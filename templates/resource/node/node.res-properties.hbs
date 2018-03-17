@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>properties</title>
+
+    <link href="{{E.BOOTSTRAP_CSS}}" rel="stylesheet">
+	</head>
+	<body>
+
+		<div class="container">
+
+			<ol class="breadcrumb">
+				<li><a href="/.xres-list">HOME</a></li>
+			{{#include "." "parents"}}
+				<li><a href="{{path}}.xres-list">{{name}}</a></li>
+			{{/include}}
+				<li class="active">
+					<a href="{{R.PATH}}.xres-list">{{R.NAME}}</a>
+				</li>
+			</ol>
+
+		<h5>Other renderers</h5>
+			<div class="form-horizontal">
+					<form method="post" action="">
+						<div class="form-group">
+    			    <label class="col-sm-2">_rt</label>
+							<div class="col-sm-8">
+								<select class="form-control" name="_rt">
+									<option value="">no set</option>
+							{{#include "/" "any" "list-template"}}
+								{{#each this}}
+									<option value="{{rt}}">{{rt}}</option>
+								{{/each}}
+
+							{{/include}}
+								</select>
+							</div>
+							<div class="col-sm-2">
+								<button class="btn btn-success" type="submit">
+                  <span>set</span>
+								</button>
+							</div>
+						</div>
+					</form>
+          </div>
+
+			<h5>properties:</h5>
+
+				{{#include "." "properties"}}
+			<div class="form-horizontal">
+				<div class="form-group">
+    			<label class="col-sm-2">{{name}}</label>
+					<div class="col-sm-8">
+						<input class="form-control" name="{{name}}" value="{{value}}" form="save_form">
+					</div>
+					<div class="col-sm-2">
+						<form method="POST" action="{{R.PATH}}{{R.SUFFIX}}">
+							<input type="hidden" name="{{name}}" value="">
+							<button class="btn btn-danger" type="submit" name="{{name}}" value="">
+								<span class="glyphicon glyphicon-minus"></span>
+							</button>
+						</form>
+					</div>
+				</div>
+				{{/include}}
+
+				<form method="post" action="{{R.PATH}}{{R.SUFFIX}}">
+					<div class="form-group">
+						<div class="col-sm-2">
+							<input class="form-control" name=":name" value="">
+						</div>
+						<div class="col-sm-8">
+							<input class="form-control" name="{:name}" value="">
+						</div>
+						<div class="col-sm-2">
+							<button class="btn btn-success" type="submit" value="add">
+								<span class="glyphicon glyphicon-plus"></span>
+							</button>
+						</div>
+					</div>
+				</form>
+			</div>
+
+			<form method="post" id="save_form" action="{{R.PATH}}.xres-list">
+				<input type="submit" value="save">
+			</form>
+
+	
+
+		</div>
+
+	</body>
+</html>

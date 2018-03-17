@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>mount</title>
+
+    <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+	</head>
+	<body>
+
+		<div class="container">
+
+			<ol class="breadcrumb">
+				<li><a href="/.xres-list">HOME</a></li>
+			{{#include "." "parents"}}
+				<li><a href="{{path}}.xres-list">{{name}}</a></li>
+			{{/include}}
+				<li class="active">
+					<a href="{{_.PATH}}.xres-list">{{_.NAME}}</a>
+				</li>
+			</ol>
+
+			<h6>mount resource:</h6>
+
+			<div class="form-horizontal">
+				<div class="form-horizontal">
+					<form method="post" action="{{_.PATH}}{{_.SUFFIX}}">
+						<div class="form-group">
+							<div class="col-sm-8">
+								<input class="form-control" name="name|newUUID" value="" autocomplete="off">
+								<input type="hidden" name=":forward" value="{{_.PATH}}.xres-list">
+							</div>
+							<div class="col-sm-2">
+								<button class="form-control btn btn-success" type="submit">
+									<span class="glyphicon glyphicon-plus"></span>
+								</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+
+		</div>
+	</body>
+</html>

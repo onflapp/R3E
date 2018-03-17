@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>list</title>
+
+    <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+	</head>
+	<body>
+		<div class="container">
+
+			<h1>Move</h1>
+
+			<ol class="breadcrumb">
+				<li><a href="{{CP_PREFIX}}/.xres-list">HOME</a></li>
+			{{#each CP_PARENTS}}
+				<li><a href="{{../CP_PREFIX}}{{path}}.xres-list">{{name}}</a></li>
+			{{/each}}
+				<li class="active">{{CP_NAME}}</li>
+			</ol>
+
+			<h1>to</h1>
+
+			<ol class="breadcrumb">
+				<li><a href="{{CP_PREFIX_PATH}}.xres-moveto/">HOME</a></li>
+			{{#each DP_PARENTS}}
+				<li><a href="{{../CP_PREFIX_PATH}}.xres-moveto{{path}}">{{name}}</a></li>
+			{{/each}}
+				<li class="active">{{DP_NAME}}</li>
+			</ol>
+
+			<table class="table">
+			{{#children DATA_NODE}}
+				{{#if properties._isfile}}
+				<tr>
+          <td>
+					  <i class="glyphicon glyphicon-file"></i> {{name}}
+          </td>
+				</tr>
+				{{else}}
+				<tr>
+          {{#match path "startsWith" ../CP_PREFIX_PATH}}
+            <td>
+					    <i class="glyphicon glyphicon-folder-close"></i> {{name}}
+            </td>
+          {{/match}}
+          {{#default}}
+            <td>
+					    <i class="glyphicon glyphicon-folder-close"></i> <a href="{{../CP_PREFIX_PATH}}.xres-moveto{{../DP_PATH}}/{{name}}">{{name}}</a>
+            </td>
+          {{/default}}
+				</tr>
+				{{/if}}
+
+			{{/children}}
+			</table>
+
+			<form method="post" action="">
+				<input name=":name:" value="{{CP_NAME}}" autocomplete="off">
+				<input type="hidden" name=":copyto" value="{{DP_PATH}}/{:name:}">
+				<input type="hidden" name=":delete" value="{{CP_PATH}}">
+				<input type="submit" value="move">
+			{{#if REQ_REFERER}}
+				<input type="hidden" name=":forward" value="{{REQ_REFERER}}">
+      {{else}}
+				<input type="hidden" name=":forward" value="{{CP_PREFIX}}{{DP_ROOT_PATH}}.xres-list">
+      {{/if}}
+			</form>
+		</div>
+	</body>
+</html>
