@@ -4,153 +4,203 @@ class FileResource extends Resource {
   protected isDirectory: boolean;
   protected renderType: string;
   protected primaryType: string;
-  protected resourceProperties: Map<string, any>;
+  protected resourceProperties = {};
 
   private fs = require('fs');
   
-  constructor(root: string, name: string) {
+  constructor(root: string, name?: string) {
     super(name);
 
-    this.resourceProperties = new Map();
     this.rootPath = root;
-    this.filePath = filename_path_append(this.rootPath, name);
-  }
 
-  public getRenderTypes(): Array<string> {
-    var rv = [];
-    if (this.primaryType) rv.push(this.primaryType);
-    if (this.renderType)  rv.push(this.renderType);
-
-    rv.push(this.getType());
-    return rv;
-  }
-
-  protected ensureNodePathExists(dir, pdir) {
-    var paths = dir.split('/');
-    var parents = [];
-
-    if (pdir) paths.pop();
-
-    while (1) {
-      var p = paths.shift();
-
-      if (p === '') continue;
-      if (!p) break;
-
-      if (paths.length >= 0) {
-        parents.push(p);
-
-        var ndir = null;//putil.join(this.rootPath, parents.join('/'));
-
-        try {
-          this.fs.mkdirSync(ndir, '0755');
-        }
-        catch (ex) {
-        }
-      }
+    if (name) {
+      this.filePath = Utils.filename_path_append(this.rootPath, name);
+    }
+    else {
+      this.filePath = root;
     }
   }
 
-  protected readMetadata(): any {
+  public getType(): string {
+    if (this.isDirectory) return 'resource/node';
+    else return 'resource/content';
+  }
+
+  public getSuperType(): string {
+    if (this.isDirectory) return null;
+    else return 'resource/node';
+  }  
+
+  public createChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
+    let path = Utils.filename_path_append(this.filePath, name);
+    let mask = '0755';
+    let res = new FileResource(this.filePath, name);
+
+    this.fs.mkdir(path, mask, function(err) {
+      if (!err) {
+        callback(res);
+      }
+      else if (err.code == 'EEXIST') {
+        callback(res);
+      }
+      else {
+        callback(null);
+      }
+    });
+  }
+
+  public importData(data: any, callback) {
     let self = this;
-    return new Promise(function(resolve, reject) {
-      let path = filename_path_append(self.filePath, '.metadata.json');
-      self.fs.readFile(path, 'utf8', function(err, data) {
-        if (data) {
-          let rv = JSON.parse(data);
-          for (let key in rv) {
-            if (key.charAt(0) == '_') {
-              if      (key == '_pt') self.primaryType = rv[key];
-              else if (key == '_rt') self.renderType = rv[key];
-            }
-            else if (!self.resourceProperties.get(key)) {
-              self.resourceProperties.set(key, rv[key]);
-            }
-          }
-        }
-        resolve();
+    let path = Utils.filename_path_append(self.filePath, '.metadata.json');
+ 
+    self.fs.readFile(path, 'utf8', function(err, mdata) {
+      let content = null;
+      if (mdata) content = JSON.parse(mdata);
+      if (!content) content = {};
+
+      for (var key in data) {
+        var v = data[key];
+        key = key.trim();
+        if (key.charAt(0) === ':') continue;
+        if (key.length === 0) continue;
+        if (v) content[key] = data[key];
+        else delete content[key];
+      }
+
+      self.fs.writeFile(path, JSON.stringify(content), 'utf8', function() {
+        callback();
       });
     });
   }
 
-  protected readInfo(): any {
+  public removeChildResource(name: string, callback) {
+    callback(null);
+  }
+
+  protected readMetadata(callback) {
     let self = this;
-    return new Promise(function(resolve, reject) {
-      self.fs.stat(self.filePath, function(err, stat) {
-        if (!stat) {
-          reject();
-        }
-        else if (stat.isFile()) {
-          self.resourceType = "resource/file";
-
-          resolve();
-        }
-        else if (stat.isDirectory()) {
-          self.isDirectory = true;
-          self.resourceType = "resource/plain";
-
-          self.readMetadata().then(function() {
-            resolve();
-          });
-        }
-        else {
-          reject();
-        }
-      });
+    let path = Utils.filename_path_append(self.filePath, '.metadata.json');
+    self.fs.readFile(path, 'utf8', function(err, data) {
+      if (data) {
+        let rv = JSON.parse(data);
+        self.resourceProperties = rv?rv:{};
+      }
+      else {
+        self.resourceProperties = {};
+      }
+      callback();
     });
   }
 
-
-  protected checkValidity(callback: any) {
-    this.readInfo().then(function() {
-      callback(true);
-
-    }, function() {
-      callback(false);
-
+  public resolveItself(callback) {
+    let self = this;
+    this.fs.stat(this.filePath, function(err, stat) {
+      if (!stat) {
+        callback(null);
+      }
+      else if (stat.isFile()) {
+        callback(self);
+      }
+      else if (stat.isDirectory()) {
+        self.isDirectory = true;
+        self.readMetadata(function() {
+          callback(self);
+        });
+      }
+      else {
+        callback(null);
+      }
     });
   }
 
   public getPropertyNames(): Array<string> {
-    let rv = [];
-		this.resourceProperties.forEach(function(val, key, map) {
-      rv.push(key);
-    });
+    var rv = [];
+    for (var k in this.resourceProperties) {
+      var v = this.resourceProperties[k];
+      if (typeof v === 'function' || k.charAt(0) === '_') {
+      }
+      else {
+        rv.push(k);
+      }
+    }
 
     return rv;
   }
 
   public getProperty(name: string): any {
-    return this.resourceProperties.get(name);
+    return this.resourceProperties[name];
   }
 
-  public resolveResource(path: string, callback: ResourceCallback): void {
-    let res = new FileResource(this.filePath, path);
-    res.checkValidity(function(valid) {
-      if (valid) callback(res);
-      else callback(null);
-    });
+  public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
+    let res = new FileResource(this.filePath, name);
+    if (walking) {
+      callback(res);
+    }
+    else {
+      res.resolveItself(callback);
+    }
   }
 
   public listChildrenNames(callback: ChildrenNamesCallback) {
-    this.fs.readdir(this.rootPath, function(err, items) {
-      callback(items);
+    this.fs.readdir(this.filePath, function(err, items) {
+      let ls = [];
+      if (items) {
+        for (var i = 0; i < items.length; i++) {
+          let it = items[i];
+          if (it.charAt(0) === '.') continue;
+
+          ls.push(it);
+        }
+      }
+      callback(ls);
     });
   }
 
-  public hasContent(): boolean {
+  public isContentResource(): boolean {
     return !this.isDirectory;
   }
 
-  public copyToWriter(typ: string, writer: ContentWriter): void {
-    writer.end();
-    /*
-    if (this.isDirectory) callback(null);
-    else {
-      this.fs.readFile(this.filePath, typ, callback);
-    }
-    */
+  public getContentType(): string {
+    let contentType = this.resourceProperties['contentType'];
+    if (contentType) return contentType;
+    
+    let name = this.getName();
+    let mime = require('mime-types');
+
+    return mime.lookup(name) || null;
   }
+
+  public start(ctype: string) {
+  }
+  public write(data: any) {
+  }
+  public error(error: Error) {
+  }
+  public end() {
+  }
+  public read(writer: ContentWriter) {
+    if (this.isDirectory) {
+      writer.end();
+    }
+    else {
+      writer.start(this.getContentType());
+
+      let is = this.fs.createReadStream(this.filePath);
+      is.on('error', function(err) {
+        writer.error(err);
+        writer.end();
+      });
+
+      is.on('data', function(data) {
+        writer.write(data);
+      });
+
+      is.on('close', function() {
+        writer.end();
+      });
+
+    }
+  }  
 }
 
 

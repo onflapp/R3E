@@ -11,6 +11,7 @@ module.exports = function(grunt) {
 			compile_lib: {
         tsconfig: false,
 				options: {
+					module: 'amd',
         	sourceMap: false,
 					target: 'es5'
       	},
@@ -35,7 +36,11 @@ module.exports = function(grunt) {
 						"src/extra/factories/HBSRendererFactory.ts",
 						"src/extra/factories/EJSRendererFactory.ts",
 						"src/extra/resources/client/AJAXResource.ts",
-						"src/extra/resources/client/ClientRequestHandler.ts"
+						"src/extra/resources/client/ClientRequestHandler.ts",
+						"src/extra/resources/server/ServerRequestHandler.ts",
+						"src/extra/resources/server/FileResource.ts",
+						"src/exports.ts"
+
 				],
 				out: 'build/r3elib.js'
 			}

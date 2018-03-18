@@ -103,7 +103,7 @@ class TemplateRendererFactory implements RendererFactory {
 
   public makeRenderer(resource: Resource, callback: RendererFactoryCallback) {
     let self = this;
-    resource.read(new ContentWriterAdapter(function(data) {
+    resource.read(new ContentWriterAdapter('utf8', function(data) {
       if (data) {
         let tfunc = self.cache[data];
         if (!tfunc) {

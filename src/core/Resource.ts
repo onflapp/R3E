@@ -13,8 +13,12 @@ abstract class Resource implements ContentWriter, ContentReader {
 
   protected resourceName: string;
 
-  constructor(name: string) {
-    this.resourceName = name;
+  constructor(name?: string) {
+    this.resourceName = name?name:'';
+  }
+
+  public resolveItself(callback) {
+    if (callback) callback(this);
   }
 
   public getType(): string {
@@ -45,10 +49,6 @@ abstract class Resource implements ContentWriter, ContentReader {
     return rv;
   }
 
-  public getPropertyNames(): Array<string> {
-    return [];
-  }
-
   public getProperties() {
     let map = {};
     let names = this.getPropertyNames();
@@ -60,6 +60,7 @@ abstract class Resource implements ContentWriter, ContentReader {
     return map;
   }
 
+  public abstract getPropertyNames(): Array<string>;
   public abstract getProperty(name: string): any;
   public abstract resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void;
   public abstract createChildResource(name: string, callback: ResourceCallback, walking?: boolean): void;
@@ -176,6 +177,10 @@ abstract class Resource implements ContentWriter, ContentReader {
 
   public isContentResource(): boolean {
     return false;
+  }
+
+  public getContentType(): string {
+    return null;
   }
 
   public start(ctype: string) {

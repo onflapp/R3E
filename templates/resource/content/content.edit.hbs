@@ -53,7 +53,7 @@
 				<li class="active">{{R.NAME}}</li>
 			</ol>
 
-			{{#match _.contentType "startsWith" "application/javascript"}}
+			{{#match contentType "startsWith" "application/javascript"}}
 			<form method="post" action="{{R.PATH}}{{R.SUFFIX}}">
 				<div class="btn-group btn-group-sm" style="margin-bottom:20px">
 					<a class="btn btn-default" href="{{R.PATH}}.xres-properties">properties</a>
@@ -64,10 +64,10 @@
 					<textarea name="_content">{{include "." "text"}}</textarea>
 				</div>
 				<input type="hidden" name="_rt" value="resource/content"></input>
-				<input type="hidden" name="contentType" value="{{_.contentType}}"></input>
+				<input type="hidden" name="_ct" value="{{contentType}}"></input>
 			</form>
 			{{/match}}
-			{{#match _.contentType "startsWith" "text/"}}
+			{{#match contentType "startsWith" "text/"}}
 			<form method="post" action="{{R.PATH}}{{R.SUFFIX}}">
 				<div class="btn-group btn-group-sm" style="margin-bottom:20px">
 					<a class="btn btn-default" href="{{R.PATH}}.xres-properties">properties</a>
@@ -78,10 +78,10 @@
 					<textarea name="_content">{{include "." "text"}}</textarea>
 				</div>
 				<input type="hidden" name="_rt" value="resource/content"></input>
-				<input type="hidden" name="contentType" value="{{_.contentType}}"></input>
+				<input type="hidden" name="_ct" value="{{contentType}}"></input>
 			</form>
 			{{/match}}
-			{{#match _.contentType "startsWith" "image/"}}
+			{{#match contentType "startsWith" "image/"}}
 				<div class="btn-group btn-group-sm" style="margin-bottom:20px">
 					<a class="btn btn-default" href="{{R.PATH}}.xres-properties">properties</a>
 					<a class="btn btn-default" target="_blank" href="{{include "." "externalize"}}">view</a>
@@ -103,7 +103,7 @@
 			{{/match}}
 
       {{#default}}
-        unknown file type of {{_.contentType}} <br>
+        unknown file type of {{contentType}} <br>
         <a href="{{include "." "externalize"}}" download target="_blank">download</a>
       {{/default}}
 		</div>

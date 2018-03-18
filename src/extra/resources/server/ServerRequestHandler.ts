@@ -1,103 +1,109 @@
-class DOMContentWriter implements ContentWriter {
-  private requestHandler: ClientRequestHandler;
+class ResponseContentWriter implements ContentWriter {
+  private requestHandler: ServerRequestHandler;
+  private respose;
 
-  constructor() {
+  constructor(res) {
+    this.respose = res;
   }
 
-  public setRequestHandler(requestHandler: ClientRequestHandler) {
+  public setRequestHandler(requestHandler: ServerRequestHandler) {
     this.requestHandler = requestHandler;
   }
 
   public start(ctype) {
-    document.open();
+    let c = ctype?ctype:'application/octet-stream';
+    this.respose.setHeader('content-type', c);
   }
   public write(content) {
-    if (typeof content != 'string') document.write(JSON.stringify(content));
-    else document.write(content);
+    if (typeof content === 'string') {
+      this.respose.write(content);
+    }
+    else {
+      this.respose.write(content);
+    }
   }
   public error(error: Error) {
     console.log(error); 
   }
   public end() {
-    let self = this;
-    document.addEventListener('readystatechange', function() {
-      if (document.readyState === 'complete') {
-        let requestHandler = self.requestHandler;
-        document.body.addEventListener('submit', function(evt) {
-          var target = evt.target;
-          var info = requestHandler.parseFormElement(target);
-          requestHandler.handleStore(info.formPath, info.formData);
-          evt.preventDefault();
-        });
+    this.respose.end();
+  }
 
-        document.body.addEventListener('click', function(evt) {
-          var target = evt.target as HTMLElement;
-          var href = target.getAttribute('href');
-          if (href && href.charAt(0) === '/') {
-            location.hash = href;
-            requestHandler.handleRequest(href);
-            evt.preventDefault();
-          }
-        });
-
-      }
-    });
-
-    document.close();
+  public redirect(rpath: string) {
+    this.respose.redirect(301, rpath);
   }
 }
 
 class ServerRequestHandler extends ResourceRequestHandler {
-  constructor(resourceResolver: ResourceResolver, templateResolver: ResourceResolver, contentWriter: DOMContentWriter) {
-    let writer = contentWriter ? contentWriter : new DOMContentWriter();
+  private resposeContentWriter: ResponseContentWriter;
+  constructor(resourceResolver: ResourceResolver, templateResolver: ResourceResolver, res) {
+    let writer = new ResponseContentWriter(res);
     super(resourceResolver, templateResolver, writer);
-    writer.setRequestHandler(this);
+    this.resposeContentWriter = writer;
+    this.resposeContentWriter.setRequestHandler(this);
   }
 
-  public parseFormElement(formElement): ClientFormInfo {
-    let action = formElement.getAttribute('action');
-    let rv = {};
+  public handlePostRequest(req) {
+    let self = this;
+    let rpath = unescape(req.url);
+    let multiparty = require('multiparty');
+    let querystring = require('querystring');
 
-    for (let i = 0; i < formElement.elements.length; i++) {
-      let p = formElement.elements[i];
-      let type = p.type.toLowerCase();
+    let ct = req.headers['content-type'];
 
-      if (type === 'submit' || type == 'button') continue;
+    if (ct && ct.indexOf('multipart/form-data') == 0) {
+      let form = new multiparty.Form({
+        maxFieldsSize:1024*1024*50
+      });
+     
+      form.parse(req, function(err, fields, files) {
+        let data = {};
 
-      let name = p.name;
-      let value = p.value;
+        for (let file in files) {
+          let v = file[0];
+					let n = v['originalFilename'];
+					let f = v['fieldName'];
+					let path = v['path'];
+        }
 
-      if (type === 'file') {
-        value = p.files[0];
+			  for (var k in fields) {
+				  var v = fields[k][0];
+				  data[k] = v;
+			  }
+        
+        self.transformValues(data);
+        rpath = self.expandValue(rpath, data);
 
-        rv[name] = value.name;
-        rv[Resource.STORE_CONTENT_PROPERTY] = function(writer, callback) {
-
-          let reader = new FileReader();
-          reader.onload = function(e) {
-            writer.write(reader.result);
-            writer.end();
-            callback();
-          };
-
-          writer.start(value.type);
-          reader.readAsArrayBuffer(value);
-        };
-      }
-      else {
-        rv[name] = value;
-      }
-
+        self.handleStore(rpath, data);
+      });
     }
+    else {
+      let body = '';
+		  req.on('data', function (data) {
+			  body += data;
+			  if (body.length > 20000000) req.connection.destroy();
+		  });
 
-    this.transformValues(rv);
+		  req.on('end', function () {
+        let data = {};
+			  let fields = querystring.parse(body);
+			  for (var k in fields) {
+				  var v = fields[k];
 
-    let path = this.expandValue(action, rv);
-    let info = new ClientFormInfo();
+          if (Array.isArray(v)) data[k] = v[0];
+          else data[k] = v;
+			  }
+  
+        self.transformValues(data);
+        rpath = self.expandValue(rpath, data);
 
-    info.formData = rv;
-    info.formPath = path;
-
-    return info;
+        self.handleStore(rpath, data);
+		  });
+    }
   }
+
+  public forwardRequest(rpath: string) {
+    this.resposeContentWriter.redirect(rpath);
+  }
+
 }

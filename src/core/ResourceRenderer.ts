@@ -23,23 +23,45 @@ interface ContentRendererFunction {
 
 class ContentWriterAdapter implements ContentWriter {
   private callback: any;
-  private data: any;
+  private data = [];
   private ctype: string;
-  constructor(callback: any) {
+  private conversion: string;
+  constructor(typ: string, callback: any) {
     this.callback = callback;
+    this.conversion = typ;
   }
 
   public start(ctype: string) {
     this.ctype = ctype;
   }
   public write(data: any) {
-    this.data = data;
+    this.data.push(data);
   }
   public error(error: Error) {
     console.log(error);
   }
   public end() {
-    this.callback(this.data, this.ctype);
+    if (this.conversion === 'utf8') {
+      let v = this.data[0];
+      if (typeof v === 'string') {
+        this.callback(this.data.join(''), this.ctype);
+      }
+      else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(v)) {
+        let b = Buffer.concat(this.data);
+        this.callback(b.toString('utf8'), this.ctype);
+      }
+      else {
+        this.callback(this.data, this.ctype);
+      }
+    }
+    else {
+      if (this.data.length === 1) {
+        this.callback(this.data[0], this.ctype);
+      }
+      else {
+        this.callback(this.data, this.ctype);
+      }
+    }
   }
 }
 
@@ -57,6 +79,7 @@ class ResourceRenderer {
   protected makeRenderTypePaths(renderTypes: Array<string>, selectors: Array<string>): Array<string> {
     var rv = [];
     var factories = this.rendererFactories;
+
     for (var i = 0; i < renderTypes.length; i++) {
 		  factories.forEach(function(val, key, map) {
         if (key == '') return;
@@ -115,6 +138,8 @@ class ResourceRenderer {
 
   public resolveRenderer(renderTypes: Array<string>, selectors: Array<string>, callback: RendererFactoryCallback) {
     let rtypes = this.makeRenderTypePaths(renderTypes, selectors);
+    if (rtypes.length === 0) throw new Error ('no render factories registered?');
+
     let plist = rtypes.slice();
     let p = rtypes.shift();
     let self = this;

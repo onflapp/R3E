@@ -5,8 +5,9 @@ class ResourceResolver {
   }
 
   public resolveResource(path: string, callback: ResourceCallback) {
+    let self = this;
 		if (path === '/' || path === '') {
-			callback(this.resource);
+      this.resource.resolveItself(callback);
 		}
     else {
       let paths = Utils.split_path(path);

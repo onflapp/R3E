@@ -41,6 +41,7 @@ class ResourceRequestContext {
       map['name'] = res.getName();
       map['superType'] = res.getSuperType();
       map['isContentResource'] = res.isContentResource();
+      map['contentType'] = res.getContentType();
       map['_'] = res.getProperties();
     }
 
@@ -183,24 +184,37 @@ class ResourceRequestHandler extends EventDispatcher {
 
     let m = path.match(/^(\/.*?)(\.x([a-z,\-_]+))(\.([a-z0-9,\-\.]+))?(\/.*?)?$/);
 
-    if (!m) return null;
+    if (m) {
+      info.dataPath = m[6]?m[6]:null;
+      info.selectorArgs = m[5]?m[5]:null;
+      info.path = Utils.absolute_path(m[1]);
+      info.selector = m[3];
+      info.suffix = m[2];
 
-    info.dataPath = m[6]?m[6]:null;
-    info.selectorArgs = m[5]?m[5]:null;
-    info.path = Utils.absolute_path(m[1]);
-    info.selector = m[3];
-    info.suffix = m[2];
 
+      info.dirname = Utils.filename_dir(info.path);
+      info.name = Utils.filename(info.path);
+      info.resourcePath = info.path;
 
-    info.dirname = Utils.filename_dir(info.path);
-    info.name = Utils.filename(info.path);
-    info.resourcePath = info.path;
+      if (info.dataPath) info.dataPath = Utils.absolute_path(info.dataPath);
 
-    if (info.dataPath) info.dataPath = Utils.absolute_path(info.dataPath);
+      info.dataName = Utils.filename(info.dataPath);
 
-    info.dataName = Utils.filename(info.dataPath);
+      return info;
+    }
+    else if (path.charAt(0) === '/') {
+      info.path = Utils.absolute_path(path);
+      info.selector = 'default';
 
-    return info;
+      info.dirname = Utils.filename_dir(info.path);
+      info.name = Utils.filename(info.path);
+      info.resourcePath = info.path;
+
+      return info;
+    }
+    else {
+      return null;
+    }
   }
 
   protected makeContext(pathInfo: PathInfo): ResourceRequestContext {
@@ -224,11 +238,16 @@ class ResourceRequestHandler extends EventDispatcher {
   }
 
   public renderRequest(rpath: string) {
-    let out = this.contentWriter.makeNestedContentWriter();
-    let info = this.parsePath(rpath);
     let rres = this.resourceResolver;
     let rrend = this.resourceRenderer;
+
+    if (!rres) throw new Error('no resource resolver');
+    if (!rrend) throw new Error('no resource renderer');
+    if (!this.contentWriter) throw new Error('no content writer');
+
+    let info = this.parsePath(rpath);
     let context = this.makeContext(info);
+    let out = this.contentWriter.makeNestedContentWriter();
 
     try {
 

@@ -1,8 +1,10 @@
 class ObjectResource extends Resource {
   protected rootObject: any;
 
-  constructor(name: string, obj?: any) {
+  constructor(name: string, obj: any) {
     super(name);
+    if (!obj) throw new Error('no object for ObjectResource');
+
     this.rootObject = obj;
   }
 
@@ -33,7 +35,7 @@ class ObjectResource extends Resource {
     var rv = [];
     for (var k in this.rootObject) {
       var v = this.rootObject[k];
-      if (typeof v === 'object' || typeof v === 'function' || k.charAt(0) === '_') {
+      if (typeof v === 'function' || k.charAt(0) === '_') {
       }
       else {
         rv.push(k);
@@ -96,8 +98,7 @@ class ObjectContentResource extends ObjectResource {
   protected rootObject: any;
 
   constructor(name: string, obj: any) {
-    super (name);
-    this.rootObject = obj;
+    super (name, obj);
   }
 
   public getType(): string {
@@ -112,9 +113,14 @@ class ObjectContentResource extends ObjectResource {
     return true;
   }
 
+  public getContentType(): string {
+    let contentType = this.rootObject['contentType'];
+    return contentType;
+  }
+
   public read(writer: ContentWriter): void {
     let data = this.rootObject;
-    let contentType = data['contentType'];
+    let contentType = this.getContentType();
 
     writer.start(contentType?contentType:'text/plain');
 

@@ -1,14 +1,20 @@
 class DefaultRenderingTemplates extends ObjectResource {
   constructor() {
-    super('');
-    this.rootObject = {
-      resource: {
-        error: {
-          default:function(res: Resource, writer: ContentWriter, context: ResourceRequestContext) {
+    super('', {
+      'resource': {
+        'error': {
+          'default':function(res: Resource, writer: ContentWriter, context: ResourceRequestContext) {
             res.read(writer);
           }
         }
+      },
+      'any': {
+        'default':function(res: Resource, writer: ContentWriter, context: ResourceRequestContext) {
+          writer.start('text/plain');
+          writer.write('default renderer');
+          writer.end();
+        }
       }
-    };
+    });
   }
 }

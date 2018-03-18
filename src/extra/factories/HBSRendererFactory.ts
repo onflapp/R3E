@@ -4,7 +4,7 @@ class HBSRendererFactory extends TemplateRendererFactory {
   constructor() {
     super();
 
-    if (window && window['Handlebars']) this.Handlebars = window['Handlebars'];
+    if (typeof window !== 'undefined' && window['Handlebars']) this.Handlebars = window['Handlebars'];
     else this.Handlebars = require('handlebars');
 
     let self = this;

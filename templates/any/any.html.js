@@ -1,4 +1,4 @@
-(function (res, writer) {
+(function (res, writer, context) {
 	writer.start('text/html');
 
 	writer.write('name:'+res.getName());
