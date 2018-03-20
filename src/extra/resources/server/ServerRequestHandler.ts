@@ -19,7 +19,7 @@ class ResponseContentWriter implements ContentWriter {
       this.respose.write(content);
     }
     else {
-      this.respose.write(content);
+      this.respose.write(content, 'binary');
     }
   }
   public error(error: Error) {
@@ -27,6 +27,8 @@ class ResponseContentWriter implements ContentWriter {
   }
   public end() {
     this.respose.end();
+    this.requestHandler = null;
+    this.respose = null;
   }
 
   public redirect(rpath: string) {
@@ -53,17 +55,49 @@ class ServerRequestHandler extends ResourceRequestHandler {
 
     if (ct && ct.indexOf('multipart/form-data') == 0) {
       let form = new multiparty.Form({
-        maxFieldsSize:1024*1024*50
+        maxFieldsSize:1024*1024*500
       });
      
       form.parse(req, function(err, fields, files) {
         let data = {};
 
         for (let file in files) {
-          let v = file[0];
-					let n = v['originalFilename'];
-					let f = v['fieldName'];
+          let v = files[file][0];
+					let f = v['originalFilename'];
+					let n = v['fieldName'];
+          let ct = v['headers']['content-type'];
 					let path = v['path'];
+
+          data[n] = f;
+          data[Resource.STORE_CONTENT_PROPERTY] = function(writer, callback) {
+            let fs = require('fs');
+            let fd = fs.openSync(path, 'r');
+
+            writer.start(ct);
+            let pos = 0;
+            let sz = 0;
+            while (true) {
+              let buff = new Buffer(1024*1000);
+              sz = fs.readSync(fd, buff, 0, buff.length, pos);
+              if (!sz) break;
+
+              pos += sz;
+              if (sz < buff.length) {
+                writer.write(buff.slice(0, sz));
+              }
+              else {
+                writer.write(buff);
+              }
+            }
+
+            fs.closeSync(fd);
+            fs.unlinkSync(path);
+
+            writer.end();
+            callback();
+          };
+
+          break;
         }
 
 			  for (var k in fields) {
@@ -81,7 +115,7 @@ class ServerRequestHandler extends ResourceRequestHandler {
       let body = '';
 		  req.on('data', function (data) {
 			  body += data;
-			  if (body.length > 20000000) req.connection.destroy();
+			  if (body.length > (1024*1000)) req.connection.destroy();
 		  });
 
 		  req.on('end', function () {

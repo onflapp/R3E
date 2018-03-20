@@ -16,7 +16,7 @@ class Utils {
     if (p.charAt(p.length-1) != '/') p += '/';
     p += name;
 
-    return p;
+    return p.replace(/\/+/g,'/');
   }
 
   static filename(path: string): string {

@@ -7,6 +7,7 @@ if (typeof module !== 'undefined') {
     HBSRendererFactory:HBSRendererFactory,
     JSRendererFactory:JSRendererFactory,
     FileResource:FileResource,
+    RootResource:RootResource,
     DefaultRenderingTemplates:DefaultRenderingTemplates
   };
 }

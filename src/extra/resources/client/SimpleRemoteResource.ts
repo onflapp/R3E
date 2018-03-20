@@ -1,4 +1,4 @@
-class AJAXResource extends Resource {
+class SimpleRemoteResource extends Resource {
   private baseURL: string;
   private path: string;
 
@@ -20,7 +20,7 @@ class AJAXResource extends Resource {
     callback(null);
   }
 
-  public importData(data: any, callback) {
+  public importProperties(data: any, callback) {
     callback(null);
   }
 
@@ -30,7 +30,7 @@ class AJAXResource extends Resource {
 
   public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
     if (walking) {
-      callback(new AJAXResource(this.baseURL, Utils.filename_path_append(this.getPath(), name)));
+      callback(new SimpleRemoteResource(this.baseURL, Utils.filename_path_append(this.getPath(), name)));
     }
     else {
       let path = this.baseURL + '/' + this.getPath() + '/' + name;

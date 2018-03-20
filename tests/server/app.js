@@ -3,7 +3,7 @@ var app = express();
 
 var r = require('../../dist/r3elib');
 
-root = new r.FileResource('.');
+root = new r.FileResource('./tests/content');
 temps = new r.FileResource('./templates');
 
 rres = new r.ResourceResolver(root);

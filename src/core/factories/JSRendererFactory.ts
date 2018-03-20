@@ -6,6 +6,8 @@ class JSRendererFactory implements RendererFactory {
           var func = eval(data);
         }
         catch(ex) {
+          console.log(data);
+          console.log(ex);
           callback(null, ex);
         }
         if (typeof func === 'function') {

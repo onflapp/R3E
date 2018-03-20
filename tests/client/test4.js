@@ -23,11 +23,10 @@ if (r) window.data = JSON.parse(r);
 
 d = new ObjectResource('data', data);
 
-root = new RootResource();
-root.importData({ 'data':d });
+root = new RootResource({'data':d});
 
 rres = new ResourceResolver(root);
-rtmp = new MultiResourceResolver([new AJAXResource('../templates/'), new DefaultRenderingTemplates()]);
+rtmp = new MultiResourceResolver([new SimpleRemoteResource('../../templates/'), new DefaultRenderingTemplates()]);
 
 var requestHandler = new ClientRequestHandler(rres, rtmp);
 requestHandler.addEventListener('stored', function(path, data) {

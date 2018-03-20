@@ -101,10 +101,10 @@ class ResourceResolver {
 
     let self = this;
     let processing = 0;
+    let ended = false;
 
     let done = function() {
-      if (processing === 0) {
-        processing = -1;
+      if (processing === 0 && ended) {
         callback(arguments);
       }
     };
@@ -119,6 +119,7 @@ class ResourceResolver {
         });
       }
       else {
+        ended = true;
         done();
       }
     });

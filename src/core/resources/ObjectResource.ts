@@ -35,7 +35,7 @@ class ObjectResource extends Resource {
     var rv = [];
     for (var k in this.rootObject) {
       var v = this.rootObject[k];
-      if (typeof v === 'function' || k.charAt(0) === '_') {
+      if (typeof v === 'object' || typeof v === 'function' || k.charAt(0) === '_') {
       }
       else {
         rv.push(k);
@@ -59,38 +59,56 @@ class ObjectResource extends Resource {
     callback(rv);
   }
 
-  public importData(data: any, callback) {
-    let processing = 0;
-    let done = function() {
-      if (processing === 0 && callback) callback();
-    };
-
+  public importProperties(data: any, callback) {
     for (let k in data) {
       let v = data[k];
 
       if (k.charAt(0) === ':') {
         continue;
       }
-      else if (k === Resource.STORE_CONTENT_PROPERTY && typeof v === 'function') {
-        let res = new ObjectContentResource(this.resourceName, this.rootObject);
-        processing++;
-        v(res, function() {
-          processing--;
-          done();
-        });
-      }
       else {
         if (v) this.rootObject[k] = v;
         else delete this.rootObject[k];
       }
     }
+    callback();
+  }
 
-    done();
+  public importContent(func, callback) {
+    let res = new ObjectContentResource(this.resourceName, this.rootObject);
+    func(res, callback);
   }
 
   public removeChildResource(name: string, callback) {
     delete this.rootObject[name];
     if (callback) callback();
+  }
+}
+
+class ObjectContentResourceWriter implements ContentWriter {
+  private rootObject;
+
+  constructor(obj) {
+    this.rootObject = obj;
+  }
+
+  public start(ctype: string) {
+    this.rootObject['_ct'] = ctype;
+  }
+  
+  public write(data: any) {
+    if (data instanceof ArrayBuffer) {
+      this.rootObject['_content64'] = Utils.ArrayBuffer2base64(data);
+    }
+    else {
+      this.rootObject['_content'] = data;
+    }
+  }
+
+  public error(error: Error) {
+  }
+
+  public end() {
   }
 }
 
@@ -114,8 +132,12 @@ class ObjectContentResource extends ObjectResource {
   }
 
   public getContentType(): string {
-    let contentType = this.rootObject['contentType'];
+    let contentType = this.rootObject['_ct'];
     return contentType;
+  }
+
+  public getWriter(): ContentWriter {
+    return new ObjectContentResourceWriter(this.rootObject);
   }
 
   public read(writer: ContentWriter): void {
@@ -132,22 +154,4 @@ class ObjectContentResource extends ObjectResource {
     writer.end();
   }
 
-  public start(ctype: string) {
-    this.rootObject['contentType'] = ctype;
-  }
-  
-  public write(data: any) {
-    if (data instanceof ArrayBuffer) {
-      this.rootObject['_content64'] = Utils.ArrayBuffer2base64(data);
-    }
-    else {
-      this.rootObject['_content'] = data;
-    }
-  }
-
-  public error(error: Error) {
-  }
-
-  public end() {
-  }
 }

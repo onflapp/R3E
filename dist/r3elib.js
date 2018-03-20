@@ -27,7 +27,7 @@ var Utils = (function () {
         if (p.charAt(p.length - 1) != '/')
             p += '/';
         p += name;
-        return p;
+        return p.replace(/\/+/g, '/');
     };
     Utils.filename = function (path) {
         if (!path)
@@ -235,6 +235,7 @@ var Resource = (function () {
     Resource.prototype.exportData = function (callback) {
         var self = this;
         var names = this.getPropertyNames();
+        var ct = this.getContentType();
         var rv = {};
         for (var i = 0; i < names.length; i++) {
             var name_3 = names[i];
@@ -247,9 +248,12 @@ var Resource = (function () {
         }
         if (this.isContentResource()) {
             rv[Resource.STORE_CONTENT_PROPERTY] = function (res, callback) {
-                self.read(res);
+                self.read(res.getWriter());
                 callback();
             };
+        }
+        if (ct) {
+            rv['_ct'] = ct;
         }
         callback(rv);
     };
@@ -294,6 +298,59 @@ var Resource = (function () {
         writer.start('object');
         export_children('', this.getName(), this);
     };
+    Resource.prototype.importData = function (data, callback) {
+        var processing = 0;
+        var ffunc = null;
+        var done = function () {
+            if (processing === 0 && callback)
+                callback();
+        };
+        processing++;
+        var props = {};
+        var _loop_2 = function (k) {
+            var v = data[k];
+            if (k === Resource.STORE_CONTENT_PROPERTY && typeof v === 'function') {
+                processing++;
+                ffunc = v;
+            }
+            else if (k === Resource.STORE_CONTENT_PROPERTY && typeof v === 'string') {
+                processing++;
+                var ct_1 = data['_ct'];
+                ffunc = function (res, callback) {
+                    var writer = res.getWriter();
+                    writer.start(ct_1 ? ct_1 : 'text/plain');
+                    writer.write(v);
+                    writer.end();
+                    callback();
+                };
+            }
+            else if (typeof v === 'function' || typeof v === 'object') {
+                return "continue";
+            }
+            else if (k.charAt(0) === ':') {
+                return "continue";
+            }
+            else {
+                props[k] = v;
+            }
+        };
+        for (var k in data) {
+            _loop_2(k);
+        }
+        if (ffunc) {
+            this.importContent(ffunc, function () {
+                processing--;
+                done();
+            });
+        }
+        this.importProperties(props, function () {
+            processing--;
+            done();
+        });
+    };
+    Resource.prototype.importContent = function (func, callback) {
+        callback();
+    };
     Resource.prototype.listChildrenResources = function (callback) {
         var self = this;
         this.listChildrenNames(function (ls) {
@@ -320,16 +377,12 @@ var Resource = (function () {
     Resource.prototype.getContentType = function () {
         return null;
     };
-    Resource.prototype.start = function (ctype) {
-    };
-    Resource.prototype.write = function (data) {
-    };
-    Resource.prototype.error = function (error) {
-    };
-    Resource.prototype.end = function () {
+    Resource.prototype.getWriter = function () {
+        return null;
     };
     Resource.prototype.read = function (writer) {
-        writer.end();
+        if (writer)
+            writer.end();
     };
     Resource.IO_TIMEOUT = 2000;
     Resource.STORE_CONTENT_PROPERTY = '_content';
@@ -428,9 +481,9 @@ var ResourceResolver = (function () {
         }
         var self = this;
         var processing = 0;
+        var ended = false;
         var done = function () {
-            if (processing === 0) {
-                processing = -1;
+            if (processing === 0 && ended) {
                 callback(arguments);
             }
         };
@@ -444,6 +497,7 @@ var ResourceResolver = (function () {
                 });
             }
             else {
+                ended = true;
                 done();
             }
         });
@@ -452,46 +506,6 @@ var ResourceResolver = (function () {
         callback();
     };
     return ResourceResolver;
-}());
-var ContentWriterAdapter = (function () {
-    function ContentWriterAdapter(typ, callback) {
-        this.data = [];
-        this.callback = callback;
-        this.conversion = typ;
-    }
-    ContentWriterAdapter.prototype.start = function (ctype) {
-        this.ctype = ctype;
-    };
-    ContentWriterAdapter.prototype.write = function (data) {
-        this.data.push(data);
-    };
-    ContentWriterAdapter.prototype.error = function (error) {
-        console.log(error);
-    };
-    ContentWriterAdapter.prototype.end = function () {
-        if (this.conversion === 'utf8') {
-            var v = this.data[0];
-            if (typeof v === 'string') {
-                this.callback(this.data.join(''), this.ctype);
-            }
-            else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(v)) {
-                var b = Buffer.concat(this.data);
-                this.callback(b.toString('utf8'), this.ctype);
-            }
-            else {
-                this.callback(this.data, this.ctype);
-            }
-        }
-        else {
-            if (this.data.length === 1) {
-                this.callback(this.data[0], this.ctype);
-            }
-            else {
-                this.callback(this.data, this.ctype);
-            }
-        }
-    };
-    return ContentWriterAdapter;
 }());
 var ResourceRenderer = (function () {
     function ResourceRenderer(resolver) {
@@ -532,7 +546,7 @@ var ResourceRenderer = (function () {
         writer.write(message + '\n');
         writer.write('resource ' + resource.getName() + ':' + resource.getType() + '\n');
         if (error)
-            writer.write(error.message);
+            writer.write(error.message + '\n' + error.stack);
         writer.end();
     };
     ResourceRenderer.prototype.renderResource = function (res, rtype, sel, writer, context) {
@@ -879,6 +893,46 @@ var ResourceRequestHandler = (function (_super) {
     };
     return ResourceRequestHandler;
 }(EventDispatcher));
+var ContentWriterAdapter = (function () {
+    function ContentWriterAdapter(typ, callback) {
+        this.data = [];
+        this.callback = callback;
+        this.conversion = typ;
+    }
+    ContentWriterAdapter.prototype.start = function (ctype) {
+        this.ctype = ctype;
+    };
+    ContentWriterAdapter.prototype.write = function (data) {
+        this.data.push(data);
+    };
+    ContentWriterAdapter.prototype.error = function (error) {
+        console.log(error);
+    };
+    ContentWriterAdapter.prototype.end = function () {
+        if (this.conversion === 'utf8') {
+            var v = this.data[0];
+            if (typeof v === 'string') {
+                this.callback(this.data.join(''), this.ctype);
+            }
+            else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(v)) {
+                var b = Buffer.concat(this.data);
+                this.callback(b.toString('utf8'), this.ctype);
+            }
+            else {
+                this.callback(this.data, this.ctype);
+            }
+        }
+        else {
+            if (this.data.length === 1) {
+                this.callback(this.data[0], this.ctype);
+            }
+            else {
+                this.callback(this.data, this.ctype);
+            }
+        }
+    };
+    return ContentWriterAdapter;
+}());
 var OrderedContentWriter = (function () {
     function OrderedContentWriter(delegate) {
         this.instances = 0;
@@ -1000,7 +1054,7 @@ var ObjectResource = (function (_super) {
         var rv = [];
         for (var k in this.rootObject) {
             var v = this.rootObject[k];
-            if (typeof v === 'function' || k.charAt(0) === '_') {
+            if (typeof v === 'object' || typeof v === 'function' || k.charAt(0) === '_') {
             }
             else {
                 rv.push(k);
@@ -1021,24 +1075,11 @@ var ObjectResource = (function (_super) {
         }
         callback(rv);
     };
-    ObjectResource.prototype.importData = function (data, callback) {
-        var processing = 0;
-        var done = function () {
-            if (processing === 0 && callback)
-                callback();
-        };
+    ObjectResource.prototype.importProperties = function (data, callback) {
         for (var k in data) {
             var v = data[k];
             if (k.charAt(0) === ':') {
                 continue;
-            }
-            else if (k === Resource.STORE_CONTENT_PROPERTY && typeof v === 'function') {
-                var res = new ObjectContentResource(this.resourceName, this.rootObject);
-                processing++;
-                v(res, function () {
-                    processing--;
-                    done();
-                });
             }
             else {
                 if (v)
@@ -1047,7 +1088,11 @@ var ObjectResource = (function (_super) {
                     delete this.rootObject[k];
             }
         }
-        done();
+        callback();
+    };
+    ObjectResource.prototype.importContent = function (func, callback) {
+        var res = new ObjectContentResource(this.resourceName, this.rootObject);
+        func(res, callback);
     };
     ObjectResource.prototype.removeChildResource = function (name, callback) {
         delete this.rootObject[name];
@@ -1056,6 +1101,27 @@ var ObjectResource = (function (_super) {
     };
     return ObjectResource;
 }(Resource));
+var ObjectContentResourceWriter = (function () {
+    function ObjectContentResourceWriter(obj) {
+        this.rootObject = obj;
+    }
+    ObjectContentResourceWriter.prototype.start = function (ctype) {
+        this.rootObject['_ct'] = ctype;
+    };
+    ObjectContentResourceWriter.prototype.write = function (data) {
+        if (data instanceof ArrayBuffer) {
+            this.rootObject['_content64'] = Utils.ArrayBuffer2base64(data);
+        }
+        else {
+            this.rootObject['_content'] = data;
+        }
+    };
+    ObjectContentResourceWriter.prototype.error = function (error) {
+    };
+    ObjectContentResourceWriter.prototype.end = function () {
+    };
+    return ObjectContentResourceWriter;
+}());
 var ObjectContentResource = (function (_super) {
     __extends(ObjectContentResource, _super);
     function ObjectContentResource(name, obj) {
@@ -1071,8 +1137,11 @@ var ObjectContentResource = (function (_super) {
         return true;
     };
     ObjectContentResource.prototype.getContentType = function () {
-        var contentType = this.rootObject['contentType'];
+        var contentType = this.rootObject['_ct'];
         return contentType;
+    };
+    ObjectContentResource.prototype.getWriter = function () {
+        return new ObjectContentResourceWriter(this.rootObject);
     };
     ObjectContentResource.prototype.read = function (writer) {
         var data = this.rootObject;
@@ -1088,74 +1157,40 @@ var ObjectContentResource = (function (_super) {
             writer.write(null);
         writer.end();
     };
-    ObjectContentResource.prototype.start = function (ctype) {
-        this.rootObject['contentType'] = ctype;
-    };
-    ObjectContentResource.prototype.write = function (data) {
-        if (data instanceof ArrayBuffer) {
-            this.rootObject['_content64'] = Utils.ArrayBuffer2base64(data);
-        }
-        else {
-            this.rootObject['_content'] = data;
-        }
-    };
-    ObjectContentResource.prototype.error = function (error) {
-    };
-    ObjectContentResource.prototype.end = function () {
-    };
     return ObjectContentResource;
 }(ObjectResource));
 var RootResource = (function (_super) {
     __extends(RootResource, _super);
-    function RootResource() {
-        var _this = _super.call(this, '') || this;
-        _this.resources = {};
-        return _this;
+    function RootResource(opts) {
+        return _super.call(this, '', opts ? opts : {}) || this;
     }
     RootResource.prototype.getType = function () {
         return 'resource/root';
     };
     RootResource.prototype.getSuperType = function () {
-        return _super.prototype.getType.call(this);
+        return 'resource/node';
     };
     RootResource.prototype.resolveChildResource = function (name, callback, walking) {
-        var rv = this.resources[name];
-        callback(rv);
+        var rv = this.rootObject[name];
+        if (rv) {
+            rv.getName = function () {
+                return name;
+            };
+            rv.resolveItself(function () {
+                callback(rv);
+            });
+        }
+        else
+            callback(rv);
     };
     RootResource.prototype.createChildResource = function (name, callback) {
         callback(null);
     };
-    RootResource.prototype.getPropertyNames = function () {
-        return [];
-    };
-    RootResource.prototype.getProperty = function (name) {
-        return null;
-    };
-    RootResource.prototype.listChildrenNames = function (callback) {
-        var rv = [];
-        for (var k in this.resources) {
-            var v = this.resources[k];
-            rv.push(v.getName());
-        }
-        callback(rv);
-    };
-    RootResource.prototype.importData = function (data, callback) {
-        for (var k in data) {
-            var v = data[k];
-            if (v instanceof Resource) {
-                this.resources[v.getName()] = v;
-            }
-        }
-        if (callback)
-            callback();
-    };
-    RootResource.prototype.removeChildResource = function (name, callback) {
-        delete this.resources[name];
-        if (callback)
-            callback();
+    RootResource.prototype.importProperties = function (data, callback) {
+        callback();
     };
     return RootResource;
-}(Resource));
+}(ObjectResource));
 var JSRendererFactory = (function () {
     function JSRendererFactory() {
     }
@@ -1166,6 +1201,8 @@ var JSRendererFactory = (function () {
                     var func = eval(data);
                 }
                 catch (ex) {
+                    console.log(data);
+                    console.log(ex);
                     callback(null, ex);
                 }
                 if (typeof func === 'function') {
@@ -1565,32 +1602,32 @@ var EJSRendererFactory = (function (_super) {
     };
     return EJSRendererFactory;
 }(TemplateRendererFactory));
-var AJAXResource = (function (_super) {
-    __extends(AJAXResource, _super);
-    function AJAXResource(base, path) {
+var SimpleRemoteResource = (function (_super) {
+    __extends(SimpleRemoteResource, _super);
+    function SimpleRemoteResource(base, path) {
         var _this = _super.call(this, '/') || this;
         _this.baseURL = base;
         _this.path = path ? path : '';
         return _this;
     }
-    AJAXResource.prototype.getPath = function () {
+    SimpleRemoteResource.prototype.getPath = function () {
         return this.path;
     };
-    AJAXResource.prototype.createChildResource = function (name, callback, walking) {
+    SimpleRemoteResource.prototype.createChildResource = function (name, callback, walking) {
         callback(null);
     };
-    AJAXResource.prototype.listChildrenNames = function (callback) {
+    SimpleRemoteResource.prototype.listChildrenNames = function (callback) {
         callback(null);
     };
-    AJAXResource.prototype.importData = function (data, callback) {
+    SimpleRemoteResource.prototype.importProperties = function (data, callback) {
         callback(null);
     };
-    AJAXResource.prototype.removeChildResource = function (name, callback) {
+    SimpleRemoteResource.prototype.removeChildResource = function (name, callback) {
         callback(null);
     };
-    AJAXResource.prototype.resolveChildResource = function (name, callback, walking) {
+    SimpleRemoteResource.prototype.resolveChildResource = function (name, callback, walking) {
         if (walking) {
-            callback(new AJAXResource(this.baseURL, Utils.filename_path_append(this.getPath(), name)));
+            callback(new SimpleRemoteResource(this.baseURL, Utils.filename_path_append(this.getPath(), name)));
         }
         else {
             var path = this.baseURL + '/' + this.getPath() + '/' + name;
@@ -1605,16 +1642,16 @@ var AJAXResource = (function (_super) {
             });
         }
     };
-    AJAXResource.prototype.getPropertyNames = function () {
+    SimpleRemoteResource.prototype.getPropertyNames = function () {
         return null;
     };
-    AJAXResource.prototype.getProperty = function (name) {
+    SimpleRemoteResource.prototype.getProperty = function (name) {
         return null;
     };
-    AJAXResource.prototype.isContentResource = function () {
+    SimpleRemoteResource.prototype.isContentResource = function () {
         return false;
     };
-    AJAXResource.prototype.requestData = function (path, callback) {
+    SimpleRemoteResource.prototype.requestData = function (path, callback) {
         var xhr = new XMLHttpRequest();
         xhr.open('GET', path);
         xhr.onreadystatechange = function () {
@@ -1631,7 +1668,7 @@ var AJAXResource = (function (_super) {
         };
         xhr.send(null);
     };
-    return AJAXResource;
+    return SimpleRemoteResource;
 }(Resource));
 var DOMContentWriter = (function () {
     function DOMContentWriter() {
@@ -1696,7 +1733,7 @@ var ClientRequestHandler = (function (_super) {
     ClientRequestHandler.prototype.parseFormElement = function (formElement) {
         var action = formElement.getAttribute('action');
         var rv = {};
-        var _loop_2 = function (i) {
+        var _loop_3 = function (i) {
             var p = formElement.elements[i];
             var type = p.type.toLowerCase();
             if (type === 'submit' || type == 'button')
@@ -1722,7 +1759,7 @@ var ClientRequestHandler = (function (_super) {
             }
         };
         for (var i = 0; i < formElement.elements.length; i++) {
-            _loop_2(i);
+            _loop_3(i);
         }
         this.transformValues(rv);
         var path = this.expandValue(action, rv);
@@ -1749,7 +1786,7 @@ var ResponseContentWriter = (function () {
             this.respose.write(content);
         }
         else {
-            this.respose.write(content);
+            this.respose.write(content, 'binary');
         }
     };
     ResponseContentWriter.prototype.error = function (error) {
@@ -1757,6 +1794,8 @@ var ResponseContentWriter = (function () {
     };
     ResponseContentWriter.prototype.end = function () {
         this.respose.end();
+        this.requestHandler = null;
+        this.respose = null;
     };
     ResponseContentWriter.prototype.redirect = function (rpath) {
         this.respose.redirect(301, rpath);
@@ -1781,15 +1820,47 @@ var ServerRequestHandler = (function (_super) {
         var ct = req.headers['content-type'];
         if (ct && ct.indexOf('multipart/form-data') == 0) {
             var form = new multiparty.Form({
-                maxFieldsSize: 1024 * 1024 * 50
+                maxFieldsSize: 1024 * 1024 * 500
             });
             form.parse(req, function (err, fields, files) {
                 var data = {};
-                for (var file in files) {
-                    var v_1 = file[0];
-                    var n = v_1['originalFilename'];
-                    var f = v_1['fieldName'];
+                var _loop_4 = function (file) {
+                    var v_1 = files[file][0];
+                    var f = v_1['originalFilename'];
+                    var n = v_1['fieldName'];
+                    var ct_2 = v_1['headers']['content-type'];
                     var path = v_1['path'];
+                    data[n] = f;
+                    data[Resource.STORE_CONTENT_PROPERTY] = function (writer, callback) {
+                        var fs = require('fs');
+                        var fd = fs.openSync(path, 'r');
+                        writer.start(ct_2);
+                        var pos = 0;
+                        var sz = 0;
+                        while (true) {
+                            var buff = new Buffer(1024 * 1000);
+                            sz = fs.readSync(fd, buff, 0, buff.length, pos);
+                            if (!sz)
+                                break;
+                            pos += sz;
+                            if (sz < buff.length) {
+                                writer.write(buff.slice(0, sz));
+                            }
+                            else {
+                                writer.write(buff);
+                            }
+                        }
+                        fs.closeSync(fd);
+                        fs.unlinkSync(path);
+                        writer.end();
+                        callback();
+                    };
+                    return "break";
+                };
+                for (var file in files) {
+                    var state_1 = _loop_4(file);
+                    if (state_1 === "break")
+                        break;
                 }
                 for (var k in fields) {
                     var v = fields[k][0];
@@ -1804,7 +1875,7 @@ var ServerRequestHandler = (function (_super) {
             var body_1 = '';
             req.on('data', function (data) {
                 body_1 += data;
-                if (body_1.length > 20000000)
+                if (body_1.length > (1024 * 1000))
                     req.connection.destroy();
             });
             req.on('end', function () {
@@ -1828,12 +1899,31 @@ var ServerRequestHandler = (function (_super) {
     };
     return ServerRequestHandler;
 }(ResourceRequestHandler));
+var FileResourceContentWriter = (function () {
+    function FileResourceContentWriter(filePath) {
+        this.fs = require('fs-extra');
+        this.filePath = filePath;
+    }
+    FileResourceContentWriter.prototype.start = function (ctype) {
+        this.fd = this.fs.openSync(this.filePath, 'w');
+    };
+    FileResourceContentWriter.prototype.write = function (data) {
+        this.fs.writeSync(this.fd, data);
+    };
+    FileResourceContentWriter.prototype.error = function (error) {
+        console.log(error);
+    };
+    FileResourceContentWriter.prototype.end = function () {
+        this.fs.closeSync(this.fd);
+    };
+    return FileResourceContentWriter;
+}());
 var FileResource = (function (_super) {
     __extends(FileResource, _super);
     function FileResource(root, name) {
         var _this = _super.call(this, name) || this;
         _this.resourceProperties = {};
-        _this.fs = require('fs');
+        _this.fs = require('fs-extra');
         _this.rootPath = root;
         if (name) {
             _this.filePath = Utils.filename_path_append(_this.rootPath, name);
@@ -1855,27 +1945,48 @@ var FileResource = (function (_super) {
         else
             return 'resource/node';
     };
+    FileResource.prototype.makeMetadataPath = function (nm) {
+        if (nm) {
+            return this.filePath + '/.' + nm + '.metadata.json';
+        }
+        else if (this.isDirectory) {
+            return Utils.filename_path_append(this.filePath, '.metadata.json');
+        }
+        else {
+            var dirname = Utils.filename_dir(this.filePath);
+            var name_8 = Utils.filename(this.filePath);
+            return dirname + '/.' + name_8 + '.metadata.json';
+        }
+    };
     FileResource.prototype.createChildResource = function (name, callback, walking) {
         var path = Utils.filename_path_append(this.filePath, name);
         var mask = '0755';
         var res = new FileResource(this.filePath, name);
         this.fs.mkdir(path, mask, function (err) {
             if (!err) {
+                res.isDirectory = true;
                 callback(res);
             }
             else if (err.code == 'EEXIST') {
-                callback(res);
+                if (walking)
+                    callback(res);
+                else
+                    res.resolveItself(callback);
             }
             else {
                 callback(null);
             }
         });
     };
-    FileResource.prototype.importData = function (data, callback) {
+    FileResource.prototype.importContent = function (func, callback) {
+        func(this, callback);
+    };
+    FileResource.prototype.importProperties = function (data, callback) {
         var self = this;
-        var path = Utils.filename_path_append(self.filePath, '.metadata.json');
+        var path = this.makeMetadataPath();
         self.fs.readFile(path, 'utf8', function (err, mdata) {
             var content = null;
+            var count = 0;
             if (mdata)
                 content = JSON.parse(mdata);
             if (!content)
@@ -1883,26 +1994,48 @@ var FileResource = (function (_super) {
             for (var key in data) {
                 var v = data[key];
                 key = key.trim();
-                if (key.charAt(0) === ':')
-                    continue;
                 if (key.length === 0)
                     continue;
                 if (v)
                     content[key] = data[key];
                 else
                     delete content[key];
+                count++;
             }
-            self.fs.writeFile(path, JSON.stringify(content), 'utf8', function () {
-                callback();
-            });
+            if (count > 0) {
+                self.fs.writeFile(path, JSON.stringify(content), 'utf8', function () {
+                    callback();
+                });
+            }
+            else {
+                self.fs.unlink(path, function () {
+                    callback();
+                });
+            }
         });
     };
     FileResource.prototype.removeChildResource = function (name, callback) {
-        callback(null);
+        var resolve = require('path').resolve;
+        var path = Utils.filename_path_append(this.filePath, name);
+        path = resolve(path);
+        if (path === '' || path === '/') {
+            console.log('invalid path');
+            callback(null);
+        }
+        else {
+            var mpath = this.makeMetadataPath(name);
+            this.fs.remove(mpath, function (err) {
+            });
+            this.fs.remove(path, function (err) {
+                if (err)
+                    console.log(err);
+                callback(null);
+            });
+        }
     };
     FileResource.prototype.readMetadata = function (callback) {
         var self = this;
-        var path = Utils.filename_path_append(self.filePath, '.metadata.json');
+        var path = this.makeMetadataPath();
         self.fs.readFile(path, 'utf8', function (err, data) {
             if (data) {
                 var rv = JSON.parse(data);
@@ -1921,7 +2054,10 @@ var FileResource = (function (_super) {
                 callback(null);
             }
             else if (stat.isFile()) {
-                callback(self);
+                self.isDirectory = false;
+                self.readMetadata(function () {
+                    callback(self);
+                });
             }
             else if (stat.isDirectory()) {
                 self.isDirectory = true;
@@ -1976,20 +2112,19 @@ var FileResource = (function (_super) {
         return !this.isDirectory;
     };
     FileResource.prototype.getContentType = function () {
-        var contentType = this.resourceProperties['contentType'];
+        var contentType = this.resourceProperties['_ct'];
         if (contentType)
             return contentType;
         var name = this.getName();
         var mime = require('mime-types');
         return mime.lookup(name) || null;
     };
-    FileResource.prototype.start = function (ctype) {
-    };
-    FileResource.prototype.write = function (data) {
-    };
-    FileResource.prototype.error = function (error) {
-    };
-    FileResource.prototype.end = function () {
+    FileResource.prototype.getWriter = function () {
+        if (this.isDirectory) {
+            this.fs.removeSync(this.filePath);
+            this.isDirectory = false;
+        }
+        return new FileResourceContentWriter(this.filePath);
     };
     FileResource.prototype.read = function (writer) {
         if (this.isDirectory) {
@@ -1997,17 +2132,24 @@ var FileResource = (function (_super) {
         }
         else {
             writer.start(this.getContentType());
-            var is = this.fs.createReadStream(this.filePath);
-            is.on('error', function (err) {
-                writer.error(err);
-                writer.end();
-            });
-            is.on('data', function (data) {
-                writer.write(data);
-            });
-            is.on('close', function () {
-                writer.end();
-            });
+            var fd = this.fs.openSync(this.filePath, 'r');
+            var pos = 0;
+            var sz = 0;
+            while (true) {
+                var buff = new Buffer(1024 * 500);
+                sz = this.fs.readSync(fd, buff, 0, buff.length, pos);
+                if (!sz)
+                    break;
+                pos += sz;
+                if (sz < buff.length) {
+                    writer.write(buff.slice(0, sz));
+                }
+                else {
+                    writer.write(buff);
+                }
+            }
+            this.fs.closeSync(fd);
+            writer.end();
         }
     };
     return FileResource;
@@ -2021,6 +2163,7 @@ if (typeof module !== 'undefined') {
         HBSRendererFactory: HBSRendererFactory,
         JSRendererFactory: JSRendererFactory,
         FileResource: FileResource,
+        RootResource: RootResource,
         DefaultRenderingTemplates: DefaultRenderingTemplates
     };
 }

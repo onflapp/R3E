@@ -1,8 +1,6 @@
-class RootResource extends Resource {
-  private resources = {};
-
-  constructor() {
-    super('');
+class RootResource extends ObjectResource {
+  constructor(opts?: any) {
+    super('', opts?opts:{});
   }
 
   public getType(): string {
@@ -10,47 +8,28 @@ class RootResource extends Resource {
   }
     
   public getSuperType(): string {
-    return super.getType();
+    return 'resource/node';
   }  
 
   public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
-    let rv = this.resources[name];
-    callback(rv);
+    let rv = this.rootObject[name];
+    if (rv) {
+      rv.getName = function() {
+        return name;
+      };
+      rv.resolveItself(function() {
+        callback(rv);
+      });
+    }
+    else callback(rv);
   }
 
   public createChildResource(name: string, callback: ResourceCallback): void {
     callback(null);
   }
 
-  public getPropertyNames(): Array<string> {
-    return [];
+  public importProperties(data: any, callback) {
+    callback();
   }
 
-  public getProperty(name: string): any {
-    return null;
-  }
-
-  public listChildrenNames(callback: ChildrenNamesCallback) {
-    let rv = [];
-    for (let k in this.resources) {
-      let v: Resource = this.resources[k];
-      rv.push(v.getName());
-    }
-    callback(rv);
-  }
-
-  public importData(data: any, callback) {
-    for (let k in data) {
-      let v = data[k];
-      if (v instanceof Resource) {
-        this.resources[v.getName()] = v;
-      }
-    }
-    if (callback) callback();
-  }
-
-  public removeChildResource(name: string, callback) {
-    delete this.resources[name];
-    if (callback) callback();
-  }
 }

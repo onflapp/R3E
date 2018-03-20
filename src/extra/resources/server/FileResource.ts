@@ -1,3 +1,29 @@
+class FileResourceContentWriter implements ContentWriter {
+  private fd;
+  private fs = require('fs-extra');
+  protected filePath: string;
+
+  constructor(filePath: string) {
+    this.filePath = filePath;
+  }
+
+  public start(ctype: string) {
+    this.fd = this.fs.openSync(this.filePath, 'w');
+  }
+
+  public write(data: any) {
+    this.fs.writeSync(this.fd, data);
+  }
+
+  public error(error: Error) {
+    console.log(error);
+  }
+
+  public end() {
+    this.fs.closeSync(this.fd);
+  }
+}
+
 class FileResource extends Resource {
   protected rootPath: string;
   protected filePath: string;
@@ -6,7 +32,7 @@ class FileResource extends Resource {
   protected primaryType: string;
   protected resourceProperties = {};
 
-  private fs = require('fs');
+  private fs = require('fs-extra');
   
   constructor(root: string, name?: string) {
     super(name);
@@ -31,6 +57,21 @@ class FileResource extends Resource {
     else return 'resource/node';
   }  
 
+  protected makeMetadataPath(nm?: string):string {
+    if (nm) {
+      return this.filePath + '/.' + nm + '.metadata.json';
+    }
+    else if (this.isDirectory) {
+      return Utils.filename_path_append(this.filePath, '.metadata.json');
+    }
+    else {
+      let dirname = Utils.filename_dir(this.filePath);
+      let name = Utils.filename(this.filePath);
+
+      return dirname + '/.' + name + '.metadata.json';
+    }
+  }
+
   public createChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
     let path = Utils.filename_path_append(this.filePath, name);
     let mask = '0755';
@@ -38,10 +79,12 @@ class FileResource extends Resource {
 
     this.fs.mkdir(path, mask, function(err) {
       if (!err) {
+        res.isDirectory = true;
         callback(res);
       }
       else if (err.code == 'EEXIST') {
-        callback(res);
+        if (walking) callback(res);
+        else res.resolveItself(callback);
       }
       else {
         callback(null);
@@ -49,37 +92,69 @@ class FileResource extends Resource {
     });
   }
 
-  public importData(data: any, callback) {
+  public importContent(func, callback) {
+    func(this, callback);
+  }
+
+  public importProperties(data: any, callback) {
     let self = this;
-    let path = Utils.filename_path_append(self.filePath, '.metadata.json');
+    let path = this.makeMetadataPath();
  
     self.fs.readFile(path, 'utf8', function(err, mdata) {
       let content = null;
+      let count = 0;
+
       if (mdata) content = JSON.parse(mdata);
       if (!content) content = {};
 
       for (var key in data) {
         var v = data[key];
         key = key.trim();
-        if (key.charAt(0) === ':') continue;
         if (key.length === 0) continue;
         if (v) content[key] = data[key];
         else delete content[key];
+
+        count++;
       }
 
-      self.fs.writeFile(path, JSON.stringify(content), 'utf8', function() {
-        callback();
-      });
+      if (count > 0) {
+        self.fs.writeFile(path, JSON.stringify(content), 'utf8', function() {
+          callback();
+        });
+      }
+      else {
+        self.fs.unlink(path, function() {
+          callback();
+        });
+      }
     });
   }
 
   public removeChildResource(name: string, callback) {
-    callback(null);
+    let resolve = require('path').resolve;
+    let path = Utils.filename_path_append(this.filePath, name);
+
+    path = resolve(path);
+    if (path === '' || path === '/') {
+      console.log('invalid path');
+      callback(null);
+    }
+    else {
+      let mpath = this.makeMetadataPath(name);
+      this.fs.remove(mpath, function(err) {
+      });
+
+      this.fs.remove(path, function(err) {
+        if (err) console.log(err);
+        callback(null);
+      });
+    }
   }
 
   protected readMetadata(callback) {
     let self = this;
-    let path = Utils.filename_path_append(self.filePath, '.metadata.json');
+    let path = this.makeMetadataPath();
+
     self.fs.readFile(path, 'utf8', function(err, data) {
       if (data) {
         let rv = JSON.parse(data);
@@ -99,7 +174,10 @@ class FileResource extends Resource {
         callback(null);
       }
       else if (stat.isFile()) {
-        callback(self);
+        self.isDirectory = false;
+        self.readMetadata(function() {
+          callback(self);
+        });
       }
       else if (stat.isDirectory()) {
         self.isDirectory = true;
@@ -161,7 +239,7 @@ class FileResource extends Resource {
   }
 
   public getContentType(): string {
-    let contentType = this.resourceProperties['contentType'];
+    let contentType = this.resourceProperties['_ct'];
     if (contentType) return contentType;
     
     let name = this.getName();
@@ -170,14 +248,15 @@ class FileResource extends Resource {
     return mime.lookup(name) || null;
   }
 
-  public start(ctype: string) {
+  public getWriter(): ContentWriter {
+    if (this.isDirectory) {
+      this.fs.removeSync(this.filePath);
+      this.isDirectory = false;
+    }
+
+    return new FileResourceContentWriter(this.filePath);
   }
-  public write(data: any) {
-  }
-  public error(error: Error) {
-  }
-  public end() {
-  }
+
   public read(writer: ContentWriter) {
     if (this.isDirectory) {
       writer.end();
@@ -185,22 +264,25 @@ class FileResource extends Resource {
     else {
       writer.start(this.getContentType());
 
-      let is = this.fs.createReadStream(this.filePath);
-      is.on('error', function(err) {
-        writer.error(err);
-        writer.end();
-      });
+      let fd = this.fs.openSync(this.filePath, 'r');
+      let pos = 0;
+      let sz = 0;
+      while (true) {
+        let buff = new Buffer(1024*500);
+        sz = this.fs.readSync(fd, buff, 0, buff.length, pos);
+        if (!sz) break;
 
-      is.on('data', function(data) {
-        writer.write(data);
-      });
+        pos += sz;
+        if (sz < buff.length) {
+          writer.write(buff.slice(0, sz));
+        }
+        else {
+          writer.write(buff);
+        }
+      }
 
-      is.on('close', function() {
-        writer.end();
-      });
-
+      this.fs.closeSync(fd);
+      writer.end();
     }
   }  
 }
-
-
