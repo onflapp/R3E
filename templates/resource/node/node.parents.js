@@ -1,9 +1,9 @@
 (function (res, writer, context) {
 	writer.start('object/javascript');
 
-	var path = context.pathInfo.resourcePath;
+	var path = context.getCurrentResourcePath();
   var env = context.getEnvironmentProperties();
-  var props = context.getPathProperties();
+  var props = context.getRequestProperties();
 
 	var parentPaths = [];
 	var ps = Utils.split_path(path);

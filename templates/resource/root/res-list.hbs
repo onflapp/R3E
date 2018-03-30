@@ -23,19 +23,6 @@
 				<a class="btn btn-default" href="{{R.PATH}}.xres-create">mount</a>
 			</div>
 
-			<table class="table table-bordered table-condensed small text-muted" style="background-color:lightgray">
-			{{#include "." "properties"}}
-				<tr>
-					<td>
-						{{name}}
-					</td>
-					<td>
-						{{value}}
-					</td>
-				</tr>
-			{{/include}}
-			</table>
-
       <table class="table ui-dropzone">
         {{#include "." "children"}}
 
@@ -59,8 +46,10 @@
               <i class="glyphicon glyphicon-folder-close"></i> <a href="{{path}}{{R.SUFFIX}}">{{name}}</a>
             </td>
             <td>
-              {{#if type}}
-              <a href="{{R.PATH}}/{{name}}.xres-renderer">{{type}}</a>
+              {{#if renderType}}
+              <a href="{{R.PATH}}/{{name}}.xres-renderer">{{renderType}}</a>
+              {{else}}
+                {{type}}
               {{/if}}
             </td>
             <td class="text-right">

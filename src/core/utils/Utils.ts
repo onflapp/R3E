@@ -1,5 +1,5 @@
 class Utils {
-  static makeUUID(): string {
+  public static makeUUID(): string {
 	  let d = new Date().getTime();
     let uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
       let r = (d + Math.random()*16)%16 | 0;
@@ -9,7 +9,40 @@ class Utils {
     return uuid;
   }
 
-  static filename_path_append(path: string, name: string): string {
+  public static listMoveItem(list, item, ref, offset) {
+    let x = 0;
+    let v = list.indexOf(item);
+    if (item === ref) {
+      x = v + offset;
+      if (x >= 0) {
+        if (v >= 0) list.splice(v, 1);
+        list.splice(x, 0, item);
+      }
+    }
+    else {
+      if (v >= 0) list.splice(v, 1);
+      if (ref) {
+        x = list.indexOf(ref);
+        if (x >= 0) {
+          if (offset > 0) x += offset;
+          else x += offset + 1;
+        }
+        else x = list.length;
+      }
+
+      list.splice(x, 0, item);
+    }
+  }
+
+  public static string2object(str: string, obj?: object): object {
+    if (!str) return obj?obj:null;
+
+    let rv = JSON.parse(str);
+    if (rv) return rv;
+    else return obj?obj:null;
+  }
+
+  public static filename_path_append(path: string, name: string): string {
     if (!name) return path;
 
     let p = path;
@@ -19,7 +52,7 @@ class Utils {
     return p.replace(/\/+/g,'/');
   }
 
-  static filename(path: string): string {
+  public static filename(path: string): string {
     if (!path) return path;
 
     let i = path.lastIndexOf('/');
@@ -30,7 +63,7 @@ class Utils {
     }
   }
 
-  static filename_dir(path: string): string {
+  public static filename_dir(path: string): string {
     if (!path) return path;
 
     let i = path.lastIndexOf('/');
@@ -41,7 +74,7 @@ class Utils {
     }
   }
 
-  static filename_ext(path: string): string {
+  public static filename_ext(path: string): string {
     let i = path.lastIndexOf('.');
     if (i == -1) return '';
     else {
@@ -50,7 +83,7 @@ class Utils {
     }
   }
 
-  static absolute_path(path) {
+  public static absolute_path(path) {
     if (!path) return null;
 
     let stack = path.split('/');
@@ -70,7 +103,7 @@ class Utils {
     else return '/'+s;
 }
 
-  static split_path(path: string): Array<string> {
+  public static split_path(path: string): Array<string> {
     if (path === '' || path === '/') return [];
 
     let ls = path.split('/');
@@ -97,7 +130,7 @@ class Utils {
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   */
 
-  static ArrayBuffer2base64(arrayBuffer: ArrayBuffer): string {
+  public static ArrayBuffer2base64(arrayBuffer: ArrayBuffer): string {
     var base64    = ''
     var encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 

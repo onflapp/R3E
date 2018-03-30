@@ -13,7 +13,7 @@ class RootResource extends ObjectResource {
 
   public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
     let rv = this.rootObject[name];
-    if (rv) {
+    if (rv && rv instanceof Resource) {
       rv.getName = function() {
         return name;
       };

@@ -14,9 +14,9 @@
 			<h1>Copy</h1>
 
 			<ol class="breadcrumb">
-				<li><a href="/.xres-list">HOME</a></li>
+				<li><a href="/{{or R.REF_SUFFIX ".xres-list"}}">HOME</a></li>
 			{{#include "." "parents"}}
-				<li><a href="{{path}}.xres-list">{{name}}</a></li>
+				<li><a href="{{path}}{{or R.REF_SUFFIX ".xres-list"}}">{{name}}</a></li>
 			{{/include}}
 				<li class="active">{{R.NAME}}</li>
 			</ol>
@@ -61,7 +61,11 @@
 				<input name=":name|newUUID" value="{{R.NAME}}" autocomplete="off">
 				<input type="hidden" name=":copyto" value="{{R.DATA_PATH_APPEND}}{:name}">
 				<input type="submit" value="copy">
+			{{#if R.REF_PATH}}
+				<input type="hidden" name=":forward" value="{{R.REF_PATH}}{{R.REF_SUFFIX}}">
+      {{else}}
 				<input type="hidden" name=":forward" value="{{R.DATA_PATH}}.xres-list">
+			{{/if}}
 			</form>
 			<a class="btn btn-default" target="_blank" href="{{R.PATH}}.xexport">export</a>
 		</div>

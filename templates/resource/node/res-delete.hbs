@@ -12,9 +12,9 @@
 		<div class="container">
 
 			<ol class="breadcrumb">
-				<li><a href="/.xres-list">HOME</a></li>
+				<li><a href="/{{or R.REF_SUFFIX ".xres-list"}}">HOME</a></li>
 			{{#include "." "parents"}}
-				<li><a href="{{path}}.xres-list">{{name}}</a></li>
+				<li><a href="{{path}}{{or R.REF_SUFFIX ".xres-list"}}">{{name}}</a></li>
 			{{/include}}
 				<li class="active">{{R.NAME}}</li>
 			</ol>
@@ -23,8 +23,8 @@
 
 			<form method="post" action="{{R.PATH}}.xres-list">
 				<input type="hidden" name=":delete" value="{{R.PATH}}">
-			{{#if REQ_REFERER}}
-				<input type="hidden" name=":forward" value="{{REFERER_PATH}}">
+			{{#if R.REF_PATH}}
+				<input type="hidden" name=":forward" value="{{R.REF_PATH}}{{R.REF_SUFFIX}}">
 			{{else}}
 				<input type="hidden" name=":forward" value="{{R.PATH_APPEND}}../.xres-list">
 			{{/if}}

@@ -34,6 +34,10 @@ class ContentWriterAdapter implements ContentWriter {
         let b = Buffer.concat(this.data);
         this.callback(b.toString('utf8'), this.ctype);
       }
+      else if (typeof ArrayBuffer !== 'undefined' && typeof window !== 'undefined') {
+        let t = new window['TextDecoder']("utf-8").decode(v);
+        this.callback(t, this.ctype);
+      }
       else {
         this.callback(this.data, this.ctype);
       }

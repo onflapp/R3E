@@ -20,7 +20,7 @@ class ObjectResource extends Resource {
       callback(null);
     }
     else {
-      if (rv['_content'] || rv['_content64'] || rv['_rt'] === 'resource/content') callback(new ObjectContentResource(name, rv));
+      if (rv['_content'] || rv['_content64'] || rv['_pt'] === 'resource/content') callback(new ObjectContentResource(name, rv));
       else callback(new ObjectResource(name, rv));
     }
   }
@@ -76,7 +76,7 @@ class ObjectResource extends Resource {
 
   public importContent(func, callback) {
     let res = new ObjectContentResource(this.resourceName, this.rootObject);
-    func(res, callback);
+    func(res.getWriter(), callback);
   }
 
   public removeChildResource(name: string, callback) {
@@ -87,18 +87,28 @@ class ObjectResource extends Resource {
 
 class ObjectContentResourceWriter implements ContentWriter {
   private rootObject;
+  private isbase64;
 
   constructor(obj) {
     this.rootObject = obj;
   }
 
   public start(ctype: string) {
-    this.rootObject['_ct'] = ctype;
+    if (ctype && ctype.indexOf('base64:') === 0) {
+      this.rootObject['_ct'] = ctype.substr(7);
+      this.isbase64 = true;
+    }
+    else this.rootObject['_ct'] = ctype;
+
+    this.rootObject['_pt'] = 'resource/content';
   }
   
   public write(data: any) {
     if (data instanceof ArrayBuffer) {
       this.rootObject['_content64'] = Utils.ArrayBuffer2base64(data);
+    }
+    else if (this.isbase64) {
+      this.rootObject['_content64'] = data;
     }
     else {
       this.rootObject['_content'] = data;

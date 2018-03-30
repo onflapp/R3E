@@ -4,7 +4,7 @@
 
 	var names = res.getPropertyNames();
   var env = context.getEnvironmentProperties();
-  var props = context.getPathProperties();
+  var props = context.getRequestProperties();
 
 	for (var i = 0; i < names.length; i++) {
 		var name = names[i];

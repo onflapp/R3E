@@ -18,7 +18,7 @@
 		}
 	}
 	else {
-		var url = context.pathInfo.path;
+		var url = context.pathInfo.resourcePath;
 		writer.start('text/plain');
 		writer.write(url);
 		writer.end();

@@ -30,9 +30,11 @@ class SimpleRemoteResource extends Resource {
 
   public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
     if (walking) {
-      callback(new SimpleRemoteResource(this.baseURL, Utils.filename_path_append(this.getPath(), name)));
+      let res = new SimpleRemoteResource(this.baseURL, Utils.filename_path_append(this.getPath(), name));
+      callback(res);
     }
     else {
+      let self = this;
       let path = this.baseURL + '/' + this.getPath() + '/' + name;
       path = path.replace(/\/+/g,'/');
 

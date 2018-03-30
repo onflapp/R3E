@@ -8,6 +8,6 @@ class NotFoundResource extends ObjectResource {
   }
   
   public getSuperType(): string {
-    return null;
+    return 'resource/node';
   }
 }

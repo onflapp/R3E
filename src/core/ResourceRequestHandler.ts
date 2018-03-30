@@ -3,100 +3,13 @@ class ClientFormInfo {
   public formPath: string;
 }
 
-class ResourceRequestContext {
-  public pathInfo: PathInfo;
-  public resourceRequestHandler: ResourceRequestHandler;
-
-  public getPathProperties():any {
-    let p = {};
-    p['PREFIX'] = this.pathInfo.prefix;
-    p['SUFFIX'] = this.pathInfo.suffix;
-    p['PATH'] = this.pathInfo.path;
-    p['NAME'] = this.pathInfo.name;
-    p['DATA_PATH'] = this.pathInfo.dataPath;
-    p['DATA_NAME'] = this.pathInfo.dataName;
-
-    let pplus = this.pathInfo.path;
-    if (pplus !== '/') pplus = pplus+'/';
-    p['PATH_APPEND'] = pplus;
-
-    let dplus = this.pathInfo.dataPath?this.pathInfo.dataPath:'';
-    if (dplus !== '/') dplus = dplus+'/';
-    p['DATA_PATH_APPEND'] = dplus;
-
-    return p;
-  }
-
-  public getEnvironmentProperties() {
-    return this.resourceRequestHandler._environmentProperties;
-  }
-
-  public makeContextMap(res: Resource) {
-    let map = {};
-    let ctx = this.getPathProperties();
-
-    if (res) {
-      map['renderType'] = res.getRenderType();
-      map['type'] = res.getType();
-      map['name'] = res.getName();
-      map['superType'] = res.getSuperType();
-      map['isContentResource'] = res.isContentResource();
-      map['contentType'] = res.getContentType();
-      map['_'] = res.getProperties();
-    }
-
-    map['R'] = ctx;
-    map['E'] = this.getEnvironmentProperties();
-    
-    return map;
-  }
-
-  public clone(): ResourceRequestContext {
-    let ctx = new ResourceRequestContext();
-    ctx.pathInfo = this.pathInfo.clone();
-    ctx.resourceRequestHandler = this.resourceRequestHandler;
-    return ctx;
-  }
-}
-
-class PathInfo {
-  public parameters: any;
-  public path: string;
-  public name: string;
-  public dirname: string;
-  public dirnames: Array<string>;
-  public selector: string;
-  public selectorArgs: string;
-  public prefix: string;
-  public suffix: string;
-  public dataPath: string;
-  public dataName: string;
-  public resourcePath: string;
-
-  public clone(): PathInfo {
-    let pi = new PathInfo();
-    pi.parameters = this.parameters;
-    pi.path = this.path;
-    pi.name = this.name;
-    pi.dirname = this.dirname;
-    pi.dirnames = this.dirnames;
-    pi.selector = this.selector;
-    pi.selectorArgs = this.selectorArgs;
-    pi.prefix = this.prefix;
-    pi.suffix = this.suffix;
-    pi.dataPath = this.dataPath;
-    pi.dataName = this.dataName;
-    pi.resourcePath = this.resourcePath;
-
-    return pi;
-  }
-}
-
 class ResourceRequestHandler extends EventDispatcher {
   private resourceResolver: ResourceResolver;
   private templateResolver: ResourceResolver;
   private contentWriter: OrderedContentWriter;
   private resourceRenderer: ResourceRenderer;
+  protected refererPath: string;
+  protected queryProperties: any;
   public _environmentProperties: Map<string, any> = new Map();
 
   constructor(resourceResolver: ResourceResolver, templateResolver: ResourceResolver, contentWriter: ContentWriter) {
@@ -152,7 +65,7 @@ class ResourceRequestHandler extends EventDispatcher {
     for (let key in data) {
       let val = data[key];
       
-      if (key.charAt(0) === ':' && key.indexOf('|') !== -1) {
+      if (key.indexOf(':') !== -1 && key.indexOf('|') !== -1) {
         let a = key.split('|');
         for (var i = 1; i < a.length; i++) {
           let t = a[i];
@@ -168,6 +81,10 @@ class ResourceRequestHandler extends EventDispatcher {
     }
   }
 
+  public getResourceResolver(): ResourceResolver {
+    return this.resourceResolver;
+  }
+
   public setEnvironment(name: string, val: string) {
     this._environmentProperties[name] = val;
   }
@@ -179,15 +96,17 @@ class ResourceRequestHandler extends EventDispatcher {
  ************************************************************************/
 
   public parsePath(rpath: string): PathInfo {
+    if (!rpath) return null;
+
     let info = new PathInfo();
     let path = rpath.replace(/\/+/g,'/');
 
     let m = path.match(/^(\/.*?)(\.x([a-z,\-_]+))(\.([a-z0-9,\-\.]+))?(\/.*?)?$/);
 
     if (m) {
-      info.dataPath = m[6]?m[6]:null;
+      info.dataPath = unescape(m[6]?m[6]:null);
       info.selectorArgs = m[5]?m[5]:null;
-      info.path = Utils.absolute_path(m[1]);
+      info.path = unescape(Utils.absolute_path(m[1]));
       info.selector = m[3];
       info.suffix = m[2];
 
@@ -203,7 +122,7 @@ class ResourceRequestHandler extends EventDispatcher {
       return info;
     }
     else if (path.charAt(0) === '/') {
-      info.path = Utils.absolute_path(path);
+      info.path = unescape(Utils.absolute_path(path));
       info.selector = 'default';
 
       info.dirname = Utils.filename_dir(info.path);
@@ -218,11 +137,92 @@ class ResourceRequestHandler extends EventDispatcher {
   }
 
   protected makeContext(pathInfo: PathInfo): ResourceRequestContext {
-    let context = new ResourceRequestContext();
-    context.pathInfo = pathInfo;
-    context.resourceRequestHandler = this;
+    pathInfo.referer = this.parsePath(this.refererPath);
+    pathInfo.query = this.queryProperties;
 
+    let context = new ResourceRequestContext(pathInfo, this);
     return context;
+  }
+
+  protected expandDataAndImport(resourcePath: string, data: any, callback) {
+    let rres = this.resourceResolver;
+    let imp = data[Resource.STORE_CONTENT_PROPERTY];
+    let processing = 0;
+
+    let done = function() {
+      if (processing === 0) {
+        callback(arguments);
+      }
+    };
+
+    let import_text = function(text) {
+      let list = JSON.parse(text);
+      if (list) {
+        processing++;
+        for (var i = 0; i < list.length; i++) {
+          let item = list[i];
+          let path = Utils.filename_path_append(resourcePath, item[':path']);
+          processing++;
+          rres.storeResource(path, item, function() {
+            processing--;
+            done();
+          });
+				}
+        processing--;
+      }
+
+      done();
+    };
+
+    if (typeof imp === 'function') {
+      imp(new ContentWriterAdapter('utf8', import_text));
+    }
+    else if (typeof imp === 'string') {
+      import_text(imp);
+    }
+    else {
+      callback();
+    }
+  }
+
+  protected expandDataAndStore(resourcePath: string, data: any, callback) {
+    let rres = this.resourceResolver;
+    let datas = {};
+    let count = 1;
+    datas[resourcePath] = {};
+
+    for (let key in data) {
+      if (key.indexOf(':') !== -1) continue;
+
+      let v = data[key];
+      let x = key.indexOf('/');
+      if (x != -1) {
+			  let p = resourcePath + '/' + key.substr(0, x);
+				let n = key.substr(x + 1);
+        let d = datas[p];
+        if (!d) {
+          d = {};
+          datas[p] = d;
+          count++;
+        }
+        datas[p][n] = v;
+      }
+      else {
+        datas[resourcePath][key] = v;
+      }
+    }
+
+    for (let key in datas) {
+      let v = datas[key];
+
+      rres.storeResource(key, v, function() {
+        count--;
+
+        if (count === 0) {
+          callback();
+        }
+      });
+    }
   }
 
   public registerFactory(typ: string, factory: RendererFactory) {
@@ -277,7 +277,7 @@ class ResourceRequestHandler extends EventDispatcher {
     let rrend = this.resourceRenderer;
     let ncontext = context.clone();
     
-    ncontext.pathInfo.resourcePath = resourcePath;
+    ncontext._setCurrentResourcePath(resourcePath);
 
     try {
 
@@ -333,6 +333,7 @@ class ResourceRequestHandler extends EventDispatcher {
       let forward = Utils.absolute_path(data[':forward']);
       let remove = Utils.absolute_path(data[':delete']);
       let copyto = Utils.absolute_path(data[':copyto']);
+      let importto = Utils.absolute_path(data[':import']);
 
       if (info) {
         if (copyto) {
@@ -356,8 +357,16 @@ class ResourceRequestHandler extends EventDispatcher {
             });
           });
         }
+        else if (importto) {
+          self.expandDataAndImport(info.resourcePath, data, function() {
+            self.dispatchAllEventsAsync('stored', info.resourcePath, data);
+
+            if (forward) self.forwardRequest(forward);
+            else self.renderRequest(rpath);
+          });
+        }
         else {
-          rres.storeResource(info.resourcePath, data, function() {
+          self.expandDataAndStore(info.resourcePath, data, function() {
             self.dispatchAllEventsAsync('stored', info.resourcePath, data);
 
             if (forward) self.forwardRequest(forward);

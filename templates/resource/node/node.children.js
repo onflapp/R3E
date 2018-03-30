@@ -9,7 +9,7 @@
 			var map = context.makeContextMap(res);
 			var name = res.getName();
 
-			map['path'] = Utils.filename_path_append(context.pathInfo.resourcePath, name);
+			map['path'] = Utils.filename_path_append(context.getCurrentResourcePath(), name);
 
 			rv.push(map);
 		}

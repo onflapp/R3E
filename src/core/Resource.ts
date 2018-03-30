@@ -41,8 +41,10 @@ abstract class Resource implements ContentReader {
     let rv = [];
     let rt = this.getRenderType();
     let st = this.getSuperType();
+    let ct = this.getContentType();
 
     if (rt) rv.push(rt);
+    if (ct) rv.push('mime/'+ct);
     rv.push(this.getType());
     if (st) rv.push(st);
 
@@ -58,6 +60,17 @@ abstract class Resource implements ContentReader {
     }
 
     return map;
+  }
+
+  public wrap(wrapper) {
+    for (let name in wrapper) {
+      let func = wrapper[name];
+      if (typeof func === 'function') {
+        this[name] = func;
+      }
+    }
+
+    return this;
   }
 
   public abstract getPropertyNames(): Array<string>;
@@ -98,9 +111,9 @@ abstract class Resource implements ContentReader {
     }
 
     if (this.isContentResource()) {
-      rv[Resource.STORE_CONTENT_PROPERTY] = function(res, callback) {
-        self.read(res.getWriter());
-        callback();
+      rv[Resource.STORE_CONTENT_PROPERTY] = function(writer, callback) {
+        self.read(writer);
+        if (callback) callback();
       };
     }
 
@@ -161,6 +174,7 @@ abstract class Resource implements ContentReader {
   public importData(data: any, callback) {
     let processing = 0;
     let ffunc = null;
+    let ct = null;
     let done = function() {
       if (processing === 0 && callback) callback();
     }
@@ -176,13 +190,12 @@ abstract class Resource implements ContentReader {
       }
       else if (k === Resource.STORE_CONTENT_PROPERTY && typeof v === 'string') {
         processing++;
-        let ct = data['_ct'];
-        ffunc = function(res, callback) {
-          let writer = res.getWriter();
+        ct = data['_ct'];
+        ffunc = function(writer, callback) {
           writer.start(ct?ct:'text/plain');
           writer.write(v);
           writer.end();
-          callback();
+          if (callback) callback();
         };
       }
       else if (typeof v === 'function' || typeof v === 'object') {
@@ -197,6 +210,10 @@ abstract class Resource implements ContentReader {
     }
 
     if (ffunc) {
+      if (ct && ct.indexOf('base64:') === 0) {
+        props['_ct'] = ct.substr(7);
+      }
+
       this.importContent(ffunc, function() {
         processing--;
         done();

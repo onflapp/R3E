@@ -15,7 +15,7 @@ class HBSRendererFactory extends TemplateRendererFactory {
     this.Handlebars.registerHelper('include', function (arg0, arg1) {
       let path = arg0;
       let block = arg1;
-      let selector = 'default';
+      let selector = null;
       let rtype = null;
 
       if (arguments.length == 3) {
@@ -31,12 +31,14 @@ class HBSRendererFactory extends TemplateRendererFactory {
       let session: TemplateRendererSession = block.data.root._session;
       let context: ResourceRequestContext = block.data.root._context;
       let res: Resource = block.data.root._resource;
-      let handler: ResourceRequestHandler = context.resourceRequestHandler;
+
+      if (!selector) selector = context.getCurrentSelector();
+      if (!selector) selector = 'default';
 
       path = self.expadPath(path, context);
 
 	    let p = session.makeOutputPlaceholder();
-      handler.renderResource(path, rtype, selector, context, function(contentType, content) {
+      context.renderResource(path, rtype, selector, context, function(contentType, content) {
         if (contentType === 'object/javascript') {
           let out = '';
           if (Array.isArray(content)) {
@@ -60,6 +62,23 @@ class HBSRendererFactory extends TemplateRendererFactory {
       return p.placeholder;
     });
 
+    this.Handlebars.registerHelper('p', function (val, options) {
+      if (typeof val === 'object') {
+        return JSON.stringify(val);
+      }
+      else {
+        return val;
+      }
+    });
+ 
+    this.Handlebars.registerHelper('or', function () {
+      var args    = arguments;
+         
+      for(var i in args) {
+        if(args[i] !== null && args[i] !== undefined) return args[i];
+      }
+    });
+          
     /************************************************************************
 
     {{#match Database.Tables.Count ">" 5}}

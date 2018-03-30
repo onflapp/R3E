@@ -13,12 +13,12 @@
 		<div class="container">
 
 			<ol class="breadcrumb">
-				<li><a href="/.xres-list">HOME</a></li>
+				<li><a href="/{{or R.REF_SUFFIX ".xres-list"}}">HOME</a></li>
 			{{#include "." "parents"}}
-				<li><a href="{{path}}.xres-list">{{name}}</a></li>
+				<li><a href="{{path}}{{or R.REF_SUFFIX ".xres-list"}}">{{name}}</a></li>
 			{{/include}}
 				<li class="active">
-					<a href="{{R.PATH}}.xres-list">{{R.NAME}}</a>
+					<a href="{{R.PATH}}{{or R.REF_SUFFIX ".xres-list"}}">{{R.NAME}}</a>
 				</li>
 			</ol>
 
@@ -30,11 +30,9 @@
 							<div class="col-sm-8">
 								<select class="form-control" name="_rt">
 									<option value="">no set</option>
-							{{#include "/" "any" "list-template"}}
-								{{#each this}}
-									<option value="{{rt}}">{{rt}}</option>
-								{{/each}}
-
+									<option value="" selected>{{renderType}}</option>
+							{{#include "/apps" "rendertypes"}}
+									<option value="{{this}}">{{this}}</option>
 							{{/include}}
 								</select>
 							</div>

@@ -1,6 +1,8 @@
 class ResponseContentWriter implements ContentWriter {
   private requestHandler: ServerRequestHandler;
   private respose;
+  private transform;
+  private closed: boolean;
 
   constructor(res) {
     this.respose = res;
@@ -11,11 +13,23 @@ class ResponseContentWriter implements ContentWriter {
   }
 
   public start(ctype) {
+    if (this.closed) return;
+
     let c = ctype?ctype:'application/octet-stream';
+    if (c === 'object/javascript') {
+      c = 'application/json';
+      this.transform = 'json';
+    }
+
     this.respose.setHeader('content-type', c);
   }
   public write(content) {
-    if (typeof content === 'string') {
+    if (this.closed) return;
+
+    if (this.transform === 'json') {
+      this.respose.write(JSON.stringify(content));
+    }
+    else if (typeof content === 'string') {
       this.respose.write(content);
     }
     else {
@@ -29,15 +43,19 @@ class ResponseContentWriter implements ContentWriter {
     this.respose.end();
     this.requestHandler = null;
     this.respose = null;
+    this.closed = true;
   }
 
   public redirect(rpath: string) {
+    this.closed = true;
+    this.respose.setHeader('Cache-Control','no-store, no-cache, must-revalidate, post-check=0, pre-check=0');
     this.respose.redirect(301, rpath);
   }
 }
 
 class ServerRequestHandler extends ResourceRequestHandler {
   private resposeContentWriter: ResponseContentWriter;
+  
   constructor(resourceResolver: ResourceResolver, templateResolver: ResourceResolver, res) {
     let writer = new ResponseContentWriter(res);
     super(resourceResolver, templateResolver, writer);
@@ -45,11 +63,33 @@ class ServerRequestHandler extends ResourceRequestHandler {
     this.resposeContentWriter.setRequestHandler(this);
   }
 
+  public handleGetRequest(req) {
+    let URL = require('url').URL;
+    let rpath = unescape(req.path);
+    let referer = req.headers.referrer || req.headers.referer;
+
+    if (referer) {
+      let r = new URL(referer);
+      this.refererPath = r.pathname;
+    }
+    this.queryProperties = req.query;
+
+    super.handleRequest(rpath);
+  }
+
   public handlePostRequest(req) {
+    let URL = require('url').URL;
     let self = this;
-    let rpath = unescape(req.url);
+    let rpath = unescape(req.path);
     let multiparty = require('multiparty');
     let querystring = require('querystring');
+    let referer = req.headers.referrer || req.headers.referer;
+
+    if (referer) {
+      let r = new URL(referer);
+      this.refererPath = r.pathname;
+    }
+    this.queryProperties = req.query;
 
     let ct = req.headers['content-type'];
 
@@ -67,9 +107,13 @@ class ServerRequestHandler extends ResourceRequestHandler {
 					let n = v['fieldName'];
           let ct = v['headers']['content-type'];
 					let path = v['path'];
+          let pref = '';
+
+          if (n.lastIndexOf('/') > 0) pref = n.substr(0, n.lastIndexOf('/')+1);
 
           data[n] = f;
-          data[Resource.STORE_CONTENT_PROPERTY] = function(writer, callback) {
+          data[pref+'_ct'] = ct;
+          data[pref+Resource.STORE_CONTENT_PROPERTY] = function(writer, callback) {
             let fs = require('fs');
             let fd = fs.openSync(path, 'r');
 
@@ -94,7 +138,7 @@ class ServerRequestHandler extends ResourceRequestHandler {
             fs.unlinkSync(path);
 
             writer.end();
-            callback();
+            if (callback) callback();
           };
 
           break;

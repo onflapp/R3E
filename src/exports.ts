@@ -8,6 +8,7 @@ if (typeof module !== 'undefined') {
     JSRendererFactory:JSRendererFactory,
     FileResource:FileResource,
     RootResource:RootResource,
-    DefaultRenderingTemplates:DefaultRenderingTemplates
+    DefaultRenderingTemplates:DefaultRenderingTemplates,
+    Utils:Utils
   };
 }

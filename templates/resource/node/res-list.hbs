@@ -62,6 +62,7 @@
               <a href="{{path}}.xres-delete">[x]</a>
               <a href="{{path}}.xres-copyto/">[c]</a>
               <a href="{{path}}.xres-moveto/">[m]</a>
+              <a href="{{path}}.xres-properties">[p]</a>
             </td>
           </tr>
           {{else}}
@@ -70,17 +71,20 @@
               <i class="glyphicon glyphicon-folder-close"></i> <a href="{{path}}{{R.SUFFIX}}">{{name}}</a>
             </td>
             <td>
-              {{#if type}}
-              <a href="{{R.PATH}}/{{name}}.xres-renderer">{{type}}</a>
+              {{#if renderType}}
+              <a href="/apps/{{renderType}}.xres-list">{{renderType}}</a>
+              {{else}}
+                {{type}}
               {{/if}}
             </td>
             <td class="text-right">
-              {{#if type}}
+              {{#if renderType}}
               <a target="_blank" href="{{R.PATH}}/{{name}}.xhtml">[v]</a>
               {{/if}}
               <a href="{{path}}.xres-delete">[x]</a>
               <a href="{{path}}.xres-copyto{{path}}/..">[c]</a>
               <a href="{{path}}.xres-moveto/">[m]</a>
+              <a href="{{path}}.xres-properties">[p]</a>
             </td>
           </tr>
           {{/if}}

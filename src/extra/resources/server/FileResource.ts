@@ -1,5 +1,6 @@
 class FileResourceContentWriter implements ContentWriter {
   private fd;
+  private isbase64;
   private fs = require('fs-extra');
   protected filePath: string;
 
@@ -8,11 +9,17 @@ class FileResourceContentWriter implements ContentWriter {
   }
 
   public start(ctype: string) {
+    if (ctype && ctype.indexOf('base64:') === 0) this.isbase64 = true;
     this.fd = this.fs.openSync(this.filePath, 'w');
   }
 
   public write(data: any) {
-    this.fs.writeSync(this.fd, data);
+    if (this.isbase64) {
+      this.fs.writeSync(this.fd, new Buffer(data, 'base64'));
+    }
+    else {
+      this.fs.writeSync(this.fd, data);
+    }
   }
 
   public error(error: Error) {
@@ -28,8 +35,6 @@ class FileResource extends Resource {
   protected rootPath: string;
   protected filePath: string;
   protected isDirectory: boolean;
-  protected renderType: string;
-  protected primaryType: string;
   protected resourceProperties = {};
 
   private fs = require('fs-extra');
@@ -53,9 +58,13 @@ class FileResource extends Resource {
   }
 
   public getSuperType(): string {
-    if (this.isDirectory) return null;
+    if (this.getType() === 'resource/node') return null;
     else return 'resource/node';
-  }  
+  }
+
+  public getRenderType(): string {
+    return this.resourceProperties['_rt'];
+  }
 
   protected makeMetadataPath(nm?: string):string {
     if (nm) {
@@ -93,7 +102,7 @@ class FileResource extends Resource {
   }
 
   public importContent(func, callback) {
-    func(this, callback);
+    func(this.getWriter(), callback);
   }
 
   public importProperties(data: any, callback) {
@@ -167,20 +176,30 @@ class FileResource extends Resource {
     });
   }
 
-  public resolveItself(callback) {
+  protected checkExistence(callback) {
     let self = this;
     this.fs.stat(this.filePath, function(err, stat) {
       if (!stat) {
-        callback(null);
+        callback(false);
       }
       else if (stat.isFile()) {
         self.isDirectory = false;
-        self.readMetadata(function() {
-          callback(self);
-        });
+        callback(true);
       }
       else if (stat.isDirectory()) {
         self.isDirectory = true;
+        callback(true);
+      }
+      else {
+        callback(false);
+      }
+    });
+  }
+
+  public resolveItself(callback) {
+    let self = this;
+    this.checkExistence(function(stat) {
+      if (stat) {
         self.readMetadata(function() {
           callback(self);
         });
@@ -212,7 +231,14 @@ class FileResource extends Resource {
   public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
     let res = new FileResource(this.filePath, name);
     if (walking) {
-      callback(res);
+      res.checkExistence(function(stat) {
+        if (stat) {
+          callback(res);
+        }
+        else {
+          callback(null);
+        }
+      });
     }
     else {
       res.resolveItself(callback);

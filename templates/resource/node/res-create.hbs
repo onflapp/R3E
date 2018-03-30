@@ -32,7 +32,7 @@
 				</div>
 			</form>
 
-			<form method="post" enctype="multipart/form-data" action="{{R.PATH_APPEND}}{:name}{{R.SUFFIX}}">
+			<form method="post" enctype="multipart/form-data" action="{{R.PATH}}{{R.SUFFIX}}">
 				<div class="form-group">
     		<label>Import File</label>
 					<input class="form-control" type="file" name=":import" value="">
@@ -41,27 +41,8 @@
 				</div>
 			</form>
 
+
 			<h6>create resource:</h6>
-
-			<div class="form-horizontal">
-				<div class="form-horizontal">
-					<form method="post" action="{{R.PATH_APPEND}}{:name}{{R.SUFFIX}}">
-						<div class="form-group">
-							<div class="col-sm-8">
-								<input class="form-control" name=":name|newUUID" value="" autocomplete="off">
-								<input type="hidden" name=":forward" value="{{R.PATH}}.xres-list">
-							</div>
-							<div class="col-sm-2">
-								<button class="form-control btn btn-success" type="submit">
-									<span class="glyphicon glyphicon-plus"></span>
-								</button>
-							</div>
-						</div>
-					</form>
-				</div>
-			</div>
-
-			<h6>create page:</h6>
 
 			<div class="form-horizontal">
 				<div class="form-horizontal">
@@ -69,17 +50,15 @@
 						<div class="form-group">
 							<div class="col-sm-8">
 								<select class="form-control" name="_rt">
-							{{#include "/" "any" "list-template"}}
-								{{#each this}}
-									<option value="{{rt}}">{{rt}}</option>
-								{{/each}}
+									<option value="">no set</option>
+							{{#include "/apps" "rendertypes"}}
+									<option value="{{this}}">{{this}}</option>
 							{{/include}}
 								</select>
 							</div>
 
 							<div class="col-sm-8">
-								<input class="form-control" name=":name" value="" autocomplete="off">
-								<input type="hidden" name="title" value="{:name}">
+								<input class="form-control" name=":name|newUUID" value="" autocomplete="off">
 								<input type="hidden" name=":forward" value="{{R.PATH}}.xres-list">
 							</div>
 							<div class="col-sm-2">

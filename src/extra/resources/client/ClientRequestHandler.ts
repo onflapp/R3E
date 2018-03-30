@@ -9,7 +9,7 @@ class DOMContentWriter implements ContentWriter {
   }
 
   public start(ctype) {
-    document.open();
+    document.open(ctype);
   }
   public write(content) {
     if (typeof content != 'string') document.write(JSON.stringify(content));
@@ -78,15 +78,19 @@ class ClientRequestHandler extends ResourceRequestHandler {
 
       if (type === 'file') {
         value = p.files[0];
+        let pref = '';
+        let ct = value.type;
+
+        if (name.lastIndexOf('/') > 0) pref = name.substr(0, name.lastIndexOf('/')+1);
 
         rv[name] = value.name;
-        rv[Resource.STORE_CONTENT_PROPERTY] = function(writer, callback) {
-
+        rv[pref+'_ct'] = ct;
+        rv[pref+Resource.STORE_CONTENT_PROPERTY] = function(writer, callback) {
           let reader = new FileReader();
           reader.onload = function(e) {
             writer.write(reader.result);
             writer.end();
-            callback();
+            if (callback) callback();
           };
 
           writer.start(value.type);

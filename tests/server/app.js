@@ -16,7 +16,7 @@ app.get('/*', function(req, res) {
 	handler.registerFactory('js', new r.JSRendererFactory());
 	handler.registerFactory('hbs', new r.HBSRendererFactory());
 
-	handler.handleRequest(unescape(req.url));
+	handler.handleGetRequest(req);
 });
 
 app.post('/*', function(req, res) {
