@@ -4,6 +4,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('grunt-contrib-concat');
+	grunt.loadNpmTasks('grunt-appcache');
 	grunt.loadNpmTasks("grunt-ts");
 
 	grunt.initConfig({
@@ -29,12 +30,13 @@ module.exports = function(grunt) {
 						"src/core/writers/BufferedContentWriter.ts",
 						"src/core/resources/ObjectResource.ts",
 						"src/core/resources/RootResource.ts",
-						"src/core/factories/JSRendererFactory.ts",
 						"src/core/factories/InterFuncRendererFactory.ts",
 						"src/core/factories/TemplateRendererFactory.ts",
+						"src/core/factories/JSRendererFactory.ts",
 						"src/core/resources/ErrorResource.ts",
 						"src/core/resources/NotFoundResource.ts",
 						"src/core/resources/MultiResourceResolver.ts",
+						"src/core/resources/CachingResourceResolver.ts",
 						"src/core/resources/DefaultRenderingTemplates.ts",
 						"src/extra/factories/HBSRendererFactory.ts",
 						"src/extra/factories/EJSRendererFactory.ts",
@@ -61,13 +63,27 @@ module.exports = function(grunt) {
 		},
 		clean: {
 			build: ['build/']
-		}
+		},
+		appcache: {
+    	options: {
+      	basePath: 'tests/client'
+    	},
+    	all: {
+      	dest: 'tests/client/manifest.appcache',
+      	cache: {
+					patterns:['templates/**/*','tests/static/**/*','tests/**/*.js', 'dist/**/*.js']
+				},
+      	xnetwork: '*',
+      	xfallback: '/ /offline.html'
+    	}
+  	}
 	});
 
 	// Default task
 	grunt.task.registerTask('default', [
 		'ts:compile_lib',
-		'copy:dist'
+		'copy:dist',
+		'appcache:all'
 	]);
 
 };

@@ -688,11 +688,11 @@ var ResourceRequestContext = (function () {
     ResourceRequestContext.prototype.renderResource = function (resourcePath, rtype, selector, context, callback) {
         this.resourceRequestHandler.renderResource(resourcePath, rtype, selector, context, callback);
     };
-    ResourceRequestContext.prototype.getEnvironmentProperties = function () {
-        return this.resourceRequestHandler._environmentProperties;
-    };
     ResourceRequestContext.prototype.getQueryProperties = function () {
         return this.pathInfo.query;
+    };
+    ResourceRequestContext.prototype.getConfigProperties = function () {
+        return this.resourceRequestHandler.getConfigProperties();
     };
     ResourceRequestContext.prototype.getResourceResolver = function () {
         return this.resourceRequestHandler.getResourceResolver();
@@ -714,8 +714,8 @@ var ResourceRequestContext = (function () {
             map['_'] = res.getProperties();
         }
         map['R'] = this.getRequestProperties();
-        map['E'] = this.getEnvironmentProperties();
         map['Q'] = this.getQueryProperties();
+        map['C'] = this.getConfigProperties();
         return map;
     };
     ResourceRequestContext.prototype.clone = function () {
@@ -756,7 +756,6 @@ var ResourceRequestHandler = (function (_super) {
     __extends(ResourceRequestHandler, _super);
     function ResourceRequestHandler(resourceResolver, templateResolver, contentWriter) {
         var _this = _super.call(this) || this;
-        _this._environmentProperties = new Map();
         _this.resourceResolver = resourceResolver;
         _this.templateResolver = templateResolver;
         _this.contentWriter = new OrderedContentWriter(contentWriter);
@@ -816,9 +815,6 @@ var ResourceRequestHandler = (function (_super) {
     };
     ResourceRequestHandler.prototype.getResourceResolver = function () {
         return this.resourceResolver;
-    };
-    ResourceRequestHandler.prototype.setEnvironment = function (name, val) {
-        this._environmentProperties[name] = val;
     };
     ResourceRequestHandler.prototype.parsePath = function (rpath) {
         if (!rpath)
@@ -928,6 +924,12 @@ var ResourceRequestHandler = (function (_super) {
                 }
             });
         }
+    };
+    ResourceRequestHandler.prototype.getConfigProperties = function () {
+        return this.configProperties;
+    };
+    ResourceRequestHandler.prototype.setConfigProperties = function (cfg) {
+        this.configProperties = cfg;
     };
     ResourceRequestHandler.prototype.registerFactory = function (typ, factory) {
         this.resourceRenderer.registerFactory(typ, factory);
@@ -1136,8 +1138,11 @@ var ContentWriterAdapter = (function () {
                 var t = new window['TextDecoder']("utf-8").decode(v);
                 this.callback(t, this.ctype);
             }
-            else {
+            else if (v) {
                 this.callback(this.data, this.ctype);
+            }
+            else {
+                this.callback(null, this.ctype);
             }
         }
         else {
@@ -1418,34 +1423,6 @@ var RootResource = (function (_super) {
     };
     return RootResource;
 }(ObjectResource));
-var JSRendererFactory = (function () {
-    function JSRendererFactory() {
-    }
-    JSRendererFactory.prototype.makeRenderer = function (resource, callback) {
-        resource.read(new ContentWriterAdapter('utf8', function (data) {
-            if (data) {
-                try {
-                    var func = eval(data);
-                }
-                catch (ex) {
-                    console.log(data);
-                    console.log(ex);
-                    callback(null, ex);
-                }
-                if (typeof func === 'function') {
-                    callback(func);
-                }
-                else {
-                    callback(null, new Error('not a function'));
-                }
-            }
-            else {
-                callback(null, new Error('unable to get data for JS'));
-            }
-        }));
-    };
-    return JSRendererFactory;
-}());
 var InterFuncRendererFactory = (function () {
     function InterFuncRendererFactory() {
     }
@@ -1544,7 +1521,6 @@ var TemplateRendererSession = (function () {
 }());
 var TemplateRendererFactory = (function () {
     function TemplateRendererFactory() {
-        this.cache = {};
     }
     TemplateRendererFactory.prototype.compileTemplate = function (template) {
         return function () {
@@ -1563,7 +1539,7 @@ var TemplateRendererFactory = (function () {
         var self = this;
         resource.read(new ContentWriterAdapter('utf8', function (data) {
             if (data) {
-                var tfunc_1 = self.cache[data];
+                var tfunc_1 = TemplateRendererFactory.cache[data];
                 if (!tfunc_1) {
                     try {
                         tfunc_1 = self.compileTemplate(data);
@@ -1573,7 +1549,7 @@ var TemplateRendererFactory = (function () {
                         return;
                     }
                 }
-                self.cache[data] = tfunc_1;
+                TemplateRendererFactory.cache[data] = tfunc_1;
                 var session_1 = new TemplateRendererSession();
                 callback(function (res, writer, context) {
                     var map = context.makeContextMap(res);
@@ -1598,7 +1574,37 @@ var TemplateRendererFactory = (function () {
             }
         }));
     };
+    TemplateRendererFactory.cache = {};
     return TemplateRendererFactory;
+}());
+var JSRendererFactory = (function () {
+    function JSRendererFactory() {
+    }
+    JSRendererFactory.prototype.makeRenderer = function (resource, callback) {
+        resource.read(new ContentWriterAdapter('utf8', function (data) {
+            if (data) {
+                try {
+                    var func = eval(data);
+                }
+                catch (ex) {
+                    console.log(data);
+                    console.log(ex);
+                    callback(null, ex);
+                }
+                if (typeof func === 'function') {
+                    callback(func);
+                }
+                else {
+                    callback(null, new Error('not a function'));
+                }
+            }
+            else {
+                callback(null, new Error('unable to get data for JS'));
+            }
+        }));
+    };
+    JSRendererFactory.cache = {};
+    return JSRendererFactory;
 }());
 var ErrorResource = (function (_super) {
     __extends(ErrorResource, _super);
@@ -1669,6 +1675,15 @@ var MultiResourceResolver = (function (_super) {
         try_resolve();
     };
     return MultiResourceResolver;
+}(ResourceResolver));
+var CachingResourceResolver = (function (_super) {
+    __extends(CachingResourceResolver, _super);
+    function CachingResourceResolver() {
+        return _super !== null && _super.apply(this, arguments) || this;
+    }
+    CachingResourceResolver.prototype.resolveResource = function (path, callback) {
+    };
+    return CachingResourceResolver;
 }(ResourceResolver));
 var DefaultRenderingTemplates = (function (_super) {
     __extends(DefaultRenderingTemplates, _super);
@@ -1879,13 +1894,18 @@ var SimpleRemoteResource = (function (_super) {
         }
         else {
             var self_1 = this;
-            var path = this.baseURL + '/' + this.getPath() + '/' + name;
-            path = path.replace(/\/+/g, '/');
-            this.requestData(path, function (text) {
+            var path_1 = this.baseURL + '/' + this.getPath() + '/' + name;
+            path_1 = path_1.replace(/\/+/g, '/');
+            if (SimpleRemoteResource.failedPaths[path_1]) {
+                callback(null);
+                return;
+            }
+            this.requestData(path_1, function (text) {
                 if (text) {
                     callback(new ObjectContentResource(name, text));
                 }
                 else {
+                    SimpleRemoteResource.failedPaths[path_1] = true;
                     callback(null);
                 }
             });
@@ -1917,48 +1937,94 @@ var SimpleRemoteResource = (function (_super) {
         };
         xhr.send(null);
     };
+    SimpleRemoteResource.failedPaths = {};
     return SimpleRemoteResource;
 }(Resource));
 var DOMContentWriter = (function () {
     function DOMContentWriter() {
     }
+    DOMContentWriter.prototype.attachListeners = function () {
+        var requestHandler = this.requestHandler;
+        document.body.addEventListener('submit', function (evt) {
+            var target = evt.target;
+            var info = requestHandler.parseFormElement(target);
+            setTimeout(function () {
+                requestHandler.handleStore(info.formPath, info.formData);
+            });
+            evt.preventDefault();
+        });
+        document.body.addEventListener('click', function (evt) {
+            var target = evt.target;
+            var href = target.getAttribute('href');
+            if (href && href.charAt(0) === '/') {
+                setTimeout(function () {
+                    requestHandler.handleRequest(href);
+                });
+                evt.preventDefault();
+            }
+        });
+    };
+    DOMContentWriter.prototype.compareElements = function (lista, listb) {
+        var rv = [];
+        for (var i = 0; i < lista.length; i++) {
+            var itema = lista[i];
+            var found = false;
+            for (var z = 0; z < listb.length; z++) {
+                var itemb = listb[z];
+                if (itemb.isEqualNode(itema)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+                rv.push(itema);
+        }
+        return rv;
+    };
+    DOMContentWriter.prototype.updateDocument = function (content) {
+        var doc = document.implementation.createHTMLDocument('');
+        doc.documentElement.innerHTML = content;
+        var additions = this.compareElements(doc.head.children, document.head.children);
+        var removals = this.compareElements(document.head.children, doc.head.children);
+        for (var i = 0; i < additions.length; i++) {
+            document.head.appendChild(additions[i]);
+        }
+        for (var i = 0; i < removals.length; i++) {
+            document.head.removeChild(removals[i]);
+        }
+        document.body = doc.body;
+    };
     DOMContentWriter.prototype.setRequestHandler = function (requestHandler) {
         this.requestHandler = requestHandler;
     };
     DOMContentWriter.prototype.start = function (ctype) {
-        document.open(ctype);
+        if (ctype === 'text/html')
+            this.htmldata = [];
+        else
+            document.open(ctype);
     };
     DOMContentWriter.prototype.write = function (content) {
-        if (typeof content != 'string')
-            document.write(JSON.stringify(content));
-        else
-            document.write(content);
+        if (this.htmldata)
+            this.htmldata.push(content);
+        else {
+            if (typeof content != 'string')
+                document.write(JSON.stringify(content));
+            else
+                document.write(content);
+        }
     };
     DOMContentWriter.prototype.error = function (error) {
         console.log(error);
     };
     DOMContentWriter.prototype.end = function () {
-        var self = this;
-        document.addEventListener('readystatechange', function () {
-            if (document.readyState === 'complete') {
-                var requestHandler_1 = self.requestHandler;
-                document.body.addEventListener('submit', function (evt) {
-                    var target = evt.target;
-                    var info = requestHandler_1.parseFormElement(target);
-                    requestHandler_1.handleStore(info.formPath, info.formData);
-                    evt.preventDefault();
-                });
-                document.body.addEventListener('click', function (evt) {
-                    var target = evt.target;
-                    var href = target.getAttribute('href');
-                    if (href && href.charAt(0) === '/') {
-                        requestHandler_1.handleRequest(href);
-                        evt.preventDefault();
-                    }
-                });
-            }
-        });
-        document.close();
+        if (this.htmldata) {
+            this.updateDocument(this.htmldata.join(''));
+        }
+        else {
+            document.close();
+        }
+        this.attachListeners();
+        this.htmldata = null;
     };
     return DOMContentWriter;
 }());
@@ -2310,9 +2376,7 @@ var FileResource = (function (_super) {
                 });
             }
             else {
-                self.fs.unlink(path, function () {
-                    callback();
-                });
+                callback();
             }
         });
     };
@@ -2430,6 +2494,8 @@ var FileResource = (function (_super) {
         return !this.isDirectory;
     };
     FileResource.prototype.getContentType = function () {
+        if (this.isDirectory)
+            return null;
         var contentType = this.resourceProperties['_ct'];
         if (contentType)
             return contentType;

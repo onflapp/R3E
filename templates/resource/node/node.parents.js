@@ -2,7 +2,6 @@
 	writer.start('object/javascript');
 
 	var path = context.getCurrentResourcePath();
-  var env = context.getEnvironmentProperties();
   var props = context.getRequestProperties();
 
 	var parentPaths = [];
@@ -18,7 +17,6 @@
 		parentPaths.unshift({
 			path:'/'+rpath,
 			name:name,
-			E:env,
 			R:props
 		});
 	}

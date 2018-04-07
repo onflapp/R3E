@@ -1,7 +1,70 @@
 class DOMContentWriter implements ContentWriter {
   private requestHandler: ClientRequestHandler;
+  private htmldata;
 
   constructor() {
+  }
+
+  protected attachListeners() {
+    let requestHandler = this.requestHandler;
+    document.body.addEventListener('submit', function(evt) {
+      var target = evt.target;
+      var info = requestHandler.parseFormElement(target);
+      setTimeout(function() {
+        requestHandler.handleStore(info.formPath, info.formData);
+      });
+      evt.preventDefault();
+    });
+
+    document.body.addEventListener('click', function(evt) {
+      var target = evt.target as HTMLElement;
+      var href = target.getAttribute('href');
+      if (href && href.charAt(0) === '/') {
+        setTimeout(function() {
+          requestHandler.handleRequest(href);
+        });
+        evt.preventDefault();
+      }
+    });
+  }
+
+  protected compareElements(lista, listb) {
+    let rv = [];
+    for (let i = 0; i < lista.length; i++) {
+			let itema = lista[i];
+      let found = false;
+      for (let z = 0; z < listb.length; z++) {
+        let itemb = listb[z];
+        if (itemb.isEqualNode(itema)) {
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) rv.push(itema);
+    }
+
+    return rv;
+  }
+
+  protected updateDocument(content) {
+    //let parser = new DOMParser();
+    //let doc = parser.parseFromString(content, 'text/html');
+
+    let doc = document.implementation.createHTMLDocument('');
+    doc.documentElement.innerHTML = content;
+
+    let additions = this.compareElements(doc.head.children, document.head.children);
+    let removals = this.compareElements(document.head.children, doc.head.children);
+
+    for (let i = 0; i < additions.length; i++) {
+      document.head.appendChild(additions[i]);
+    }
+    for (let i = 0; i < removals.length; i++) {
+      document.head.removeChild(removals[i]);
+    }
+
+    document.body = doc.body;
   }
 
   public setRequestHandler(requestHandler: ClientRequestHandler) {
@@ -9,40 +72,29 @@ class DOMContentWriter implements ContentWriter {
   }
 
   public start(ctype) {
-    document.open(ctype);
+    if (ctype === 'text/html') this.htmldata = [];
+    else document.open(ctype);
   }
   public write(content) {
-    if (typeof content != 'string') document.write(JSON.stringify(content));
-    else document.write(content);
+    if (this.htmldata) this.htmldata.push(content);
+    else {
+      if (typeof content != 'string') document.write(JSON.stringify(content));
+      else document.write(content);
+    }
+
   }
   public error(error: Error) {
     console.log(error); 
   }
   public end() {
-    let self = this;
-    document.addEventListener('readystatechange', function() {
-      if (document.readyState === 'complete') {
-        let requestHandler = self.requestHandler;
-        document.body.addEventListener('submit', function(evt) {
-          var target = evt.target;
-          var info = requestHandler.parseFormElement(target);
-          requestHandler.handleStore(info.formPath, info.formData);
-          evt.preventDefault();
-        });
-
-        document.body.addEventListener('click', function(evt) {
-          var target = evt.target as HTMLElement;
-          var href = target.getAttribute('href');
-          if (href && href.charAt(0) === '/') {
-            requestHandler.handleRequest(href);
-            evt.preventDefault();
-          }
-        });
-
-      }
-    });
-
-    document.close();
+    if (this.htmldata) {
+      this.updateDocument(this.htmldata.join(''));
+    }
+    else {
+      document.close();
+    }
+    this.attachListeners();
+    this.htmldata = null;
   }
 }
 

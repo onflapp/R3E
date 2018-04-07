@@ -6,11 +6,12 @@ class ClientFormInfo {
 class ResourceRequestHandler extends EventDispatcher {
   private resourceResolver: ResourceResolver;
   private templateResolver: ResourceResolver;
+  private configResolver: ResourceResolver;
   private contentWriter: OrderedContentWriter;
   private resourceRenderer: ResourceRenderer;
   protected refererPath: string;
   protected queryProperties: any;
-  public _environmentProperties: Map<string, any> = new Map();
+  protected configProperties: any;
 
   constructor(resourceResolver: ResourceResolver, templateResolver: ResourceResolver, contentWriter: ContentWriter) {
     super();
@@ -83,10 +84,6 @@ class ResourceRequestHandler extends EventDispatcher {
 
   public getResourceResolver(): ResourceResolver {
     return this.resourceResolver;
-  }
-
-  public setEnvironment(name: string, val: string) {
-    this._environmentProperties[name] = val;
   }
 
 /************************************************************************
@@ -223,6 +220,14 @@ class ResourceRequestHandler extends EventDispatcher {
         }
       });
     }
+  }
+
+  public getConfigProperties() {
+    return this.configProperties;
+  }
+
+  public setConfigProperties(cfg) {
+    this.configProperties = cfg;
   }
 
   public registerFactory(typ: string, factory: RendererFactory) {

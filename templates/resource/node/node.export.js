@@ -2,13 +2,14 @@
 	var processing = 0;
 	var ended = false;
 	var count = 0;
+	var texttypes = ['application/json', 'application/javascript'];
 
 	var export_content = function(data) {
 		var func = data['_content'];
 		var ct = data['_ct'];
 		var bin = true;
 
-		if (ct && (ct.indexOf('text/') === 0 || ct === 'application/json' || ct === 'application/javascript')) bin = false;
+		if (ct && (ct.indexOf('text/') === 0 || texttypes.indexOf(ct) !== 0)) bin = false;
 
 		func(new ContentWriterAdapter(bin?null:'utf8', function(buff) {
 

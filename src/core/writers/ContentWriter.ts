@@ -38,8 +38,11 @@ class ContentWriterAdapter implements ContentWriter {
         let t = new window['TextDecoder']("utf-8").decode(v);
         this.callback(t, this.ctype);
       }
-      else {
+      else if (v) {
         this.callback(this.data, this.ctype);
+      }
+      else {
+        this.callback(null, this.ctype);
       }
     }
     else {

@@ -9,9 +9,13 @@ temps = new r.FileResource('./templates');
 rres = new r.ResourceResolver(root);
 rtmp = new r.MultiResourceResolver([temps]);
 
+var config = {
+	'BOOTSTRAP_CSS':'//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css'
+};
+
 app.get('/*', function(req, res) {
 	var handler = new r.ServerRequestHandler(rres, rtmp, res);
-	handler.setEnvironment('BOOTSTRAP_CSS', '//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css');
+	hander.setConfigProperties(config);
 
 	handler.registerFactory('js', new r.JSRendererFactory());
 	handler.registerFactory('hbs', new r.HBSRendererFactory());
@@ -21,7 +25,7 @@ app.get('/*', function(req, res) {
 
 app.post('/*', function(req, res) {
 	var handler = new r.ServerRequestHandler(rres, rtmp, res);
-	handler.setEnvironment('BOOTSTRAP_CSS', '//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css');
+	hander.setConfigProperties(config);
 
 	handler.registerFactory('js', new r.JSRendererFactory());
 	handler.registerFactory('hbs', new r.HBSRendererFactory());

@@ -1,6 +1,7 @@
 class SimpleRemoteResource extends Resource {
   private baseURL: string;
   private path: string;
+  private static failedPaths = {};
 
 	constructor(base: string, path?: string) {
 		super('/');
@@ -38,11 +39,17 @@ class SimpleRemoteResource extends Resource {
       let path = this.baseURL + '/' + this.getPath() + '/' + name;
       path = path.replace(/\/+/g,'/');
 
+      if (SimpleRemoteResource.failedPaths[path]) {
+        callback(null);
+        return;
+      }
+
       this.requestData(path, function(text) {
         if (text) {
           callback(new ObjectContentResource(name, text));
         }
         else {
+          SimpleRemoteResource.failedPaths[path] = true;
           callback(null);
         }
       });
@@ -67,8 +74,8 @@ class SimpleRemoteResource extends Resource {
     xhr.open('GET', path);
 
 		xhr.onreadystatechange = function() {
-			var DONE = 4; // readyState 4 means the request is done.
-			var OK = 200; // status 200 is a successful return.
+			var DONE = 4;
+			var OK = 200;
 			if (xhr.readyState === DONE) {
 				if (xhr.status === OK) {
 					callback(xhr.responseText);

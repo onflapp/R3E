@@ -48,12 +48,12 @@ class ResourceRequestContext {
     this.resourceRequestHandler.renderResource(resourcePath, rtype, selector, context, callback);
   }
 
-  public getEnvironmentProperties() {
-    return this.resourceRequestHandler._environmentProperties;
-  }
-
   public getQueryProperties() {
     return this.pathInfo.query;
+  }
+
+  public getConfigProperties() {
+    return this.resourceRequestHandler.getConfigProperties();
   }
 
   public getResourceResolver(): ResourceResolver {
@@ -79,9 +79,9 @@ class ResourceRequestContext {
       map['_'] = res.getProperties();
     }
 
-    map['R'] = this.getRequestProperties()
-    map['E'] = this.getEnvironmentProperties();
-    map['Q'] = this.getQueryProperties()
+    map['R'] = this.getRequestProperties();
+    map['Q'] = this.getQueryProperties();
+    map['C'] = this.getConfigProperties();
     
     return map;
   }

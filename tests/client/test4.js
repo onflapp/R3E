@@ -12,9 +12,13 @@ window.data = {
 		}
 	},
 	'f.txt':{
-		contentType:'text/plain',
+		_ct:'text/plain',
 		_content:'hello'
 	}
+};
+
+window.config = {
+	'BOOTSTRAP_CSS':'../static/bootstrap/css/bootstrap.min.css'
 };
 
 var r = localStorage.getItem('data');
@@ -22,8 +26,9 @@ if (r) window.data = JSON.parse(r);
 
 
 d = new ObjectResource('data', data);
+c = new ObjectResource('conf', config);
 
-root = new RootResource({'data':d});
+root = new RootResource({'data':d, 'conf':c});
 
 rres = new ResourceResolver(root);
 rtmp = new MultiResourceResolver([new SimpleRemoteResource('../../templates/'), new DefaultRenderingTemplates()]);
@@ -33,8 +38,7 @@ requestHandler.addEventListener('stored', function(path, data) {
 	localStorage.setItem('data', JSON.stringify(window.data))
 });
 
-requestHandler.setEnvironment('BOOTSTRAP_CSS', '//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css');
-
+requestHandler.setConfigProperties(config);
 requestHandler.registerFactory('js', new JSRendererFactory());
 requestHandler.registerFactory('hbs', new HBSRendererFactory());
 

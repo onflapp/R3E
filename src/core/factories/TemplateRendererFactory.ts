@@ -88,7 +88,7 @@ class TemplateRendererSession {
 }
 
 class TemplateRendererFactory implements RendererFactory {
-  private cache = {};
+  private static cache = {};
 
   protected compileTemplate(template: string): any {
     return function() {
@@ -106,7 +106,7 @@ class TemplateRendererFactory implements RendererFactory {
     let self = this;
     resource.read(new ContentWriterAdapter('utf8', function(data) {
       if (data) {
-        let tfunc = self.cache[data];
+        let tfunc = TemplateRendererFactory.cache[data];
         if (!tfunc) {
           try {
             tfunc = self.compileTemplate(data);
@@ -117,7 +117,7 @@ class TemplateRendererFactory implements RendererFactory {
           }
         }
 
-        self.cache[data] = tfunc;
+        TemplateRendererFactory.cache[data] = tfunc;
 
         let session = new TemplateRendererSession();
 

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>edit</title>
 
-    <link href="{{E.BOOTSTRAP_CSS}}" rel="stylesheet">
+    <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
 
 		<style>
 			html,body,.container {
@@ -75,7 +75,7 @@
 				</div>
 
 				<div id="editor-container">
-					<textarea name="_content">{{include "." "text"}}</textarea>
+					<textarea autocorrect="off" autocapitalize="off" autocomplete="off" autofocus="on" spellcheck="false" name="_content">{{include "." "text"}}</textarea>
 				</div>
 				<input type="hidden" name="_rt" value="resource/content"></input>
 				<input type="hidden" name="_ct" value="{{contentType}}"></input>

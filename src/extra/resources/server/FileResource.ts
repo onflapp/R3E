@@ -132,9 +132,7 @@ class FileResource extends Resource {
         });
       }
       else {
-        self.fs.unlink(path, function() {
-          callback();
-        });
+        callback();
       }
     });
   }
@@ -265,6 +263,8 @@ class FileResource extends Resource {
   }
 
   public getContentType(): string {
+    if (this.isDirectory) return null;
+
     let contentType = this.resourceProperties['_ct'];
     if (contentType) return contentType;
     

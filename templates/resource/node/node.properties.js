@@ -3,7 +3,6 @@
 	var rv = [];
 
 	var names = res.getPropertyNames();
-  var env = context.getEnvironmentProperties();
   var props = context.getRequestProperties();
 
 	for (var i = 0; i < names.length; i++) {
@@ -13,7 +12,6 @@
 		rv.push({
 			name:name,
 			value:val,
-			E:env,
 			R:props
 		});
 	}

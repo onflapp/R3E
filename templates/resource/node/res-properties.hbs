@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>properties</title>
 
-    <link href="{{E.BOOTSTRAP_CSS}}" rel="stylesheet">
+    <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
 	</head>
 	<body>
 
@@ -52,7 +52,7 @@
 				<div class="form-group">
     			<label class="col-sm-2">{{name}}</label>
 					<div class="col-sm-8">
-						<input class="form-control" name="{{name}}" value="{{value}}" form="save_form">
+						<input class="form-control" name="{{name}}" value="{{value}}" form="save_form" autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false">
 					</div>
 					<div class="col-sm-2">
 						<form method="POST" action="{{R.PATH}}{{R.SUFFIX}}">
@@ -68,10 +68,10 @@
 				<form method="post" action="{{R.PATH}}{{R.SUFFIX}}">
 					<div class="form-group">
 						<div class="col-sm-2">
-							<input class="form-control" name=":name" value="">
+							<input class="form-control" name=":name" value="" autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false">
 						</div>
 						<div class="col-sm-8">
-							<input class="form-control" name="{:name}" value="">
+							<input class="form-control" name="{:name}" value="" autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false">
 						</div>
 						<div class="col-sm-2">
 							<button class="btn btn-success" type="submit" value="add">
@@ -85,8 +85,6 @@
 			<form method="post" id="save_form" action="{{R.PATH}}.xres-list">
 				<input type="submit" value="save">
 			</form>
-
-	
 
 		</div>
 

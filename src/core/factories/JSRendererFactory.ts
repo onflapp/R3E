@@ -1,4 +1,6 @@
 class JSRendererFactory implements RendererFactory {
+  private static cache = {};
+
   public makeRenderer(resource: Resource, callback: RendererFactoryCallback) {
     resource.read(new ContentWriterAdapter ('utf8', function(data) {
       if (data) {
