@@ -80,17 +80,120 @@ class ResourceRequestHandler extends EventDispatcher {
         }
       }
     }
+
+    return data;
   }
 
-  public getResourceResolver(): ResourceResolver {
-    return this.resourceResolver;
+  protected transformData(data: Data, context: ResourceRequestContext, callback) {
+    let rrend = this.resourceRenderer;
+		let selectors = ['store'];
+		let renderTypes = data.getRenderTypes();
+
+    data.values = this.expandValues(data.values, data.values);
+
+		rrend.resolveRenderer(renderTypes, selectors, function(rend: ContentRendererFunction, error? : Error) {
+			if (rend) {
+				rend(data, new ContentWriterAdapter('object', callback), context);
+			}
+			else {
+        callback(data);
+			}
+		});
   }
 
-/************************************************************************
- ** /cards/item1.xjson.-1.223/a/d
- ** [path].x[selector].[selectorArgs][dataPath]
- **
- ************************************************************************/
+  protected makeContext(pathInfo: PathInfo): ResourceRequestContext {
+    pathInfo.referer = this.parsePath(this.refererPath);
+    pathInfo.query = this.queryProperties;
+
+    let context = new ResourceRequestContext(pathInfo, this);
+    return context;
+  }
+
+  protected expandDataAndImport(resourcePath: string, data: Data, callback) {
+    let rres = this.resourceResolver;
+    let imp = data.values[Resource.STORE_CONTENT_PROPERTY];
+    let processing = 0;
+
+    let done = function() {
+      if (processing === 0) {
+        callback(arguments);
+      }
+    };
+
+    let import_text = function(text) {
+      let list = JSON.parse(text);
+      if (list) {
+        processing++;
+        for (var i = 0; i < list.length; i++) {
+          let item = list[i];
+          let path = Utils.filename_path_append(resourcePath, item[':path']);
+          processing++;
+          rres.storeResource(path, item, function() {
+            processing--;
+            done();
+          });
+				}
+        processing--;
+      }
+
+      done();
+    };
+
+    if (typeof imp === 'function') {
+      imp(new ContentWriterAdapter('utf8', import_text));
+    }
+    else if (typeof imp === 'string') {
+      import_text(imp);
+    }
+    else {
+      callback();
+    }
+  }
+
+  protected expandDataAndStore(resourcePath: string, data: Data, callback) {
+    let rres = this.resourceResolver;
+    let datas = {};
+    let count = 1;
+    datas[resourcePath] = {};
+
+    for (let key in data.values) {
+      if (key.indexOf(':') !== -1) continue;
+
+      let v = data.values[key];
+      let x = key.indexOf('/');
+      if (x != -1) {
+			  let p = resourcePath + '/' + key.substr(0, x);
+				let n = key.substr(x + 1);
+        let d = datas[p];
+        if (!d) {
+          d = {};
+          datas[p] = d;
+          count++;
+        }
+        datas[p][n] = v;
+      }
+      else {
+        datas[resourcePath][key] = v;
+      }
+    }
+
+    for (let key in datas) {
+      let v = datas[key];
+
+      rres.storeResource(key, new Data(v), function() {
+        count--;
+
+        if (count === 0) {
+          callback();
+        }
+      });
+    }
+  }
+
+/**********************************************************
+ * /cards/item1.xjson.-1.223/a/d
+ * [path].x[selector].[selectorArgs][dataPath]
+ */
 
   public parsePath(rpath: string): PathInfo {
     if (!rpath) return null;
@@ -133,93 +236,8 @@ class ResourceRequestHandler extends EventDispatcher {
     }
   }
 
-  protected makeContext(pathInfo: PathInfo): ResourceRequestContext {
-    pathInfo.referer = this.parsePath(this.refererPath);
-    pathInfo.query = this.queryProperties;
-
-    let context = new ResourceRequestContext(pathInfo, this);
-    return context;
-  }
-
-  protected expandDataAndImport(resourcePath: string, data: any, callback) {
-    let rres = this.resourceResolver;
-    let imp = data[Resource.STORE_CONTENT_PROPERTY];
-    let processing = 0;
-
-    let done = function() {
-      if (processing === 0) {
-        callback(arguments);
-      }
-    };
-
-    let import_text = function(text) {
-      let list = JSON.parse(text);
-      if (list) {
-        processing++;
-        for (var i = 0; i < list.length; i++) {
-          let item = list[i];
-          let path = Utils.filename_path_append(resourcePath, item[':path']);
-          processing++;
-          rres.storeResource(path, item, function() {
-            processing--;
-            done();
-          });
-				}
-        processing--;
-      }
-
-      done();
-    };
-
-    if (typeof imp === 'function') {
-      imp(new ContentWriterAdapter('utf8', import_text));
-    }
-    else if (typeof imp === 'string') {
-      import_text(imp);
-    }
-    else {
-      callback();
-    }
-  }
-
-  protected expandDataAndStore(resourcePath: string, data: any, callback) {
-    let rres = this.resourceResolver;
-    let datas = {};
-    let count = 1;
-    datas[resourcePath] = {};
-
-    for (let key in data) {
-      if (key.indexOf(':') !== -1) continue;
-
-      let v = data[key];
-      let x = key.indexOf('/');
-      if (x != -1) {
-			  let p = resourcePath + '/' + key.substr(0, x);
-				let n = key.substr(x + 1);
-        let d = datas[p];
-        if (!d) {
-          d = {};
-          datas[p] = d;
-          count++;
-        }
-        datas[p][n] = v;
-      }
-      else {
-        datas[resourcePath][key] = v;
-      }
-    }
-
-    for (let key in datas) {
-      let v = datas[key];
-
-      rres.storeResource(key, v, function() {
-        count--;
-
-        if (count === 0) {
-          callback();
-        }
-      });
-    }
+  public getResourceResolver(): ResourceResolver {
+    return this.resourceResolver;
   }
 
   public getConfigProperties() {
@@ -242,7 +260,7 @@ class ResourceRequestHandler extends EventDispatcher {
     this.renderRequest(rpath);
   }
 
-  public renderRequest(rpath: string) {
+  protected renderRequest(rpath: string) {
     let rres = this.resourceResolver;
     let rrend = this.resourceRenderer;
 
@@ -258,21 +276,21 @@ class ResourceRequestHandler extends EventDispatcher {
 
       if (info) {
         rres.resolveResource(info.resourcePath, function(res) {
-          if (res) rrend.renderResource(res, res.getType(), info.selector, out, context);
+          if (res) rrend.renderResource(res, info.selector, out, context);
           else {
             let res = new NotFoundResource(info.resourcePath);
-            rrend.renderResource(res, res.getType(), info.selector, out, context);
+            rrend.renderResource(res, info.selector, out, context);
           }
         });
       }
       else {
-        rrend.renderResource(new ErrorResource('invalid path '+rpath), null, 'default', out, context);
+        rrend.renderResource(new ErrorResource('invalid path '+rpath), 'default', out, context);
       }
 
     }
     catch(ex) {
       console.log(ex);
-      rrend.renderResource(new ErrorResource(ex), null, 'default', out, context);
+      rrend.renderResource(new ErrorResource(ex), 'default', out, context);
     }
   }
 
@@ -288,21 +306,21 @@ class ResourceRequestHandler extends EventDispatcher {
 
       if (resourcePath) {
         rres.resolveResource(resourcePath, function(res: Resource) {
-          if (res) rrend.renderResource(res, rtype, selector, out, ncontext);
+          if (res) rrend.renderResource(res, selector, out, ncontext);
           else {
             let res = new NotFoundResource(resourcePath);
-            rrend.renderResource(res, res.getType(), selector, out, ncontext);
+            rrend.renderResource(res, selector, out, ncontext);
           }
         });
       }
       else {
-        rrend.renderResource(new ErrorResource('invalid path '+resourcePath), null, 'default', out, ncontext);
+        rrend.renderResource(new ErrorResource('invalid path '+resourcePath), 'default', out, ncontext);
       } 
 
     }
     catch(ex) {
       console.log(ex);
-      rrend.renderResource(new ErrorResource(ex), null, 'default', out, ncontext);
+      rrend.renderResource(new ErrorResource(ex), 'default', out, ncontext);
     }
   }
 
@@ -325,70 +343,81 @@ class ResourceRequestHandler extends EventDispatcher {
 
  ************************************************************************/
 
-  public handleStore(rpath: string, data: any) {
+  public handleStore(rpath: string, data: Data) {
     let self = this;
+    let rres = this.resourceResolver;
+    let rrend = this.resourceRenderer;
     let info = this.parsePath(rpath);
     let context = this.makeContext(info);
-    let rrend = this.resourceRenderer;
+
+    let render_error = function(err) {
+      let out = this.contentWriter.makeNestedContentWriter();
+      rrend.renderResource(err, 'default', out, context);
+    };
+
+    if (info.resourcePath) {
+      self.transformData(data, context, function(data) {
+        self.storeResource(info.resourcePath, data, function(error) {
+          if (!error) {
+            let forward = Utils.absolute_path(data.values[':forward']);
+
+            if (forward) self.forwardRequest(forward);
+            else self.renderRequest(rpath);
+          }
+          else {
+            render_error(error);
+          }
+        });
+      });
+    }
+    else {
+      render_error(new ErrorResource('invalid path ' + rpath));
+    }
+  }
+
+  public storeResource(resourcePath: string, data: Data, callback) {
+    let self = this;
     let rres = this.resourceResolver;
 
-    try { 
-      data = this.expandValues(data, data);
+    try {
+      let remove = Utils.absolute_path(data.values[':delete']);
+      let copyto = Utils.absolute_path(data.values[':copyto']);
+      let moveto = Utils.absolute_path(data.values[':moveto']);
+      let importto = Utils.absolute_path(data.values[':import']);
 
-      let forward = Utils.absolute_path(data[':forward']);
-      let remove = Utils.absolute_path(data[':delete']);
-      let copyto = Utils.absolute_path(data[':copyto']);
-      let importto = Utils.absolute_path(data[':import']);
-
-      if (info) {
-        if (copyto) {
-          rres.copyResource(info.resourcePath, copyto, function() {
-            self.dispatchAllEventsAsync('stored', info.resourcePath, data);
-
-            if (forward) self.forwardRequest(forward);
-            else self.renderRequest(rpath);
-          });
-        }
-        else if (remove) {
-          let dirname = Utils.filename_dir(remove);
-          let name = Utils.filename(remove);
-
-          rres.resolveResource(dirname, function(res: Resource) {
-            res.removeChildResource(name, function() {
-              self.dispatchAllEventsAsync('stored', remove, data);
-
-              if (forward) self.forwardRequest(forward);
-              else self.renderRequest(rpath);
-            });
-          });
-        }
-        else if (importto) {
-          self.expandDataAndImport(info.resourcePath, data, function() {
-            self.dispatchAllEventsAsync('stored', info.resourcePath, data);
-
-            if (forward) self.forwardRequest(forward);
-            else self.renderRequest(rpath);
-          });
-        }
-        else {
-          self.expandDataAndStore(info.resourcePath, data, function() {
-            self.dispatchAllEventsAsync('stored', info.resourcePath, data);
-
-            if (forward) self.forwardRequest(forward);
-            else self.renderRequest(rpath);
-          });
-        }
+      if (copyto) {
+        rres.copyResource(resourcePath, copyto, function() {
+          self.dispatchAllEventsAsync('stored', resourcePath, data);
+          callback();
+        });
+      }
+      else if (moveto) {
+        rres.moveResource(resourcePath, moveto, function() {
+          self.dispatchAllEventsAsync('stored', resourcePath, data);
+          callback();
+        });
+      }
+      else if (remove) {
+        rres.removeResource(resourcePath, function() {
+          self.dispatchAllEventsAsync('stored', remove, data);
+          callback();
+        });
+      }
+      else if (importto) {
+        self.expandDataAndImport(resourcePath, data, function() {
+          self.dispatchAllEventsAsync('stored', resourcePath, data);
+          callback();
+        });
       }
       else {
-        let out = this.contentWriter.makeNestedContentWriter();
-        rrend.renderResource(new ErrorResource('invalid path '+rpath), null, 'default', out, context);
+        self.expandDataAndStore(resourcePath, data, function() {
+          self.dispatchAllEventsAsync('stored', resourcePath, data);
+          callback();
+        });
       }
-
     }
     catch(ex) {
-      console.log(ex);
-      let out = this.contentWriter.makeNestedContentWriter();
-      rrend.renderResource(new ErrorResource(ex), null, 'default', out, context);
+      callback(new ErrorResource(ex));
     }
   }
 }

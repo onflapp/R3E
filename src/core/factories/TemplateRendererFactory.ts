@@ -121,19 +121,18 @@ class TemplateRendererFactory implements RendererFactory {
 
         let session = new TemplateRendererSession();
 
-        callback(function(res: Resource, writer: ContentWriter, context: ResourceRequestContext) {
-          let map = context.makeContextMap(res);
+        callback(function(data: Data, writer: ContentWriter, context: ResourceRequestContext) {
+          let map = context.makeContextMap(data);
 
           map['_session'] = session;
           map['_context'] = context;
-          map['_resource'] = res;
 
           try {
             let txt = tfunc(map);
             session.replaceOutputPlaceholders(txt, function(txt) {
               writer.start('text/html');
               writer.write(txt);
-              writer.end();
+              writer.end(null);
             });
           }
           catch (ex) {
@@ -144,6 +143,6 @@ class TemplateRendererFactory implements RendererFactory {
       else {
         callback(null, new Error('unable to read utf8 from resource'));
       }
-    }));
+    }), null);
   }
 }

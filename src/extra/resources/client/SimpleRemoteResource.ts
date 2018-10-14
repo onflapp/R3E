@@ -25,6 +25,10 @@ class SimpleRemoteResource extends Resource {
     callback(null);
   }
 
+  public importContent(func, callback) {
+    callback(null);
+  }
+
   public removeChildResource(name: string, callback) {
     callback(null);
   }
@@ -54,18 +58,6 @@ class SimpleRemoteResource extends Resource {
         }
       });
     }
-  }
-
-	public getPropertyNames(): Array < string > {
-		return null;
-	}
-
-	public getProperty(name: string): any {
-		return null;
-	}
-
-  public isContentResource(): boolean {
-    return false;
   }
 
   protected requestData(path: string, callback): void {

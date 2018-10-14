@@ -22,6 +22,6 @@ class JSRendererFactory implements RendererFactory {
       else {
         callback(null, new Error('unable to get data for JS'));
       }
-    }));
+    }), null);
   }
 }

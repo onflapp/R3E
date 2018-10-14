@@ -11,7 +11,7 @@ class DOMContentWriter implements ContentWriter {
       var target = evt.target;
       var info = requestHandler.parseFormElement(target);
       setTimeout(function() {
-        requestHandler.handleStore(info.formPath, info.formData);
+        requestHandler.handleStore(info.formPath, new Data(info.formData));
       });
       evt.preventDefault();
     });
@@ -106,8 +106,11 @@ class ClientRequestHandler extends ResourceRequestHandler {
   }
 
   public forwardRequest(rpath: string) {
-    location.hash = rpath;
-    super.renderRequest(rpath);
+    this.renderRequest(rpath);
+  }
+
+  public handleRequest(rpath: string) {
+    this.renderRequest(rpath);
   }
 
   public renderRequest(rpath: string) {
@@ -130,6 +133,8 @@ class ClientRequestHandler extends ResourceRequestHandler {
 
       if (type === 'file') {
         value = p.files[0];
+        if (!value) continue;
+          
         let pref = '';
         let ct = value.type;
 
@@ -141,8 +146,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
           let reader = new FileReader();
           reader.onload = function(e) {
             writer.write(reader.result);
-            writer.end();
-            if (callback) callback();
+            writer.end(callback);
           };
 
           writer.start(value.type);
@@ -155,7 +159,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
 
     }
 
-    this.transformValues(rv);
+    rv = this.transformValues(rv);
 
     let path = this.expandValue(action, rv);
     let info = new ClientFormInfo();

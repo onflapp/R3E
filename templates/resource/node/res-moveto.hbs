@@ -4,36 +4,36 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>list</title>
+    <title>move to</title>
 
-    <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
 	</head>
 	<body>
 		<div class="container">
 
-			<h1>Move</h1>
+			<h1>Move from</h1>
 
 			<ol class="breadcrumb">
-				<li><a href="/.xres-list">HOME</a></li>
-			{{#each CP_PARENTS}}
-				<li><a href="{{../CP_PREFIX}}{{path}}.xres-list">{{name}}</a></li>
-			{{/each}}
-				<li class="active">{{CP_NAME}}</li>
+				<li>HOME</li>
+			{{#include "." "parents"}}
+				<li>{{name}}</li>
+			{{/include}}
+				<li class="active">{{R.NAME}}</li>
 			</ol>
 
 			<h1>to</h1>
 
 			<ol class="breadcrumb">
-				<li><a href="{{CP_PREFIX_PATH}}.xres-moveto/">HOME</a></li>
-			{{#each DP_PARENTS}}
-				<li><a href="{{../CP_PREFIX_PATH}}.xres-moveto{{path}}">{{name}}</a></li>
-			{{/each}}
-				<li class="active">{{DP_NAME}}</li>
+				<li><a href="{{R.PATH}}.xres-moveto/">HOME</a></li>
+			{{#include R.DATA_PATH "parents"}}
+				<li><a href="{{R.PATH}}.xres-moveto{{path}}">{{name}}</a></li>
+			{{/include}}
+				<li class="active">{{R.DATA_NAME}}</li>
 			</ol>
 
-			<table class="table">
-			{{#children DATA_NODE}}
-				{{#if properties._isfile}}
+      <table class="table">
+			{{#include R.DATA_PATH "children"}}
+				{{#if isContentResource}}
 				<tr>
           <td>
 					  <i class="glyphicon glyphicon-file"></i> {{name}}
@@ -41,32 +41,27 @@
 				</tr>
 				{{else}}
 				<tr>
-          {{#match path "startsWith" ../CP_PREFIX_PATH}}
+          {{#match path "startsWith" R.PATH}}
             <td>
 					    <i class="glyphicon glyphicon-folder-close"></i> {{name}}
             </td>
           {{/match}}
           {{#default}}
             <td>
-					    <i class="glyphicon glyphicon-folder-close"></i> <a href="{{../CP_PREFIX_PATH}}.xres-moveto{{../DP_PATH}}/{{name}}">{{name}}</a>
+					    <i class="glyphicon glyphicon-folder-close"></i> <a href="{{R.PATH}}.xres-moveto{{path}}">{{name}}</a>
             </td>
           {{/default}}
 				</tr>
 				{{/if}}
 
-			{{/children}}
+			{{/include}}
 			</table>
-
-			<form method="post" action="">
-				<input name=":name:" value="{{CP_NAME}}" autocomplete="off">
-				<input type="hidden" name=":copyto" value="{{DP_PATH}}/{:name:}">
-				<input type="hidden" name=":delete" value="{{CP_PATH}}">
+			
+			<form method="post" action="{{R.PATH}}.xres-list">
+				<input name=":name|newUUID" value="{{R.NAME}}" autocomplete="off">
+				<input type="hidden" name=":moveto" value="{{R.DATA_PATH_APPEND}}{:name}">
 				<input type="submit" value="move">
-			{{#if REQ_REFERER}}
-				<input type="hidden" name=":forward" value="{{REQ_REFERER}}">
-      {{else}}
-				<input type="hidden" name=":forward" value="{{CP_PREFIX}}{{DP_ROOT_PATH}}.xres-list">
-      {{/if}}
+				<input type="hidden" name=":forward" value="{{R.DATA_PATH}}.xres-list">
 			</form>
 		</div>
 	</body>

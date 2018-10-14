@@ -118,6 +118,28 @@ class Utils {
     return names;
   }
 
+  public static filename_mime(path: string): string {
+    if (!path) return null;
+  
+    let ext = Utils.filename_ext(path).toLowerCase();
+    if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
+    if (ext === 'png') return 'image/png';
+    if (ext === 'gif') return 'image/gif';
+    if (ext === 'txt') return 'text/plain';
+    if (ext === 'html' || ext === 'htm') return 'text/html';
+    if (ext === 'xml') return 'text/xml';
+
+    return 'application/octet-stream';
+  }
+
+  public static Blob2Text(blob, callback) {
+    let reader = new FileReader();
+    reader.addEventListener('loadend', function(evt) {
+      callback(reader.result);
+    });
+    reader.readAsText(blob);
+  }
+
   // Converts an ArrayBuffer directly to base64, without any intermediate 'convert to string then
   // use window.btoa' step. According to my tests, this appears to be a faster approach:
   // http://jsperf.com/encoding-xhr-image-data/5

@@ -6,14 +6,72 @@ interface ChildrenNamesCallback {
   (names: Array<string>): void
 }
 
-abstract class Resource implements ContentReader {
-  public static IO_TIMEOUT = 2000;
+class Data {
+  public values: any;
+
+  constructor(obj?: any) {
+    this.values = obj?obj:{};
+  }
+
+  public getProperties() {
+    let map = {};
+    let names = this.getPropertyNames();
+    for (let i = 0; i < names.length; i++) {
+      let n = names[i];
+      map[n] = this.getProperty(n);
+    }
+
+    return map;
+  }
+
+  public getPropertyNames(): Array<string> {
+    var rv = [];
+    for (var k in this.values) {
+      var v = this.values[k];
+      if (typeof v === 'object' || typeof v === 'function' || k.charAt(0) === '_') {
+      }
+      else {
+        rv.push(k);
+      }
+    }
+    return rv;
+  }
+
+  public getProperty(name: string): any {
+    return this.values[name];
+  }
+
+  public getRenderTypes(): Array<string> {
+    let rv = [];
+    let rt = this.values['_rt'];
+
+    if (rt) rv.push(rt);
+    rv.push('any');
+
+    return rv;
+  }
+
+  public wrap(wrapper) {
+    for (let name in wrapper) {
+      let func = wrapper[name];
+      if (typeof func === 'function') {
+        this[name] = func;
+      }
+    }
+
+    return this;
+  }
+}
+
+abstract class Resource extends Data implements ContentReader {
+  public static IO_TIMEOUT = 10000;
   public static STORE_CONTENT_PROPERTY = '_content';
   public static STORE_RENDERTYPE_PROPERTY = '_rt';
 
   protected resourceName: string;
 
   constructor(name?: string) {
+    super({});
     this.resourceName = name?name:'';
   }
 
@@ -51,31 +109,8 @@ abstract class Resource implements ContentReader {
     return rv;
   }
 
-  public getProperties() {
-    let map = {};
-    let names = this.getPropertyNames();
-    for (let i = 0; i < names.length; i++) {
-      let n = names[i];
-      map[n] = this.getProperty(n);
-    }
-
-    return map;
-  }
-
-  public wrap(wrapper) {
-    for (let name in wrapper) {
-      let func = wrapper[name];
-      if (typeof func === 'function') {
-        this[name] = func;
-      }
-    }
-
-    return this;
-  }
-
-  public abstract getPropertyNames(): Array<string>;
-  public abstract getProperty(name: string): any;
-  public abstract importProperties(data: any, callback);
+  public abstract importProperties(data: any, callback): void;
+  public abstract importContent(func, callback): void;
   public abstract resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void;
   public abstract createChildResource(name: string, callback: ResourceCallback, walking?: boolean): void;
   public abstract removeChildResource(name: string, callback);
@@ -112,8 +147,7 @@ abstract class Resource implements ContentReader {
 
     if (this.isContentResource()) {
       rv[Resource.STORE_CONTENT_PROPERTY] = function(writer, callback) {
-        self.read(writer);
-        if (callback) callback();
+        self.read(writer, callback);
       };
     }
 
@@ -121,7 +155,7 @@ abstract class Resource implements ContentReader {
       rv['_ct'] = ct;
     }
 
-    callback(rv);
+    callback(new Data(rv));
   }
 
   public exportChilrenResources(level, writer: ContentWriter): void {
@@ -130,7 +164,7 @@ abstract class Resource implements ContentReader {
 
     let done = function() {
       if (processing === 0) {
-        writer.end();
+        writer.end(null);
         processing = -1;
       }
     };
@@ -139,9 +173,9 @@ abstract class Resource implements ContentReader {
       processing++; //children
       processing++; //data
 
-      res.exportData(function(data) {
-        if (name) data[':name'] = name;
-        if (path) data[':path'] = path;
+      res.exportData(function(data: Data) {
+        if (name) data.values[':name'] = name;
+        if (path) data.values[':path'] = path;
 
         writer.write(data);
         processing--; //data
@@ -167,11 +201,11 @@ abstract class Resource implements ContentReader {
       });
     };
 
-    writer.start('object');
+    writer.start('object/javascript');
     export_children('', this.getName(), this);
   }
 
-  public importData(data: any, callback) {
+  public importData(data: Data, callback) {
     let processing = 0;
     let ffunc = null;
     let ct = null;
@@ -181,8 +215,8 @@ abstract class Resource implements ContentReader {
 
     processing++;
     let props = {};
-    for (let k in data) {
-      let v = data[k];
+    for (let k in data.values) {
+      let v = data.values[k];
 
       if (k === Resource.STORE_CONTENT_PROPERTY && typeof v === 'function') {
         processing++;
@@ -190,12 +224,11 @@ abstract class Resource implements ContentReader {
       }
       else if (k === Resource.STORE_CONTENT_PROPERTY && typeof v === 'string') {
         processing++;
-        ct = data['_ct'];
+        ct = data.values['_ct'];
         ffunc = function(writer, callback) {
           writer.start(ct?ct:'text/plain');
           writer.write(v);
-          writer.end();
-          if (callback) callback();
+          writer.end(callback);
         };
       }
       else if (typeof v === 'function' || typeof v === 'object') {
@@ -227,15 +260,11 @@ abstract class Resource implements ContentReader {
 
   }
 
-  public importContent(func, callback) {
-    callback();
-  }
-
   public listChildrenResources(callback: any) {
     let self = this;
     this.listChildrenNames(function(ls) {
       let rv = [];
-      if (ls.length > 0) {
+      if (ls && ls.length > 0) {
         for (var i = 0; i < ls.length; i++) {
           let name = ls[i];
           self.resolveChildResource(name, function(res) {
@@ -264,7 +293,7 @@ abstract class Resource implements ContentReader {
     return null;
   }
 
-  public read(writer: ContentWriter) {
-    if (writer) writer.end();
+  public read(writer: ContentWriter, callback: any) {
+    if (writer) writer.end(callback);
   }
 }

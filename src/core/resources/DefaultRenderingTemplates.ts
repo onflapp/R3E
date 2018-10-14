@@ -4,7 +4,7 @@ class DefaultRenderingTemplates extends ObjectResource {
       'resource': {
         'error': {
           'default':function(res: Resource, writer: ContentWriter, context: ResourceRequestContext) {
-            res.read(writer);
+            res.read(writer, null);
           }
         }
       },
@@ -12,7 +12,7 @@ class DefaultRenderingTemplates extends ObjectResource {
         'default':function(res: Resource, writer: ContentWriter, context: ResourceRequestContext) {
           writer.start('text/plain');
           writer.write('default renderer');
-          writer.end();
+          writer.end(null);
         }
       }
     });

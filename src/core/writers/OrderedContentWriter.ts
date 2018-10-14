@@ -67,7 +67,7 @@ class OrderedContentWriter implements ContentWriter {
     delegate.start(this.contentType);
     writeOutQueue(this);
     setTimeout(function() {
-      delegate.end();
+      delegate.end(null);
     })
   }
 }

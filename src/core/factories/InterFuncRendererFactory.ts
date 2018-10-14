@@ -12,6 +12,6 @@ class InterFuncRendererFactory implements RendererFactory {
       else {
         callback(null, new Error('cannot read object as function'));
       }
-    }));
+    }), null);
   }
 }

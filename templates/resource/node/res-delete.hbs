@@ -23,11 +23,7 @@
 
 			<form method="post" action="{{R.PATH}}.xres-list">
 				<input type="hidden" name=":delete" value="{{R.PATH}}">
-			{{#if R.REF_PATH}}
-				<input type="hidden" name=":forward" value="{{R.REF_PATH}}{{R.REF_SUFFIX}}">
-			{{else}}
 				<input type="hidden" name=":forward" value="{{R.PATH_APPEND}}../.xres-list">
-			{{/if}}
 				<input type="submit" value="delete">
 			</form>
 		</div>

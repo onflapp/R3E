@@ -35,7 +35,7 @@ class ResourceResolver {
     }
 	}
 
-  public storeResource(path: string, data: any, callback) {
+  public storeResource(path: string, data: Data, callback) {
     let self = this;
 
 		if (path === '/' || path === '') {
@@ -89,6 +89,27 @@ class ResourceResolver {
     });
   }
 
+  public removeResource(fromPath: string, callback) {
+    let dirname = Utils.filename_dir(fromPath);
+    let name = Utils.filename(fromPath);
+    let self = this;
+
+    self.resolveResource(dirname, function(res: Resource) {
+      res.removeChildResource(name, function() {
+        callback();
+      });
+    });
+  }
+
+  public moveResource(fromPath: string, toPath: string, callback) {
+    let self = this;
+    self.copyResource(fromPath, toPath, function() {
+      self.removeResource(fromPath, function() {
+        callback();
+      });
+    });
+  }
+
   public copyResource(fromPath: string, toPath: string, callback) {
     if (fromPath === '/' || fromPath === '') {
       callback();
@@ -109,9 +130,9 @@ class ResourceResolver {
       }
     };
 
-    this.exportResources(fromPath, function(data) {
+    this.exportResources(fromPath, function(data: Data) {
       if (data) {
-        let path = Utils.filename_path_append(toPath, data[':path']);
+        let path = Utils.filename_path_append(toPath, data.values[':path']);
         processing++;
         self.storeResource(path, data, function() {
           processing--;
@@ -123,10 +144,6 @@ class ResourceResolver {
         done();
       }
     });
-  }
-
-  public moveResource(path: string, callback) {
-    callback();
   }
 
 }

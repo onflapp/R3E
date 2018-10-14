@@ -25,12 +25,14 @@ var r = localStorage.getItem('data');
 if (r) window.data = JSON.parse(r);
 
 db  = new PouchDB('dbtest');
+dbx = new Dropbox.Dropbox({ accessToken:'heqNqEJNsg0AAAAAAAAHThZa890PtapTCQJPn6Dt-nqH41umubC5F3QuqKtR1iVY' });
 
 p = new PouchDBResource(db);
+b = new DropBoxResource(dbx);
 d = new ObjectResource('data', data);
 c = new ObjectResource('conf', config);
 
-root = new RootResource({'data':d, 'conf':c, 'db':p});
+root = new RootResource({'data':d, 'conf':c, 'db':p, 'box':b});
 
 rres = new ResourceResolver(root);
 rtmp = new MultiResourceResolver([new SimpleRemoteResource('../../templates/'), new DefaultRenderingTemplates()]);

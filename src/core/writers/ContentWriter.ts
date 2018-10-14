@@ -2,7 +2,7 @@ interface ContentWriter {
   start(ctype: string);
   write(data: any);
   error(error: Error);
-  end();
+  end(callback: any);
 }
 
 class ContentWriterAdapter implements ContentWriter {
@@ -24,17 +24,28 @@ class ContentWriterAdapter implements ContentWriter {
   public error(error: Error) {
     console.log(error);
   }
-  public end() {
+  public end(cb: any) {
     if (this.conversion === 'utf8') {
       let v = this.data[0];
-      if (typeof v === 'string') {
+      let self = this;
+      if (!v) {
+        this.callback('', this.ctype);
+      }
+      else if (typeof v === 'string') {
         this.callback(this.data.join(''), this.ctype);
       }
       else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(v)) {
         let b = Buffer.concat(this.data);
         this.callback(b.toString('utf8'), this.ctype);
       }
-      else if (typeof ArrayBuffer !== 'undefined' && typeof window !== 'undefined') {
+      else if (v instanceof Blob && typeof window !== 'undefined') {
+        let reader = new FileReader();
+        reader.onload = function() {
+          self.callback(reader.result, self.ctype);
+        };
+        reader.readAsText(v);
+      }
+      else if (v instanceof ArrayBuffer && typeof window !== 'undefined') {
         let t = new window['TextDecoder']("utf-8").decode(v);
         this.callback(t, this.ctype);
       }
@@ -53,5 +64,6 @@ class ContentWriterAdapter implements ContentWriter {
         this.callback(this.data, this.ctype);
       }
     }
+    if (cb) cb();
   }
 }

@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+  <title>Dropbox JavaScript SDK</title>
+  <script src="https://cdn.jsdelivr.net/npm/promise-polyfill@7/dist/polyfill.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fetch/2.0.3/fetch.js"></script>
+  <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
+</head>
+<body>
+
+  <script>
+    var CLIENT_ID = '3zfzck6x93q7l8o';
+
+    if (true) {
+      var dbx = new Dropbox.Dropbox({ accessToken:'heqNqEJNsg0AAAAAAAAHThZa890PtapTCQJPn6Dt-nqH41umubC5F3QuqKtR1iVY' });
+      dbx.filesListFolder({path: ''})
+        .then(function(response) {
+          console.log(response);
+        })
+        .catch(function(error) {
+          console.error(error);
+        });
+    } 
+    else {
+      var dbx = new Dropbox.Dropbox({ clientId: CLIENT_ID });
+      var authUrl = dbx.getAuthenticationUrl('http://localhost:2222/tests/client/dropbox.html');
+      //http://localhost:2222/tests/client/dropbox.html#access_token=heqNqEJNsg0AAAAAAAAHThZa890PtapTCQJPn6Dt-nqH41umubC5F3QuqKtR1iVY&token_type=bearer&uid=7614970&account_id=dbid%3AAACC5oI51Whnr8DPr-qPjKWczXBFQCjlopk
+    }
+  </script>
+</body>
+</html>

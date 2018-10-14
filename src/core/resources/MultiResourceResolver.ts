@@ -1,5 +1,6 @@
 class MultiResourceResolver extends ResourceResolver {
   private resolvers: Array<ResourceResolver> = [];
+
   constructor (list: any) {
     super(null);
     for (var i = 0; i < list.length; i++) {

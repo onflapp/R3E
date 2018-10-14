@@ -14,6 +14,7 @@ module.exports = function(grunt) {
 				options: {
 					module: 'amd',
         	sourceMap: false,
+					strict: false,
 					target: 'es5'
       	},
 				src: [
@@ -44,6 +45,8 @@ module.exports = function(grunt) {
 						"src/extra/resources/client/ClientRequestHandler.ts",
 						"src/extra/resources/server/ServerRequestHandler.ts",
 						"src/extra/resources/server/FileResource.ts",
+						"src/extra/resources/PouchDBResource.ts",
+						"src/extra/resources/DropBoxResource.ts",
 						"src/exports.ts"
 
 				],

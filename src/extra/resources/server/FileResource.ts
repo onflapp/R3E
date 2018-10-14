@@ -26,8 +26,9 @@ class FileResourceContentWriter implements ContentWriter {
     console.log(error);
   }
 
-  public end() {
+  public end(callback: any) {
     this.fs.closeSync(this.fd);
+    if (callback) callback();
   }
 }
 
@@ -35,7 +36,6 @@ class FileResource extends Resource {
   protected rootPath: string;
   protected filePath: string;
   protected isDirectory: boolean;
-  protected resourceProperties = {};
 
   private fs = require('fs-extra');
   
@@ -63,7 +63,7 @@ class FileResource extends Resource {
   }
 
   public getRenderType(): string {
-    return this.resourceProperties['_rt'];
+    return this.values['_rt'];
   }
 
   protected makeMetadataPath(nm?: string):string {
@@ -165,10 +165,10 @@ class FileResource extends Resource {
     self.fs.readFile(path, 'utf8', function(err, data) {
       if (data) {
         let rv = JSON.parse(data);
-        self.resourceProperties = rv?rv:{};
+        self.values = rv?rv:{};
       }
       else {
-        self.resourceProperties = {};
+        self.values = {};
       }
       callback();
     });
@@ -206,24 +206,6 @@ class FileResource extends Resource {
         callback(null);
       }
     });
-  }
-
-  public getPropertyNames(): Array<string> {
-    var rv = [];
-    for (var k in this.resourceProperties) {
-      var v = this.resourceProperties[k];
-      if (typeof v === 'function' || k.charAt(0) === '_') {
-      }
-      else {
-        rv.push(k);
-      }
-    }
-
-    return rv;
-  }
-
-  public getProperty(name: string): any {
-    return this.resourceProperties[name];
   }
 
   public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
@@ -265,7 +247,7 @@ class FileResource extends Resource {
   public getContentType(): string {
     if (this.isDirectory) return null;
 
-    let contentType = this.resourceProperties['_ct'];
+    let contentType = this.values['_ct'];
     if (contentType) return contentType;
     
     let name = this.getName();
@@ -283,9 +265,9 @@ class FileResource extends Resource {
     return new FileResourceContentWriter(this.filePath);
   }
 
-  public read(writer: ContentWriter) {
+  public read(writer: ContentWriter, callback: any) {
     if (this.isDirectory) {
-      writer.end();
+      writer.end(callback);
     }
     else {
       writer.start(this.getContentType());
@@ -308,7 +290,7 @@ class FileResource extends Resource {
       }
 
       this.fs.closeSync(fd);
-      writer.end();
+      writer.end(callback);
     }
   }  
 }

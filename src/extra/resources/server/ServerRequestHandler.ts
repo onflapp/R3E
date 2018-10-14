@@ -89,6 +89,7 @@ class ServerRequestHandler extends ResourceRequestHandler {
       let r = new URL(referer);
       this.refererPath = r.pathname;
     }
+
     this.queryProperties = req.query;
 
     let ct = req.headers['content-type'];
@@ -149,10 +150,10 @@ class ServerRequestHandler extends ResourceRequestHandler {
 				  data[k] = v;
 			  }
         
-        self.transformValues(data);
+        data = self.transformValues(data);
         rpath = self.expandValue(rpath, data);
 
-        self.handleStore(rpath, data);
+        self.handleStore(rpath, new Data(data));
       });
     }
     else {
@@ -172,10 +173,10 @@ class ServerRequestHandler extends ResourceRequestHandler {
           else data[k] = v;
 			  }
   
-        self.transformValues(data);
+        data = self.transformValues(data);
         rpath = self.expandValue(rpath, data);
 
-        self.handleStore(rpath, data);
+        self.handleStore(rpath, new Data(data));
 		  });
     }
   }

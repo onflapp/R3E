@@ -3,6 +3,7 @@ if (typeof module !== 'undefined') {
     ServerRequestHandler:ServerRequestHandler,
     MultiResourceResolver:MultiResourceResolver,
     ResourceResolver:ResourceResolver,
+    CachingResourceResolver:CachingResourceResolver,
     ObjectResource:ObjectResource,
     HBSRendererFactory:HBSRendererFactory,
     JSRendererFactory:JSRendererFactory,

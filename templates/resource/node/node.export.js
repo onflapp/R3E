@@ -9,7 +9,7 @@
 		var ct = data['_ct'];
 		var bin = true;
 
-		if (ct && (ct.indexOf('text/') === 0 || texttypes.indexOf(ct) !== 0)) bin = false;
+		if (ct && (ct.indexOf('text/') === 0 || texttypes.indexOf(ct) >= 0)) bin = false;
 
 		func(new ContentWriterAdapter(bin?null:'utf8', function(buff) {
 
@@ -41,13 +41,13 @@
 		},
 		write:function(data) {
 
-			if (data['_content']) {
+			if (data.values['_content']) {
 				processing++;
-				export_content(data);
+				export_content(data.values);
 			}
 			else {
 				if (count > 0) writer.write('\n,\n');
-				writer.write(JSON.stringify(data));
+				writer.write(JSON.stringify(data.values));
 			}
 			count++;
 		},

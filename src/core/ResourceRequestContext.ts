@@ -13,12 +13,17 @@ class ResourceRequestContext {
     p['SUFFIX'] = this.pathInfo.suffix;
     p['PATH'] = this.pathInfo.path;
     p['NAME'] = this.pathInfo.name;
+    p['DIRNAME'] = this.pathInfo.dirname;
     p['DATA_PATH'] = this.pathInfo.dataPath;
     p['DATA_NAME'] = this.pathInfo.dataName;
 
     let pplus = this.pathInfo.path;
     if (pplus !== '/') pplus = pplus+'/';
     p['PATH_APPEND'] = pplus;
+
+    let dpplus = this.pathInfo.dirname;
+    if (dpplus !== '/') dpplus = dpplus+'/';
+    p['DIRNAME_APPEND'] = dpplus;
 
     let dplus = this.pathInfo.dataPath?this.pathInfo.dataPath:'';
     if (dplus !== '/') dplus = dplus+'/';
@@ -44,8 +49,8 @@ class ResourceRequestContext {
     return this.pathInfo.resourcePath;
   }
 
-  public renderResource(resourcePath: string, rtype: string, selector: string, context: ResourceRequestContext, callback: any) {
-    this.resourceRequestHandler.renderResource(resourcePath, rtype, selector, context, callback);
+  public renderResource(resourcePath: string, rstype: string, selector: string, context: ResourceRequestContext, callback: any) {
+    this.resourceRequestHandler.renderResource(resourcePath, rstype, selector, context, callback);
   }
 
   public getQueryProperties() {
@@ -64,10 +69,10 @@ class ResourceRequestContext {
     this.resourceRequestHandler.forwardRequest(rpath);
   }
 
-  public makeContextMap(res: Resource) {
+  public makeContextMap(res: Data) {
     let map = {};
 
-    if (res) {
+    if (res instanceof Resource) {
       map['renderType'] = res.getRenderType();
       map['renderTypes'] = res.getRenderTypes();
       map['superType'] = res.getSuperType();
