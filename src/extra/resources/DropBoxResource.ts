@@ -1,280 +1,259 @@
 class DropBoxResourceContentWriter implements ContentWriter {
-  protected dbx;
-  protected filePath: string;
-  protected buffer = [];
+	protected dbx;
+	protected filePath: string;
+	protected buffer = [];
 
-  constructor(dbx: any, filePath: string) {
-    this.dbx = dbx;
-    this.filePath = filePath;
-  }
+	constructor(dbx: any, filePath: string) {
+		this.dbx = dbx;
+		this.filePath = filePath;
+	}
 
-  public start(ctype: string) {
-  }
+	public start(ctype: string) {}
 
-  public write(data: any) {
-    this.buffer.push(data);
-  }
+	public write(data: any) {
+		this.buffer.push(data);
+	}
 
-  public error(error: Error) {
-    console.log(error);
-  }
+	public error(error: Error) {
+		console.log(error);
+	}
 
-  public end(callback: any) {
-    let self = this;
-    let offset = 0;
-    let fileid = null;
+	public end(callback: any) {
+		let self = this;
+		let offset = 0;
+		let fileid = null;
 
-    let finish = function() {
-      self.dbx.filesUploadSessionFinish({
-        cursor: {
-				  session_id: fileid.session_id,
-          offset: offset
-        },
-				commit: {
-					path: self.filePath,
-					mode: 'overwrite'
-        }
-      })
-      .then(function(response) {
-        if (callback) callback();
-      })
-      .catch(function (err) {
-        console.log(err);
-        if (callback) callback();
-      });
-    };
+		let finish = function() {
+			self.dbx.filesUploadSessionFinish({
+					cursor: {
+						session_id: fileid.session_id,
+						offset: offset
+					},
+					commit: {
+						path: self.filePath,
+						mode: 'overwrite'
+					}
+				})
+				.then(function(response) {
+					if (callback) callback();
+				})
+				.catch(function(err) {
+					console.log(err);
+					if (callback) callback();
+				});
+		};
 
-    let store_chunk = function(data) {
-      self.dbx.filesUploadSessionAppend({
-        contents: data,
-        offset: offset,
-        session_id: fileid.session_id
-      })
-      .then(function(response) {
-        if (data.length) offset += data.length;
-        else if (data.byteLength) offset += data.byteLength;
+		let store_chunk = function(data) {
+			self.dbx.filesUploadSessionAppend({
+					contents: data,
+					offset: offset,
+					session_id: fileid.session_id
+				})
+				.then(function(response) {
+					if (data.length) offset += data.length;
+					else if (data.byteLength) offset += data.byteLength;
 
-        if (self.buffer.length > 0) store_chunk(self.buffer.shift());
-        else finish();
-      })
-      .catch(function (err) {
-        console.log(err);
-        if (callback) callback();
-      });
-    };
+					if (self.buffer.length > 0) store_chunk(self.buffer.shift());
+					else finish();
+				})
+				.catch(function(err) {
+					console.log(err);
+					if (callback) callback();
+				});
+		};
 
-    this.dbx.filesUploadSessionStart({
-      contents: null,
-			close: false
-    })
-    .then(function (response) {
-			fileid = response;
-      store_chunk(self.buffer.shift());
-    })
-    .catch(function (err) {
-      console.log(err);
-    });
-  }
+		this.dbx.filesUploadSessionStart({
+				contents: null,
+				close: false
+			})
+			.then(function(response) {
+				fileid = response;
+				store_chunk(self.buffer.shift());
+			})
+			.catch(function(err) {
+				console.log(err);
+			});
+	}
 }
 
-class DropBoxResource extends Resource {
-  protected dbx: any;
-  protected filePath: string;
-  protected isDirectory: boolean = true;
-  protected resources = null;
+class DropBoxResource extends StoredResource {
+	protected dbx: any;
 
-  constructor(dbx: any, path?: string, name?: string) {
-    super(name);
+	constructor(dbx: any, name? : string, base? : string) {
+		super(name ? name : '', base ? base : '');
 
-    this.dbx = dbx;
-    this.filePath = path?path:'';
-  }
+		this.dbx = dbx;
+	}
 
-  public getType(): string {
-    if (this.isDirectory) return 'resource/node';
-    else return 'resource/content';
-  }
+	protected makeNewResource(name: string) {
+		let path = this.getStoragePath();
+		return new DropBoxResource(this.dbx, name, path);
+	}
 
-  public getSuperType(): string {
-    if (this.getType() === 'resource/node') return null;
-    else return 'resource/node';
-  }
+	protected getMetadataPath(nm ? : string): string {
+		if (nm) {
+			return this.basePath + '/.' + nm + '.metadata.json';
+		}
+		else if (this.isDirectory) {
+			return this.getStoragePath('.metadata.json');
+		}
+		else {
+			let dirname = Utils.filename_dir(this.basePath);
+			let name = Utils.filename(this.basePath);
 
-  public getRenderType(): string {
-    return this.values['_rt'];
-  }
+			return dirname + '/.' + name + '.metadata.json';
+		}
+	}
 
-  protected makeMetadataPath(nm?: string):string {
-    if (nm) {
-      return this.filePath + '/.' + nm + '.metadata.json';
-    }
-    else if (this.isDirectory) {
-      return Utils.filename_path_append(this.filePath, '.metadata.json');
-    }
-    else {
-      let dirname = Utils.filename_dir(this.filePath);
-      let name = Utils.filename(this.filePath);
+	protected storeProperties(callback) {
+		let self = this;
+		let path = this.getMetadataPath();
 
-      return dirname + '/.' + name + '.metadata.json';
-    }
-  }
+		this.dbx.filesUpload({
+				contents: JSON.stringify(self.values),
+				path: path,
+				mute: true,
+				mode: 'overwrite'
+			})
+			.then(function(response) {
+				callback();
+			})
+			.catch(function(error) {
+				callback(null);
+			});
+	}
 
-  protected readResources(callback) {
-    let self = this;
-    if (self.resources) {
-      callback(self.resources);
-    }
-    else if (self.isDirectory) {
-      self.dbx.filesListFolder({path: this.filePath})
-      .then(function(response) {
-        self.resources = {};
 
-        for (let i = 0; i < response.entries.length; i++) {
-          let item = response.entries[i];
-          let name = item.name;
-          if (name.charAt(0) === '.') continue;
+	protected loadProperties(callback) {
+		let path = this.getStoragePath();
+		let self = this;
+		let load_metadata = function(callback) {
+			let metadata = self.getMetadataPath();
+			self.dbx.filesDownload({
+					path: metadata
+				})
+				.then(function(data) {
+					let reader = new FileReader();
+					reader.onload = function(event) {
+						let txt = reader.result;
+            try { 
+              self.values = JSON.parse(txt);
+            } 
+            catch (ignore) {};
+						callback(true);
+					};
+					reader.readAsText(data.fileBlob);
+				})
+				.catch(function(error) {
+					callback(true);
+				});
+		};
 
-          let path = Utils.filename_path_append(self.filePath, name);
-          let res = new DropBoxResource(self.dbx, path, name);
-          
-          if (item['.tag'] === 'file') res.isDirectory = false;
-          else res.isDirectory = true;
+		if (path) {
+			self.dbx.filesGetMetadata({
+					path: path
+				})
+				.then(function(response) {
+					if (response['.tag'] === 'file') self.isDirectory = false;
+					else self.isDirectory = true;
 
-          self.resources[name] = res;
-        }
-        callback(self.resources);
-      })
-      .catch(function(error) {
-        callback();
-      });
-    }
-    else {
-      callback();
-    }
-  }
+					load_metadata(callback);
+				})
+				.catch(function(error) {
+					callback(false);
+				});
+		}
+		else {
+			callback(true);
+		}
+	}
 
-  public createChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
-    let self = this;
-    this.readResources(function(rls) {
-      let path = Utils.filename_path_append(self.filePath, name);
-      let res = new DropBoxResource(self.dbx, path, name);
+	public removeChildResource(name: string, callback) {
+		let path = this.getStoragePath(name);
+		this.dbx.filesDelete({
+				path: path
+			})
+			.then(function(response) {
+				callback();
+			})
+			.catch(function(error) {
+				callback(null);
+			});
+	}
 
-      if (!self.resources) self.resources = {};
-      self.resources[name] = res;
-      callback(res);
-    });
-  }
+	public storeChildrenNames(callback) {
+		callback();
+	}
 
-  public importContent(func, callback) {
-    func(this.getWriter(), callback);
-  }
+	protected ensurePathExists(path: string, callback) {
+		let self = this;
+		self.dbx.filesCreateFolder({
+				path: path
+			})
+			.then(function() {
+				callback(true);
+			})
+			.catch(function(error) {
+        if (error.status === 409) callback(true);
+        else callback(false);
+			});
+	}
 
-  public importProperties(data: any, callback) {
-    let self = this;
-    let path = this.makeMetadataPath();
+	public loadChildrenNames(callback: ChildrenNamesCallback) {
+		let self = this;
+		let path = this.getStoragePath();
+		let rv = [];
+		self.dbx.filesListFolder({
+				path: path
+			})
+			.then(function(response) {
 
-    this.dbx.filesUpload({
-      contents:'xxx',
-      path: path,
-      mute: true,
-      mode: 'overwrite'
-    })
-    .then(function(response) {
-      callback();
-    })
-    .catch(function(error) {
-      callback(null);
-    });
-  }
+				for (let i = 0; i < response.entries.length; i++) {
+					let item = response.entries[i];
+					let name = item.name;
+					if (name.charAt(0) === '.') continue;
 
-  public removeChildResource(name: string, callback) {
-    this.resources = null;
 
-    let path = Utils.filename_path_append(this.filePath, name);
-    this.dbx.filesDelete({path:path})
-    .then(function(response) {
-      callback();
-    })
-    .catch(function(error) {
-      callback(null);
-    });
-  }
+					rv.push(name);
+				}
+				callback(rv);
+			})
+			.catch(function(error) {
+				callback(null);
+			});
+	}
 
-  public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
-    if (walking) {
-      if (this.resources) {
-        callback(this.resources[name]);
-      }
-      else {
-        this.resources = {};
-        let path = Utils.filename_path_append(this.filePath, name);
-        let res = new DropBoxResource(this.dbx, path, name);
-        this.resources[name] = res;
-        callback(res);
-      }
-    }
-    else {
-      this.readResources(function(rls) {
-        if (rls) callback(rls[name]);
-        else callback(null);
-      });
-    }
-  }
+	public getWriter(): ContentWriter {
+		if (this.isDirectory) {
+			this.isDirectory = false;
+		}
 
-  public listChildrenNames(callback: ChildrenNamesCallback) {
-    this.readResources(function(rls) {
-      if (!rls) callback([]);
-      else {
-        let ls = [];
-        for (let name in rls) {
-          ls.push(name);
-        }
-        callback(ls);
-      }
-    });
-  }
+		return new DropBoxResourceContentWriter(this.dbx, this.basePath);
+	}
 
-  public isContentResource(): boolean {
-    return !this.isDirectory;
-  }
+	public read(writer: ContentWriter, callback: any) {
+		if (this.isDirectory) {
+			writer.end(callback);
+		}
+		else {
+			let path = this.getStoragePath();
+			let ct = this.getContentType();
 
-  public getContentType(): string {
-    if (this.isDirectory) return null;
-
-    let contentType = this.values['_ct'];
-    if (contentType) return contentType;
-    else return Utils.filename_mime(this.getName());
-  }
-
-  public getWriter(): ContentWriter {
-    if (this.isDirectory) {
-      this.isDirectory = false;
-    }
-
-    return new DropBoxResourceContentWriter(this.dbx, this.filePath);
-  }
-
-  public read(writer: ContentWriter, callback: any) {
-    if (this.isDirectory) {
-      writer.end(callback);
-    }
-    else {
-      let path = this.filePath;
-      let ct = this.getContentType();
-      
-      this.dbx.filesDownload({path:this.filePath})
-      .then(function(data) {
-        let reader = new FileReader();
-        reader.onload = function(event){
-          writer.start(ct);
-          writer.write(reader.result);
-          writer.end(callback);
-        };
-        reader.readAsArrayBuffer(data.fileBlob) ; 
-      })
-      .catch(function(error) {
-        writer.end(callback);
-      });
-    }
-  }  
+			this.dbx.filesDownload({
+					path: path
+				})
+				.then(function(data) {
+					let reader = new FileReader();
+					reader.onload = function(event) {
+						writer.start(ct);
+						writer.write(reader.result);
+						writer.end(callback);
+					};
+					reader.readAsArrayBuffer(data.fileBlob);
+				})
+				.catch(function(error) {
+					writer.end(callback);
+				});
+		}
+	}
 }

@@ -40,17 +40,13 @@ class PouchDBResourceContentWriter implements ContentWriter {
   }
 }
 
-class PouchDBResource extends Resource {
-  protected nodePath: string;
-  protected nodeName: string;
+class PouchDBResource extends StoredResource {
   protected contentType: string;
   protected db: any;
 
-  constructor(db: any, path?: string, name?: string) {
-    super(name);
+  constructor(db: any, base?: string, name?: string) {
+		super(name ? name : '', base ? base : '');
 
-    this.nodePath = path?path:'';
-    this.nodeName = name?name:'';
     this.contentType = null;
     this.db = db;
   }
@@ -73,20 +69,6 @@ class PouchDBResource extends Resource {
     }
   }
 
-  public getRenderType(): string {
-    return this.values['_rt'];
-  }
-
-  public getType(): string {
-    if (this.contentType) return 'resource/content';
-    else return 'resource/node';
-  }
-
-  public getSuperType(): string {
-    if (this.getType() === 'resource/node') return null;
-    else return 'resource/node';
-  }
-
   public isContentResource(): boolean {
     if (this.contentType) return true;
     else return false;
@@ -96,105 +78,98 @@ class PouchDBResource extends Resource {
     return this.contentType;
   }
 
-  protected storeNode(callback) {
-    let self = this;
-    let path = Utils.filename_path_append(this.nodePath, this.nodeName);
-    
-    let id = this.make_key(path);
-
-    let item = {
-      _id:id
-    };
-
-    this.db.put(item).then(function() {
-      callback(self);
-    })
-    .catch(function(err) {
-      console.log(err);
-      callback();
-    });
+	protected ensurePathExists(path: string, callback) {
+    callback(true);
   }
 
-  public importContent(func, callback) {
-    func(this.getWriter(), callback);
-  }
+	public storeChildrenNames(callback) {
+    callback();
+	}
 
-  public importProperties(data: any, callback) {
+  protected storeProperties(callback) {
     let self = this;
-    let path = Utils.filename_path_append(this.nodePath, this.nodeName);
+    let path = this.getStoragePath();
     let id = this.make_key(path);
 
-    self.db.get(id).then(function(doc) {
-      for (let key in data) {
-        let v = data[key];
+    let update_doc = function(doc) {
+      for (let key in self.values) {
+        let v = self.values[key];
         key = key.trim();
-        if (key.length === 0) continue;
-        if (v) doc[key] = data[key];
-        else delete doc[key];
+        if (v && key) doc[self.escape_name(key)] = v;
       }
 
       self.db.put(doc).then(function() {
-        callback();
+        callback(true);
       })
       .catch(function(err) {
         console.log(err);
-        callback();
+        callback(false);
       });
+    };
+
+    self.db.get(id)
+    .then(function(doc) {
+      for (let key in doc) {
+        if (key.charAt(0) === '_') continue;
+        if (!self.values[key]) delete doc[key];
+      }
+
+      update_doc(doc);
     })
     .catch(function(err) {
+      //not found, new?
+      if (err.status === 404) {
+        let doc = {
+          _id:id
+        };
+
+        update_doc(doc);
+      }
+      else {
         console.log(err);
-        callback();
+        callback(false);
+      }
+    });
+
+  }
+
+	protected loadProperties(callback) {
+    let self = this;
+    let path = this.getStoragePath();
+    let id = this.make_key(path);
+
+    self.db.get(id)
+    .then(function(doc) {
+      for (let key in doc) {
+        let v = doc[key];
+        if (key.charAt(0) === '_') continue;
+        if (v) self.values[self.unescape_name(key)] = v;
+      }
+      callback(true);
+    })
+    .catch(function(err) {
+      if (err.status === 404 && path === '') { //special case for the root
+        callback(true);
+      }
+      else {
+        console.log(err);
+        callback(false);
+      }
     });
   }
 
-  public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
-    let self = this;
-    let path = Utils.filename_path_append(this.nodePath, this.nodeName);
-
-    if (walking) {
-      let res = new PouchDBResource(self.db, path, name);
-       callback(res);
-    }
-    else {
-      let bpath = Utils.filename_path_append(path, name);
-      let id = this.make_key(bpath);
-
-      this.db.get(id).then(function(doc) {
-        let res = new PouchDBResource(self.db, path, name);
-        res.values = {};
-
-        for (let key in doc) {
-				  let val = doc[key];
-
-          if (key === '_attachments') res.contentType = doc._attachments.content.content_type;
-          else if (key.charAt(0) !== '_') res.values[key] = val;
-				}
-
-        callback(res);
-      }).catch(function (err) {
-        callback(null);
-        console.log(err);
-      });
-    }
-  }
-  public createChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
-    let path = Utils.filename_path_append(this.nodePath, this.nodeName);
-    let res = new PouchDBResource(this.db, path, name);
-
-    if (walking) callback(res);
-    else {
-      res.storeNode(callback);
-    }
+	protected makeNewResource(name: string) {
+		let path = this.getStoragePath();
+    return new PouchDBResource(this.db, path, name);
   }
 
   public removeChildResource(name: string, callback) {
     let self = this;
-    let path = Utils.filename_path_append(this.nodePath, this.nodeName);
-        path = Utils.filename_path_append(path, name);
-
+    let path = this.getStoragePath(name);
     let id = this.make_key(path);
 
-    self.db.get(id).then(function(doc) {
+    self.db.get(id)
+    .then(function(doc) {
       self.db.remove(doc);
     })
     .then(function (result) {
@@ -206,8 +181,8 @@ class PouchDBResource extends Resource {
     }); 
   }
 
-  public listChildrenNames(callback: ChildrenNamesCallback) {
-    let path = Utils.filename_path_append(this.nodePath, this.nodeName)+'/';
+	public loadChildrenNames(callback: ChildrenNamesCallback) {
+		let path = this.getStoragePath() + '/';
     let id = this.make_key(path);
 
     this.db.allDocs({
@@ -231,14 +206,14 @@ class PouchDBResource extends Resource {
   }
 
   public getWriter(): ContentWriter {
-    let path = Utils.filename_path_append(this.nodePath, this.nodeName);
+    let path = this.getStoragePath();
     let id = this.make_key(path);
 
     return new PouchDBResourceContentWriter(this.db, id);
   }
 
   public read(writer: ContentWriter, callback: any) {
-    let path = Utils.filename_path_append(this.nodePath, this.nodeName);
+    let path = this.getStoragePath();
     let id = this.make_key(path);
     let self = this;
 

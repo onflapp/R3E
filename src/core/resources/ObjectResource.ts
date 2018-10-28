@@ -24,7 +24,7 @@ class ObjectResource extends Resource {
     }
   }
 
-  public createChildResource(name: string, callback: ResourceCallback): void {
+  public allocateChildResource(name: string, callback: ResourceCallback): void {
     let rv = {};
     this.values[name] = rv;
     callback(new ObjectResource(name, rv));
@@ -39,21 +39,6 @@ class ObjectResource extends Resource {
       }
     }
     callback(rv);
-  }
-
-  public importProperties(data: any, callback) {
-    for (let k in data) {
-      let v = data[k];
-
-      if (k.charAt(0) === ':') {
-        continue;
-      }
-      else {
-        if (v) this.values[k] = v;
-        else delete this.values[k];
-      }
-    }
-    callback();
   }
 
   public importContent(func, callback) {

@@ -49,7 +49,7 @@ class ResourceResolver {
         let walking = false;
         if (paths.length > 0) walking = true;
 
-        res.resolveOrCreateChildResource(name, function(rv) {
+        res.resolveOrAllocateChildResource(name, function(rv) {
           if (!rv) {
             callback(null);
           }

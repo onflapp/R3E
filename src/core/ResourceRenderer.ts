@@ -94,7 +94,7 @@ class ResourceRenderer {
 		let self = this;
 
 		let resolve_renderer = function(p: string) {
-			console.log('try:' + p);
+			//console.log('try:' + p);
 			self.rendererResolver.resolveResource(p, function(rend: Resource) {
 				if (rend) {
 					if (rend.isContentResource()) {

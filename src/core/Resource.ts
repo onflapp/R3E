@@ -13,6 +13,21 @@ class Data {
     this.values = obj?obj:{};
   }
 
+  public importProperties(data: any, callback) {
+    for (let k in data) {
+      let v = data[k];
+
+      if (k.charAt(0) === ':') {
+        continue;
+      }
+      else {
+        if (v) this.values[k] = v;
+        else delete this.values[k];
+      }
+    }
+    callback();
+  }
+
   public getProperties() {
     let map = {};
     let names = this.getPropertyNames();
@@ -109,21 +124,20 @@ abstract class Resource extends Data implements ContentReader {
     return rv;
   }
 
-  public abstract importProperties(data: any, callback): void;
   public abstract importContent(func, callback): void;
   public abstract resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void;
-  public abstract createChildResource(name: string, callback: ResourceCallback, walking?: boolean): void;
+  public abstract allocateChildResource(name: string, callback: ResourceCallback, walking?: boolean): void;
   public abstract removeChildResource(name: string, callback);
   public abstract listChildrenNames(callback: ChildrenNamesCallback);
 
-  public resolveOrCreateChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
+  public resolveOrAllocateChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
     let self = this;
     this.resolveChildResource(name, function(res) {
       if (res) {
         callback(res);
       }
       else {
-        self.createChildResource(name, callback);
+        self.allocateChildResource(name, callback);
       }
     }, walking);
   }
@@ -264,12 +278,14 @@ abstract class Resource extends Data implements ContentReader {
     let self = this;
     this.listChildrenNames(function(ls) {
       let rv = [];
+      let sz = 0;
       if (ls && ls.length > 0) {
         for (var i = 0; i < ls.length; i++) {
           let name = ls[i];
           self.resolveChildResource(name, function(res) {
-            rv.push(res);
-            if (rv.length === ls.length) {
+            sz++;
+            if (res) rv.push(res);
+            if (sz === ls.length) {
               callback(rv);
             }
           });

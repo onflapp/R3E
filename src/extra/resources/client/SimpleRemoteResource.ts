@@ -13,7 +13,7 @@ class SimpleRemoteResource extends Resource {
     return this.path;
   }
 
-  public createChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
+  public allocateChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
     callback(null);
   }
 

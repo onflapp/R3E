@@ -26,6 +26,7 @@ class DOMContentWriter implements ContentWriter {
         evt.preventDefault();
       }
     });
+
   }
 
   protected compareElements(lista, listb) {
@@ -99,10 +100,19 @@ class DOMContentWriter implements ContentWriter {
 }
 
 class ClientRequestHandler extends ResourceRequestHandler {
+  protected currentPath: string;
   constructor(resourceResolver: ResourceResolver, templateResolver: ResourceResolver, contentWriter: DOMContentWriter) {
     let writer = contentWriter ? contentWriter : new DOMContentWriter();
     super(resourceResolver, templateResolver, writer);
     writer.setRequestHandler(this);
+    let self = this;
+
+    window.addEventListener('hashchange', function(evt) {
+      let path = window.location.hash.substr(1);
+      if (path !== self.currentPath) {
+        self.renderRequest(path);
+      }
+    });
   }
 
   public forwardRequest(rpath: string) {
@@ -114,6 +124,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
   }
 
   public renderRequest(rpath: string) {
+    this.currentPath = rpath;
     location.hash = rpath;
     super.renderRequest(rpath);
   }
