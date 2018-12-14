@@ -1,8 +1,16 @@
 class DOMContentWriter implements ContentWriter {
   private requestHandler: ClientRequestHandler;
   private htmldata;
+  private extdata;
 
   constructor() {
+  }
+
+  protected escapeHTML(html){
+    let text = document.createTextNode(html);
+    let p = document.createElement('p');
+    p.appendChild(text);
+    return p.innerHTML;
   }
 
   protected attachListeners() {
@@ -74,13 +82,18 @@ class DOMContentWriter implements ContentWriter {
 
   public start(ctype) {
     if (ctype === 'text/html') this.htmldata = [];
-    else document.open(ctype);
+    else {
+      this.extdata = window.open('about:blank');
+      this.extdata.document.open(ctype);
+      this.extdata.document.write('<pre>');
+    }
   }
+
   public write(content) {
     if (this.htmldata) this.htmldata.push(content);
     else {
-      if (typeof content != 'string') document.write(JSON.stringify(content));
-      else document.write(content);
+      if (typeof content != 'string') this.extdata.document.write(JSON.stringify(content));
+      else this.extdata.document.write(this.escapeHTML(content));
     }
 
   }
@@ -92,10 +105,12 @@ class DOMContentWriter implements ContentWriter {
       this.updateDocument(this.htmldata.join(''));
     }
     else {
-      document.close();
+      this.extdata.document.write('</pre>');
+      this.extdata.document.close();
     }
     this.attachListeners();
     this.htmldata = null;
+    this.extdata = null;
   }
 }
 

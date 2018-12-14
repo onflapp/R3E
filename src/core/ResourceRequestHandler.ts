@@ -357,7 +357,10 @@ class ResourceRequestHandler extends EventDispatcher {
 
     if (info.resourcePath) {
       self.transformData(data, context, function(data) {
-        self.storeResource(info.resourcePath, data, function(error) {
+        let storeto = Utils.absolute_path(data.values[':storeto']);
+        if (!storeto) storeto = info.resourcePath;
+
+        self.storeResource(storeto, data, function(error) {
           if (!error) {
             let forward = Utils.absolute_path(data.values[':forward']);
 

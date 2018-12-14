@@ -3,6 +3,8 @@ abstract class StoredResource extends Resource {
   protected baseName: string;
   protected childNames;
   protected isDirectory: boolean = true;
+  protected resourceCache = {};
+  protected loaded = false;
 
 	constructor(name: string, base?: string) {
 		super(name);
@@ -15,6 +17,15 @@ abstract class StoredResource extends Resource {
       this.basePath = name;
     }
 	}
+
+  protected getCachedResource(name: string): Resource {
+    return this.resourceCache[name];
+  }
+
+  protected setCachedResource(name: string, res: Resource): Resource {
+    this.resourceCache[name] = res;
+    return res;
+  }
 
   public getStoragePath(name?: string): string {
     let path = Utils.filename_path_append(this.basePath, this.baseName);
@@ -50,22 +61,34 @@ abstract class StoredResource extends Resource {
 
   public resolveItself(callback) {
     let self = this;
-    this.loadProperties(function(rv) {
-      if (rv) callback(self);
-      else callback(null);
-    });
+
+    if (self.loaded) {
+      callback(self);
+    }
+    else {
+      self.loadProperties(function(rv) {
+        self.loaded = rv?true:false;
+
+        if (rv) callback(self);
+        else callback(null);
+      });
+    }
   }
 
   public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
-    if (walking) {
-      let res = this.makeNewResource(name);
+    let res = this.getCachedResource(name);
+    if (res) {
+      callback(res);
+    }
+    else if (walking) {
+      res = this.setCachedResource(name, this.makeNewResource(name));
       callback(res);
     }
     else {
       let self = this;
       this.listChildrenNames(function(childNames) {
         if (childNames && childNames.indexOf(name) >= 0) {
-          let res = self.makeNewResource(name);
+          res = self.setCachedResource(name, self.makeNewResource(name));
           res.resolveItself(callback);
         }
         else callback(null);

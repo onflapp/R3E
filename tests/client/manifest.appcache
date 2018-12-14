@@ -1,5 +1,5 @@
 CACHE MANIFEST
-# rev 413 - 2018-10-28T14:47:22.062Z
+# rev 451 - 2018-10-30T11:55:04.856Z
 
 CACHE:
 ../../templates/any/any.env.js
@@ -17,6 +17,7 @@ CACHE:
 ../../templates/resource/node/res-copyto.hbs
 ../../templates/resource/node/res-create.hbs
 ../../templates/resource/node/res-delete.hbs
+../../templates/resource/node/res-exportto.hbs
 ../../templates/resource/node/res-list.hbs
 ../../templates/resource/node/res-moveto.hbs
 ../../templates/resource/node/res-properties.hbs
@@ -37,7 +38,10 @@ CACHE:
 ../static/bootstrap/fonts/glyphicons-halflings-regular.woff2
 ../static/bootstrap/js/bootstrap.min.js
 ../static/handlebars.js
-pouchdb.js
+../static/libs/dropbox-sdk.js
+../static/libs/fetch.js
+../static/libs/polyfill.js
+../static/libs/pouchdb.js
 test1.js
 test2.js
 test3.js
@@ -47,3 +51,6 @@ test5.js
 ../server/test1.js
 ../server/test2.js
 ../../dist/r3elib.js
+
+NETWORK:
+*

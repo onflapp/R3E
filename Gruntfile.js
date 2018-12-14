@@ -41,7 +41,7 @@ module.exports = function(grunt) {
 						"src/extra/factories/HBSRendererFactory.ts",
 						"src/extra/resources/StoredResource.ts",
 						"src/extra/resources/client/RemoteResource.ts",
-						"src/extra/resources/client/SimpleRemoteResource.ts",
+						"src/extra/resources/client/RemoteTemplateResource.ts",
 						"src/extra/resources/client/ClientRequestHandler.ts",
 						"src/extra/resources/server/ServerRequestHandler.ts",
 						"src/extra/resources/server/FileResource.ts",
@@ -76,7 +76,7 @@ module.exports = function(grunt) {
       	cache: {
 					patterns:['templates/**/*','tests/static/**/*','tests/**/*.js', 'dist/**/*.js']
 				},
-      	xnetwork: '*',
+      	network: '*',
       	xfallback: '/ /offline.html'
     	}
   	}

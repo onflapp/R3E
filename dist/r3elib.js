@@ -1115,7 +1115,10 @@ var ResourceRequestHandler = (function (_super) {
         };
         if (info.resourcePath) {
             self.transformData(data, context, function (data) {
-                self.storeResource(info.resourcePath, data, function (error) {
+                var storeto = Utils.absolute_path(data.values[':storeto']);
+                if (!storeto)
+                    storeto = info.resourcePath;
+                self.storeResource(storeto, data, function (error) {
                     if (!error) {
                         var forward = Utils.absolute_path(data.values[':forward']);
                         if (forward)
@@ -1805,7 +1808,7 @@ var HBSRendererFactory = (function (_super) {
         else
             _this.Handlebars = require('handlebars');
         var self = _this;
-        _this.Handlebars.registerHelper('include', function (arg0, arg1) {
+        var include = function (arg0, arg1) {
             var path = arg0;
             var block = arg1;
             var selector = null;
@@ -1819,6 +1822,7 @@ var HBSRendererFactory = (function (_super) {
                 selector = arguments[2];
                 block = arguments[3];
             }
+            var safe = (block.name === 'include-safe') ? true : false;
             var session = block.data.root._session;
             var context = block.data.root._context;
             var res = block.data.root._resource;
@@ -1841,16 +1845,22 @@ var HBSRendererFactory = (function (_super) {
                         var it = content;
                         out = block.fn(it);
                     }
+                    if (safe)
+                        out = self.Handlebars.Utils.escapeExpression(out);
                     p.write(out);
                     p.end();
                 }
                 else {
+                    if (safe)
+                        content = self.Handlebars.Utils.escapeExpression(content);
                     p.write(content);
                     p.end();
                 }
             });
             return p.placeholder;
-        });
+        };
+        _this.Handlebars.registerHelper('include', include);
+        _this.Handlebars.registerHelper('include-safe', include);
         _this.Handlebars.registerHelper('p', function (val, options) {
             if (typeof val === 'object') {
                 return JSON.stringify(val);
@@ -1941,6 +1951,8 @@ var StoredResource = (function (_super) {
     function StoredResource(name, base) {
         var _this = _super.call(this, name) || this;
         _this.isDirectory = true;
+        _this.resourceCache = {};
+        _this.loaded = false;
         if (typeof base !== 'undefined') {
             _this.baseName = name;
             _this.basePath = base;
@@ -1951,6 +1963,13 @@ var StoredResource = (function (_super) {
         }
         return _this;
     }
+    StoredResource.prototype.getCachedResource = function (name) {
+        return this.resourceCache[name];
+    };
+    StoredResource.prototype.setCachedResource = function (name, res) {
+        this.resourceCache[name] = res;
+        return res;
+    };
     StoredResource.prototype.getStoragePath = function (name) {
         var path = Utils.filename_path_append(this.basePath, this.baseName);
         if (name)
@@ -1986,23 +2005,33 @@ var StoredResource = (function (_super) {
     };
     StoredResource.prototype.resolveItself = function (callback) {
         var self = this;
-        this.loadProperties(function (rv) {
-            if (rv)
-                callback(self);
-            else
-                callback(null);
-        });
+        if (self.loaded) {
+            callback(self);
+        }
+        else {
+            self.loadProperties(function (rv) {
+                self.loaded = rv ? true : false;
+                if (rv)
+                    callback(self);
+                else
+                    callback(null);
+            });
+        }
     };
     StoredResource.prototype.resolveChildResource = function (name, callback, walking) {
-        if (walking) {
-            var res = this.makeNewResource(name);
+        var res = this.getCachedResource(name);
+        if (res) {
+            callback(res);
+        }
+        else if (walking) {
+            res = this.setCachedResource(name, this.makeNewResource(name));
             callback(res);
         }
         else {
             var self_2 = this;
             this.listChildrenNames(function (childNames) {
                 if (childNames && childNames.indexOf(name) >= 0) {
-                    var res = self_2.makeNewResource(name);
+                    res = self_2.setCachedResource(name, self_2.makeNewResource(name));
                     res.resolveItself(callback);
                 }
                 else
@@ -2214,57 +2243,72 @@ var RemoteResource = (function (_super) {
     };
     return RemoteResource;
 }(ObjectResource));
-var SimpleRemoteResource = (function (_super) {
-    __extends(SimpleRemoteResource, _super);
-    function SimpleRemoteResource(base, path) {
-        var _this = _super.call(this, '/') || this;
+var RemoteTemplateResource = (function (_super) {
+    __extends(RemoteTemplateResource, _super);
+    function RemoteTemplateResource(base, path, name) {
+        var _this = _super.call(this, name ? name : '') || this;
+        _this.resources = {};
         _this.baseURL = base;
         _this.path = path ? path : '';
         return _this;
     }
-    SimpleRemoteResource.prototype.getPath = function () {
+    RemoteTemplateResource.prototype.getPath = function () {
         return this.path;
     };
-    SimpleRemoteResource.prototype.allocateChildResource = function (name, callback, walking) {
+    RemoteTemplateResource.prototype.allocateChildResource = function (name, callback, walking) {
         callback(null);
     };
-    SimpleRemoteResource.prototype.listChildrenNames = function (callback) {
+    RemoteTemplateResource.prototype.listChildrenNames = function (callback) {
+        var rv = [];
+        for (var key in this.resources) {
+            rv.push(key);
+        }
+        callback(rv);
+    };
+    RemoteTemplateResource.prototype.importProperties = function (data, callback) {
         callback(null);
     };
-    SimpleRemoteResource.prototype.importProperties = function (data, callback) {
+    RemoteTemplateResource.prototype.importContent = function (func, callback) {
         callback(null);
     };
-    SimpleRemoteResource.prototype.importContent = function (func, callback) {
+    RemoteTemplateResource.prototype.removeChildResource = function (name, callback) {
         callback(null);
     };
-    SimpleRemoteResource.prototype.removeChildResource = function (name, callback) {
-        callback(null);
-    };
-    SimpleRemoteResource.prototype.resolveChildResource = function (name, callback, walking) {
-        if (walking) {
-            var res = new SimpleRemoteResource(this.baseURL, Utils.filename_path_append(this.getPath(), name));
+    RemoteTemplateResource.prototype.resolveChildResource = function (name, callback, walking) {
+        var res = this.resources[name];
+        if (res) {
+            callback(res);
+        }
+        else if (walking) {
+            res = new RemoteTemplateResource(this.baseURL, Utils.filename_path_append(this.getPath(), name), name);
+            this.resources[name] = res;
             callback(res);
         }
         else {
             var self_4 = this;
             var path_1 = this.baseURL + '/' + this.getPath() + '/' + name;
             path_1 = path_1.replace(/\/+/g, '/');
-            if (SimpleRemoteResource.failedPaths[path_1]) {
+            if (RemoteTemplateResource.failedPaths[path_1]) {
                 callback(null);
                 return;
             }
-            this.requestData(path_1, function (text) {
+            this.requestData(path_1, function (ctype, text) {
                 if (text) {
-                    callback(new ObjectContentResource(name, text));
+                    res = new ObjectContentResource(name, {
+                        _content: text,
+                        _ct: ctype
+                    });
+                    self_4.resources[name] = res;
+                    callback(res);
                 }
                 else {
-                    SimpleRemoteResource.failedPaths[path_1] = true;
+                    RemoteTemplateResource.failedPaths[path_1] = true;
                     callback(null);
                 }
             });
         }
     };
-    SimpleRemoteResource.prototype.requestData = function (path, callback) {
+    RemoteTemplateResource.prototype.requestData = function (path, callback) {
         var xhr = new XMLHttpRequest();
         xhr.open('GET', path);
         xhr.onreadystatechange = function () {
@@ -2272,7 +2316,8 @@ var SimpleRemoteResource = (function (_super) {
             var OK = 200;
             if (xhr.readyState === DONE) {
                 if (xhr.status === OK) {
-                    callback(xhr.responseText);
+                    var ct = xhr.getResponseHeader('content-type');
+                    callback(ct, xhr.responseText);
                 }
                 else {
                     callback(null);
@@ -2281,12 +2326,18 @@ var SimpleRemoteResource = (function (_super) {
         };
         xhr.send(null);
     };
-    SimpleRemoteResource.failedPaths = {};
-    return SimpleRemoteResource;
+    RemoteTemplateResource.failedPaths = {};
+    return RemoteTemplateResource;
 }(Resource));
 var DOMContentWriter = (function () {
     function DOMContentWriter() {
     }
+    DOMContentWriter.prototype.escapeHTML = function (html) {
+        var text = document.createTextNode(html);
+        var p = document.createElement('p');
+        p.appendChild(text);
+        return p.innerHTML;
+    };
     DOMContentWriter.prototype.attachListeners = function () {
         var requestHandler = this.requestHandler;
         document.body.addEventListener('submit', function (evt) {
@@ -2344,17 +2395,20 @@ var DOMContentWriter = (function () {
     DOMContentWriter.prototype.start = function (ctype) {
         if (ctype === 'text/html')
             this.htmldata = [];
-        else
-            document.open(ctype);
+        else {
+            this.extdata = window.open('about:blank');
+            this.extdata.document.open(ctype);
+            this.extdata.document.write('<pre>');
+        }
     };
     DOMContentWriter.prototype.write = function (content) {
         if (this.htmldata)
             this.htmldata.push(content);
         else {
             if (typeof content != 'string')
-                document.write(JSON.stringify(content));
+                this.extdata.document.write(JSON.stringify(content));
             else
-                document.write(content);
+                this.extdata.document.write(this.escapeHTML(content));
         }
     };
     DOMContentWriter.prototype.error = function (error) {
@@ -2365,10 +2419,12 @@ var DOMContentWriter = (function () {
             this.updateDocument(this.htmldata.join(''));
         }
         else {
-            document.close();
+            this.extdata.document.write('</pre>');
+            this.extdata.document.close();
         }
         this.attachListeners();
         this.htmldata = null;
+        this.extdata = null;
     };
     return DOMContentWriter;
 }());
