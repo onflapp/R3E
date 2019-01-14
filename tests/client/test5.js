@@ -31,11 +31,12 @@ p = new PouchDBResource(db);
 b = new DropBoxResource(dbx);
 d = new ObjectResource('data', data);
 c = new ObjectResource('conf', config);
+t = new RemoteTemplateResource('../../templates/');
 
-root = new RootResource({'data':d, 'conf':c, 'db':p, 'box':b});
+root = new RootResource({'system':t, 'data':d, 'conf':c, 'db':p, 'box':b});
 
 rres = new ResourceResolver(root);
-rtmp = new MultiResourceResolver([new SimpleRemoteResource('../../templates/'), new DefaultRenderingTemplates()]);
+rtmp = new MultiResourceResolver([t, new DefaultRenderingTemplates()]);
 
 var requestHandler = new ClientRequestHandler(rres, rtmp);
 requestHandler.addEventListener('stored', function(path, data) {

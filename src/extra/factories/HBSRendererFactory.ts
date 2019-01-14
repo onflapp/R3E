@@ -9,7 +9,10 @@ class HBSRendererFactory extends TemplateRendererFactory {
 
     let self = this;
 
-    let import_func = function(arg0, arg1, arg2) {
+    //include "/path"
+    //include "/path" "sel"
+
+    let include = function (arg0, arg1) {
       let path = arg0;
       let block = arg1;
       let selector = null;
@@ -25,6 +28,7 @@ class HBSRendererFactory extends TemplateRendererFactory {
         block = arguments[3];
       }
 
+      let safe = (block.name === 'include-safe')?true:false;
       let session: TemplateRendererSession = block.data.root._session;
       let context: ResourceRequestContext = block.data.root._context;
       let res: Resource = block.data.root._resource;
@@ -49,10 +53,12 @@ class HBSRendererFactory extends TemplateRendererFactory {
             let it = content;
             out = block.fn(it);
           }
+          if (safe) out = self.Handlebars.Utils.escapeExpression(out);
           p.write(out);
           p.end();
         }
         else {
+          if (safe) content = self.Handlebars.Utils.escapeExpression(content);
           p.write(content);
           p.end();
         }
@@ -63,7 +69,8 @@ class HBSRendererFactory extends TemplateRendererFactory {
     //include "/path"
     //include "/path" "sel"
 
-    this.Handlebars.registerHelper('include', import_func);
+    this.Handlebars.registerHelper('include', include);
+    this.Handlebars.registerHelper('include-safe', include);
 
     this.Handlebars.registerHelper('p', function (val, options) {
       if (typeof val === 'object') {

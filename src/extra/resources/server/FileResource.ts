@@ -32,29 +32,16 @@ class FileResourceContentWriter implements ContentWriter {
   }
 }
 
-class FileResource extends Resource {
-  protected rootPath: string;
-  protected filePath: string;
-  protected isDirectory: boolean;
-
+class FileResource extends StoredResource {
   private fs = require('fs-extra');
   
-  constructor(root: string, name?: string) {
-    super(name);
-
-    this.rootPath = root;
-
-    if (name) {
-      this.filePath = Utils.filename_path_append(this.rootPath, name);
-    }
-    else {
-      this.filePath = root;
-    }
+	constructor(name: string, base: string) {
+    super(name, base);
   }
 
-  public getType(): string {
-    if (this.isDirectory) return 'resource/node';
-    else return 'resource/content';
+  protected makeNewResource(name: string) {
+    let path = this.getStoragePath();
+    return new FileResource(name, path);
   }
 
   public getSuperType(): string {
@@ -69,126 +56,32 @@ class FileResource extends Resource {
     return this.values['_rt'];
   }
 
-  protected makeMetadataPath(nm?: string):string {
+  protected getMetadataPath(nm?: string):string {
     if (nm) {
-      return this.filePath + '/.' + nm + '.metadata.json';
+      return this.basePath + '/.' + nm + '.metadata.json';
     }
     else if (this.isDirectory) {
-      return Utils.filename_path_append(this.filePath, '.metadata.json');
+      return this.getStoragePath('.metadata.json');
     }
     else {
-      let dirname = Utils.filename_dir(this.filePath);
-      let name = Utils.filename(this.filePath);
+      let dirname = Utils.filename_dir(this.basePath);
+      let name = Utils.filename(this.basePath);
 
       return dirname + '/.' + name + '.metadata.json';
     }
   }
 
-  public createChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
-    let path = Utils.filename_path_append(this.filePath, name);
-    let mask = '0755';
-    let res = new FileResource(this.filePath, name);
+  protected storeChildrenNames(callback) {
+    callback(true);
+  }
 
+  protected ensurePathExists(path, callback) {
+    let mask = '0755';
     this.fs.mkdir(path, mask, function(err) {
       if (!err) {
-        res.isDirectory = true;
-        callback(res);
+        callback(true);
       }
       else if (err.code == 'EEXIST') {
-        if (walking) callback(res);
-        else res.resolveItself(callback);
-      }
-      else {
-        callback(null);
-      }
-    });
-  }
-
-  public importContent(func, callback) {
-    func(this.getWriter(), callback);
-  }
-
-  public importProperties(data: any, callback) {
-    let self = this;
-    let path = this.makeMetadataPath();
- 
-    self.fs.readFile(path, 'utf8', function(err, mdata) {
-      let content = null;
-      let count = 0;
-
-      if (mdata) content = JSON.parse(mdata);
-      if (!content) content = {};
-
-      for (var key in data) {
-        var v = data[key];
-        key = key.trim();
-        if (key.length === 0) continue;
-        if (v) content[key] = data[key];
-        else delete content[key];
-
-        count++;
-      }
-
-      if (count > 0) {
-        self.fs.writeFile(path, JSON.stringify(content), 'utf8', function() {
-          callback();
-        });
-      }
-      else {
-        callback();
-      }
-    });
-  }
-
-  public removeChildResource(name: string, callback) {
-    let resolve = require('path').resolve;
-    let path = Utils.filename_path_append(this.filePath, name);
-
-    path = resolve(path);
-    if (path === '' || path === '/') {
-      console.log('invalid path');
-      callback(null);
-    }
-    else {
-      let mpath = this.makeMetadataPath(name);
-      this.fs.remove(mpath, function(err) {
-      });
-
-      this.fs.remove(path, function(err) {
-        if (err) console.log(err);
-        callback(null);
-      });
-    }
-  }
-
-  protected readMetadata(callback) {
-    let self = this;
-    let path = this.makeMetadataPath();
-
-    self.fs.readFile(path, 'utf8', function(err, data) {
-      if (data) {
-        let rv = JSON.parse(data);
-        self.values = rv?rv:{};
-      }
-      else {
-        self.values = {};
-      }
-      callback();
-    });
-  }
-
-  protected checkExistence(callback) {
-    let self = this;
-    this.fs.stat(this.filePath, function(err, stat) {
-      if (!stat) {
-        callback(false);
-      }
-      else if (stat.isFile()) {
-        self.isDirectory = false;
-        callback(true);
-      }
-      else if (stat.isDirectory()) {
-        self.isDirectory = true;
         callback(true);
       }
       else {
@@ -197,39 +90,9 @@ class FileResource extends Resource {
     });
   }
 
-  public resolveItself(callback) {
-    let self = this;
-    this.checkExistence(function(stat) {
-      if (stat) {
-        self.readMetadata(function() {
-          callback(self);
-        });
-      }
-      else {
-        callback(null);
-      }
-    });
-  }
-
-  public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
-    let res = new FileResource(this.filePath, name);
-    if (walking) {
-      res.checkExistence(function(stat) {
-        if (stat) {
-          callback(res);
-        }
-        else {
-          callback(null);
-        }
-      });
-    }
-    else {
-      res.resolveItself(callback);
-    }
-  }
-
-  public listChildrenNames(callback: ChildrenNamesCallback) {
-    this.fs.readdir(this.filePath, function(err, items) {
+  public loadChildrenNames(callback: ChildrenNamesCallback) {
+    let path = this.getStoragePath();
+    this.fs.readdir(path, function(err, items) {
       let ls = [];
       if (items) {
         for (var i = 0; i < items.length; i++) {
@@ -243,29 +106,76 @@ class FileResource extends Resource {
     });
   }
 
-  public isContentResource(): boolean {
-    return !this.isDirectory;
+  protected storeProperties(callback) {
+    let self = this;
+    let path = this.getMetadataPath();
+ 
+    self.fs.writeFile(path, JSON.stringify(this.values), 'utf8', function() {
+        callback(true);
+    });
   }
 
-  public getContentType(): string {
-    if (this.isDirectory) return null;
+  protected loadProperties(callback) {
+    let self = this;
+    let path = this.getStoragePath();
 
-    let contentType = this.values['_ct'];
-    if (contentType) return contentType;
-    
-    let name = this.getName();
-    let mime = require('mime-types');
+    let loadMetadata = function(path, callback) {
+      self.fs.readFile(path, 'utf8', function(err, data) {
+        if (data) {
+          let rv = JSON.parse(data);
+          self.values = rv?rv:{};
+        }
+        else {
+          self.values = {};
+        }
+        callback();
+      });
+    };
 
-    return mime.lookup(name) || null;
+    self.fs.stat(path, function(err, stats) {
+      if (err) callback(false);
+      else {
+        self.isDirectory = stats.isDirectory();
+        loadMetadata(self.getMetadataPath(), function() {
+          callback(true);
+        });
+      }
+    });
+  }
+
+  public importContent(func, callback) {
+    func(this.getWriter(), callback);
+  }
+
+  public removeChildResource(name: string, callback) {
+    let resolve = require('path').resolve;
+    let path = Utils.filename_path_append(this.basePath, name);
+
+    path = resolve(path);
+    if (path === '' || path === '/') {
+      console.log('invalid path');
+      callback(null);
+    }
+    else {
+      let mpath = this.getMetadataPath(name);
+      this.fs.remove(mpath, function(err) {
+      });
+
+      this.fs.remove(path, function(err) {
+        if (err) console.log(err);
+        callback(null);
+      });
+    }
   }
 
   public getWriter(): ContentWriter {
+    let path = this.getStoragePath();
     if (this.isDirectory) {
-      this.fs.removeSync(this.filePath);
+      this.fs.removeSync(path);
       this.isDirectory = false;
     }
 
-    return new FileResourceContentWriter(this.filePath);
+    return new FileResourceContentWriter(path);
   }
 
   public read(writer: ContentWriter, callback: any) {
@@ -274,8 +184,9 @@ class FileResource extends Resource {
     }
     else {
       writer.start(this.getContentType());
+      let path = this.getStoragePath();
 
-      let fd = this.fs.openSync(this.filePath, 'r');
+      let fd = this.fs.openSync(path, 'r');
       let pos = 0;
       let sz = 0;
       while (true) {

@@ -1,8 +1,16 @@
 class DOMContentWriter implements ContentWriter {
   private requestHandler: ClientRequestHandler;
   private htmldata;
+  private extdata;
 
   constructor() {
+  }
+
+  protected escapeHTML(html){
+    let text = document.createTextNode(html);
+    let p = document.createElement('p');
+    p.appendChild(text);
+    return p.innerHTML;
   }
 
   protected attachListeners() {
@@ -20,17 +28,6 @@ class DOMContentWriter implements ContentWriter {
       var target = evt.target as HTMLElement;
       var href = target.getAttribute('href');
       if (href && href.charAt(0) === '/') {
-        setTimeout(function() {
-          requestHandler.handleRequest(href);
-        });
-        evt.preventDefault();
-      }
-    });
-
-    window.addEventListener('hashchange', function(evt) {
-      var url = new URL(evt.newURL);
-      var href = url.hash.substr(1);
-      if (href) {
         setTimeout(function() {
           requestHandler.handleRequest(href);
         });
@@ -84,13 +81,18 @@ class DOMContentWriter implements ContentWriter {
 
   public start(ctype) {
     if (ctype === 'text/html') this.htmldata = [];
-    else document.open(ctype);
+    else {
+      this.extdata = window.open('about:blank');
+      this.extdata.document.open(ctype);
+      this.extdata.document.write('<pre>');
+    }
   }
+
   public write(content) {
     if (this.htmldata) this.htmldata.push(content);
     else {
-      if (typeof content != 'string') document.write(JSON.stringify(content));
-      else document.write(content);
+      if (typeof content != 'string') this.extdata.document.write(JSON.stringify(content));
+      else this.extdata.document.write(this.escapeHTML(content));
     }
 
   }
@@ -102,18 +104,29 @@ class DOMContentWriter implements ContentWriter {
       this.updateDocument(this.htmldata.join(''));
     }
     else {
-      document.close();
+      this.extdata.document.write('</pre>');
+      this.extdata.document.close();
     }
     this.attachListeners();
     this.htmldata = null;
+    this.extdata = null;
   }
 }
 
 class ClientRequestHandler extends ResourceRequestHandler {
+  protected currentPath: string;
   constructor(resourceResolver: ResourceResolver, templateResolver: ResourceResolver, contentWriter: DOMContentWriter) {
     let writer = contentWriter ? contentWriter : new DOMContentWriter();
     super(resourceResolver, templateResolver, writer);
     writer.setRequestHandler(this);
+    let self = this;
+
+    window.addEventListener('hashchange', function(evt) {
+      let path = window.location.hash.substr(1);
+      if (path !== self.currentPath) {
+        self.renderRequest(path);
+      }
+    });
   }
 
   public forwardRequest(rpath: string) {
@@ -125,6 +138,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
   }
 
   public renderRequest(rpath: string) {
+    this.currentPath = rpath;
     location.hash = rpath;
     super.renderRequest(rpath);
   }

@@ -4,31 +4,29 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>copy to</title>
+    <title>export to</title>
 
     <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
 	</head>
 	<body>
 		<div class="container">
 
-			<h1>Copy from</h1>
+			<h1>Export from</h1>
 
 			<ol class="breadcrumb">
-				<li><a href="/.xres-list">HOME</a></li>
+				<li>HOME</li>
 			{{#include "." "parents"}}
-				<li><a href="{{path}}.xres-list">{{name}}</a></li>
+				<li>{{name}}</li>
 			{{/include}}
-				<li class="active">
-					<a href="{{R.PATH}}.xres-list">{{R.NAME}}</a>
-				</li>
+				<li class="active">{{R.NAME}}</li>
 			</ol>
 
 			<h1>to</h1>
 
 			<ol class="breadcrumb">
-				<li><a href="{{R.PATH}}.xres-copyto/">HOME</a></li>
+				<li><a href="{{R.PATH}}.xres-exportto/">HOME</a></li>
 			{{#include R.DATA_PATH "parents"}}
-				<li><a href="{{R.PATH}}.xres-copyto{{path}}">{{name}}</a></li>
+				<li><a href="{{R.PATH}}.xres-exportto{{path}}">{{name}}</a></li>
 			{{/include}}
 				<li class="active">{{R.DATA_NAME}}</li>
 			</ol>
@@ -50,7 +48,7 @@
           {{/match}}
           {{#default}}
             <td>
-					    <i class="glyphicon glyphicon-folder-close"></i> <a href="{{R.PATH}}.xres-copyto{{path}}">{{name}}</a>
+					    <i class="glyphicon glyphicon-folder-close"></i> <a href="{{R.PATH}}.xres-exportto{{path}}">{{name}}</a>
             </td>
           {{/default}}
 				</tr>
@@ -62,11 +60,9 @@
 			<form method="post" action="{{R.PATH}}.xres-list">
 				<input name=":name|newUUID" value="{{R.NAME}}" autocomplete="off">
 				<input type="hidden" name=":copyto" value="{{R.DATA_PATH_APPEND}}{:name}">
-				<input type="submit" value="copy">
+				<input type="submit" value="export">
 				<input type="hidden" name=":forward" value="{{R.DATA_PATH}}.xres-list">
 			</form>
-			<a class="btn btn-default" target="_blank" href="{{R.PATH}}.xexport">export</a>
-			<a class="btn btn-default" target="_blank" href="{{R.PATH}}.xres-exportto{{R.DATA_PATH}}">export to...</a>
 		</div>
 	</body>
 </html>

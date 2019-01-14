@@ -24,7 +24,7 @@ class RootResource extends ObjectResource {
     else callback(rv);
   }
 
-  public createChildResource(name: string, callback: ResourceCallback): void {
+  public allocateChildResource(name: string, callback: ResourceCallback): void {
     callback(null);
   }
 

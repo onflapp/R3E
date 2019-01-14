@@ -26,11 +26,13 @@ if (r) window.data = JSON.parse(r);
 
 db  = new PouchDB('dbtest');
 
+//r = new RemoteResource('', 'http://localhost:1111/DB');
+r = new RemoteResource('', '/tests/rem');
 p = new PouchDBResource(db);
 d = new ObjectResource('data', data);
 c = new ObjectResource('conf', config);
 
-root = new RootResource({'data':d, 'conf':c, 'db':p});
+root = new RootResource({'data':d, 'conf':c, 'db':p, 'rem':r});
 
 rres = new ResourceResolver(root);
 rtmp = new MultiResourceResolver([new SimpleRemoteResource('../../templates/'), new DefaultRenderingTemplates()]);
