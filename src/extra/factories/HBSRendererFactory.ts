@@ -9,10 +9,7 @@ class HBSRendererFactory extends TemplateRendererFactory {
 
     let self = this;
 
-    //include "/path"
-    //include "/path" "sel"
-
-    this.Handlebars.registerHelper('include', function (arg0, arg1) {
+    let import_func = function(arg0, arg1, arg2) {
       let path = arg0;
       let block = arg1;
       let selector = null;
@@ -37,7 +34,8 @@ class HBSRendererFactory extends TemplateRendererFactory {
 
       path = self.expadPath(path, context);
 
-	    let p = session.makeOutputPlaceholder();
+      let p = session.makeOutputPlaceholder();
+
       context.renderResource(path, rtype, selector, context, function(contentType, content) {
         if (contentType === 'object/javascript') {
           let out = '';
@@ -45,7 +43,7 @@ class HBSRendererFactory extends TemplateRendererFactory {
             for (var i = 0; i < content.length; i++) {
               let it = content[i];
               out += block.fn(it);
-						}
+            }
           }
           else {
             let it = content;
@@ -60,7 +58,12 @@ class HBSRendererFactory extends TemplateRendererFactory {
         }
       });
       return p.placeholder;
-    });
+    };
+
+    //include "/path"
+    //include "/path" "sel"
+
+    this.Handlebars.registerHelper('include', import_func);
 
     this.Handlebars.registerHelper('p', function (val, options) {
       if (typeof val === 'object') {
@@ -72,13 +75,43 @@ class HBSRendererFactory extends TemplateRendererFactory {
     });
  
     this.Handlebars.registerHelper('or', function () {
-      var args    = arguments;
+      var args = arguments;
          
       for(var i in args) {
         if(args[i] !== null && args[i] !== undefined) return args[i];
       }
     });
-          
+
+    this.Handlebars.registerHelper('eq', function (lvalue, rvalue, result) {
+      if (lvalue === rvalue) return result;
+      else return null;
+    });
+         
+    this.Handlebars.registerHelper('prop', function (path, block) {
+      let context: ResourceRequestContext = block.data.root._context;
+      let session: TemplateRendererSession = block.data.root._session;
+
+      if (path.charAt(0) !== '/') path = self.expadPath(path, context);
+
+      let name = Utils.filename(path);
+      let base = Utils.filename_dir(path);
+
+      let p = session.makeOutputPlaceholder();
+      context.resolveResource(base, function(res: Resource) {
+        if (res) {
+          let val = res.getProperty(name);
+          p.write(val?val:'');
+          p.end();
+        }
+        else {
+          p.write('non');
+          p.end();
+        }
+      });
+
+      return new self.Handlebars.SafeString(p.placeholder);
+    });
+
     /************************************************************************
 
     {{#match Database.Tables.Count ">" 5}}

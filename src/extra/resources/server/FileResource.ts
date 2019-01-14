@@ -58,6 +58,9 @@ class FileResource extends Resource {
   }
 
   public getSuperType(): string {
+    var st = this.values['_st'];
+
+    if (st) return st;
     if (this.getType() === 'resource/node') return null;
     else return 'resource/node';
   }

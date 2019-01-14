@@ -14,11 +14,13 @@
 			<h1>Copy from</h1>
 
 			<ol class="breadcrumb">
-				<li>HOME</li>
+				<li><a href="/.xres-list">HOME</a></li>
 			{{#include "." "parents"}}
-				<li>{{name}}</li>
+				<li><a href="{{path}}.xres-list">{{name}}</a></li>
 			{{/include}}
-				<li class="active">{{R.NAME}}</li>
+				<li class="active">
+					<a href="{{R.PATH}}.xres-list">{{R.NAME}}</a>
+				</li>
 			</ol>
 
 			<h1>to</h1>

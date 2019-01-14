@@ -4,11 +4,11 @@ class RootResource extends ObjectResource {
   }
 
   public getType(): string {
-    return 'resource/root';
+    return 'resource/node';
   }
     
   public getSuperType(): string {
-    return 'resource/node';
+    return 'resource/root';
   }  
 
   public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {

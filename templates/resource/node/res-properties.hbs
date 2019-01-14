@@ -29,10 +29,10 @@
     			    <label class="col-sm-2">_rt</label>
 							<div class="col-sm-8">
 								<select class="form-control" name="_rt">
-									<option value="">no set</option>
-									<option value="" selected>{{renderType}}</option>
+									<option value="">not set</option>
+                  <option disabled>-</option>
 							{{#include "/apps" "rendertypes"}}
-									<option value="{{this}}">{{this}}</option>
+									<option value="{{this}}" {{eq this ../renderType "selected"}}>{{this}}</option>
 							{{/include}}
 								</select>
 							</div>

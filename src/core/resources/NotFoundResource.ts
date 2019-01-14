@@ -3,11 +3,7 @@ class NotFoundResource extends ObjectResource {
     super (name, {});
   }
 
-  public getType(): string {
+  public getRenderType(): string {
     return 'resource/notfound';
-  }
-  
-  public getSuperType(): string {
-    return 'resource/node';
   }
 }

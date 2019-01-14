@@ -8,7 +8,7 @@ class Tools {
     });
   }
 
-  public static visitAllChidren(res: Resource, walk:boolean, callback) {
+  public static visitAllChidren(res: Resource, resolve:boolean, callback) {
     let processing = 0;
     let done = function() {
       if (processing === 0) {
@@ -37,7 +37,7 @@ class Tools {
             }
             done();
 
-          }, walk);
+          }, !resolve);
 				}
 
         done();

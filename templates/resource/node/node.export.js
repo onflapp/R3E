@@ -58,5 +58,5 @@
 			ended = true;
 			done();
 		}
-	});
+	}, true);
 });

@@ -64,9 +64,10 @@ class Data {
 }
 
 abstract class Resource extends Data implements ContentReader {
-  public static IO_TIMEOUT = 10000;
+  public static IO_TIMEOUT = 10000000;
   public static STORE_CONTENT_PROPERTY = '_content';
   public static STORE_RENDERTYPE_PROPERTY = '_rt';
+  public static STORE_SUPERTYPE_PROPERTY = '_st';
 
   protected resourceName: string;
 
@@ -103,8 +104,8 @@ abstract class Resource extends Data implements ContentReader {
 
     if (rt) rv.push(rt);
     if (ct) rv.push('mime/'+ct);
-    rv.push(this.getType());
     if (st) rv.push(st);
+    rv.push(this.getType());
 
     return rv;
   }
@@ -145,6 +146,11 @@ abstract class Resource extends Data implements ContentReader {
       rv[Resource.STORE_RENDERTYPE_PROPERTY] = this.getRenderType();
     }
 
+    if (this.getSuperType()) {
+      rv[Resource.STORE_SUPERTYPE_PROPERTY] = this.getSuperType();
+    }
+
+
     if (this.isContentResource()) {
       rv[Resource.STORE_CONTENT_PROPERTY] = function(writer, callback) {
         self.read(writer, callback);
@@ -158,7 +164,7 @@ abstract class Resource extends Data implements ContentReader {
     callback(new Data(rv));
   }
 
-  public exportChilrenResources(level, writer: ContentWriter): void {
+  public exportChilrenResources(level, writer: ContentWriter, incSource?: boolean): void {
     let self = this;
     let processing = 0;
 
@@ -202,7 +208,7 @@ abstract class Resource extends Data implements ContentReader {
     };
 
     writer.start('object/javascript');
-    export_children('', this.getName(), this);
+    export_children(incSource?this.getName():'', this.getName(), this);
   }
 
   public importData(data: Data, callback) {

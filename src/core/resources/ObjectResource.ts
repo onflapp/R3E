@@ -12,6 +12,11 @@ class ObjectResource extends Resource {
     return rt?rt:null;
   }
 
+  public getSuperType(): string {
+    let st = this.values['_st'];
+    return st?st:null;
+  }
+
   public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
     let rv = this.values[name];
 

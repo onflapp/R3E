@@ -49,8 +49,22 @@ class ResourceRequestContext {
     return this.pathInfo.resourcePath;
   }
 
+  public getCurrentDataPath():string {
+    return this.pathInfo.dataPath;
+  }
+
   public renderResource(resourcePath: string, rstype: string, selector: string, context: ResourceRequestContext, callback: any) {
-    this.resourceRequestHandler.renderResource(resourcePath, rstype, selector, context, callback);
+    this.resourceRequestHandler.renderResource(resourcePath, selector, context, callback);
+  }
+
+  public resolveResource(resourcePath: string, callback: any) {
+    let rres = this.getResourceResolver();
+    rres.resolveResource(resourcePath, callback);
+  }
+
+  public resolveTemplateResource(resourcePath: string, callback: any) {
+    let trres = this.getTemplateResourceResolver();
+    trres.resolveResource(resourcePath, callback);
   }
 
   public getQueryProperties() {
@@ -65,8 +79,16 @@ class ResourceRequestContext {
     return this.resourceRequestHandler.getResourceResolver();
   }
 
+  public getTemplateResourceResolver(): ResourceResolver {
+    return this.resourceRequestHandler.getTemplateResourceResolver();
+  }
+
   public forwardRequest(rpath: string) {
     this.resourceRequestHandler.forwardRequest(rpath);
+  }
+
+  public storeResource(resourcePath: string, data: any, callback) {
+    this.resourceRequestHandler.storeResource(resourcePath, data, callback);
   }
 
   public makeContextMap(res: Data) {

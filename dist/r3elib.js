@@ -147,6 +147,12 @@ var Utils = (function () {
             return 'text/html';
         if (ext === 'xml')
             return 'text/xml';
+        if (ext === 'js')
+            return 'text/plain';
+        if (ext === 'json')
+            return 'text/plain';
+        if (ext === 'md')
+            return 'text/markdown';
         return 'application/octet-stream';
     };
     Utils.Blob2Text = function (blob, callback) {
@@ -322,9 +328,9 @@ var Resource = (function (_super) {
             rv.push(rt);
         if (ct)
             rv.push('mime/' + ct);
-        rv.push(this.getType());
         if (st)
             rv.push(st);
+        rv.push(this.getType());
         return rv;
     };
     Resource.prototype.resolveOrCreateChildResource = function (name, callback, walking) {
@@ -352,6 +358,9 @@ var Resource = (function (_super) {
         if (this.getRenderType()) {
             rv[Resource.STORE_RENDERTYPE_PROPERTY] = this.getRenderType();
         }
+        if (this.getSuperType()) {
+            rv[Resource.STORE_SUPERTYPE_PROPERTY] = this.getSuperType();
+        }
         if (this.isContentResource()) {
             rv[Resource.STORE_CONTENT_PROPERTY] = function (writer, callback) {
                 self.read(writer, callback);
@@ -362,7 +371,7 @@ var Resource = (function (_super) {
         }
         callback(new Data(rv));
     };
-    Resource.prototype.exportChilrenResources = function (level, writer) {
+    Resource.prototype.exportChilrenResources = function (level, writer, incSource) {
         var self = this;
         var processing = 0;
         var done = function () {
@@ -401,7 +410,7 @@ var Resource = (function (_super) {
             });
         };
         writer.start('object/javascript');
-        export_children('', this.getName(), this);
+        export_children(incSource ? this.getName() : '', this.getName(), this);
     };
     Resource.prototype.importData = function (data, callback) {
         var processing = 0;
@@ -488,9 +497,10 @@ var Resource = (function (_super) {
         if (writer)
             writer.end(callback);
     };
-    Resource.IO_TIMEOUT = 10000;
+    Resource.IO_TIMEOUT = 10000000;
     Resource.STORE_CONTENT_PROPERTY = '_content';
     Resource.STORE_RENDERTYPE_PROPERTY = '_rt';
+    Resource.STORE_SUPERTYPE_PROPERTY = '_st';
     return Resource;
 }(Data));
 var ResourceResolver = (function () {
@@ -641,11 +651,11 @@ var ResourceRenderer = (function () {
                 var f = Utils.filename(renderTypes[i]);
                 for (var z = 0; z < selectors.length; z++) {
                     var sel = selectors[z];
-                    var p = renderTypes[i] + '/' + sel;
-                    rv.push(p);
+                    var p = renderTypes[i] + '.' + sel;
                     rv.push(p + '.' + key);
                     p = renderTypes[i] + '/' + f + '.' + sel;
-                    rv.push(p);
+                    rv.push(p + '.' + key);
+                    p = renderTypes[i] + '/' + sel;
                     rv.push(p + '.' + key);
                 }
             });
@@ -758,8 +768,19 @@ var ResourceRequestContext = (function () {
     ResourceRequestContext.prototype.getCurrentResourcePath = function () {
         return this.pathInfo.resourcePath;
     };
+    ResourceRequestContext.prototype.getCurrentDataPath = function () {
+        return this.pathInfo.dataPath;
+    };
     ResourceRequestContext.prototype.renderResource = function (resourcePath, rstype, selector, context, callback) {
-        this.resourceRequestHandler.renderResource(resourcePath, rstype, selector, context, callback);
+        this.resourceRequestHandler.renderResource(resourcePath, selector, context, callback);
+    };
+    ResourceRequestContext.prototype.resolveResource = function (resourcePath, callback) {
+        var rres = this.getResourceResolver();
+        rres.resolveResource(resourcePath, callback);
+    };
+    ResourceRequestContext.prototype.resolveTemplateResource = function (resourcePath, callback) {
+        var trres = this.getTemplateResourceResolver();
+        trres.resolveResource(resourcePath, callback);
     };
     ResourceRequestContext.prototype.getQueryProperties = function () {
         return this.pathInfo.query;
@@ -770,8 +791,14 @@ var ResourceRequestContext = (function () {
     ResourceRequestContext.prototype.getResourceResolver = function () {
         return this.resourceRequestHandler.getResourceResolver();
     };
+    ResourceRequestContext.prototype.getTemplateResourceResolver = function () {
+        return this.resourceRequestHandler.getTemplateResourceResolver();
+    };
     ResourceRequestContext.prototype.forwardRequest = function (rpath) {
         this.resourceRequestHandler.forwardRequest(rpath);
+    };
+    ResourceRequestContext.prototype.storeResource = function (resourcePath, data, callback) {
+        this.resourceRequestHandler.storeResource(resourcePath, data, callback);
     };
     ResourceRequestContext.prototype.makeContextMap = function (res) {
         var map = {};
@@ -909,7 +936,7 @@ var ResourceRequestHandler = (function (_super) {
     };
     ResourceRequestHandler.prototype.expandDataAndImport = function (resourcePath, data, callback) {
         var rres = this.resourceResolver;
-        var imp = data.values[Resource.STORE_CONTENT_PROPERTY];
+        var imp = data[Resource.STORE_CONTENT_PROPERTY];
         var processing = 0;
         var done = function () {
             if (processing === 0) {
@@ -924,7 +951,7 @@ var ResourceRequestHandler = (function (_super) {
                     var item = list[i];
                     var path = Utils.filename_path_append(resourcePath, item[':path']);
                     processing++;
-                    rres.storeResource(path, item, function () {
+                    rres.storeResource(path, new Data(item), function () {
                         processing--;
                         done();
                     });
@@ -948,10 +975,10 @@ var ResourceRequestHandler = (function (_super) {
         var datas = {};
         var count = 1;
         datas[resourcePath] = {};
-        for (var key in data.values) {
+        for (var key in data) {
             if (key.indexOf(':') !== -1)
                 continue;
-            var v = data.values[key];
+            var v = data[key];
             var x = key.indexOf('/');
             if (x != -1) {
                 var p = resourcePath + '/' + key.substr(0, x);
@@ -1013,6 +1040,9 @@ var ResourceRequestHandler = (function (_super) {
     ResourceRequestHandler.prototype.getResourceResolver = function () {
         return this.resourceResolver;
     };
+    ResourceRequestHandler.prototype.getTemplateResourceResolver = function () {
+        return this.templateResolver;
+    };
     ResourceRequestHandler.prototype.getConfigProperties = function () {
         return this.configProperties;
     };
@@ -1049,31 +1079,35 @@ var ResourceRequestHandler = (function (_super) {
                         var res_1 = new NotFoundResource(info.resourcePath);
                         rrend.renderResource(res_1, info.selector, out, context);
                     }
+                    out.end(null);
                 });
             }
             else {
                 rrend.renderResource(new ErrorResource('invalid path ' + rpath), 'default', out, context);
+                out.end(null);
             }
         }
         catch (ex) {
             console.log(ex);
             rrend.renderResource(new ErrorResource(ex), 'default', out, context);
+            out.end(null);
         }
     };
-    ResourceRequestHandler.prototype.renderResource = function (resourcePath, rtype, selector, context, callback) {
+    ResourceRequestHandler.prototype.renderResource = function (resourcePath, selector, context, callback) {
         var out = new OrderedContentWriter(new BufferedContentWriter(callback));
         var rres = this.resourceResolver;
         var rrend = this.resourceRenderer;
         var ncontext = context.clone();
+        var sel = selector ? selector : 'default';
         ncontext._setCurrentResourcePath(resourcePath);
         try {
             if (resourcePath) {
                 rres.resolveResource(resourcePath, function (res) {
                     if (res)
-                        rrend.renderResource(res, selector, out, ncontext);
+                        rrend.renderResource(res, sel, out, ncontext);
                     else {
                         var res_2 = new NotFoundResource(resourcePath);
-                        rrend.renderResource(res_2, selector, out, ncontext);
+                        rrend.renderResource(res_2, sel, out, ncontext);
                     }
                 });
             }
@@ -1095,12 +1129,13 @@ var ResourceRequestHandler = (function (_super) {
         var render_error = function (err) {
             var out = this.contentWriter.makeNestedContentWriter();
             rrend.renderResource(err, 'default', out, context);
+            out.close(null);
         };
         if (info.resourcePath) {
-            self.transformData(data, context, function (data) {
-                self.storeResource(info.resourcePath, data, function (error) {
+            self.transformData(new Data(data), context, function (ddata) {
+                self.storeResource(info.resourcePath, ddata.values, function (error) {
                     if (!error) {
-                        var forward = Utils.absolute_path(data.values[':forward']);
+                        var forward = Utils.absolute_path(ddata.values[':forward']);
                         if (forward)
                             self.forwardRequest(forward);
                         else
@@ -1120,10 +1155,10 @@ var ResourceRequestHandler = (function (_super) {
         var self = this;
         var rres = this.resourceResolver;
         try {
-            var remove_1 = Utils.absolute_path(data.values[':delete']);
-            var copyto = Utils.absolute_path(data.values[':copyto']);
-            var moveto = Utils.absolute_path(data.values[':moveto']);
-            var importto = Utils.absolute_path(data.values[':import']);
+            var remove_1 = Utils.absolute_path(data[':delete']);
+            var copyto = Utils.absolute_path(data[':copyto']);
+            var moveto = Utils.absolute_path(data[':moveto']);
+            var importto = Utils.absolute_path(data[':import']);
             if (copyto) {
                 rres.copyResource(resourcePath, copyto, function () {
                     self.dispatchAllEventsAsync('stored', resourcePath, data);
@@ -1171,7 +1206,7 @@ var Tools = (function () {
             return (ai - bi);
         });
     };
-    Tools.visitAllChidren = function (res, walk, callback) {
+    Tools.visitAllChidren = function (res, resolve, callback) {
         var processing = 0;
         var done = function () {
             if (processing === 0) {
@@ -1193,7 +1228,7 @@ var Tools = (function () {
                             visit_children(rpath, name_7, r);
                         }
                         done();
-                    }, walk);
+                    }, !resolve);
                 };
                 for (var i = 0; i < names.length; i++) {
                     _loop_4();
@@ -1292,9 +1327,10 @@ var OrderedContentWriter = (function () {
     };
     OrderedContentWriter.prototype.end = function () {
         var p = this.parentWriter ? this.parentWriter : this;
-        if (p.instances > 0)
+        if (p.instances > 0) {
             p.instances--;
-        if (p.instances == 0) {
+        }
+        else if (p.instances == 0) {
             p.endAll();
         }
     };
@@ -1364,6 +1400,10 @@ var ObjectResource = (function (_super) {
     ObjectResource.prototype.getRenderType = function () {
         var rt = this.values['_rt'];
         return rt ? rt : null;
+    };
+    ObjectResource.prototype.getSuperType = function () {
+        var st = this.values['_st'];
+        return st ? st : null;
     };
     ObjectResource.prototype.resolveChildResource = function (name, callback, walking) {
         var rv = this.values[name];
@@ -1493,10 +1533,10 @@ var RootResource = (function (_super) {
         return _super.call(this, '', opts) || this;
     }
     RootResource.prototype.getType = function () {
-        return 'resource/root';
+        return 'resource/node';
     };
     RootResource.prototype.getSuperType = function () {
-        return 'resource/node';
+        return 'resource/root';
     };
     RootResource.prototype.resolveChildResource = function (name, callback, walking) {
         var rv = this.values[name];
@@ -1606,6 +1646,9 @@ var TemplateRendererSession = (function () {
         this.pending--;
         if (this.pending === 0 && this.deferredReplaceFunc) {
             this.deferredReplaceFunc();
+        }
+        else if (this.pending < 0) {
+            console.log('pending not in sync ' + this.pending);
         }
     };
     TemplateRendererSession.prototype.close = function () {
@@ -1726,11 +1769,8 @@ var NotFoundResource = (function (_super) {
     function NotFoundResource(name) {
         return _super.call(this, name, {}) || this;
     }
-    NotFoundResource.prototype.getType = function () {
+    NotFoundResource.prototype.getRenderType = function () {
         return 'resource/notfound';
-    };
-    NotFoundResource.prototype.getSuperType = function () {
-        return 'resource/node';
     };
     return NotFoundResource;
 }(ObjectResource));
@@ -1757,8 +1797,9 @@ var MultiResourceResolver = (function (_super) {
             if (i < resolvers.length) {
                 var resolver = resolvers[i++];
                 resolver.resolveResource(path, function (resource) {
-                    if (resource)
+                    if (resource) {
                         callback(resource);
+                    }
                     else
                         try_resolve();
                 });
@@ -1831,7 +1872,7 @@ var HBSRendererFactory = (function (_super) {
         else
             _this.Handlebars = require('handlebars');
         var self = _this;
-        _this.Handlebars.registerHelper('include', function (arg0, arg1) {
+        var import_func = function (arg0, arg1, arg2) {
             var path = arg0;
             var block = arg1;
             var selector = null;
@@ -1876,7 +1917,8 @@ var HBSRendererFactory = (function (_super) {
                 }
             });
             return p.placeholder;
-        });
+        };
+        _this.Handlebars.registerHelper('include', import_func);
         _this.Handlebars.registerHelper('p', function (val, options) {
             if (typeof val === 'object') {
                 return JSON.stringify(val);
@@ -1891,6 +1933,33 @@ var HBSRendererFactory = (function (_super) {
                 if (args[i] !== null && args[i] !== undefined)
                     return args[i];
             }
+        });
+        _this.Handlebars.registerHelper('eq', function (lvalue, rvalue, result) {
+            if (lvalue === rvalue)
+                return result;
+            else
+                return null;
+        });
+        _this.Handlebars.registerHelper('prop', function (path, block) {
+            var context = block.data.root._context;
+            var session = block.data.root._session;
+            if (path.charAt(0) !== '/')
+                path = self.expadPath(path, context);
+            var name = Utils.filename(path);
+            var base = Utils.filename_dir(path);
+            var p = session.makeOutputPlaceholder();
+            context.resolveResource(base, function (res) {
+                if (res) {
+                    var val = res.getProperty(name);
+                    p.write(val ? val : '');
+                    p.end();
+                }
+                else {
+                    p.write('non');
+                    p.end();
+                }
+            });
+            return new self.Handlebars.SafeString(p.placeholder);
         });
         _this.Handlebars.registerHelper('match', function (lvalue, operator, rvalue, options) {
             var operators = null;
@@ -2057,7 +2126,7 @@ var DOMContentWriter = (function () {
             var target = evt.target;
             var info = requestHandler.parseFormElement(target);
             setTimeout(function () {
-                requestHandler.handleStore(info.formPath, new Data(info.formData));
+                requestHandler.handleStore(info.formPath, info.formData);
             });
             evt.preventDefault();
         });
@@ -2065,6 +2134,16 @@ var DOMContentWriter = (function () {
             var target = evt.target;
             var href = target.getAttribute('href');
             if (href && href.charAt(0) === '/') {
+                setTimeout(function () {
+                    requestHandler.handleRequest(href);
+                });
+                evt.preventDefault();
+            }
+        });
+        window.addEventListener('hashchange', function (evt) {
+            var url = new URL(evt.newURL);
+            var href = url.hash.substr(1);
+            if (href) {
                 setTimeout(function () {
                     requestHandler.handleRequest(href);
                 });
@@ -2336,7 +2415,7 @@ var ServerRequestHandler = (function (_super) {
                 }
                 data = self.transformValues(data);
                 rpath = self.expandValue(rpath, data);
-                self.handleStore(rpath, new Data(data));
+                self.handleStore(rpath, data);
             });
         }
         else {
@@ -2358,7 +2437,7 @@ var ServerRequestHandler = (function (_super) {
                 }
                 data = self.transformValues(data);
                 rpath = self.expandValue(rpath, data);
-                self.handleStore(rpath, new Data(data));
+                self.handleStore(rpath, data);
             });
         }
     };
@@ -2416,6 +2495,9 @@ var FileResource = (function (_super) {
             return 'resource/content';
     };
     FileResource.prototype.getSuperType = function () {
+        var st = this.values['_st'];
+        if (st)
+            return st;
         if (this.getType() === 'resource/node')
             return null;
         else
@@ -3129,6 +3211,277 @@ var DropBoxResource = (function (_super) {
         }
     };
     return DropBoxResource;
+}(Resource));
+var GitHubResourceContentWriter = (function () {
+    function GitHubResourceContentWriter(repo, filePath) {
+        this.buffer = [];
+        this.repo = repo;
+        this.filePath = filePath;
+    }
+    GitHubResourceContentWriter.prototype.start = function (ctype) {
+    };
+    GitHubResourceContentWriter.prototype.write = function (data) {
+        this.buffer.push(data);
+    };
+    GitHubResourceContentWriter.prototype.error = function (error) {
+        console.log(error);
+    };
+    GitHubResourceContentWriter.prototype.end = function (callback) {
+        var self = this;
+        var data = this.buffer.join('');
+        var opts = {
+            encode: true
+        };
+        this.repo.writeFile('master', this.filePath, data, '', opts, function () {
+            callback();
+        });
+    };
+    return GitHubResourceContentWriter;
+}());
+var GitHubResource = (function (_super) {
+    __extends(GitHubResource, _super);
+    function GitHubResource(repo, path, name) {
+        var _this = _super.call(this, name) || this;
+        _this.isDirectory = true;
+        _this.resources = null;
+        _this.repo = repo;
+        _this.filePath = path ? path : '';
+        return _this;
+    }
+    GitHubResource.prototype.getType = function () {
+        if (this.isDirectory)
+            return 'resource/node';
+        else
+            return 'resource/content';
+    };
+    GitHubResource.prototype.getSuperType = function () {
+        if (this.getType() === 'resource/node')
+            return null;
+        else
+            return 'resource/node';
+    };
+    GitHubResource.prototype.getRenderType = function () {
+        return this.values['_rt'];
+    };
+    GitHubResource.prototype.makeMetadataPath = function (nm) {
+        if (nm) {
+            return this.filePath + '/.' + nm + '.metadata.json';
+        }
+        else if (this.isDirectory) {
+            return Utils.filename_path_append(this.filePath, '.metadata.json');
+        }
+        else {
+            var dirname = Utils.filename_dir(this.filePath);
+            var name_13 = Utils.filename(this.filePath);
+            return dirname + '/.' + name_13 + '.metadata.json';
+        }
+    };
+    GitHubResource.prototype.readResources = function (callback) {
+        var self = this;
+        if (self.resources) {
+            callback(self.resources);
+        }
+        else if (self.isDirectory) {
+            self.repo.getContents('master', this.filePath, false)
+                .then(function (response) {
+                self.resources = {};
+                for (var i = 0; i < response.data.length; i++) {
+                    var item = response.data[i];
+                    var name_14 = item.name;
+                    if (name_14.charAt(0) === '.')
+                        continue;
+                    var path = name_14;
+                    if (self.filePath)
+                        path = Utils.filename_path_append(self.filePath, name_14);
+                    var res = new GitHubResource(self.repo, path, name_14);
+                    if (item['type'] === 'file')
+                        res.isDirectory = false;
+                    else if (item['type'] === 'dir')
+                        res.isDirectory = true;
+                    else
+                        continue;
+                    self.resources[name_14] = res;
+                }
+                callback(self.resources);
+            })
+                .catch(function (error) {
+                callback();
+            });
+        }
+        else {
+            callback();
+        }
+    };
+    GitHubResource.prototype.createChildResource = function (name, callback, walking) {
+        var self = this;
+        this.readResources(function (rls) {
+            var path = name;
+            if (self.filePath)
+                path = Utils.filename_path_append(self.filePath, name);
+            var res = new GitHubResource(self.repo, path, name);
+            if (!self.resources)
+                self.resources = {};
+            self.resources[name] = res;
+            callback(res);
+        });
+    };
+    GitHubResource.prototype.importContent = function (func, callback) {
+        func(this.getWriter(), callback);
+    };
+    GitHubResource.prototype.importProperties = function (data, callback) {
+        var self = this;
+        var path = this.makeMetadataPath();
+        var str = JSON.stringify(data);
+        var opts = {
+            encode: true
+        };
+        this.repo.writeFile('master', path, str, '', opts, function () {
+            callback();
+        });
+    };
+    GitHubResource.prototype.removeChildResource = function (name, callback) {
+        var self = this;
+        var todelete = [];
+        var delete_paths = function (paths) {
+            if (paths.length) {
+                var path = paths.pop();
+                self.repo.deleteFile('master', path, function () {
+                    delete_paths(todelete);
+                })
+                    .catch(function () {
+                    callback(null);
+                });
+            }
+            else {
+                callback();
+            }
+        };
+        var cc = 0;
+        var collect_all = function (path) {
+            self.repo.getContents('master', path, false)
+                .then(function (response) {
+                cc++;
+                for (var i = 0; i < response.data.length; i++) {
+                    var item = response.data[i];
+                    var np = Utils.filename_path_append(path, item.name);
+                    if (item.type === 'dir') {
+                        collect_all(np);
+                    }
+                    else {
+                        todelete.push(np);
+                    }
+                }
+                cc--;
+                if (cc === 0) {
+                    delete_paths(todelete);
+                }
+            })
+                .catch(function (error) {
+                callback(null);
+            });
+        };
+        self.repo.getContents('master', this.filePath, false)
+            .then(function (response) {
+            for (var i = 0; i < response.data.length; i++) {
+                var item = response.data[i];
+                if (item.name === name) {
+                    var path = name;
+                    if (self.filePath)
+                        path = Utils.filename_path_append(self.filePath, name);
+                    if (item.type === 'dir') {
+                        collect_all(path);
+                        return;
+                    }
+                    else {
+                        todelete.push(path);
+                        delete_paths(todelete);
+                        return;
+                    }
+                }
+            }
+            callback();
+        })
+            .catch(function (error) {
+            callback(null);
+        });
+        this.resources = null;
+    };
+    GitHubResource.prototype.resolveChildResource = function (name, callback, walking) {
+        if (walking) {
+            if (this.resources) {
+                callback(this.resources[name]);
+            }
+            else {
+                this.resources = {};
+                var path = name;
+                if (this.filePath)
+                    path = Utils.filename_path_append(this.filePath, name);
+                var res = new GitHubResource(this.repo, path, name);
+                this.resources[name] = res;
+                callback(res);
+            }
+        }
+        else {
+            this.readResources(function (rls) {
+                if (rls)
+                    callback(rls[name]);
+                else
+                    callback(null);
+            });
+        }
+    };
+    GitHubResource.prototype.listChildrenNames = function (callback) {
+        this.readResources(function (rls) {
+            if (!rls)
+                callback([]);
+            else {
+                var ls = [];
+                for (var name_15 in rls) {
+                    ls.push(name_15);
+                }
+                callback(ls);
+            }
+        });
+    };
+    GitHubResource.prototype.isContentResource = function () {
+        return !this.isDirectory;
+    };
+    GitHubResource.prototype.getContentType = function () {
+        if (this.isDirectory)
+            return null;
+        var contentType = this.values['_ct'];
+        if (contentType)
+            return contentType;
+        else
+            return Utils.filename_mime(this.getName());
+    };
+    GitHubResource.prototype.getWriter = function () {
+        if (this.isDirectory) {
+            this.isDirectory = false;
+        }
+        return new GitHubResourceContentWriter(this.repo, this.filePath);
+    };
+    GitHubResource.prototype.read = function (writer, callback) {
+        if (this.isDirectory) {
+            writer.end(callback);
+        }
+        else {
+            var path = this.filePath;
+            var ct_3 = this.getContentType();
+            this.repo.getContents('master', this.filePath, false)
+                .then(function (data) {
+                var content = data.data.content;
+                var encoding = data.data.encoding;
+                writer.start(ct_3);
+                writer.write(Utils.base642ArrayBuffer(content));
+                writer.end(callback);
+            })
+                .catch(function (error) {
+                writer.end(callback);
+            });
+        }
+    };
+    return GitHubResource;
 }(Resource));
 if (typeof module !== 'undefined') {
     module.exports = {

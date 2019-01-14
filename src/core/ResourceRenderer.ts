@@ -36,12 +36,13 @@ class ResourceRenderer {
 				let f = Utils.filename(renderTypes[i]);
 				for (let z = 0; z < selectors.length; z++) {
 					let sel = selectors[z];
-					let p = renderTypes[i] + '/' + sel;
-					rv.push(p);
+					let p = renderTypes[i] + '.' + sel;
 					rv.push(p + '.' + key);
 
 					p = renderTypes[i] + '/' + f + '.' + sel;
-					rv.push(p);
+					rv.push(p + '.' + key);
+
+					p = renderTypes[i] + '/' + sel;
 					rv.push(p + '.' + key);
 				}
 			});

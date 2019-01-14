@@ -36,8 +36,10 @@ class OrderedContentWriter implements ContentWriter {
 	public end() {
     let p = this.parentWriter?this.parentWriter:this;
 
-    if (p.instances > 0) p.instances--;
-    if (p.instances == 0) {
+    if (p.instances > 0) {
+      p.instances--;
+    }
+    else if (p.instances == 0) {
       p.endAll();
     }
 	}

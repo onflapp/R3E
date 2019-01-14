@@ -78,6 +78,9 @@ class TemplateRendererSession {
     if (this.pending === 0 && this.deferredReplaceFunc) {
       this.deferredReplaceFunc();
     }
+    else if (this.pending < 0) {
+      console.log('pending not in sync ' + this.pending);
+    }
   }
 
   protected close() {

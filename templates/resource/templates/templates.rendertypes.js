@@ -2,10 +2,11 @@
 	writer.start('object/javascript');
 	var paths = [];
 
-	Tools.visitAllChidren(res, true, function(path, res) {
+	Tools.visitAllChidren(res, false, function(path, res) {
 		if (path) {
-			if (!res.isContentResource()) {
-				paths.push(path.substr(1));
+			if (res.isContentResource()) {
+				var n = Utils.filename_dir(path).substr(1);
+				if (!paths.includes(n)) paths.push(n);
 			}
 		}
 		else {

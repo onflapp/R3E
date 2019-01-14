@@ -109,9 +109,9 @@ class ResourceRequestHandler extends EventDispatcher {
     return context;
   }
 
-  protected expandDataAndImport(resourcePath: string, data: Data, callback) {
+  protected expandDataAndImport(resourcePath: string, data: any, callback) {
     let rres = this.resourceResolver;
-    let imp = data.values[Resource.STORE_CONTENT_PROPERTY];
+    let imp = data[Resource.STORE_CONTENT_PROPERTY];
     let processing = 0;
 
     let done = function() {
@@ -128,7 +128,7 @@ class ResourceRequestHandler extends EventDispatcher {
           let item = list[i];
           let path = Utils.filename_path_append(resourcePath, item[':path']);
           processing++;
-          rres.storeResource(path, item, function() {
+          rres.storeResource(path, new Data(item), function() {
             processing--;
             done();
           });
@@ -150,16 +150,16 @@ class ResourceRequestHandler extends EventDispatcher {
     }
   }
 
-  protected expandDataAndStore(resourcePath: string, data: Data, callback) {
+  protected expandDataAndStore(resourcePath: string, data: any, callback) {
     let rres = this.resourceResolver;
     let datas = {};
     let count = 1;
     datas[resourcePath] = {};
 
-    for (let key in data.values) {
+    for (let key in data) {
       if (key.indexOf(':') !== -1) continue;
 
-      let v = data.values[key];
+      let v = data[key];
       let x = key.indexOf('/');
       if (x != -1) {
 			  let p = resourcePath + '/' + key.substr(0, x);
@@ -240,6 +240,10 @@ class ResourceRequestHandler extends EventDispatcher {
     return this.resourceResolver;
   }
 
+  public getTemplateResourceResolver(): ResourceResolver {
+    return this.templateResolver;
+  }
+
   public getConfigProperties() {
     return this.configProperties;
   }
@@ -281,24 +285,28 @@ class ResourceRequestHandler extends EventDispatcher {
             let res = new NotFoundResource(info.resourcePath);
             rrend.renderResource(res, info.selector, out, context);
           }
+          out.end(null);
         });
       }
       else {
         rrend.renderResource(new ErrorResource('invalid path '+rpath), 'default', out, context);
+        out.end(null);
       }
 
     }
     catch(ex) {
       console.log(ex);
       rrend.renderResource(new ErrorResource(ex), 'default', out, context);
+      out.end(null);
     }
   }
 
-  public renderResource(resourcePath: string, rtype: string, selector: string, context: ResourceRequestContext, callback: any) {
+  public renderResource(resourcePath: string, selector: string, context: ResourceRequestContext, callback: any) {
     let out = new OrderedContentWriter(new BufferedContentWriter(callback));
     let rres = this.resourceResolver;
     let rrend = this.resourceRenderer;
     let ncontext = context.clone();
+    let sel = selector?selector:'default';
     
     ncontext._setCurrentResourcePath(resourcePath);
 
@@ -306,10 +314,10 @@ class ResourceRequestHandler extends EventDispatcher {
 
       if (resourcePath) {
         rres.resolveResource(resourcePath, function(res: Resource) {
-          if (res) rrend.renderResource(res, selector, out, ncontext);
+          if (res) rrend.renderResource(res, sel, out, ncontext);
           else {
             let res = new NotFoundResource(resourcePath);
-            rrend.renderResource(res, selector, out, ncontext);
+            rrend.renderResource(res, sel, out, ncontext);
           }
         });
       }
@@ -343,7 +351,7 @@ class ResourceRequestHandler extends EventDispatcher {
 
  ************************************************************************/
 
-  public handleStore(rpath: string, data: Data) {
+  public handleStore(rpath: string, data: any) {
     let self = this;
     let rres = this.resourceResolver;
     let rrend = this.resourceRenderer;
@@ -353,13 +361,14 @@ class ResourceRequestHandler extends EventDispatcher {
     let render_error = function(err) {
       let out = this.contentWriter.makeNestedContentWriter();
       rrend.renderResource(err, 'default', out, context);
+      out.close(null);
     };
 
     if (info.resourcePath) {
-      self.transformData(data, context, function(data) {
-        self.storeResource(info.resourcePath, data, function(error) {
+      self.transformData(new Data(data), context, function(ddata) {
+        self.storeResource(info.resourcePath, ddata.values, function(error) {
           if (!error) {
-            let forward = Utils.absolute_path(data.values[':forward']);
+            let forward = Utils.absolute_path(ddata.values[':forward']);
 
             if (forward) self.forwardRequest(forward);
             else self.renderRequest(rpath);
@@ -375,15 +384,15 @@ class ResourceRequestHandler extends EventDispatcher {
     }
   }
 
-  public storeResource(resourcePath: string, data: Data, callback) {
+  public storeResource(resourcePath: string, data: any, callback) {
     let self = this;
     let rres = this.resourceResolver;
 
     try {
-      let remove = Utils.absolute_path(data.values[':delete']);
-      let copyto = Utils.absolute_path(data.values[':copyto']);
-      let moveto = Utils.absolute_path(data.values[':moveto']);
-      let importto = Utils.absolute_path(data.values[':import']);
+      let remove = Utils.absolute_path(data[':delete']);
+      let copyto = Utils.absolute_path(data[':copyto']);
+      let moveto = Utils.absolute_path(data[':moveto']);
+      let importto = Utils.absolute_path(data[':import']);
 
       if (copyto) {
         rres.copyResource(resourcePath, copyto, function() {

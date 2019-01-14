@@ -11,7 +11,7 @@ class DOMContentWriter implements ContentWriter {
       var target = evt.target;
       var info = requestHandler.parseFormElement(target);
       setTimeout(function() {
-        requestHandler.handleStore(info.formPath, new Data(info.formData));
+        requestHandler.handleStore(info.formPath, info.formData);
       });
       evt.preventDefault();
     });
@@ -20,6 +20,17 @@ class DOMContentWriter implements ContentWriter {
       var target = evt.target as HTMLElement;
       var href = target.getAttribute('href');
       if (href && href.charAt(0) === '/') {
+        setTimeout(function() {
+          requestHandler.handleRequest(href);
+        });
+        evt.preventDefault();
+      }
+    });
+
+    window.addEventListener('hashchange', function(evt) {
+      var url = new URL(evt.newURL);
+      var href = url.hash.substr(1);
+      if (href) {
         setTimeout(function() {
           requestHandler.handleRequest(href);
         });

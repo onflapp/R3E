@@ -128,6 +128,9 @@ class Utils {
     if (ext === 'txt') return 'text/plain';
     if (ext === 'html' || ext === 'htm') return 'text/html';
     if (ext === 'xml') return 'text/xml';
+    if (ext === 'js') return 'text/plain';
+    if (ext === 'json') return 'text/plain';
+    if (ext === 'md') return 'text/markdown';
 
     return 'application/octet-stream';
   }

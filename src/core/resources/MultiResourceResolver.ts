@@ -21,7 +21,9 @@ class MultiResourceResolver extends ResourceResolver {
       if (i < resolvers.length) {
         var resolver = resolvers[i++];
         resolver.resolveResource(path, function(resource: Resource) {
-          if (resource) callback(resource);
+          if (resource) {
+            callback(resource);
+          }
           else try_resolve();
         });
       }

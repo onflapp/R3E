@@ -46,6 +46,12 @@
           <td>render type</td>
           <td>{{renderType}}</td>
         </tr>
+
+        <tr>
+          <td>super type</td>
+          <td>{{superType}}</td>
+        </tr>
+
 			</table>
 
       <table class="table ui-dropzone">
@@ -60,10 +66,7 @@
               {{contentType}}
             </td>
             <td class="text-right">
-              <a href="{{path}}.xres-delete">[x]</a>
-              <a href="{{path}}.xres-copyto{{path}}/..">[c]</a>
-              <a href="{{path}}.xres-moveto{{path}}/..">[m]</a>
-              <a href="{{path}}.xres-properties">[p]</a>
+              {{include path "res-list-actions"}}
             </td>
           </tr>
           {{else}}
@@ -79,13 +82,7 @@
               {{/if}}
             </td>
             <td class="text-right">
-              {{#if renderType}}
-              <a target="_blank" href="{{R.PATH}}/{{name}}.xhtml">[v]</a>
-              {{/if}}
-              <a href="{{path}}.xres-delete">[x]</a>
-              <a href="{{path}}.xres-copyto{{path}}/..">[c]</a>
-              <a href="{{path}}.xres-moveto{{path}}/..">[m]</a>
-              <a href="{{path}}.xres-properties">[p]</a>
+              {{include path "res-list-actions"}}
             </td>
           </tr>
           {{/if}}

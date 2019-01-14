@@ -47,6 +47,7 @@ module.exports = function(grunt) {
 						"src/extra/resources/server/FileResource.ts",
 						"src/extra/resources/PouchDBResource.ts",
 						"src/extra/resources/DropBoxResource.ts",
+						"src/extra/resources/GitHubResource.ts",
 						"src/exports.ts"
 
 				],
