@@ -6,9 +6,10 @@ if (typeof module !== 'undefined') {
     ObjectResource:ObjectResource,
     HBSRendererFactory:HBSRendererFactory,
     JSRendererFactory:JSRendererFactory,
+    InterFuncRendererFactory:InterFuncRendererFactory,
+    ResourceRequestHandler:ResourceRequestHandler,
     FileResource:FileResource,
     RootResource:RootResource,
-    DefaultRenderingTemplates:DefaultRenderingTemplates,
     Utils:Utils
   };
 }

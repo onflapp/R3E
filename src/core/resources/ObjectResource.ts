@@ -24,6 +24,9 @@ class ObjectResource extends Resource {
       if (rv['_content'] || rv['_content64'] || rv['_pt'] === 'resource/content') callback(new ObjectContentResource(name, rv));
       else callback(new ObjectResource(name, rv));
     }
+    else if (typeof rv === 'function') {
+      callback(new ObjectContentResource(name, rv));
+    }
     else {
       callback(null);
     }
@@ -127,10 +130,20 @@ class ObjectContentResource extends ObjectResource {
 
     writer.start(contentType?contentType:'text/plain');
 
-    if (data['_content'])              writer.write(data['_content']);
-    else if (data['_content64'])       writer.write(Utils.base642ArrayBuffer(data['_content64']));
-    else if (typeof data === 'string') writer.write(data);
-    else                               writer.write(null);
+    if (data['_content']) {
+      if (data['_content']['type'] === 'Buffer' && data['_content']['data']) { //Buffer that may have been JSON.stringifyed
+        writer.write(Int8Array.from(data['_content']['data']).buffer);
+      }
+      else {
+        writer.write(data['_content']);
+      }
+    }
+    else if (data['_content64']) {
+      writer.write(Utils.base642ArrayBuffer(data['_content64']));
+    }
+    else {
+      writer.write(data);
+    }
 
     writer.end(callback);
   }

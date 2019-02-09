@@ -111,7 +111,7 @@ class GitHubResource extends Resource {
     }
   }
 
-  public createChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
+  public allocateChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
     let self = this;
     this.readResources(function(rls) {
       
