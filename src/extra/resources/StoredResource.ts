@@ -27,6 +27,11 @@ abstract class StoredResource extends Resource {
     return res;
   }
 
+  protected clearCachedResource(name: string) {
+    if (name) delete this.resourceCache[name];
+    else this.resourceCache = {};
+  }
+
   public getStoragePath(name?: string): string {
     let path = Utils.filename_path_append(this.basePath, this.baseName);
     if (name) path = Utils.filename_path_append(path, name);
@@ -78,7 +83,7 @@ abstract class StoredResource extends Resource {
   public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
     let res = this.getCachedResource(name);
     if (res) {
-      callback(res);
+      res.resolveItself(callback);
     }
     else if (walking) {
       res = this.setCachedResource(name, this.makeNewResource(name));
@@ -141,6 +146,8 @@ abstract class StoredResource extends Resource {
 
   public removeChildResource(name: string, callback) {
     this.childNames.splice(this.childNames.indexOf(name), 1);
+    this.clearCachedResource(name);
+
     this.storeChildrenNames(function() {
       callback();
     });

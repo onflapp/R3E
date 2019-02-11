@@ -359,9 +359,11 @@ class ResourceRequestHandler extends EventDispatcher {
     let context = this.makeContext(info);
 
     let render_error = function(err) {
-      let out = this.contentWriter.makeNestedContentWriter();
+      console.log(err);
+
+      let out = self.contentWriter.makeNestedContentWriter();
       rrend.renderResource(err, 'default', out, context);
-      out.close(null);
+      out.end(null);
     };
 
     if (info.resourcePath) {

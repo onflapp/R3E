@@ -110,15 +110,18 @@ class ServerRequestHandler extends ResourceRequestHandler {
 					let path = v['path'];
           let pref = '';
 
+          let mime = Utils.filename_mime(n); //try to guess one of our types first
+          if (mime === 'application/octet-stream' && ct) mime = ct;
+
           if (n.lastIndexOf('/') > 0) pref = n.substr(0, n.lastIndexOf('/')+1);
 
           data[n] = f;
-          data[pref+'_ct'] = ct;
+          data[pref+'_ct'] = mime;
           data[pref+Resource.STORE_CONTENT_PROPERTY] = function(writer, callback) {
             let fs = require('fs');
             let fd = fs.openSync(path, 'r');
 
-            writer.start(ct);
+            writer.start(mime);
             let pos = 0;
             let sz = 0;
             while (true) {

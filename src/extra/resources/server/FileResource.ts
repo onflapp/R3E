@@ -148,24 +148,27 @@ class FileResource extends StoredResource {
   }
 
   public removeChildResource(name: string, callback) {
-    let resolve = require('path').resolve;
-    let path = Utils.filename_path_append(this.basePath, name);
+    let self = this;
+    super.removeChildResource(name, function() {
+      let resolve = require('path').resolve;
+      let path = Utils.filename_path_append(self.basePath, name);
 
-    path = resolve(path);
-    if (path === '' || path === '/') {
-      console.log('invalid path');
-      callback(null);
-    }
-    else {
-      let mpath = this.getMetadataPath(name);
-      this.fs.remove(mpath, function(err) {
-      });
-
-      this.fs.remove(path, function(err) {
-        if (err) console.log(err);
+      path = resolve(path);
+      if (path === '' || path === '/') {
+        console.log('invalid path');
         callback(null);
-      });
-    }
+      }
+      else {
+        let mpath = self.getMetadataPath(name);
+        self.fs.remove(mpath, function(err) {
+        });
+
+        self.fs.remove(path, function(err) {
+          if (err) console.log(err);
+          callback(true);
+        });
+      }
+    });
   }
 
   public getWriter(): ContentWriter {

@@ -1,7 +1,11 @@
+<div class="btn-group btn-group-xs">
+  <a class="btn btn-default glyphicon glyphicon-trash" href="{{path}}.xres-delete"></a>
+  <a class="btn btn-default glyphicon glyphicon-plus-sign" href="{{path}}.xres-copyto{{path}}/.."></a>
+  <a class="btn btn-default glyphicon glyphicon-move" href="{{path}}.xres-moveto{{path}}/.."></a>
+</div>
+<div class="btn-group btn-group-xs">
 {{#if renderType}}
-  <a target="_blank" href="{{R.PATH}}/{{name}}.xhtml">[v]</a>
+  <a class="btn btn-default glyphicon glyphicon-eye-open" target="_blank" href="{{path}}.xhtml"></a>
 {{/if}}
-  <a href="{{path}}.xres-delete">[x]</a>
-  <a href="{{path}}.xres-copyto{{path}}/..">[c]</a>
-  <a href="{{path}}.xres-moveto{{path}}/..">[m]</a>
-  <a href="{{path}}.xres-properties">[p]</a>
+  <a class="btn btn-default btn-default glyphicon glyphicon-edit" href="{{path}}.xres-properties"></a>
+</div>

@@ -2,6 +2,7 @@ class DOMContentWriter implements ContentWriter {
   private requestHandler: ClientRequestHandler;
   private htmldata;
   private extdata;
+  private externalResources = {};
 
   constructor() {
   }
@@ -16,22 +17,28 @@ class DOMContentWriter implements ContentWriter {
   protected attachListeners() {
     let requestHandler = this.requestHandler;
     document.body.addEventListener('submit', function(evt) {
-      var target = evt.target;
-      var info = requestHandler.parseFormElement(target);
+      let target = evt.target;
+      let info = requestHandler.parseFormElement(target);
+      evt.preventDefault();
+      evt.stopPropagation();
+
       setTimeout(function() {
         requestHandler.handleStore(info.formPath, info.formData);
       });
-      evt.preventDefault();
     });
 
     document.body.addEventListener('click', function(evt) {
-      var target = evt.target as HTMLElement;
-      var href = target.getAttribute('href');
+      let target = evt.target as HTMLElement;
+      let href = target.getAttribute('href');
+
+      if (!href) href = target.parentElement.getAttribute('href');
       if (href && href.charAt(0) === '/') {
+        evt.preventDefault();
+        evt.stopPropagation();
+
         setTimeout(function() {
           requestHandler.handleRequest(href);
         });
-        evt.preventDefault();
       }
     });
   }
@@ -59,20 +66,54 @@ class DOMContentWriter implements ContentWriter {
     //let parser = new DOMParser();
     //let doc = parser.parseFromString(content, 'text/html');
 
+    let processing = 0;
     let doc = document.implementation.createHTMLDocument('');
     doc.documentElement.innerHTML = content;
 
     let additions = this.compareElements(doc.head.children, document.head.children);
     let removals = this.compareElements(document.head.children, doc.head.children);
 
+    let done_loading = function() {
+      let scripts = document.body.querySelectorAll('script');
+      for (var i = 0; i < scripts.length; i++) {
+        let script = scripts[i];
+        let code = script.innerText;
+
+        if (script['__evaluated']) continue;
+        try {
+          eval(code);
+        }
+        catch (ex) {
+          console.log(ex);
+        }
+        script['__evaluated'] = true;
+      }
+    };
+
     for (let i = 0; i < additions.length; i++) {
-      document.head.appendChild(additions[i]);
+      let el = additions[i];
+      if (el.tagName === 'SCRIPT') {
+        if (el.src && this.externalResources[el.src]) continue;
+
+        processing++;
+
+        el = document.createElement('script');
+        el.src = additions[i].src;
+        el.onload = function() {
+          processing--;
+          if (processing === 0) done_loading();
+        };
+
+        this.externalResources[el.src] = 'y';
+      }
+      document.head.appendChild(el);
     }
     for (let i = 0; i < removals.length; i++) {
       document.head.removeChild(removals[i]);
     }
 
     document.body = doc.body;
+    if (processing === 0) done_loading();
   }
 
   public setRequestHandler(requestHandler: ClientRequestHandler) {
@@ -85,7 +126,7 @@ class DOMContentWriter implements ContentWriter {
       this.extdata = window.open('about:blank');
       if (this.extdata) { //may happen if popup windows are blocked
         this.extdata.document.open(ctype);
-        this.extdata.document.write('<pre>');
+        this.extdata.document.write('<pre>\n');
       }
     }
   }
@@ -93,8 +134,13 @@ class DOMContentWriter implements ContentWriter {
   public write(content) {
     if (this.htmldata) this.htmldata.push(content);
     else if (this.extdata) {
-      if (typeof content != 'string') this.extdata.document.write(JSON.stringify(content));
-      else this.extdata.document.write(this.escapeHTML(content));
+      if (typeof content != 'string') {
+        this.extdata.document.write(JSON.stringify(content));
+      }
+      else {
+        let val = this.escapeHTML(content);
+        this.extdata.document.write(val);
+      }
     }
 
   }
@@ -167,8 +213,11 @@ class ClientRequestHandler extends ResourceRequestHandler {
 
         if (name.lastIndexOf('/') > 0) pref = name.substr(0, name.lastIndexOf('/')+1);
 
+        let mime = Utils.filename_mime(value.name); //try to guess one of our types first
+        if (mime === 'application/octet-stream' && ct) mime = ct;
+
         rv[name] = value.name;
-        rv[pref+'_ct'] = ct;
+        rv[pref+'_ct'] = mime;
         rv[pref+Resource.STORE_CONTENT_PROPERTY] = function(writer, callback) {
           let reader = new FileReader();
           reader.onload = function(e) {

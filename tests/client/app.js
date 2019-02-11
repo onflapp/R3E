@@ -13,9 +13,11 @@ window.data = {
 	},
 	'f.txt':{
 		_ct:'text/plain',
-		_content:'hello'
+		_content:'\n\nhello  '
 	}
 };
+
+document.body.innerHTML = '';
 
 //content resolver
 var root = new ObjectResource('', window.data);
@@ -35,7 +37,7 @@ var def = new ObjectResource('', {
     'any': {
       'default.func':function(res, writer, context) {
 				//default is to take the existing resource path and render it as html
-	      context.forwardRequest(context.getCurrentResourcePath()+'.xhtml');
+	      context.forwardRequest(context.getCurrentResourcePath()+'.xres-list');
       }
     }
 });
@@ -48,7 +50,10 @@ var rtmp = new MultiResourceResolver([temps, def]);
 
 //configuration which is passed through context to the renderers
 var config = {
-	'BOOTSTRAP_CSS':'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css'
+	'BOOTSTRAP_CSS':'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css',
+	'CODEMIRROR_JS':'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/codemirror.min.js',
+	'CODEMIRROR_CSS':'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/codemirror.min.css',
+	'CODEMIRROR_THEME':'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/theme/solarized.min.css'
 };
 
 var handler = new ClientRequestHandler(rres, rtmp);
@@ -61,5 +66,5 @@ handler.registerFactory('hbs', new HBSRendererFactory());
 handler.registerFactory('func', new InterFuncRendererFactory());  //internal functions, usefull for function-based renderers
 
 var path = location.hash.substr(1);
-if (!path) path = '/.xhtml';
+if (!path) path = '/.xres-list';
 handler.handleRequest(path);

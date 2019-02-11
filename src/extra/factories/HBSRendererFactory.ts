@@ -158,6 +158,10 @@ class HBSRendererFactory extends TemplateRendererFactory {
           if (l && l.indexOf(r) === 0) return true;
           else return false;
         },
+        '!startsWith': function (l, r) {
+          if (l && l.indexOf(r) === 0) return false;
+          else return true;
+        },
         'typeof': function (l, r) { return typeof l == r; }
       };
 

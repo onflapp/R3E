@@ -3,26 +3,31 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>properties</title>
 
     <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
 	</head>
 	<body>
 
-		<div class="container">
+<div role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <a class="close" href="{{R.PATH_APPEND}}../.xres-list"><span aria-hidden="true">&times;</span></a>
+        <h4 class="modal-title">Resource Properties</h4>
+      </div>
+      <div class="modal-body">
 
 			<ol class="breadcrumb">
-				<li><a href="/{{or R.REF_SUFFIX ".xres-list"}}">HOME</a></li>
+				<li><a href="/.xres-list">HOME</a></li>
 			{{#include "." "parents"}}
-				<li><a href="{{path}}{{or R.REF_SUFFIX ".xres-list"}}">{{name}}</a></li>
+				<li>{{name}}</li>
 			{{/include}}
-				<li class="active">
-					<a href="{{R.PATH}}{{or R.REF_SUFFIX ".xres-list"}}">{{R.NAME}}</a>
-				</li>
+				<li class="active">{{R.NAME}}</li>
 			</ol>
 
-		<h5>Other renderers</h5>
+		<h4>Other renderers</h4>
 			<div class="form-horizontal">
 					<form method="post" action="">
 						<div class="form-group">
@@ -45,7 +50,7 @@
 					</form>
           </div>
 
-			<h5>properties:</h5>
+			<h4>properties:</h4>
 
 				{{#include "." "properties"}}
 			<div class="form-horizontal">
@@ -68,10 +73,10 @@
 				<form method="post" action="{{R.PATH}}{{R.SUFFIX}}">
 					<div class="form-group">
 						<div class="col-sm-2">
-							<input class="form-control" name=":name" value="" autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false">
+							<input class="form-control" name=":name" value="" autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="name">
 						</div>
 						<div class="col-sm-8">
-							<input class="form-control" name="{:name}" value="" autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false">
+							<input class="form-control" name="{:name}" value="" autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false" placeholder="value">
 						</div>
 						<div class="col-sm-2">
 							<button class="btn btn-success" type="submit" value="add">
@@ -82,11 +87,19 @@
 				</form>
 			</div>
 
-			<form method="post" id="save_form" action="{{R.PATH}}.xres-list">
-				<input type="submit" value="save">
-			</form>
 
-		</div>
+ </div>
+      <div class="modal-footer">
+
+			<form class="form-inline" method="post" id="save_form" action="{{R.PATH}}.xres-list">
+        <a class="btn btn-default" href="{{R.PATH_APPEND}}../.xres-list">Cancel</a>
+				<input class="btn btn-success" type="submit" value="Save">
+			</form>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
 
 	</body>
 </html>

@@ -21,7 +21,7 @@ var def = new r.ObjectResource('', {
     'any': {
       'default.func':function(res, writer, context) {
 				//default is to take the existing resource path and render it as html
-	      context.forwardRequest(context.getCurrentResourcePath()+'.xhtml');
+	      context.forwardRequest(context.getCurrentResourcePath()+'.xres-list');
       }
     }
 });
@@ -34,7 +34,10 @@ var rtmp = new r.MultiResourceResolver([temps, def]);
 
 //configuration which is passed through context to the renderers
 var config = {
-	'BOOTSTRAP_CSS':'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css'
+	'BOOTSTRAP_CSS':'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css',
+	'CODEMIRROR_JS':'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/codemirror.min.js',
+	'CODEMIRROR_CSS':'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/codemirror.min.css',
+	'CODEMIRROR_THEME':'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/theme/solarized.min.css'
 };
 
 //handlers for GET and POST for express

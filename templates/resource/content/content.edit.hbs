@@ -3,44 +3,22 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title>edit</title>
 
     <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
-
-		<style>
-			html,body,.container {
-				height: 100%;
-			}
-			
-			img.image {
-				max-width:250px;
-			}
-
-			img.pdf {
-				width:100%;
-			}
-
+    <link href="{{C.CODEMIRROR_CSS}}" rel="stylesheet">
+    <link href="{{C.CODEMIRROR_THEME}}" rel="stylesheet">
+    <script src="{{C.CODEMIRROR_JS}}"></script>
+    <style>
       #editor-container {
-        position: fixed;
-        top: 100px;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        border: 1px solid black;
+        margin-top: 20px;
       }
-
-      #editor-container textarea {
+      #editor-container img {
+        max-width: fit-content;
         width: 100%;
-        height: 100%;
-        margin: 0;
-        border: 0;
-        padding: 10px;
-        font-family: Courier New, monospace;
-        font-size: 11px;
       }
-            
-		</style>
+    </style>
 	</head>
 	<body>
 		<div class="container">
@@ -55,13 +33,18 @@
 
 			{{#match contentType "startsWith" "application/javascript"}}
 			<form method="post" action="{{R.PATH}}{{R.SUFFIX}}">
-				<div class="btn-group btn-group-sm" style="margin-bottom:20px">
-					<a class="btn btn-default" href="{{R.PATH}}.xres-properties">properties</a>
-					<input class="btn btn-default" type="submit" value="save"></input>
+
+				<div class="btn-group btn-group-sm">
+					<a class="btn btn-default" href="{{R.PATH}}/../.xres-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
+					<a class="btn btn-default" href="{{R.PATH}}.xres-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
+				</div>
+				<div class="btn-group btn-group-sm pull-right">
+					<button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-floppy-save"></span> Save</button>
 				</div>
 
 				<div id="editor-container">
-					<textarea autocorrect="off" autocapitalize="off" autocomplete="off" autofocus="on" spellcheck="false" name="_content">{{include-safe "." "text"}}</textarea>
+					<textarea autocorrect="off" autocapitalize="off" autocomplete="off" autofocus="on" spellcheck="false" name="_content">
+{{include-safe "." "text"}}</textarea>
 				</div>
 				<input type="hidden" name="_rt" value="resource/content"></input>
 				<input type="hidden" name="_ct" value="{{contentType}}"></input>
@@ -69,35 +52,44 @@
 			{{/match}}
 			{{#match contentType "startsWith" "text/"}}
 			<form method="post" action="{{R.PATH}}{{R.SUFFIX}}">
-				<div class="btn-group btn-group-sm" style="margin-bottom:20px">
-					<a class="btn btn-default" href="{{R.PATH}}.xres-properties">properties</a>
-					<input class="btn btn-default" type="submit" value="save"></input>
+
+				<div class="btn-group btn-group-sm">
+					<a class="btn btn-default" href="{{R.PATH}}/../.xres-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
+					<a class="btn btn-default" href="{{R.PATH}}.xres-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
+				</div>
+				<div class="btn-group btn-group-sm pull-right">
+					<button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-floppy-save"></span> Save</button>
 				</div>
 
 				<div id="editor-container">
-					<textarea autocorrect="off" autocapitalize="off" autocomplete="off" autofocus="on" spellcheck="false" name="_content">{{include-safe "." "text"}}</textarea>
+					<textarea autocorrect="off" autocapitalize="off" autocomplete="off" autofocus="on" spellcheck="false" name="_content">
+{{include-safe "." "text"}}</textarea>
 				</div>
 				<input type="hidden" name="_rt" value="resource/content"></input>
 				<input type="hidden" name="_ct" value="{{contentType}}"></input>
 			</form>
 			{{/match}}
 			{{#match contentType "startsWith" "image/"}}
-				<div class="btn-group btn-group-sm" style="margin-bottom:20px">
-					<a class="btn btn-default" href="{{R.PATH}}.xres-properties">properties</a>
-					<a class="btn btn-default" target="_blank" href="{{include "." "externalize"}}">view</a>
+
+				<div class="btn-group btn-group-sm">
+					<a class="btn btn-default" href="{{R.PATH}}/../.xres-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
+					<a class="btn btn-default" href="{{R.PATH}}.xres-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
+					<a class="btn btn-default" target="_blank" href="{{include "." "externalize"}}"><span class="glyphicon glyphicon-eye-open"></span> View</a>
 				</div>
 
-				<div>
+				<div id="editor-container">
 					<img class="image" src="{{include "." "externalize"}}"></img>
 				</div>
 			{{/match}}
 			{{#match contentType "startsWith" "application/pdf"}}
-				<div class="btn-group btn-group-sm" style="margin-bottom:20px">
-					<a class="btn btn-default" href="{{R.PATH}}.xres-properties">properties</a>
-					<a class="btn btn-default" target="_blank" href="{{include "." "externalize"}}">view</a>
+
+				<div class="btn-group btn-group-sm">
+					<a class="btn btn-default" href="{{R.PATH}}/../.xres-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
+					<a class="btn btn-default" href="{{R.PATH}}.xres-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
+					<a class="btn btn-default" target="_blank" href="{{include "." "externalize"}}"><span class="glyphicon glyphicon-eye-open"></span> View</a>
 				</div>
 
-				<div>
+				<div id="editor-container">
 					<iframe class="pdf" src="{{include "." "externalize"}}"></iframe>
 				</div>
 			{{/match}}
@@ -107,4 +99,16 @@
         <a href="{{include "." "externalize"}}" download target="_blank">download</a>
       {{/default}}
 		</div>
+    <script>
+      var ta = document.querySelector('textarea');
+      if (ta) {
+        var editor = CodeMirror.fromTextArea(ta, {
+          lineNumbers: true,
+          autofocus: true,
+          mode: 'javascript',
+          theme: 'solarized dark'
+        });
+      }
+    </script>
 	</body>
+  </html>

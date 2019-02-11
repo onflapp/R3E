@@ -63,6 +63,7 @@ class ObjectResource extends Resource {
 class ObjectContentResourceWriter implements ContentWriter {
   private values;
   private isbase64;
+  private istext;
 
   constructor(obj) {
     this.values = obj;
@@ -70,17 +71,26 @@ class ObjectContentResourceWriter implements ContentWriter {
 
   public start(ctype: string) {
     if (ctype && ctype.indexOf('base64:') === 0) {
-      this.values['_ct'] = ctype.substr(7);
+      ctype = ctype.substr(7);
+      this.values['_ct'] = ctype;
       this.isbase64 = true;
     }
-    else this.values['_ct'] = ctype;
+    else {
+      this.values['_ct'] = ctype;
+    }
 
+    this.istext = Utils.is_texttype(ctype);
     this.values['_pt'] = 'resource/content';
   }
   
   public write(data: any) {
     if (data instanceof ArrayBuffer) {
-      this.values['_content64'] = Utils.ArrayBuffer2base64(data);
+      if (this.istext && typeof window !== 'undefined') this.values['_content'] = new window['TextDecoder']('utf-8').decode(data);
+      else this.values['_content64'] = Utils.ArrayBuffer2base64(data);
+    }
+    else if (typeof Buffer !== 'undefined' && data instanceof Buffer) {
+      if (this.istext) this.values['_content'] = data.toString('utf8');
+      else this.values['_content64'] = data.toString('base64');
     }
     else if (this.isbase64) {
       this.values['_content64'] = data;
@@ -130,7 +140,7 @@ class ObjectContentResource extends ObjectResource {
 
     writer.start(contentType?contentType:'text/plain');
 
-    if (data['_content']) {
+    if (typeof data['_content'] !== 'undefined') {
       if (data['_content']['type'] === 'Buffer' && data['_content']['data']) { //Buffer that may have been JSON.stringifyed
         writer.write(Int8Array.from(data['_content']['data']).buffer);
       }

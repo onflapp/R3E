@@ -46,7 +46,7 @@ class ContentWriterAdapter implements ContentWriter {
         reader.readAsText(v);
       }
       else if (v instanceof ArrayBuffer && typeof window !== 'undefined') {
-        let t = new window['TextDecoder']("utf-8").decode(v);
+        let t = new window['TextDecoder']('utf-8').decode(v);
         this.callback(t, this.ctype);
       }
       else if (v) {

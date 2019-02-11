@@ -4,6 +4,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-contrib-copy');
 	grunt.loadNpmTasks('grunt-contrib-clean');
 	grunt.loadNpmTasks('grunt-contrib-concat');
+	grunt.loadNpmTasks('grunt-exec');
 	grunt.loadNpmTasks('grunt-appcache');
 	grunt.loadNpmTasks("grunt-ts");
 
@@ -37,7 +38,6 @@ module.exports = function(grunt) {
 						"src/core/resources/ErrorResource.ts",
 						"src/core/resources/NotFoundResource.ts",
 						"src/core/resources/MultiResourceResolver.ts",
-						"src/core/resources/DefaultRenderingTemplates.ts",
 						"src/extra/factories/HBSRendererFactory.ts",
 						"src/extra/resources/StoredResource.ts",
 						"src/extra/resources/client/RemoteResource.ts",
@@ -53,6 +53,10 @@ module.exports = function(grunt) {
 				],
 				out: 'build/r3elib.js'
 			}
+		},
+		exec: {
+			archive_templates: '/bin/echo -n "window.templates=" > ./dist/templates.js ; node ./tests/server/files2json.js templates >> ./dist/templates.js',
+			archive_content:   '/bin/echo -n "window.content="   > ./dist/content.js   ; node ./tests/server/files2json.js templates >> ./dist/content.js'
 		},
 		copy: {
 			dist: {
@@ -73,9 +77,9 @@ module.exports = function(grunt) {
       	basePath: 'tests/client'
     	},
     	all: {
-      	dest: 'tests/client/manifest.appcache',
+      	dest: 'tests/client/app.appcache',
       	cache: {
-					patterns:['templates/**/*','tests/static/**/*','tests/**/*.js', 'dist/**/*.js']
+					patterns:['tests/client/app.js', 'dist/**/*.js']
 				},
       	network: '*',
       	xfallback: '/ /offline.html'
@@ -87,6 +91,8 @@ module.exports = function(grunt) {
 	grunt.task.registerTask('default', [
 		'ts:compile_lib',
 		'copy:dist',
+		'exec:archive_templates',
+		'exec:archive_content',
 		'appcache:all'
 	]);
 

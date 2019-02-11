@@ -118,6 +118,14 @@ class Utils {
     return names;
   }
 
+  public static is_texttype(mime: string): boolean {
+    if (!mime) return false;
+
+	  let texttypes = ['application/json', 'application/javascript'];
+		if (mime.indexOf('text/') === 0 || texttypes.indexOf(mime) >= 0) return true;
+    else return false;
+  }
+
   public static filename_mime(path: string): string {
     if (!path) return null;
   
@@ -131,6 +139,7 @@ class Utils {
     if (ext === 'js') return 'text/plain';
     if (ext === 'json') return 'text/plain';
     if (ext === 'md') return 'text/markdown';
+    if (ext === 'hbs') return 'text/handlebars';
 
     return 'application/octet-stream';
   }

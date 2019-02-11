@@ -9,18 +9,24 @@
     <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
 	</head>
 	<body>
-		<div class="container">
+
+<div role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <a class="close" href="{{R.PATH_APPEND}}../.xres-list"><span aria-hidden="true">&times;</span></a>
+        <h4 class="modal-title">Copy Resource</h4>
+      </div>
+      <div class="modal-body">
 
 			<h1>Copy from</h1>
 
 			<ol class="breadcrumb">
 				<li><a href="/.xres-list">HOME</a></li>
 			{{#include "." "parents"}}
-				<li><a href="{{path}}.xres-list">{{name}}</a></li>
+				<li>{{name}}</li>
 			{{/include}}
-				<li class="active">
-					<a href="{{R.PATH}}.xres-list">{{R.NAME}}</a>
-				</li>
+				<li class="active">{{R.NAME}}</li>
 			</ol>
 
 			<h1>to</h1>
@@ -33,6 +39,7 @@
 				<li class="active">{{R.DATA_NAME}}</li>
 			</ol>
 
+			<form method="post" action="{{R.PATH}}.xres-list">
       <table class="table">
 			{{#include R.DATA_PATH "children"}}
 				{{#if isContentResource}}
@@ -43,30 +50,40 @@
 				</tr>
 				{{else}}
 				<tr>
-          {{#match path "startsWith" R.PATH}}
-            <td>
-					    <i class="glyphicon glyphicon-folder-close"></i> {{name}}
-            </td>
-          {{/match}}
-          {{#default}}
+          {{#match path "!startsWith" R.PATH}}
             <td>
 					    <i class="glyphicon glyphicon-folder-close"></i> <a href="{{R.PATH}}.xres-copyto{{path}}">{{name}}</a>
             </td>
-          {{/default}}
+          {{/match}}
 				</tr>
 				{{/if}}
 
 			{{/include}}
+				<tr>
+          <td>
+				    <input class="form-control" name=":name|newUUID" value="Copy of {{R.NAME}}" autocomplete="off">
+          </td>
+				</tr>
+
 			</table>
 			
-			<form method="post" action="{{R.PATH}}.xres-list">
-				<input name=":name|newUUID" value="{{R.NAME}}" autocomplete="off">
 				<input type="hidden" name=":copyto" value="{{R.DATA_PATH_APPEND}}{:name}">
-				<input type="submit" value="copy">
 				<input type="hidden" name=":forward" value="{{R.DATA_PATH}}.xres-list">
+
+      <div class="modal-footer">
+        <div class="pull-left">
+			  <a class="btn btn-default" target="_blank" href="{{R.PATH}}.xexport">Export</a>
+			  <a class="btn btn-default" target="_blank" href="{{R.PATH}}.xres-exportto{{R.DATA_PATH}}">Export to...</a>
+        </div>
+        <a class="btn btn-default" href="{{R.PATH_APPEND}}../.xres-list">Cancel</a>
+				<input class="btn btn-success" type="submit" value="Copy">
+      </div>
+
 			</form>
-			<a class="btn btn-default" target="_blank" href="{{R.PATH}}.xexport">export</a>
-			<a class="btn btn-default" target="_blank" href="{{R.PATH}}.xres-exportto{{R.DATA_PATH}}">export to...</a>
-		</div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
 	</body>
 </html>
