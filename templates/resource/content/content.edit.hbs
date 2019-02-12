@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -12,93 +13,104 @@
     <script src="{{C.CODEMIRROR_JS}}"></script>
     <style>
       #editor-container {
-        margin-top: 20px;
-      }
-      #editor-container img {
-        max-width: fit-content;
-        width: 100%;
-      }
-    </style>
-	</head>
-	<body>
-		<div class="container">
+          margin-top: 20px;
+        }
+        #editor-container .CodeMirror {
+          position: fixed;
+          bottom: 0px;
+          top: 100px;
+          right: 0px;
+          left: 0px;
+          font-size: 11px;
+          line-height: 11px;
+          height: initial;
+        }
+        #editor-container img {
+          max-width: fit-content;
+          width: 100%;
+        }
+      </style>
+  </head>
 
-			<ol class="breadcrumb">
-				<li><a href="/.xres-list">HOME</a></li>
-			{{#include "." "parents"}}
-				<li><a href="{{path}}.xres-list">{{name}}</a></li>
-			{{/include}}
-				<li class="active">{{R.NAME}}</li>
-			</ol>
+  <body>
+    <div class="container">
 
-			{{#match contentType "startsWith" "application/javascript"}}
-			<form method="post" action="{{R.PATH}}{{R.SUFFIX}}">
+      <ol class="breadcrumb">
+        <li><a href="/.xres-list">HOME</a></li>
+        {{#include "." "parents"}}
+          <li><a href="{{path}}.xres-list">{{name}}</a></li>
+        {{/include}}
+        <li class="active">{{R.NAME}}</li>
+      </ol>
 
-				<div class="btn-group btn-group-sm">
-					<a class="btn btn-default" href="{{R.PATH}}/../.xres-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
-					<a class="btn btn-default" href="{{R.PATH}}.xres-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
-				</div>
-				<div class="btn-group btn-group-sm pull-right">
-					<button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-floppy-save"></span> Save</button>
-				</div>
+      {{#match contentType "startsWith" "application/javascript"}}
+        <form method="post" action="{{R.PATH}}{{R.SUFFIX}}">
 
-				<div id="editor-container">
-					<textarea autocorrect="off" autocapitalize="off" autocomplete="off" autofocus="on" spellcheck="false" name="_content">
+          <div class="btn-group btn-group-sm">
+            <a class="btn btn-default" href="{{R.PATH}}/../.xres-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
+            <a class="btn btn-default" href="{{R.PATH}}.xres-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
+          </div>
+          <div class="btn-group btn-group-sm pull-right">
+            <button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-floppy-save"></span> Save</button>
+          </div>
+
+          <div id="editor-container">
+            <textarea autocorrect="off" autocapitalize="off" autocomplete="off" autofocus="on" spellcheck="false" name="_content">
 {{include-safe "." "text"}}</textarea>
-				</div>
-				<input type="hidden" name="_rt" value="resource/content"></input>
-				<input type="hidden" name="_ct" value="{{contentType}}"></input>
-			</form>
-			{{/match}}
-			{{#match contentType "startsWith" "text/"}}
-			<form method="post" action="{{R.PATH}}{{R.SUFFIX}}">
+          </div>
+          <input type="hidden" name="_rt" value="resource/content"></input>
+          <input type="hidden" name="_ct" value="{{contentType}}"></input>
+        </form>
+      {{/match}}
+      {{#match contentType "startsWith" "text/"}}
+        <form method="post" action="{{R.PATH}}{{R.SUFFIX}}">
 
-				<div class="btn-group btn-group-sm">
-					<a class="btn btn-default" href="{{R.PATH}}/../.xres-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
-					<a class="btn btn-default" href="{{R.PATH}}.xres-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
-				</div>
-				<div class="btn-group btn-group-sm pull-right">
-					<button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-floppy-save"></span> Save</button>
-				</div>
+          <div class="btn-group btn-group-sm">
+            <a class="btn btn-default" href="{{R.PATH}}/../.xres-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
+            <a class="btn btn-default" href="{{R.PATH}}.xres-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
+          </div>
+          <div class="btn-group btn-group-sm pull-right">
+            <button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-floppy-save"></span> Save</button>
+          </div>
 
-				<div id="editor-container">
-					<textarea autocorrect="off" autocapitalize="off" autocomplete="off" autofocus="on" spellcheck="false" name="_content">
+          <div id="editor-container">
+            <textarea autocorrect="off" autocapitalize="off" autocomplete="off" autofocus="on" spellcheck="false" name="_content">
 {{include-safe "." "text"}}</textarea>
-				</div>
-				<input type="hidden" name="_rt" value="resource/content"></input>
-				<input type="hidden" name="_ct" value="{{contentType}}"></input>
-			</form>
-			{{/match}}
-			{{#match contentType "startsWith" "image/"}}
+          </div>
+          <input type="hidden" name="_rt" value="resource/content"></input>
+          <input type="hidden" name="_ct" value="{{contentType}}"></input>
+        </form>
+      {{/match}}
+      {{#match contentType "startsWith" "image/"}}
 
-				<div class="btn-group btn-group-sm">
-					<a class="btn btn-default" href="{{R.PATH}}/../.xres-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
-					<a class="btn btn-default" href="{{R.PATH}}.xres-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
-					<a class="btn btn-default" target="_blank" href="{{include "." "externalize"}}"><span class="glyphicon glyphicon-eye-open"></span> View</a>
-				</div>
+        <div class="btn-group btn-group-sm">
+          <a class="btn btn-default" href="{{R.PATH}}/../.xres-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
+          <a class="btn btn-default" href="{{R.PATH}}.xres-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
+          <a class="btn btn-default" target="_blank" href="{{include "." "externalize"}}"><span class="glyphicon glyphicon-eye-open"></span> View</a>
+        </div>
 
-				<div id="editor-container">
-					<img class="image" src="{{include "." "externalize"}}"></img>
-				</div>
-			{{/match}}
-			{{#match contentType "startsWith" "application/pdf"}}
+        <div id="editor-container">
+          <img class="image" src="{{include "." "externalize"}}"></img>
+        </div>
+      {{/match}}
+      {{#match contentType "startsWith" "application/pdf"}}
 
-				<div class="btn-group btn-group-sm">
-					<a class="btn btn-default" href="{{R.PATH}}/../.xres-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
-					<a class="btn btn-default" href="{{R.PATH}}.xres-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
-					<a class="btn btn-default" target="_blank" href="{{include "." "externalize"}}"><span class="glyphicon glyphicon-eye-open"></span> View</a>
-				</div>
+        <div class="btn-group btn-group-sm">
+          <a class="btn btn-default" href="{{R.PATH}}/../.xres-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
+          <a class="btn btn-default" href="{{R.PATH}}.xres-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
+          <a class="btn btn-default" target="_blank" href="{{include "." "externalize"}}"><span class="glyphicon glyphicon-eye-open"></span> View</a>
+        </div>
 
-				<div id="editor-container">
-					<iframe class="pdf" src="{{include "." "externalize"}}"></iframe>
-				</div>
-			{{/match}}
+        <div id="editor-container">
+          <iframe class="pdf" src="{{include "." "externalize"}}"></iframe>
+        </div>
+      {{/match}}
 
       {{#default}}
         unknown file type of {{contentType}} <br>
         <a href="{{include "." "externalize"}}" download target="_blank">download</a>
       {{/default}}
-		</div>
+    </div>
     <script>
       var ta = document.querySelector('textarea');
       if (ta) {
@@ -110,5 +122,6 @@
         });
       }
     </script>
-	</body>
-  </html>
+  </body>
+
+</html>

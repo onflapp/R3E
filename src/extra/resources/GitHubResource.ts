@@ -8,8 +8,7 @@ class GitHubResourceContentWriter implements ContentWriter {
     this.filePath = filePath;
   }
 
-  public start(ctype: string) {
-  }
+  public start(ctype: string) {}
 
   public write(data: any) {
     this.buffer.push(data);
@@ -23,10 +22,10 @@ class GitHubResourceContentWriter implements ContentWriter {
     let self = this;
     let data = this.buffer.join('');
     let opts = {
-      encode:true
+      encode: true
     };
 
-    this.repo.writeFile('master', this.filePath, data, '', opts, function() {
+    this.repo.writeFile('master', this.filePath, data, '', opts, function () {
       callback();
     });
   }
@@ -38,11 +37,11 @@ class GitHubResource extends Resource {
   protected isDirectory: boolean = true;
   protected resources = null;
 
-  constructor(repo: any, path?: string, name?: string) {
+  constructor(repo: any, path ? : string, name ? : string) {
     super(name);
 
     this.repo = repo;
-    this.filePath = path?path:'';
+    this.filePath = path ? path : '';
   }
 
   public getType(): string {
@@ -59,7 +58,7 @@ class GitHubResource extends Resource {
     return this.values['_rt'];
   }
 
-  protected makeMetadataPath(nm?: string):string {
+  protected makeMetadataPath(nm ? : string): string {
     if (nm) {
       return this.filePath + '/.' + nm + '.metadata.json';
     }
@@ -81,40 +80,40 @@ class GitHubResource extends Resource {
     }
     else if (self.isDirectory) {
       self.repo.getContents('master', this.filePath, false)
-      .then(function(response) {
-        self.resources = {};
+        .then(function (response) {
+          self.resources = {};
 
-        for (let i = 0; i < response.data.length; i++) {
-          let item = response.data[i];
-          let name = item.name;
-          if (name.charAt(0) === '.') continue;
+          for (let i = 0; i < response.data.length; i++) {
+            let item = response.data[i];
+            let name = item.name;
+            if (name.charAt(0) === '.') continue;
 
-          let path = name;
-          if (self.filePath) path = Utils.filename_path_append(self.filePath, name);
+            let path = name;
+            if (self.filePath) path = Utils.filename_path_append(self.filePath, name);
 
-          let res = new GitHubResource(self.repo, path, name);
-          
-          if (item['type'] === 'file') res.isDirectory = false;
-          else if (item['type'] === 'dir') res.isDirectory = true;
-          else continue;
+            let res = new GitHubResource(self.repo, path, name);
 
-          self.resources[name] = res;
-        }
-        callback(self.resources);
-      })
-      .catch(function(error) {
-        callback();
-      });
+            if (item['type'] === 'file') res.isDirectory = false;
+            else if (item['type'] === 'dir') res.isDirectory = true;
+            else continue;
+
+            self.resources[name] = res;
+          }
+          callback(self.resources);
+        })
+        .catch(function (error) {
+          callback();
+        });
     }
     else {
       callback();
     }
   }
 
-  public allocateChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
+  public allocateChildResource(name: string, callback: ResourceCallback, walking ? : boolean): void {
     let self = this;
-    this.readResources(function(rls) {
-      
+    this.readResources(function (rls) {
+
       let path = name;
       if (self.filePath) path = Utils.filename_path_append(self.filePath, name);
       let res = new GitHubResource(self.repo, path, name);
@@ -134,10 +133,10 @@ class GitHubResource extends Resource {
     let path = this.makeMetadataPath();
     let str = JSON.stringify(data);
     let opts = {
-      encode:true
+      encode: true
     };
 
-    this.repo.writeFile('master', path, str, '', opts, function() {
+    this.repo.writeFile('master', path, str, '', opts, function () {
       callback();
     });
   }
@@ -146,75 +145,75 @@ class GitHubResource extends Resource {
     let self = this;
     let todelete = [];
 
-    let delete_paths = function(paths) {
+    let delete_paths = function (paths) {
       if (paths.length) {
         let path = paths.pop();
-        self.repo.deleteFile('master', path, function() {
-          delete_paths(todelete);
-        })
-        .catch(function() {
-          callback(null);
-        });
+        self.repo.deleteFile('master', path, function () {
+            delete_paths(todelete);
+          })
+          .catch(function () {
+            callback(null);
+          });
       }
       else {
-        callback(); 
+        callback();
       }
     };
 
     let cc = 0;
-    let collect_all = function(path) {
+    let collect_all = function (path) {
       self.repo.getContents('master', path, false)
-      .then(function(response) {
-        cc++;
-        for (let i = 0; i < response.data.length; i++) {
-          let item = response.data[i];
-          let np = Utils.filename_path_append(path, item.name);
-          if (item.type === 'dir') {
-            collect_all(np);
+        .then(function (response) {
+          cc++;
+          for (let i = 0; i < response.data.length; i++) {
+            let item = response.data[i];
+            let np = Utils.filename_path_append(path, item.name);
+            if (item.type === 'dir') {
+              collect_all(np);
+            }
+            else {
+              todelete.push(np);
+            }
           }
-          else {
-            todelete.push(np);
+          cc--;
+          if (cc === 0) {
+            delete_paths(todelete);
           }
-        }
-        cc--;
-        if (cc === 0) {
-          delete_paths(todelete);
-        }
-      })
-      .catch(function(error) {
-        callback(null);
-      });
+        })
+        .catch(function (error) {
+          callback(null);
+        });
     };
 
     self.repo.getContents('master', this.filePath, false)
-    .then(function(response) {
-      for (let i = 0; i < response.data.length; i++) {
-        let item = response.data[i];
-        if (item.name === name) {
-          let path = name;
-          if (self.filePath) path = Utils.filename_path_append(self.filePath, name);
-          if (item.type === 'dir') {
-            collect_all(path);
-            return;
-          }
-          else {
-            todelete.push(path);
-            delete_paths(todelete);
-            return;
+      .then(function (response) {
+        for (let i = 0; i < response.data.length; i++) {
+          let item = response.data[i];
+          if (item.name === name) {
+            let path = name;
+            if (self.filePath) path = Utils.filename_path_append(self.filePath, name);
+            if (item.type === 'dir') {
+              collect_all(path);
+              return;
+            }
+            else {
+              todelete.push(path);
+              delete_paths(todelete);
+              return;
+            }
           }
         }
-      }
-      callback();
-    })
-    .catch(function(error) {
-      callback(null);
-    });
+        callback();
+      })
+      .catch(function (error) {
+        callback(null);
+      });
 
 
     this.resources = null;
   }
 
-  public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
+  public resolveChildResource(name: string, callback: ResourceCallback, walking ? : boolean): void {
     if (walking) {
       if (this.resources) {
         callback(this.resources[name]);
@@ -230,7 +229,7 @@ class GitHubResource extends Resource {
       }
     }
     else {
-      this.readResources(function(rls) {
+      this.readResources(function (rls) {
         if (rls) callback(rls[name]);
         else callback(null);
       });
@@ -238,7 +237,7 @@ class GitHubResource extends Resource {
   }
 
   public listChildrenNames(callback: ChildrenNamesCallback) {
-    this.readResources(function(rls) {
+    this.readResources(function (rls) {
       if (!rls) callback([]);
       else {
         let ls = [];
@@ -277,19 +276,19 @@ class GitHubResource extends Resource {
     else {
       let path = this.filePath;
       let ct = this.getContentType();
-      
-      this.repo.getContents('master', this.filePath, false)
-      .then(function(data) {
-        let content = data.data.content;
-        let encoding = data.data.encoding;
 
-        writer.start(ct);
-        writer.write(Utils.base642ArrayBuffer(content));
-        writer.end(callback);
-      })
-      .catch(function(error) {
-        writer.end(callback);
-      });
+      this.repo.getContents('master', this.filePath, false)
+        .then(function (data) {
+          let content = data.data.content;
+          let encoding = data.data.encoding;
+
+          writer.start(ct);
+          writer.write(Utils.base642ArrayBuffer(content));
+          writer.end(callback);
+        })
+        .catch(function (error) {
+          writer.end(callback);
+        });
     }
-  }  
+  }
 }

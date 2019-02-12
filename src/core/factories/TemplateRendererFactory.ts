@@ -1,5 +1,5 @@
 class TemplateOutputPlaceholder {
-  private buffer: Array<string> = [];
+  private buffer: Array < string > = [];
   private session: TemplateRendererSession;
   private closed: boolean = false;
 
@@ -12,7 +12,7 @@ class TemplateOutputPlaceholder {
     this.placeholder = '[[' + id + ']]';
     this.session = session;
 
-    setTimeout(function() {
+    setTimeout(function () {
       if (!self.closed) {
         self.buffer = ['write timeout'];
         self.end();
@@ -41,10 +41,10 @@ class TemplateOutputPlaceholder {
 
 class TemplateRendererSession {
   private outputPlaceholderID: number = 1;
-  private placeholders: Array<TemplateOutputPlaceholder> = [];
+  private placeholders: Array < TemplateOutputPlaceholder > = [];
   private deferredReplaceFunc: any;
   private pending: any = 0;
-  
+
   public makeOutputPlaceholder() {
     let self = this;
     let p = new TemplateOutputPlaceholder(this.outputPlaceholderID++, this);
@@ -56,15 +56,15 @@ class TemplateRendererSession {
 
   public replaceOutputPlaceholders(text: string, callback: any) {
     let self = this;
-    let replaceFunc = function() {
-      let ls = self.placeholders.sort(function(a: TemplateOutputPlaceholder, b: TemplateOutputPlaceholder): number {
+    let replaceFunc = function () {
+      let ls = self.placeholders.sort(function (a: TemplateOutputPlaceholder, b: TemplateOutputPlaceholder): number {
         return +(a.id > b.id) - +(a.id < b.id);
       });
       for (let i = 0; i < ls.length; i++) {
         let it = ls[i];
         text = text.replace(it.placeholder, it.toString());
       }
-      
+
       callback(text);
       self.close();
     };
@@ -94,7 +94,7 @@ class TemplateRendererFactory implements RendererFactory {
   private static cache = {};
 
   protected compileTemplate(template: string): any {
-    return function() {
+    return function () {
       return template;
     };
   }
@@ -107,14 +107,14 @@ class TemplateRendererFactory implements RendererFactory {
 
   public makeRenderer(resource: Resource, callback: RendererFactoryCallback) {
     let self = this;
-    resource.read(new ContentWriterAdapter('utf8', function(data) {
+    resource.read(new ContentWriterAdapter('utf8', function (data) {
       if (data) {
         let tfunc = TemplateRendererFactory.cache[data];
         if (!tfunc) {
           try {
             tfunc = self.compileTemplate(data);
           }
-          catch(ex) {
+          catch (ex) {
             callback(null, ex);
             return;
           }
@@ -124,7 +124,7 @@ class TemplateRendererFactory implements RendererFactory {
 
         let session = new TemplateRendererSession();
 
-        callback(function(data: Data, writer: ContentWriter, context: ResourceRequestContext) {
+        callback(function (data: Data, writer: ContentWriter, context: ResourceRequestContext) {
           let map = context.makeContextMap(data);
 
           map['_session'] = session;
@@ -132,7 +132,7 @@ class TemplateRendererFactory implements RendererFactory {
 
           try {
             let txt = tfunc(map);
-            session.replaceOutputPlaceholders(txt, function(txt) {
+            session.replaceOutputPlaceholders(txt, function (txt) {
               writer.start('text/html');
               writer.write(txt);
               writer.end(null);

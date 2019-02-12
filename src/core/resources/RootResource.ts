@@ -1,23 +1,23 @@
 class RootResource extends ObjectResource {
-  constructor(opts?: any) {
+  constructor(opts ? : any) {
     super('', opts);
   }
 
   public getType(): string {
     return 'resource/node';
   }
-    
+
   public getSuperType(): string {
     return 'resource/root';
-  }  
+  }
 
-  public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
+  public resolveChildResource(name: string, callback: ResourceCallback, walking ? : boolean): void {
     let rv = this.values[name];
     if (rv && rv instanceof Resource) {
-      rv.getName = function() {
+      rv.getName = function () {
         return name;
       };
-      rv.resolveItself(function() {
+      rv.resolveItself(function () {
         callback(rv);
       });
     }

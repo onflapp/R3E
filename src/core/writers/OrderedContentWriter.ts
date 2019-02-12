@@ -1,5 +1,5 @@
 class OrderedContentWriter implements ContentWriter {
-  protected contentQueue: Array<any>;
+  protected contentQueue: Array < any > ;
   protected contentType: string;
   protected instances = 0;
   protected parentWriter;
@@ -11,7 +11,7 @@ class OrderedContentWriter implements ContentWriter {
   }
 
   public makeNestedContentWriter(): ContentWriter {
-    let p = this.parentWriter?this.parentWriter:this;
+    let p = this.parentWriter ? this.parentWriter : this;
     let w = new OrderedContentWriter(null);
     w.parentWriter = p;
     this.contentQueue.push(w);
@@ -24,17 +24,17 @@ class OrderedContentWriter implements ContentWriter {
     this.contentQueue.push(content);
   }
 
-	public start(contentType) {
-    let p = this.parentWriter?this.parentWriter:this;
+  public start(contentType) {
+    let p = this.parentWriter ? this.parentWriter : this;
     if (contentType && !p.contentType) p.contentType = contentType;
-	}
+  }
 
-	public error(err) {
-		console.log(err);
-	}
+  public error(err) {
+    console.log(err);
+  }
 
-	public end() {
-    let p = this.parentWriter?this.parentWriter:this;
+  public end() {
+    let p = this.parentWriter ? this.parentWriter : this;
 
     if (p.instances > 0) {
       p.instances--;
@@ -42,13 +42,13 @@ class OrderedContentWriter implements ContentWriter {
     else if (p.instances == 0) {
       p.endAll();
     }
-	}
+  }
 
   protected endAll() {
     let delegate = this.delegateWriter;
     if (!delegate) return;
 
-    let writeOutQueue = function(writer) {
+    let writeOutQueue = function (writer) {
       if (writer.contentQueue) {
         for (var i = 0; i < writer.contentQueue.length; i++) {
           var content = writer.contentQueue[i];
@@ -68,7 +68,7 @@ class OrderedContentWriter implements ContentWriter {
 
     delegate.start(this.contentType);
     writeOutQueue(this);
-    setTimeout(function() {
+    setTimeout(function () {
       delegate.end(null);
     })
   }

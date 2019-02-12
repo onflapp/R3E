@@ -1,14 +1,14 @@
-	<h1>parents:</h1>
+<h1>parents:</h1>
 
-	<ul>
-	{{#each CP_PARENTS}}
-		<li><a href="{{path}}.x{{../CP_SEL}}">{{name}}</a></li>
-	{{/each}}
-	</ul>
+<ul>
+  {{#each CP_PARENTS}}
+    <li><a href="{{path}}.x{{../CP_SEL}}">{{name}}</a></li>
+  {{/each}}
+</ul>
 
-	<form method="post">
-		<textarea name="content">{{CURRENT_NODE.content}}</textarea>
-		<input type="hidden" name="_pt" value="resource/file"></input>
-			<input type="hidden" name=":forward" value="{{CP_PATH}}.xedit"></input>
-		<input type="submit" value="save"></input>
-	</form>
+<form method="post">
+  <textarea name="content">{{CURRENT_NODE.content}}</textarea>
+  <input type="hidden" name="_pt" value="resource/file"></input>
+  <input type="hidden" name=":forward" value="{{CP_PATH}}.xedit"></input>
+  <input type="submit" value="save"></input>
+</form>

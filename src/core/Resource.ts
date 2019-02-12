@@ -3,14 +3,14 @@ interface ResourceCallback {
 }
 
 interface ChildrenNamesCallback {
-  (names: Array<string>): void
+  (names: Array < string > ): void
 }
 
 class Data {
   public values: any;
 
-  constructor(obj?: any) {
-    this.values = obj?obj:{};
+  constructor(obj ? : any) {
+    this.values = obj ? obj : {};
   }
 
   public importProperties(data: any, callback) {
@@ -39,12 +39,11 @@ class Data {
     return map;
   }
 
-  public getPropertyNames(): Array<string> {
+  public getPropertyNames(): Array < string > {
     var rv = [];
     for (var k in this.values) {
       var v = this.values[k];
-      if (typeof v === 'object' || typeof v === 'function' || k.charAt(0) === '_') {
-      }
+      if (typeof v === 'object' || typeof v === 'function' || k.charAt(0) === '_') {}
       else {
         rv.push(k);
       }
@@ -56,7 +55,7 @@ class Data {
     return this.values[name];
   }
 
-  public getRenderTypes(): Array<string> {
+  public getRenderTypes(): Array < string > {
     let rv = [];
     let rt = this.values['_rt'];
 
@@ -86,9 +85,9 @@ abstract class Resource extends Data implements ContentReader {
 
   protected resourceName: string;
 
-  constructor(name?: string) {
+  constructor(name ? : string) {
     super({});
-    this.resourceName = name?name:'';
+    this.resourceName = name ? name : '';
   }
 
   public resolveItself(callback) {
@@ -111,14 +110,14 @@ abstract class Resource extends Data implements ContentReader {
     return null;
   }
 
-  public getRenderTypes(): Array<string> {
+  public getRenderTypes(): Array < string > {
     let rv = [];
     let rt = this.getRenderType();
     let st = this.getSuperType();
     let ct = this.getContentType();
 
     if (rt) rv.push(rt);
-    if (ct) rv.push('mime/'+ct);
+    if (ct) rv.push('mime/' + ct);
     if (st) rv.push(st);
     rv.push(this.getType());
 
@@ -126,14 +125,14 @@ abstract class Resource extends Data implements ContentReader {
   }
 
   public abstract importContent(func, callback): void;
-  public abstract resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void;
-  public abstract allocateChildResource(name: string, callback: ResourceCallback, walking?: boolean): void;
+  public abstract resolveChildResource(name: string, callback: ResourceCallback, walking ? : boolean): void;
+  public abstract allocateChildResource(name: string, callback: ResourceCallback, walking ? : boolean): void;
   public abstract removeChildResource(name: string, callback);
   public abstract listChildrenNames(callback: ChildrenNamesCallback);
 
-  public resolveOrAllocateChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
+  public resolveOrAllocateChildResource(name: string, callback: ResourceCallback, walking ? : boolean): void {
     let self = this;
-    this.resolveChildResource(name, function(res) {
+    this.resolveChildResource(name, function (res) {
       if (res) {
         callback(res);
       }
@@ -154,7 +153,7 @@ abstract class Resource extends Data implements ContentReader {
       let value = this.getProperty(name);
 
       if (value) rv[name] = value;
-		}
+    }
 
     if (this.getRenderType()) {
       rv[Resource.STORE_RENDERTYPE_PROPERTY] = this.getRenderType();
@@ -166,7 +165,7 @@ abstract class Resource extends Data implements ContentReader {
 
 
     if (this.isContentResource()) {
-      rv[Resource.STORE_CONTENT_PROPERTY] = function(writer, callback) {
+      rv[Resource.STORE_CONTENT_PROPERTY] = function (writer, callback) {
         self.read(writer, callback);
       };
     }
@@ -178,22 +177,22 @@ abstract class Resource extends Data implements ContentReader {
     callback(new Data(rv));
   }
 
-  public exportChilrenResources(level, writer: ContentWriter, incSource?: boolean): void {
+  public exportChilrenResources(level, writer: ContentWriter, incSource ? : boolean): void {
     let self = this;
     let processing = 0;
 
-    let done = function() {
+    let done = function () {
       if (processing === 0) {
         writer.end(null);
         processing = -1;
       }
     };
 
-    let export_children = function(path, name, res) {
+    let export_children = function (path, name, res) {
       processing++; //children
       processing++; //data
 
-      res.exportData(function(data: Data) {
+      res.exportData(function (data: Data) {
         if (name) data.values[':name'] = name;
         if (path) data.values[':path'] = path;
 
@@ -202,19 +201,19 @@ abstract class Resource extends Data implements ContentReader {
         done();
       });
 
-      res.listChildrenNames(function(names) {
+      res.listChildrenNames(function (names) {
         processing += names.length; //names
 
         for (var i = 0; i < names.length; i++) {
-					let name = names[i];
+          let name = names[i];
 
-          res.resolveChildResource(name, function(r) {
+          res.resolveChildResource(name, function (r) {
             let rpath = Utils.filename_path_append(path, name);
 
             export_children(rpath, name, r);
             processing--; //names
           });
-				}
+        }
 
         processing--; //children
         done();
@@ -222,14 +221,14 @@ abstract class Resource extends Data implements ContentReader {
     };
 
     writer.start('object/javascript');
-    export_children(incSource?this.getName():'', this.getName(), this);
+    export_children(incSource ? this.getName() : '', this.getName(), this);
   }
 
   public importData(data: Data, callback) {
     let processing = 0;
     let ffunc = null;
     let ct = null;
-    let done = function() {
+    let done = function () {
       if (processing === 0 && callback) callback();
     }
 
@@ -245,8 +244,8 @@ abstract class Resource extends Data implements ContentReader {
       else if (k === Resource.STORE_CONTENT_PROPERTY && typeof v === 'string') {
         processing++;
         ct = data.values['_ct'];
-        ffunc = function(writer, callback) {
-          writer.start(ct?ct:'text/plain');
+        ffunc = function (writer, callback) {
+          writer.start(ct ? ct : 'text/plain');
           writer.write(v);
           writer.end(callback);
         };
@@ -267,13 +266,13 @@ abstract class Resource extends Data implements ContentReader {
         props['_ct'] = ct.substr(7);
       }
 
-      this.importContent(ffunc, function() {
+      this.importContent(ffunc, function () {
         processing--;
         done();
       });
     }
 
-    this.importProperties(props, function() {
+    this.importProperties(props, function () {
       processing--;
       done();
     });
@@ -282,13 +281,13 @@ abstract class Resource extends Data implements ContentReader {
 
   public listChildrenResources(callback: any) {
     let self = this;
-    this.listChildrenNames(function(ls) {
+    this.listChildrenNames(function (ls) {
       let rv = [];
       let sz = 0;
       if (ls && ls.length > 0) {
         for (var i = 0; i < ls.length; i++) {
           let name = ls[i];
-          self.resolveChildResource(name, function(res) {
+          self.resolveChildResource(name, function (res) {
             sz++;
             if (res) rv.push(res);
             if (sz === ls.length) {

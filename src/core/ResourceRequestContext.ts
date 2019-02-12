@@ -7,7 +7,7 @@ class ResourceRequestContext {
     this.resourceRequestHandler = handler;
   }
 
-  public getRequestProperties():any {
+  public getRequestProperties(): any {
     let p = {};
     p['PREFIX'] = this.pathInfo.prefix;
     p['SUFFIX'] = this.pathInfo.suffix;
@@ -18,15 +18,15 @@ class ResourceRequestContext {
     p['DATA_NAME'] = this.pathInfo.dataName;
 
     let pplus = this.pathInfo.path;
-    if (pplus !== '/') pplus = pplus+'/';
+    if (pplus !== '/') pplus = pplus + '/';
     p['PATH_APPEND'] = pplus;
 
     let dpplus = this.pathInfo.dirname;
-    if (dpplus !== '/') dpplus = dpplus+'/';
+    if (dpplus !== '/') dpplus = dpplus + '/';
     p['DIRNAME_APPEND'] = dpplus;
 
-    let dplus = this.pathInfo.dataPath?this.pathInfo.dataPath:'';
-    if (dplus !== '/') dplus = dplus+'/';
+    let dplus = this.pathInfo.dataPath ? this.pathInfo.dataPath : '';
+    if (dplus !== '/') dplus = dplus + '/';
     p['DATA_PATH_APPEND'] = dplus;
 
     if (this.pathInfo.referer) {
@@ -41,15 +41,15 @@ class ResourceRequestContext {
     this.pathInfo.resourcePath = rpath;
   }
 
-  public getCurrentSelector():string {
+  public getCurrentSelector(): string {
     return this.pathInfo.selector;
   }
 
-  public getCurrentResourcePath():string {
+  public getCurrentResourcePath(): string {
     return this.pathInfo.resourcePath;
   }
 
-  public getCurrentDataPath():string {
+  public getCurrentDataPath(): string {
     return this.pathInfo.dataPath;
   }
 
@@ -109,7 +109,7 @@ class ResourceRequestContext {
     map['R'] = this.getRequestProperties();
     map['Q'] = this.getQueryProperties();
     map['C'] = this.getConfigProperties();
-    
+
     return map;
   }
 
@@ -124,7 +124,7 @@ class PathInfo {
   public path: string;
   public name: string;
   public dirname: string;
-  public dirnames: Array<string>;
+  public dirnames: Array < string > ;
   public selector: string;
   public selectorArgs: string;
   public prefix: string;
@@ -155,5 +155,3 @@ class PathInfo {
     return pi;
   }
 }
-
-

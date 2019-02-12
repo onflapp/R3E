@@ -4,11 +4,11 @@ class RemoteResource extends ObjectResource {
   private resolved: boolean = false;
   private childNames = [];
 
-	constructor(name: string, base: string, obj?: any) {
-		super(name, obj?obj:{});
+  constructor(name: string, base: string, obj ? : any) {
+    super(name, obj ? obj : {});
     this.baseName = name;
     this.baseURL = base;
-	}
+  }
 
   public getURL(name: string): string {
     let path = this.baseURL + '/' + name;
@@ -39,7 +39,7 @@ class RemoteResource extends ObjectResource {
     let self = this;
     let processed = 0;
     let found = 0;
-    let done = function() {
+    let done = function () {
       if (processed == 2) {
         if (found) {
           callback(self);
@@ -49,7 +49,7 @@ class RemoteResource extends ObjectResource {
       }
     };
 
-    this.refresh(this.getPropertiesStoreName(), function(rv) {
+    this.refresh(this.getPropertiesStoreName(), function (rv) {
       if (rv) {
         self.values = rv;
         found++;
@@ -58,7 +58,7 @@ class RemoteResource extends ObjectResource {
       done();
     });
 
-    this.refresh(this.getChildrenStoreName(), function(rv) {
+    this.refresh(this.getChildrenStoreName(), function (rv) {
       if (rv) {
         self.childNames = rv;
         found++;
@@ -69,14 +69,14 @@ class RemoteResource extends ObjectResource {
 
   }
 
-  public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
+  public resolveChildResource(name: string, callback: ResourceCallback, walking ? : boolean): void {
     if (walking) {
       let res = this.makeNewResource(name, {});
       callback(res);
     }
     else {
       let self = this;
-      this.resolveItself(function(rv) {
+      this.resolveItself(function (rv) {
         if (rv && self.childNames.indexOf(name) >= 0) {
           let res = self.makeNewResource(name, {});
           res.resolveItself(callback);
@@ -94,15 +94,15 @@ class RemoteResource extends ObjectResource {
     if (this.childNames.indexOf(name) === -1) this.childNames.push(name);
 
     let res = this.makeNewResource(name, {});
-    this.store(this.getChildrenStoreName(), this.childNames, function() {
+    this.store(this.getChildrenStoreName(), this.childNames, function () {
       callback(res);
     });
   }
 
   public importProperties(data: any, callback) {
     let self = this;
-    super.importProperties(data, function() {
-      self.store(self.getPropertiesStoreName(), self.values, function() {
+    super.importProperties(data, function () {
+      self.store(self.getPropertiesStoreName(), self.values, function () {
         callback();
       });
     });
@@ -111,8 +111,8 @@ class RemoteResource extends ObjectResource {
   public removeChildResource(name: string, callback) {
     let self = this;
     this.childNames.splice(this.childNames.indexOf(name), 1);
-    super.removeChildResource(name, function() {
-      self.store(self.getChildrenStoreName(), self.childNames, function() {
+    super.removeChildResource(name, function () {
+      self.store(self.getChildrenStoreName(), self.childNames, function () {
         callback();
       });
     });
@@ -121,24 +121,24 @@ class RemoteResource extends ObjectResource {
   protected store(name, values, callback): void {
     let url = this.getURL(name);
     let data = JSON.stringify(values);
-		let xhr = new XMLHttpRequest();
+    let xhr = new XMLHttpRequest();
     let self = this;
 
     xhr.open('POST', url);
 
-    xhr.setRequestHeader('Content-Type', 'application/json');//;charset=UTF-8');
-		xhr.onreadystatechange = function() {
-			var DONE = 4;
-			var OK = 200;
-			if (xhr.readyState === DONE) {
-				if (xhr.status === OK) {
-					callback(xhr.responseText);
-				}
-				else {
+    xhr.setRequestHeader('Content-Type', 'application/json'); //;charset=UTF-8');
+    xhr.onreadystatechange = function () {
+      var DONE = 4;
+      var OK = 200;
+      if (xhr.readyState === DONE) {
+        if (xhr.status === OK) {
+          callback(xhr.responseText);
+        }
+        else {
           callback(null);
-				}
-			}
-		};
+        }
+      }
+    };
 
     xhr.send(data);
   }
@@ -148,27 +148,26 @@ class RemoteResource extends ObjectResource {
     let xhr = new XMLHttpRequest();
 
     xhr.open('GET', url);
-		xhr.onreadystatechange = function() {
-			var DONE = 4;
-			var OK = 200;
-			if (xhr.readyState === DONE) {
-				if (xhr.status === OK) {
+    xhr.onreadystatechange = function () {
+      var DONE = 4;
+      var OK = 200;
+      if (xhr.readyState === DONE) {
+        if (xhr.status === OK) {
           let val = null;
-					let data = xhr.responseText;
+          let data = xhr.responseText;
           if (data) {
             try {
               val = JSON.parse(data);
             }
-            catch (ex) {
-            }
+            catch (ex) {}
           }
           callback(val);
-				}
-				else {
+        }
+        else {
           callback(null);
-				}
-			}
-		};
+        }
+      }
+    };
 
     xhr.send();
   }

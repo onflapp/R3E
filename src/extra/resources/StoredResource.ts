@@ -6,8 +6,8 @@ abstract class StoredResource extends Resource {
   protected resourceCache = {};
   protected loaded = false;
 
-	constructor(name: string, base?: string) {
-		super(name);
+  constructor(name: string, base ? : string) {
+    super(name);
     if (typeof base !== 'undefined') {
       this.baseName = name;
       this.basePath = base;
@@ -16,7 +16,7 @@ abstract class StoredResource extends Resource {
       this.baseName = '';
       this.basePath = name;
     }
-	}
+  }
 
   protected getCachedResource(name: string): Resource {
     return this.resourceCache[name];
@@ -32,7 +32,7 @@ abstract class StoredResource extends Resource {
     else this.resourceCache = {};
   }
 
-  public getStoragePath(name?: string): string {
+  public getStoragePath(name ? : string): string {
     let path = Utils.filename_path_append(this.basePath, this.baseName);
     if (name) path = Utils.filename_path_append(path, name);
     return path;
@@ -71,8 +71,8 @@ abstract class StoredResource extends Resource {
       callback(self);
     }
     else {
-      self.loadProperties(function(rv) {
-        self.loaded = rv?true:false;
+      self.loadProperties(function (rv) {
+        self.loaded = rv ? true : false;
 
         if (rv) callback(self);
         else callback(null);
@@ -80,7 +80,7 @@ abstract class StoredResource extends Resource {
     }
   }
 
-  public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
+  public resolveChildResource(name: string, callback: ResourceCallback, walking ? : boolean): void {
     let res = this.getCachedResource(name);
     if (res) {
       res.resolveItself(callback);
@@ -91,7 +91,7 @@ abstract class StoredResource extends Resource {
     }
     else {
       let self = this;
-      this.listChildrenNames(function(childNames) {
+      this.listChildrenNames(function (childNames) {
         if (childNames && childNames.indexOf(name) >= 0) {
           res = self.setCachedResource(name, self.makeNewResource(name));
           res.resolveItself(callback);
@@ -107,7 +107,7 @@ abstract class StoredResource extends Resource {
       callback(self.childNames);
     }
     else {
-      this.loadChildrenNames(function(ls) {
+      this.loadChildrenNames(function (ls) {
         self.childNames = ls;
         callback(ls);
       });
@@ -118,7 +118,7 @@ abstract class StoredResource extends Resource {
     if (this.childNames.indexOf(name) === -1) this.childNames.push(name);
 
     let res = this.makeNewResource(name);
-    this.storeChildrenNames(function() {
+    this.storeChildrenNames(function () {
       callback(res);
     });
   }
@@ -126,10 +126,10 @@ abstract class StoredResource extends Resource {
   public importProperties(data: any, callback) {
     let self = this;
     let path = this.getStoragePath();
-    super.importProperties(data, function() {
-      self.ensurePathExists(path, function(rv) {
+    super.importProperties(data, function () {
+      self.ensurePathExists(path, function (rv) {
         if (rv) {
-          self.storeProperties(function() {
+          self.storeProperties(function () {
             callback();
           });
         }
@@ -148,7 +148,7 @@ abstract class StoredResource extends Resource {
     this.childNames.splice(this.childNames.indexOf(name), 1);
     this.clearCachedResource(name);
 
-    this.storeChildrenNames(function() {
+    this.storeChildrenNames(function () {
       callback();
     });
   }

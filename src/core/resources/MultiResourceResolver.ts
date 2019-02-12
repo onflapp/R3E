@@ -1,7 +1,7 @@
 class MultiResourceResolver extends ResourceResolver {
-  private resolvers: Array<ResourceResolver> = [];
+  private resolvers: Array < ResourceResolver > = [];
 
-  constructor (list: any) {
+  constructor(list: any) {
     super(null);
     for (var i = 0; i < list.length; i++) {
       let it = list[i];
@@ -11,16 +11,16 @@ class MultiResourceResolver extends ResourceResolver {
       else {
         this.resolvers.push(it);
       }
-		}
+    }
   }
 
   public resolveResource(path: string, callback: ResourceCallback) {
     var i = 0;
     let resolvers = this.resolvers;
-    let try_resolve = function() {
+    let try_resolve = function () {
       if (i < resolvers.length) {
         var resolver = resolvers[i++];
-        resolver.resolveResource(path, function(resource: Resource) {
+        resolver.resolveResource(path, function (resource: Resource) {
           if (resource) {
             callback(resource);
           }
@@ -32,5 +32,5 @@ class MultiResourceResolver extends ResourceResolver {
       }
     };
     try_resolve();
-	}
+  }
 }

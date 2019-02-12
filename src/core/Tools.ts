@@ -1,6 +1,6 @@
 class Tools {
   public static reoderChildren(children, order) {
-    children.sort(function(a, b) {
+    children.sort(function (a, b) {
       let ai = order.indexOf(a.getName());
       let bi = order.indexOf(b.getName());
 
@@ -8,25 +8,25 @@ class Tools {
     });
   }
 
-  public static visitAllChidren(res: Resource, resolve:boolean, callback) {
+  public static visitAllChidren(res: Resource, resolve: boolean, callback) {
     let processing = 0;
-    let done = function() {
+    let done = function () {
       if (processing === 0) {
         callback(null);
       }
     };
 
-    let visit_children = function(path, name, res) {
+    let visit_children = function (path, name, res) {
       processing++;
 
-      res.listChildrenNames(function(names) {
+      res.listChildrenNames(function (names) {
         processing--;
         processing += names.length;
 
         for (var i = 0; i < names.length; i++) {
-					let name = names[i];
+          let name = names[i];
 
-          res.resolveChildResource(name, function(r) {
+          res.resolveChildResource(name, function (r) {
             let rpath = Utils.filename_path_append(path, name);
 
             let skip = callback(rpath, r);
@@ -38,7 +38,7 @@ class Tools {
             done();
 
           }, !resolve);
-				}
+        }
 
         done();
       });

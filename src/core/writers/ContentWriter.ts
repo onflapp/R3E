@@ -40,7 +40,7 @@ class ContentWriterAdapter implements ContentWriter {
       }
       else if (v instanceof Blob && typeof window !== 'undefined') {
         let reader = new FileReader();
-        reader.onload = function() {
+        reader.onload = function () {
           self.callback(reader.result, self.ctype);
         };
         reader.readAsText(v);

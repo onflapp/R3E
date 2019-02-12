@@ -9,15 +9,15 @@ class ObjectResource extends Resource {
 
   public getRenderType(): string {
     let rt = this.values['_rt'];
-    return rt?rt:null;
+    return rt ? rt : null;
   }
 
   public getSuperType(): string {
     let st = this.values['_st'];
-    return st?st:null;
+    return st ? st : null;
   }
 
-  public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
+  public resolveChildResource(name: string, callback: ResourceCallback, walking ? : boolean): void {
     let rv = this.values[name];
 
     if (typeof rv === 'object') {
@@ -82,7 +82,7 @@ class ObjectContentResourceWriter implements ContentWriter {
     this.istext = Utils.is_texttype(ctype);
     this.values['_pt'] = 'resource/content';
   }
-  
+
   public write(data: any) {
     if (data instanceof ArrayBuffer) {
       if (this.istext && typeof window !== 'undefined') this.values['_content'] = new window['TextDecoder']('utf-8').decode(data);
@@ -100,8 +100,7 @@ class ObjectContentResourceWriter implements ContentWriter {
     }
   }
 
-  public error(error: Error) {
-  }
+  public error(error: Error) {}
 
   public end(callback: any) {
     if (callback) callback();
@@ -110,7 +109,7 @@ class ObjectContentResourceWriter implements ContentWriter {
 
 class ObjectContentResource extends ObjectResource {
   constructor(name: string, obj: any) {
-    super (name, obj);
+    super(name, obj);
   }
 
   public getType(): string {
@@ -119,7 +118,7 @@ class ObjectContentResource extends ObjectResource {
 
   public getSuperType(): string {
     return 'resource/node';
-  }  
+  }
 
   public isContentResource(): boolean {
     return true;
@@ -138,7 +137,7 @@ class ObjectContentResource extends ObjectResource {
     let data = this.values;
     let contentType = this.getContentType();
 
-    writer.start(contentType?contentType:'text/plain');
+    writer.start(contentType ? contentType : 'text/plain');
 
     if (typeof data['_content'] !== 'undefined') {
       if (data['_content']['type'] === 'Buffer' && data['_content']['data']) { //Buffer that may have been JSON.stringifyed

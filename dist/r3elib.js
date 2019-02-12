@@ -163,7 +163,7 @@ var Utils = (function () {
         if (ext === 'md')
             return 'text/markdown';
         if (ext === 'hbs')
-            return 'text/handlebars';
+            return 'text/plain';
         return 'application/octet-stream';
     };
     Utils.Blob2Text = function (blob, callback) {
@@ -292,8 +292,7 @@ var Data = (function () {
         var rv = [];
         for (var k in this.values) {
             var v = this.values[k];
-            if (typeof v === 'object' || typeof v === 'function' || k.charAt(0) === '_') {
-            }
+            if (typeof v === 'object' || typeof v === 'function' || k.charAt(0) === '_') { }
             else {
                 rv.push(k);
             }
@@ -596,13 +595,11 @@ var ResourceResolver = (function () {
         this.resolveResource(path, function (res) {
             if (res) {
                 res.exportChilrenResources(0, {
-                    start: function (ctype) {
-                    },
+                    start: function (ctype) { },
                     write: function (data) {
                         callback(data);
                     },
-                    error: function (err) {
-                    },
+                    error: function (err) { },
                     end: function () {
                         callback(null);
                     }
@@ -1514,8 +1511,7 @@ var ObjectContentResourceWriter = (function () {
             this.values['_content'] = data;
         }
     };
-    ObjectContentResourceWriter.prototype.error = function (error) {
-    };
+    ObjectContentResourceWriter.prototype.error = function (error) { };
     ObjectContentResourceWriter.prototype.end = function (callback) {
         if (callback)
             callback();
@@ -1967,14 +1963,30 @@ var HBSRendererFactory = (function (_super) {
                 operator = "===";
             }
             operators = {
-                '==': function (l, r) { return l == r; },
-                '===': function (l, r) { return l === r; },
-                '!=': function (l, r) { return l != r; },
-                '!==': function (l, r) { return l !== r; },
-                '<': function (l, r) { return l < r; },
-                '>': function (l, r) { return l > r; },
-                '<=': function (l, r) { return l <= r; },
-                '>=': function (l, r) { return l >= r; },
+                '==': function (l, r) {
+                    return l == r;
+                },
+                '===': function (l, r) {
+                    return l === r;
+                },
+                '!=': function (l, r) {
+                    return l != r;
+                },
+                '!==': function (l, r) {
+                    return l !== r;
+                },
+                '<': function (l, r) {
+                    return l < r;
+                },
+                '>': function (l, r) {
+                    return l > r;
+                },
+                '<=': function (l, r) {
+                    return l <= r;
+                },
+                '>=': function (l, r) {
+                    return l >= r;
+                },
                 'startsWith': function (l, r) {
                     if (l && l.indexOf(r) === 0)
                         return true;
@@ -1987,7 +1999,9 @@ var HBSRendererFactory = (function (_super) {
                     else
                         return true;
                 },
-                'typeof': function (l, r) { return typeof l == r; }
+                'typeof': function (l, r) {
+                    return typeof l == r;
+                }
             };
             if (!operators[operator]) {
                 throw new Error("Handlerbars Helper 'compare' doesn't know the operator " + operator);
@@ -2321,8 +2335,7 @@ var RemoteResource = (function (_super) {
                         try {
                             val = JSON.parse(data);
                         }
-                        catch (ex) {
-                        }
+                        catch (ex) { }
                     }
                     callback(val);
                 }
@@ -2447,7 +2460,7 @@ var DOMContentWriter = (function () {
             var href = target.getAttribute('href');
             if (!href)
                 href = target.parentElement.getAttribute('href');
-            if (href && href.charAt(0) === '/') {
+            if (href && href.charAt(0) === '/' && evt.button === 0 && !evt.ctrlKey && !evt.altKey && !evt.shiftKey) {
                 evt.preventDefault();
                 evt.stopPropagation();
                 setTimeout(function () {
@@ -2952,8 +2965,7 @@ var FileResource = (function (_super) {
             }
             else {
                 var mpath = self.getMetadataPath(name);
-                self.fs.remove(mpath, function (err) {
-                });
+                self.fs.remove(mpath, function (err) { });
                 self.fs.remove(path, function (err) {
                     if (err)
                         console.log(err);
@@ -3017,7 +3029,9 @@ var PouchDBResourceContentWriter = (function () {
     PouchDBResourceContentWriter.prototype.end = function (callback) {
         var self = this;
         self.db.get(this.id).then(function (doc) {
-            var blob = new Blob(self.buffer, { type: self.ctype });
+            var blob = new Blob(self.buffer, {
+                type: self.ctype
+            });
             self.db.putAttachment(doc._id, 'content', doc._rev, blob, self.ctype).then(function () {
                 if (callback)
                     callback();
@@ -3193,7 +3207,9 @@ var PouchDBResource = (function (_super) {
         var id = this.make_key(path);
         var self = this;
         self.db.get(id).then(function (doc) {
-            self.db.getAttachment(doc._id, 'content', { rev: doc._rev }).then(function (data) {
+            self.db.getAttachment(doc._id, 'content', {
+                rev: doc._rev
+            }).then(function (data) {
                 writer.start(data.type);
                 writer.write(data);
                 writer.end(callback);
@@ -3457,8 +3473,7 @@ var GitHubResourceContentWriter = (function () {
         this.repo = repo;
         this.filePath = filePath;
     }
-    GitHubResourceContentWriter.prototype.start = function (ctype) {
-    };
+    GitHubResourceContentWriter.prototype.start = function (ctype) { };
     GitHubResourceContentWriter.prototype.write = function (data) {
         this.buffer.push(data);
     };

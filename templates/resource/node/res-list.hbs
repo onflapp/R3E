@@ -1,63 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="user-scalable=no,width=device-width, initial-scale=1.0">
-    <title>list</title>
 
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-    <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
-	</head>
-	<body>
-  
-		<div class="container">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="user-scalable=no,width=device-width, initial-scale=1.0">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
-			<ol class="breadcrumb">
-				<li><a href="/{{R.SUFFIX}}">HOME</a></li>
-			{{#include "." "parents"}}
-				<li><a href="{{path}}{{R.SUFFIX}}">{{name}}</a></li>
-			{{/include}}
-				<li class="active">{{R.NAME}}</li>
-			</ol>
+  <title>list</title>
 
-			<div class="btn-group btn-group-sm" style="margin-bottom:20px">
-				<a class="btn btn-default" href="{{R.PATH}}.xres-create"><span class="glyphicon glyphicon-plus"></span> Create</a>
-				<a class="btn btn-default" href="{{R.PATH}}.xres-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
-			</div>
+  <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
+</head>
 
-			<table class="table table-bordered table-condensed small text-muted" style="background-color:lightgray">
-			{{#include "." "properties"}}
-				<tr>
-					<td>
-						{{name}}
-					</td>
-					<td>
-						{{value}}
-					</td>
-				</tr>
-			{{/include}}
+<body>
+
+  <div class="container">
+
+    <ol class="breadcrumb">
+      <li><a href="/{{R.SUFFIX}}">HOME</a></li>
+      {{#include "." "parents"}}
+        <li><a href="{{path}}{{R.SUFFIX}}">{{name}}</a></li>
+      {{/include}}
+      <li class="active">{{R.NAME}}</li>
+    </ol>
+
+    <div class="btn-group btn-group-sm" style="margin-bottom:20px">
+      <a class="btn btn-default" href="{{R.PATH}}.xres-create"><span class="glyphicon glyphicon-plus"></span> Create</a>
+      <a class="btn btn-default" href="{{R.PATH}}.xres-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
+    </div>
+
+    <table class="table table-bordered table-condensed small text-muted" style="background-color:lightgray">
+      {{#include "." "properties"}}
         <tr>
-          <td>resource type</td>
-          <td>{{type}}</td>
+          <td>
+            {{name}}
+          </td>
+          <td>
+            {{value}}
+          </td>
         </tr>
+      {{/include}}
+      <tr>
+        <td>resource type</td>
+        <td>{{type}}</td>
+      </tr>
 
-        <tr>
-          <td>render type</td>
-          <td>{{renderType}}</td>
-        </tr>
+      <tr>
+        <td>render type</td>
+        <td>{{renderType}}</td>
+      </tr>
 
-        <tr>
-          <td>super type</td>
-          <td>{{superType}}</td>
-        </tr>
+      <tr>
+        <td>super type</td>
+        <td>{{superType}}</td>
+      </tr>
 
-			</table>
+    </table>
 
-      <table class="table ui-dropzone">
-        {{#include "." "children"}}
+    <table class="table ui-dropzone">
+      {{#include "." "children"}}
 
-          {{#if isContentResource}}
+        {{#if isContentResource}}
           <tr>
             <td>
               <i class="glyphicon glyphicon-file"></i> <a href="{{path}}.xedit">{{name}}</a>
@@ -69,14 +72,14 @@
               {{include path "res-list-actions"}}
             </td>
           </tr>
-          {{else}}
+        {{else}}
           <tr>
             <td>
               <i class="glyphicon glyphicon-folder-close"></i> <a href="{{path}}{{R.SUFFIX}}">{{name}}</a>
             </td>
             <td>
               {{#if renderType}}
-              <a href="/apps/{{renderType}}.xres-list">{{renderType}}</a>
+                <a href="/apps/{{renderType}}.xres-list">{{renderType}}</a>
               {{else}}
                 {{type}}
               {{/if}}
@@ -85,11 +88,12 @@
               {{include path "res-list-actions"}}
             </td>
           </tr>
-          {{/if}}
+        {{/if}}
 
-        {{/include}}
-      </table>
+      {{/include}}
+    </table>
 
-		</div>
-	</body>
+  </div>
+</body>
+
 </html>

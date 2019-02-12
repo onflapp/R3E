@@ -1,6 +1,6 @@
 class InterFuncRendererFactory implements RendererFactory {
   public makeRenderer(resource: Resource, callback: RendererFactoryCallback) {
-    resource.read(new ContentWriterAdapter('object', function(func) {
+    resource.read(new ContentWriterAdapter('object', function (func) {
       if (func) {
         if (typeof func === 'function') {
           callback(func);

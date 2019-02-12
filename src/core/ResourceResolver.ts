@@ -1,23 +1,23 @@
 class ResourceResolver {
   private resource: Resource;
-  constructor (resource: Resource) {
+  constructor(resource: Resource) {
     this.resource = resource;
   }
 
   public resolveResource(path: string, callback: ResourceCallback) {
     let self = this;
-		if (path === '/' || path === '') {
+    if (path === '/' || path === '') {
       this.resource.resolveItself(callback);
-		}
+    }
     else {
       let paths = Utils.split_path(path);
       let p = paths.shift();
 
-      let resolve_path = function(res: Resource, name: string) {
+      let resolve_path = function (res: Resource, name: string) {
         let walking = false;
         if (paths.length > 0) walking = true;
 
-        res.resolveChildResource(name, function(rv) {
+        res.resolveChildResource(name, function (rv) {
           if (!rv) {
             callback(null);
           }
@@ -33,23 +33,23 @@ class ResourceResolver {
 
       resolve_path(this.resource, p);
     }
-	}
+  }
 
   public storeResource(path: string, data: Data, callback) {
     let self = this;
 
-		if (path === '/' || path === '') {
-		  this.resource.importData(data, callback);
-		}
+    if (path === '/' || path === '') {
+      this.resource.importData(data, callback);
+    }
     else {
       let paths = Utils.split_path(path);
       let p = paths.shift();
 
-      let resolve_path = function(res: Resource, name: string) {
+      let resolve_path = function (res: Resource, name: string) {
         let walking = false;
         if (paths.length > 0) walking = true;
 
-        res.resolveOrAllocateChildResource(name, function(rv) {
+        res.resolveOrAllocateChildResource(name, function (rv) {
           if (!rv) {
             callback(null);
           }
@@ -68,17 +68,15 @@ class ResourceResolver {
   }
 
   public exportResources(path: string, callback) {
-    this.resolveResource(path, function(res: Resource) {
+    this.resolveResource(path, function (res: Resource) {
       if (res) {
         res.exportChilrenResources(0, {
-          start: function(ctype) {
-          },
-          write: function(data) {
+          start: function (ctype) {},
+          write: function (data) {
             callback(data);
           },
-          error: function(err) {
-          },
-          end: function() {
+          error: function (err) {},
+          end: function () {
             callback(null);
           }
         });
@@ -94,8 +92,8 @@ class ResourceResolver {
     let name = Utils.filename(fromPath);
     let self = this;
 
-    self.resolveResource(dirname, function(res: Resource) {
-      res.removeChildResource(name, function() {
+    self.resolveResource(dirname, function (res: Resource) {
+      res.removeChildResource(name, function () {
         callback();
       });
     });
@@ -103,8 +101,8 @@ class ResourceResolver {
 
   public moveResource(fromPath: string, toPath: string, callback) {
     let self = this;
-    self.copyResource(fromPath, toPath, function() {
-      self.removeResource(fromPath, function() {
+    self.copyResource(fromPath, toPath, function () {
+      self.removeResource(fromPath, function () {
         callback();
       });
     });
@@ -124,17 +122,17 @@ class ResourceResolver {
     let processing = 0;
     let ended = false;
 
-    let done = function() {
+    let done = function () {
       if (processing === 0 && ended) {
         callback(arguments);
       }
     };
 
-    this.exportResources(fromPath, function(data: Data) {
+    this.exportResources(fromPath, function (data: Data) {
       if (data) {
         let path = Utils.filename_path_append(toPath, data.values[':path']);
         processing++;
-        self.storeResource(path, data, function() {
+        self.storeResource(path, data, function () {
           processing--;
           done();
         });

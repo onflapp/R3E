@@ -1,10 +1,10 @@
 class Utils {
   public static makeUUID(): string {
-	  let d = new Date().getTime();
-    let uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      let r = (d + Math.random()*16)%16 | 0;
-      d = Math.floor(d/16);
-      return (c=='x' ? r : (r&0x7|0x8)).toString(16);
+    let d = new Date().getTime();
+    let uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      let r = (d + Math.random() * 16) % 16 | 0;
+      d = Math.floor(d / 16);
+      return (c == 'x' ? r : (r & 0x7 | 0x8)).toString(16);
     });
     return uuid;
   }
@@ -34,22 +34,22 @@ class Utils {
     }
   }
 
-  public static string2object(str: string, obj?: object): object {
-    if (!str) return obj?obj:null;
+  public static string2object(str: string, obj ? : object): object {
+    if (!str) return obj ? obj : null;
 
     let rv = JSON.parse(str);
     if (rv) return rv;
-    else return obj?obj:null;
+    else return obj ? obj : null;
   }
 
   public static filename_path_append(path: string, name: string): string {
     if (!name) return path;
 
     let p = path;
-    if (p.charAt(p.length-1) != '/') p += '/';
+    if (p.charAt(p.length - 1) != '/') p += '/';
     p += name;
 
-    return p.replace(/\/+/g,'/');
+    return p.replace(/\/+/g, '/');
   }
 
   public static filename(path: string): string {
@@ -58,7 +58,7 @@ class Utils {
     let i = path.lastIndexOf('/');
     if (i == -1) return path;
     else {
-      let name = path.substr(i+1);
+      let name = path.substr(i + 1);
       return name;
     }
   }
@@ -78,7 +78,7 @@ class Utils {
     let i = path.lastIndexOf('.');
     if (i == -1) return '';
     else {
-      let ext = path.substr(i+1);
+      let ext = path.substr(i + 1);
       return ext;
     }
   }
@@ -89,7 +89,7 @@ class Utils {
     let stack = path.split('/');
     let rv = [];
 
-    for (var i=0; i < stack.length; i++) {
+    for (var i = 0; i < stack.length; i++) {
       let it = stack[i];
 
       if (it === '.') continue;
@@ -100,10 +100,10 @@ class Utils {
 
     let s = rv.join('/');
     if (s.charAt(0) === '/') return s;
-    else return '/'+s;
-}
+    else return '/' + s;
+  }
 
-  public static split_path(path: string): Array<string> {
+  public static split_path(path: string): Array < string > {
     if (path === '' || path === '/') return [];
 
     let ls = path.split('/');
@@ -121,14 +121,14 @@ class Utils {
   public static is_texttype(mime: string): boolean {
     if (!mime) return false;
 
-	  let texttypes = ['application/json', 'application/javascript'];
-		if (mime.indexOf('text/') === 0 || texttypes.indexOf(mime) >= 0) return true;
+    let texttypes = ['application/json', 'application/javascript'];
+    if (mime.indexOf('text/') === 0 || texttypes.indexOf(mime) >= 0) return true;
     else return false;
   }
 
   public static filename_mime(path: string): string {
     if (!path) return null;
-  
+
     let ext = Utils.filename_ext(path).toLowerCase();
     if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
     if (ext === 'png') return 'image/png';
@@ -139,14 +139,14 @@ class Utils {
     if (ext === 'js') return 'text/plain';
     if (ext === 'json') return 'text/plain';
     if (ext === 'md') return 'text/markdown';
-    if (ext === 'hbs') return 'text/handlebars';
+    if (ext === 'hbs') return 'text/plain';
 
     return 'application/octet-stream';
   }
 
   public static Blob2Text(blob, callback) {
     let reader = new FileReader();
-    reader.addEventListener('loadend', function(evt) {
+    reader.addEventListener('loadend', function (evt) {
       callback(reader.result);
     });
     reader.readAsText(blob);
@@ -165,13 +165,13 @@ class Utils {
   */
 
   public static ArrayBuffer2base64(arrayBuffer: ArrayBuffer): string {
-    var base64    = ''
+    var base64 = ''
     var encodings = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
-    var bytes         = new Uint8Array(arrayBuffer)
-    var byteLength    = bytes.byteLength
+    var bytes = new Uint8Array(arrayBuffer)
+    var byteLength = bytes.byteLength
     var byteRemainder = byteLength % 3
-    var mainLength    = byteLength - byteRemainder
+    var mainLength = byteLength - byteRemainder
 
     var a, b, c, d
     var chunk
@@ -183,9 +183,9 @@ class Utils {
 
       // Use bitmasks to extract 6-bit segments from the triplet
       a = (chunk & 16515072) >> 18 // 16515072 = (2^6 - 1) << 18
-      b = (chunk & 258048)   >> 12 // 258048   = (2^6 - 1) << 12
-      c = (chunk & 4032)     >>  6 // 4032     = (2^6 - 1) << 6
-      d = chunk & 63               // 63       = 2^6 - 1
+      b = (chunk & 258048) >> 12 // 258048   = (2^6 - 1) << 12
+      c = (chunk & 4032) >> 6 // 4032     = (2^6 - 1) << 6
+      d = chunk & 63 // 63       = 2^6 - 1
 
       // Convert the raw binary segments to the appropriate ASCII encoding
       base64 += encodings[a] + encodings[b] + encodings[c] + encodings[d]
@@ -198,30 +198,31 @@ class Utils {
       a = (chunk & 252) >> 2 // 252 = (2^6 - 1) << 2
 
       // Set the 4 least significant bits to zero
-      b = (chunk & 3)   << 4 // 3   = 2^2 - 1
+      b = (chunk & 3) << 4 // 3   = 2^2 - 1
 
       base64 += encodings[a] + encodings[b] + '=='
-    } else if (byteRemainder == 2) {
+    }
+    else if (byteRemainder == 2) {
       chunk = (bytes[mainLength] << 8) | bytes[mainLength + 1]
 
       a = (chunk & 64512) >> 10 // 64512 = (2^6 - 1) << 10
-      b = (chunk & 1008)  >>  4 // 1008  = (2^6 - 1) << 4
+      b = (chunk & 1008) >> 4 // 1008  = (2^6 - 1) << 4
 
       // Set the 2 least significant bits to zero
-      c = (chunk & 15)    <<  2 // 15    = 2^4 - 1
+      c = (chunk & 15) << 2 // 15    = 2^4 - 1
 
       base64 += encodings[a] + encodings[b] + encodings[c] + '='
     }
-    
+
     return base64
   }
 
-  static base642ArrayBuffer(base64:string): ArrayBuffer {
-    var binary_string =  window.atob(base64);
+  static base642ArrayBuffer(base64: string): ArrayBuffer {
+    var binary_string = window.atob(base64);
     var len = binary_string.length;
-    var bytes = new Uint8Array( len );
-    for (var i = 0; i < len; i++)        {
-        bytes[i] = binary_string.charCodeAt(i);
+    var bytes = new Uint8Array(len);
+    for (var i = 0; i < len; i++) {
+      bytes[i] = binary_string.charCodeAt(i);
     }
     return bytes.buffer;
   }

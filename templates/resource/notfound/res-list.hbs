@@ -1,30 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>not found</title>
 
-    <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
-	</head>
-	<body>
-  
-		<div class="container">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>not found</title>
 
-			<ol class="breadcrumb">
-				<li><a href="/{{R.SUFFIX}}">HOME</a></li>
-			{{#include "." "parents"}}
-				<li><a href="{{path}}{{R.SUFFIX}}">{{name}}</a></li>
-			{{/include}}
-				<li class="active">{{R.NAME}}</li>
-			</ol>
+  <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
+</head>
 
-      <p>not found</p>
+<body>
 
-			<a class="btn btn-default" href="{{R.PATH}}.xres-create">create</a>
+  <div class="container">
 
-		</div>
-	</body>
+    <ol class="breadcrumb">
+      <li><a href="/{{R.SUFFIX}}">HOME</a></li>
+      {{#include "." "parents"}}
+        <li><a href="{{path}}{{R.SUFFIX}}">{{name}}</a></li>
+      {{/include}}
+      <li class="active">{{R.NAME}}</li>
+    </ol>
+
+    <p>not found</p>
+
+    <a class="btn btn-default" href="{{R.PATH}}.xres-create">create</a>
+
+  </div>
+</body>
+
 </html>
-

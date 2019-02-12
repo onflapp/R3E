@@ -4,10 +4,9 @@ class DOMContentWriter implements ContentWriter {
   private extdata;
   private externalResources = {};
 
-  constructor() {
-  }
+  constructor() {}
 
-  protected escapeHTML(html){
+  protected escapeHTML(html) {
     let text = document.createTextNode(html);
     let p = document.createElement('p');
     p.appendChild(text);
@@ -16,27 +15,27 @@ class DOMContentWriter implements ContentWriter {
 
   protected attachListeners() {
     let requestHandler = this.requestHandler;
-    document.body.addEventListener('submit', function(evt) {
+    document.body.addEventListener('submit', function (evt) {
       let target = evt.target;
       let info = requestHandler.parseFormElement(target);
       evt.preventDefault();
       evt.stopPropagation();
 
-      setTimeout(function() {
+      setTimeout(function () {
         requestHandler.handleStore(info.formPath, info.formData);
       });
     });
 
-    document.body.addEventListener('click', function(evt) {
+    document.body.addEventListener('click', function (evt) {
       let target = evt.target as HTMLElement;
       let href = target.getAttribute('href');
 
       if (!href) href = target.parentElement.getAttribute('href');
-      if (href && href.charAt(0) === '/') {
+      if (href && href.charAt(0) === '/' && evt.button === 0 && !evt.ctrlKey && !evt.altKey && !evt.shiftKey) {
         evt.preventDefault();
         evt.stopPropagation();
 
-        setTimeout(function() {
+        setTimeout(function () {
           requestHandler.handleRequest(href);
         });
       }
@@ -46,7 +45,7 @@ class DOMContentWriter implements ContentWriter {
   protected compareElements(lista, listb) {
     let rv = [];
     for (let i = 0; i < lista.length; i++) {
-			let itema = lista[i];
+      let itema = lista[i];
       let found = false;
       for (let z = 0; z < listb.length; z++) {
         let itemb = listb[z];
@@ -73,7 +72,7 @@ class DOMContentWriter implements ContentWriter {
     let additions = this.compareElements(doc.head.children, document.head.children);
     let removals = this.compareElements(document.head.children, doc.head.children);
 
-    let done_loading = function() {
+    let done_loading = function () {
       let scripts = document.body.querySelectorAll('script');
       for (var i = 0; i < scripts.length; i++) {
         let script = scripts[i];
@@ -99,7 +98,7 @@ class DOMContentWriter implements ContentWriter {
 
         el = document.createElement('script');
         el.src = additions[i].src;
-        el.onload = function() {
+        el.onload = function () {
           processing--;
           if (processing === 0) done_loading();
         };
@@ -145,7 +144,7 @@ class DOMContentWriter implements ContentWriter {
 
   }
   public error(error: Error) {
-    console.log(error); 
+    console.log(error);
   }
   public end() {
     if (this.htmldata) {
@@ -169,7 +168,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
     writer.setRequestHandler(this);
     let self = this;
 
-    window.addEventListener('hashchange', function(evt) {
+    window.addEventListener('hashchange', function (evt) {
       let path = window.location.hash.substr(1);
       if (path !== self.currentPath) {
         self.renderRequest(path);
@@ -207,20 +206,20 @@ class ClientRequestHandler extends ResourceRequestHandler {
       if (type === 'file') {
         value = p.files[0];
         if (!value) continue;
-          
+
         let pref = '';
         let ct = value.type;
 
-        if (name.lastIndexOf('/') > 0) pref = name.substr(0, name.lastIndexOf('/')+1);
+        if (name.lastIndexOf('/') > 0) pref = name.substr(0, name.lastIndexOf('/') + 1);
 
         let mime = Utils.filename_mime(value.name); //try to guess one of our types first
         if (mime === 'application/octet-stream' && ct) mime = ct;
 
         rv[name] = value.name;
-        rv[pref+'_ct'] = mime;
-        rv[pref+Resource.STORE_CONTENT_PROPERTY] = function(writer, callback) {
+        rv[pref + '_ct'] = mime;
+        rv[pref + Resource.STORE_CONTENT_PROPERTY] = function (writer, callback) {
           let reader = new FileReader();
-          reader.onload = function(e) {
+          reader.onload = function (e) {
             writer.write(reader.result);
             writer.end(callback);
           };

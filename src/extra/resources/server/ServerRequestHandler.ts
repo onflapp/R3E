@@ -15,7 +15,7 @@ class ResponseContentWriter implements ContentWriter {
   public start(ctype) {
     if (this.closed) return;
 
-    let c = ctype?ctype:'application/octet-stream';
+    let c = ctype ? ctype : 'application/octet-stream';
     if (c === 'object/javascript') {
       c = 'application/json';
       this.transform = 'json';
@@ -37,7 +37,7 @@ class ResponseContentWriter implements ContentWriter {
     }
   }
   public error(error: Error) {
-    console.log(error); 
+    console.log(error);
   }
   public end() {
     this.respose.end();
@@ -48,14 +48,14 @@ class ResponseContentWriter implements ContentWriter {
 
   public redirect(rpath: string) {
     this.closed = true;
-    this.respose.setHeader('Cache-Control','no-store, no-cache, must-revalidate, post-check=0, pre-check=0');
+    this.respose.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0');
     this.respose.redirect(301, rpath);
   }
 }
 
 class ServerRequestHandler extends ResourceRequestHandler {
   private resposeContentWriter: ResponseContentWriter;
-  
+
   constructor(resourceResolver: ResourceResolver, templateResolver: ResourceResolver, res) {
     let writer = new ResponseContentWriter(res);
     super(resourceResolver, templateResolver, writer);
@@ -96,28 +96,28 @@ class ServerRequestHandler extends ResourceRequestHandler {
 
     if (ct && ct.indexOf('multipart/form-data') == 0) {
       let form = new multiparty.Form({
-        maxFieldsSize:1024*1024*500
+        maxFieldsSize: 1024 * 1024 * 500
       });
-     
-      form.parse(req, function(err, fields, files) {
+
+      form.parse(req, function (err, fields, files) {
         let data = {};
 
         for (let file in files) {
           let v = files[file][0];
-					let f = v['originalFilename'];
-					let n = v['fieldName'];
+          let f = v['originalFilename'];
+          let n = v['fieldName'];
           let ct = v['headers']['content-type'];
-					let path = v['path'];
+          let path = v['path'];
           let pref = '';
 
           let mime = Utils.filename_mime(n); //try to guess one of our types first
           if (mime === 'application/octet-stream' && ct) mime = ct;
 
-          if (n.lastIndexOf('/') > 0) pref = n.substr(0, n.lastIndexOf('/')+1);
+          if (n.lastIndexOf('/') > 0) pref = n.substr(0, n.lastIndexOf('/') + 1);
 
           data[n] = f;
-          data[pref+'_ct'] = mime;
-          data[pref+Resource.STORE_CONTENT_PROPERTY] = function(writer, callback) {
+          data[pref + '_ct'] = mime;
+          data[pref + Resource.STORE_CONTENT_PROPERTY] = function (writer, callback) {
             let fs = require('fs');
             let fd = fs.openSync(path, 'r');
 
@@ -125,7 +125,7 @@ class ServerRequestHandler extends ResourceRequestHandler {
             let pos = 0;
             let sz = 0;
             while (true) {
-              let buff = new Buffer(1024*1000);
+              let buff = new Buffer(1024 * 1000);
               sz = fs.readSync(fd, buff, 0, buff.length, pos);
               if (!sz) break;
 
@@ -148,11 +148,11 @@ class ServerRequestHandler extends ResourceRequestHandler {
           break;
         }
 
-			  for (var k in fields) {
-				  var v = fields[k][0];
-				  data[k] = v;
-			  }
-        
+        for (var k in fields) {
+          var v = fields[k][0];
+          data[k] = v;
+        }
+
         data = self.transformValues(data);
         rpath = self.expandValue(rpath, data);
 
@@ -161,26 +161,26 @@ class ServerRequestHandler extends ResourceRequestHandler {
     }
     else {
       let body = '';
-		  req.on('data', function (data) {
-			  body += data;
-			  if (body.length > (1024*1000)) req.connection.destroy();
-		  });
+      req.on('data', function (data) {
+        body += data;
+        if (body.length > (1024 * 1000)) req.connection.destroy();
+      });
 
-		  req.on('end', function () {
+      req.on('end', function () {
         let data = {};
-			  let fields = querystring.parse(body);
-			  for (var k in fields) {
-				  var v = fields[k];
+        let fields = querystring.parse(body);
+        for (var k in fields) {
+          var v = fields[k];
 
           if (Array.isArray(v)) data[k] = v[0];
           else data[k] = v;
-			  }
-  
+        }
+
         data = self.transformValues(data);
         rpath = self.expandValue(rpath, data);
 
         self.handleStore(rpath, data);
-		  });
+      });
     }
   }
 

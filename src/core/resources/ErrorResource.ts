@@ -5,7 +5,7 @@ class ErrorResource extends ObjectResource {
     if (typeof err === 'string') err = obj;
     else err = '' + err;
 
-    super ('/', err);
+    super('/', err);
   }
 
   public getType(): string {

@@ -34,8 +34,8 @@ class FileResourceContentWriter implements ContentWriter {
 
 class FileResource extends StoredResource {
   private fs = require('fs-extra');
-  
-	constructor(name: string, base: string) {
+
+  constructor(name: string, base: string) {
     super(name, base);
   }
 
@@ -56,7 +56,7 @@ class FileResource extends StoredResource {
     return this.values['_rt'];
   }
 
-  protected getMetadataPath(nm?: string):string {
+  protected getMetadataPath(nm ? : string): string {
     if (nm) {
       return this.basePath + '/.' + nm + '.metadata.json';
     }
@@ -77,7 +77,7 @@ class FileResource extends StoredResource {
 
   protected ensurePathExists(path, callback) {
     let mask = '0755';
-    this.fs.mkdir(path, mask, function(err) {
+    this.fs.mkdir(path, mask, function (err) {
       if (!err) {
         callback(true);
       }
@@ -92,7 +92,7 @@ class FileResource extends StoredResource {
 
   public loadChildrenNames(callback: ChildrenNamesCallback) {
     let path = this.getStoragePath();
-    this.fs.readdir(path, function(err, items) {
+    this.fs.readdir(path, function (err, items) {
       let ls = [];
       if (items) {
         for (var i = 0; i < items.length; i++) {
@@ -109,9 +109,9 @@ class FileResource extends StoredResource {
   protected storeProperties(callback) {
     let self = this;
     let path = this.getMetadataPath();
- 
-    self.fs.writeFile(path, JSON.stringify(this.values), 'utf8', function() {
-        callback(true);
+
+    self.fs.writeFile(path, JSON.stringify(this.values), 'utf8', function () {
+      callback(true);
     });
   }
 
@@ -119,11 +119,11 @@ class FileResource extends StoredResource {
     let self = this;
     let path = this.getStoragePath();
 
-    let loadMetadata = function(path, callback) {
-      self.fs.readFile(path, 'utf8', function(err, data) {
+    let loadMetadata = function (path, callback) {
+      self.fs.readFile(path, 'utf8', function (err, data) {
         if (data) {
           let rv = JSON.parse(data);
-          self.values = rv?rv:{};
+          self.values = rv ? rv : {};
         }
         else {
           self.values = {};
@@ -132,11 +132,11 @@ class FileResource extends StoredResource {
       });
     };
 
-    self.fs.stat(path, function(err, stats) {
+    self.fs.stat(path, function (err, stats) {
       if (err) callback(false);
       else {
         self.isDirectory = stats.isDirectory();
-        loadMetadata(self.getMetadataPath(), function() {
+        loadMetadata(self.getMetadataPath(), function () {
           callback(true);
         });
       }
@@ -149,7 +149,7 @@ class FileResource extends StoredResource {
 
   public removeChildResource(name: string, callback) {
     let self = this;
-    super.removeChildResource(name, function() {
+    super.removeChildResource(name, function () {
       let resolve = require('path').resolve;
       let path = Utils.filename_path_append(self.basePath, name);
 
@@ -160,10 +160,9 @@ class FileResource extends StoredResource {
       }
       else {
         let mpath = self.getMetadataPath(name);
-        self.fs.remove(mpath, function(err) {
-        });
+        self.fs.remove(mpath, function (err) {});
 
-        self.fs.remove(path, function(err) {
+        self.fs.remove(path, function (err) {
           if (err) console.log(err);
           callback(true);
         });
@@ -193,7 +192,7 @@ class FileResource extends StoredResource {
       let pos = 0;
       let sz = 0;
       while (true) {
-        let buff = new Buffer(1024*500);
+        let buff = new Buffer(1024 * 500);
         sz = this.fs.readSync(fd, buff, 0, buff.length, pos);
         if (!sz) break;
 
@@ -209,5 +208,5 @@ class FileResource extends StoredResource {
       this.fs.closeSync(fd);
       writer.end(callback);
     }
-  }  
+  }
 }

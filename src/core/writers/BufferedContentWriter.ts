@@ -13,7 +13,7 @@ class BufferedContentWriter implements ContentWriter {
     this.content.push(data);
   }
   error(err: Error) {
-		console.log(err);
+    console.log(err);
   }
   end() {
     if (this.content.length === 0) {

@@ -1,32 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>list</title>
 
-    <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
-	</head>
-	<body>
-		<div class="container">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>list</title>
 
-			<ol class="breadcrumb">
-				<li><a href="/{{R.SUFFIX}}">HOME</a></li>
-			{{#include "." "parents"}}
-				<li><a href="{{path}}{{R.SUFFIX}}">{{name}}</a></li>
-			{{/include}}
-				<li class="active">{{R.NAME}}</li>
-			</ol>
+  <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
+</head>
 
-			<div class="btn-group btn-group-sm" style="margin-bottom:20px">
-				<a class="btn btn-default" href="{{R.PATH}}.xres-create">mount</a>
-			</div>
+<body>
+  <div class="container">
 
-      <table class="table ui-dropzone">
-        {{#include "." "children"}}
+    <ol class="breadcrumb">
+      <li><a href="/{{R.SUFFIX}}">HOME</a></li>
+      {{#include "." "parents"}}
+        <li><a href="{{path}}{{R.SUFFIX}}">{{name}}</a></li>
+      {{/include}}
+      <li class="active">{{R.NAME}}</li>
+    </ol>
 
-          {{#if isContentResource}}
+    <div class="btn-group btn-group-sm" style="margin-bottom:20px">
+      <a class="btn btn-default" href="{{R.PATH}}.xres-create">mount</a>
+    </div>
+
+    <table class="table ui-dropzone">
+      {{#include "." "children"}}
+
+        {{#if isContentResource}}
           <tr>
             <td>
               <i class="glyphicon glyphicon-file"></i> <a href="{{path}}.xedit">{{name}}</a>
@@ -37,29 +39,30 @@
             <td class="text-right">
             </td>
           </tr>
-          {{else}}
+        {{else}}
           <tr>
             <td>
               <i class="glyphicon glyphicon-folder-close"></i> <a href="{{path}}{{R.SUFFIX}}">{{name}}</a>
             </td>
             <td>
               {{#if renderType}}
-              <a href="{{R.PATH}}/{{name}}.xres-renderer">{{renderType}}</a>
+                <a href="{{R.PATH}}/{{name}}.xres-renderer">{{renderType}}</a>
               {{else}}
                 {{type}}
               {{/if}}
             </td>
             <td class="text-right">
               {{#if type}}
-              <a target="_blank" href="{{R.PATH}}/{{name}}.xhtml">[v]</a>
+                <a target="_blank" href="{{R.PATH}}/{{name}}.xhtml">[v]</a>
               {{/if}}
             </td>
           </tr>
-          {{/if}}
+        {{/if}}
 
-        {{/include}}
-      </table>
+      {{/include}}
+    </table>
 
-		</div>
-	</body>
+  </div>
+</body>
+
 </html>

@@ -49,9 +49,9 @@ class ResourceRequestHandler extends EventDispatcher {
     let rv2 = {};
     for (let key in rv1) {
       let val = rv1[key];
-      
+
       if (key.indexOf('{:') === 0) {
-        let nkey = rv1[key.substr(1, key.length-2)];
+        let nkey = rv1[key.substr(1, key.length - 2)];
         if (nkey) rv2[nkey] = val;
       }
       else {
@@ -65,7 +65,7 @@ class ResourceRequestHandler extends EventDispatcher {
   protected transformValues(data) {
     for (let key in data) {
       let val = data[key];
-      
+
       if (key.indexOf(':') !== -1 && key.indexOf('|') !== -1) {
         let a = key.split('|');
         for (var i = 1; i < a.length; i++) {
@@ -86,19 +86,19 @@ class ResourceRequestHandler extends EventDispatcher {
 
   protected transformData(data: Data, context: ResourceRequestContext, callback) {
     let rrend = this.resourceRenderer;
-		let selectors = ['store'];
-		let renderTypes = data.getRenderTypes();
+    let selectors = ['store'];
+    let renderTypes = data.getRenderTypes();
 
     data.values = this.expandValues(data.values, data.values);
 
-		rrend.resolveRenderer(renderTypes, selectors, function(rend: ContentRendererFunction, error? : Error) {
-			if (rend) {
-				rend(data, new ContentWriterAdapter('object', callback), context);
-			}
-			else {
+    rrend.resolveRenderer(renderTypes, selectors, function (rend: ContentRendererFunction, error ? : Error) {
+      if (rend) {
+        rend(data, new ContentWriterAdapter('object', callback), context);
+      }
+      else {
         callback(data);
-			}
-		});
+      }
+    });
   }
 
   protected makeContext(pathInfo: PathInfo): ResourceRequestContext {
@@ -114,13 +114,13 @@ class ResourceRequestHandler extends EventDispatcher {
     let imp = data[Resource.STORE_CONTENT_PROPERTY];
     let processing = 0;
 
-    let done = function() {
+    let done = function () {
       if (processing === 0) {
         callback(arguments);
       }
     };
 
-    let import_text = function(text) {
+    let import_text = function (text) {
       let list = JSON.parse(text);
       if (list) {
         processing++;
@@ -128,11 +128,11 @@ class ResourceRequestHandler extends EventDispatcher {
           let item = list[i];
           let path = Utils.filename_path_append(resourcePath, item[':path']);
           processing++;
-          rres.storeResource(path, new Data(item), function() {
+          rres.storeResource(path, new Data(item), function () {
             processing--;
             done();
           });
-				}
+        }
         processing--;
       }
 
@@ -162,8 +162,8 @@ class ResourceRequestHandler extends EventDispatcher {
       let v = data[key];
       let x = key.indexOf('/');
       if (x != -1) {
-			  let p = resourcePath + '/' + key.substr(0, x);
-				let n = key.substr(x + 1);
+        let p = resourcePath + '/' + key.substr(0, x);
+        let n = key.substr(x + 1);
         let d = datas[p];
         if (!d) {
           d = {};
@@ -180,7 +180,7 @@ class ResourceRequestHandler extends EventDispatcher {
     for (let key in datas) {
       let v = datas[key];
 
-      rres.storeResource(key, new Data(v), function() {
+      rres.storeResource(key, new Data(v), function () {
         count--;
 
         if (count === 0) {
@@ -190,22 +190,22 @@ class ResourceRequestHandler extends EventDispatcher {
     }
   }
 
-/**********************************************************
- * /cards/item1.xjson.-1.223/a/d
- * [path].x[selector].[selectorArgs][dataPath]
- */
+  /**********************************************************
+   * /cards/item1.xjson.-1.223/a/d
+   * [path].x[selector].[selectorArgs][dataPath]
+   */
 
   public parsePath(rpath: string): PathInfo {
     if (!rpath) return null;
 
     let info = new PathInfo();
-    let path = rpath.replace(/\/+/g,'/');
+    let path = rpath.replace(/\/+/g, '/');
 
     let m = path.match(/^(\/.*?)(\.x([a-z,\-_]+))(\.([a-z0-9,\-\.]+))?(\/.*?)?$/);
 
     if (m) {
-      info.dataPath = unescape(m[6]?m[6]:null);
-      info.selectorArgs = m[5]?m[5]:null;
+      info.dataPath = unescape(m[6] ? m[6] : null);
+      info.selectorArgs = m[5] ? m[5] : null;
       info.path = unescape(Utils.absolute_path(m[1]));
       info.selector = m[3];
       info.suffix = m[2];
@@ -279,7 +279,7 @@ class ResourceRequestHandler extends EventDispatcher {
     try {
 
       if (info) {
-        rres.resolveResource(info.resourcePath, function(res) {
+        rres.resolveResource(info.resourcePath, function (res) {
           if (res) rrend.renderResource(res, info.selector, out, context);
           else {
             let res = new NotFoundResource(info.resourcePath);
@@ -289,12 +289,12 @@ class ResourceRequestHandler extends EventDispatcher {
         });
       }
       else {
-        rrend.renderResource(new ErrorResource('invalid path '+rpath), 'default', out, context);
+        rrend.renderResource(new ErrorResource('invalid path ' + rpath), 'default', out, context);
         out.end(null);
       }
 
     }
-    catch(ex) {
+    catch (ex) {
       console.log(ex);
       rrend.renderResource(new ErrorResource(ex), 'default', out, context);
       out.end(null);
@@ -306,14 +306,14 @@ class ResourceRequestHandler extends EventDispatcher {
     let rres = this.resourceResolver;
     let rrend = this.resourceRenderer;
     let ncontext = context.clone();
-    let sel = selector?selector:'default';
-    
+    let sel = selector ? selector : 'default';
+
     ncontext._setCurrentResourcePath(resourcePath);
 
     try {
 
       if (resourcePath) {
-        rres.resolveResource(resourcePath, function(res: Resource) {
+        rres.resolveResource(resourcePath, function (res: Resource) {
           if (res) rrend.renderResource(res, sel, out, ncontext);
           else {
             let res = new NotFoundResource(resourcePath);
@@ -322,34 +322,34 @@ class ResourceRequestHandler extends EventDispatcher {
         });
       }
       else {
-        rrend.renderResource(new ErrorResource('invalid path '+resourcePath), 'default', out, ncontext);
-      } 
+        rrend.renderResource(new ErrorResource('invalid path ' + resourcePath), 'default', out, ncontext);
+      }
 
     }
-    catch(ex) {
+    catch (ex) {
       console.log(ex);
       rrend.renderResource(new ErrorResource(ex), 'default', out, ncontext);
     }
   }
 
-/************************************************************************
+  /************************************************************************
 
-<form method="post" enctype="multipart/form-data" action="{{currentPath.PREFIX}}{{currentPath.path}}/{:name}">
-	<input type="file" name=":name" value="">
-	<input type="hidden" name=":name@fileName" value="val1"> <<---- override the name
-	<input type="hidden" name="prop" value="val1">
-	<input type="hidden" name=":forward" value="{{currentPath.PREFIX}}{{currentPath.path}}.xhtml">
-</form>
+  <form method="post" enctype="multipart/form-data" action="{{currentPath.PREFIX}}{{currentPath.path}}/{:name}">
+  	<input type="file" name=":name" value="">
+  	<input type="hidden" name=":name@fileName" value="val1"> <<---- override the name
+  	<input type="hidden" name="prop" value="val1">
+  	<input type="hidden" name=":forward" value="{{currentPath.PREFIX}}{{currentPath.path}}.xhtml">
+  </form>
 
-<form>
-	<input type="file" name=":import" value="">
-</form>
+  <form>
+  	<input type="file" name=":import" value="">
+  </form>
 
-<form>
-	<input type="text" name=":import" value="{json:value}">
-</form>
+  <form>
+  	<input type="text" name=":import" value="{json:value}">
+  </form>
 
- ************************************************************************/
+   ************************************************************************/
 
   public handleStore(rpath: string, data: any) {
     let self = this;
@@ -358,7 +358,7 @@ class ResourceRequestHandler extends EventDispatcher {
     let info = this.parsePath(rpath);
     let context = this.makeContext(info);
 
-    let render_error = function(err) {
+    let render_error = function (err) {
       console.log(err);
 
       let out = self.contentWriter.makeNestedContentWriter();
@@ -367,11 +367,11 @@ class ResourceRequestHandler extends EventDispatcher {
     };
 
     if (info.resourcePath) {
-      self.transformData(new Data(data), context, function(ddata: Data) {
+      self.transformData(new Data(data), context, function (ddata: Data) {
         let storeto = Utils.absolute_path(ddata.values[':storeto']);
         if (!storeto) storeto = info.resourcePath;
 
-        self.storeResource(storeto, ddata.values, function(error) {
+        self.storeResource(storeto, ddata.values, function (error) {
           if (!error) {
             let forward = Utils.absolute_path(ddata.values[':forward']);
 
@@ -400,37 +400,37 @@ class ResourceRequestHandler extends EventDispatcher {
       let importto = Utils.absolute_path(data[':import']);
 
       if (copyto) {
-        rres.copyResource(resourcePath, copyto, function() {
+        rres.copyResource(resourcePath, copyto, function () {
           self.dispatchAllEventsAsync('stored', resourcePath, data);
           callback();
         });
       }
       else if (moveto) {
-        rres.moveResource(resourcePath, moveto, function() {
+        rres.moveResource(resourcePath, moveto, function () {
           self.dispatchAllEventsAsync('stored', resourcePath, data);
           callback();
         });
       }
       else if (remove) {
-        rres.removeResource(resourcePath, function() {
+        rres.removeResource(resourcePath, function () {
           self.dispatchAllEventsAsync('stored', remove, data);
           callback();
         });
       }
       else if (importto) {
-        self.expandDataAndImport(resourcePath, data, function() {
+        self.expandDataAndImport(resourcePath, data, function () {
           self.dispatchAllEventsAsync('stored', resourcePath, data);
           callback();
         });
       }
       else {
-        self.expandDataAndStore(resourcePath, data, function() {
+        self.expandDataAndStore(resourcePath, data, function () {
           self.dispatchAllEventsAsync('stored', resourcePath, data);
           callback();
         });
       }
     }
-    catch(ex) {
+    catch (ex) {
       callback(new ErrorResource(ex));
     }
   }

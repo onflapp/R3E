@@ -4,17 +4,17 @@ class RemoteTemplateResource extends Resource {
   private resources = {};
   private static failedPaths = {};
 
-	constructor(base: string, path?: string, name?: string) {
-		super(name?name:'');
+  constructor(base: string, path ? : string, name ? : string) {
+    super(name ? name : '');
     this.baseURL = base;
-    this.path = path?path:'';
-	}
+    this.path = path ? path : '';
+  }
 
   public getPath(): string {
     return this.path;
   }
 
-  public allocateChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
+  public allocateChildResource(name: string, callback: ResourceCallback, walking ? : boolean): void {
     callback(null);
   }
 
@@ -39,7 +39,7 @@ class RemoteTemplateResource extends Resource {
     callback(null);
   }
 
-  public resolveChildResource(name: string, callback: ResourceCallback, walking?: boolean): void {
+  public resolveChildResource(name: string, callback: ResourceCallback, walking ? : boolean): void {
     let res = this.resources[name];
     if (res) {
       callback(res);
@@ -52,18 +52,18 @@ class RemoteTemplateResource extends Resource {
     else {
       let self = this;
       let path = this.baseURL + '/' + this.getPath() + '/' + name;
-      path = path.replace(/\/+/g,'/');
+      path = path.replace(/\/+/g, '/');
 
       if (RemoteTemplateResource.failedPaths[path]) {
         callback(null);
         return;
       }
 
-      this.requestData(path, function(ctype, text) {
+      this.requestData(path, function (ctype, text) {
         if (text) {
           res = new ObjectContentResource(name, {
-            _content:text,
-            _ct:ctype
+            _content: text,
+            _ct: ctype
           });
           self.resources[name] = res;
           callback(res);
@@ -77,22 +77,22 @@ class RemoteTemplateResource extends Resource {
   }
 
   protected requestData(path: string, callback): void {
-		let xhr = new XMLHttpRequest();
+    let xhr = new XMLHttpRequest();
 
     xhr.open('GET', path);
-		xhr.onreadystatechange = function() {
-			var DONE = 4;
-			var OK = 200;
-			if (xhr.readyState === DONE) {
-				if (xhr.status === OK) {
+    xhr.onreadystatechange = function () {
+      var DONE = 4;
+      var OK = 200;
+      if (xhr.readyState === DONE) {
+        if (xhr.status === OK) {
           let ct = xhr.getResponseHeader('content-type');
-					callback(ct, xhr.responseText);
-				}
-				else {
+          callback(ct, xhr.responseText);
+        }
+        else {
           callback(null);
-				}
-			}
-		};
+        }
+      }
+    };
 
     xhr.send(null);
   }
