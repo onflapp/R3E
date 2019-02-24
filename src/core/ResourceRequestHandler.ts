@@ -12,6 +12,7 @@ class ResourceRequestHandler extends EventDispatcher {
   protected refererPath: string;
   protected queryProperties: any;
   protected configProperties: any;
+  protected pathParserRegexp: RegExp;
 
   constructor(resourceResolver: ResourceResolver, templateResolver: ResourceResolver, contentWriter: ContentWriter) {
     super();
@@ -20,6 +21,12 @@ class ResourceRequestHandler extends EventDispatcher {
     this.templateResolver = templateResolver;
     this.contentWriter = new OrderedContentWriter(contentWriter);
     this.resourceRenderer = new ResourceRenderer(this.templateResolver);
+
+    //set defaults for path parsing
+    this.pathParserRegexp = new RegExp(/^(\/.*?)(\.x-([a-z,\-_]+))(\.([a-z0-9,\-\.]+))?(\/.*?)?$/);
+    this.configProperties = {
+      'X': '.x-'
+    };
   }
 
   protected expandValue(val, data) {
@@ -102,6 +109,8 @@ class ResourceRequestHandler extends EventDispatcher {
   }
 
   protected makeContext(pathInfo: PathInfo): ResourceRequestContext {
+    if (!pathInfo) return null;
+
     pathInfo.referer = this.parsePath(this.refererPath);
     pathInfo.query = this.queryProperties;
 
@@ -191,9 +200,14 @@ class ResourceRequestHandler extends EventDispatcher {
   }
 
   /**********************************************************
-   * /cards/item1.xjson.-1.223/a/d
-   * [path].x[selector].[selectorArgs][dataPath]
+   * default: (/^(\/.*?)(\.x-([a-z,\-_]+))(\.([a-z0-9,\-\.]+))?(\/.*?)?$/)
+   * /cards/item1.x-json.-1.223/a/d
+   * [path].x-[selector].[selectorArgs][dataPath]
    */
+
+  public setPathParserPattern(pattern: string) {
+    this.pathParserRegexp = new RegExp(pattern);
+  }
 
   public parsePath(rpath: string): PathInfo {
     if (!rpath) return null;
@@ -201,12 +215,12 @@ class ResourceRequestHandler extends EventDispatcher {
     let info = new PathInfo();
     let path = rpath.replace(/\/+/g, '/');
 
-    let m = path.match(/^(\/.*?)(\.x([a-z,\-_]+))(\.([a-z0-9,\-\.]+))?(\/.*?)?$/);
+    let m = path.match(this.pathParserRegexp);
 
     if (m) {
-      info.dataPath = unescape(m[6] ? m[6] : null);
+      info.dataPath = Utils.unescape(m[6] ? m[6] : null);
       info.selectorArgs = m[5] ? m[5] : null;
-      info.path = unescape(Utils.absolute_path(m[1]));
+      info.path = Utils.unescape(Utils.absolute_path(m[1]));
       info.selector = m[3];
       info.suffix = m[2];
 
@@ -222,7 +236,7 @@ class ResourceRequestHandler extends EventDispatcher {
       return info;
     }
     else if (path.charAt(0) === '/') {
-      info.path = unescape(Utils.absolute_path(path));
+      info.path = Utils.unescape(Utils.absolute_path(path));
       info.selector = 'default';
 
       info.dirname = Utils.filename_dir(info.path);
@@ -366,7 +380,7 @@ class ResourceRequestHandler extends EventDispatcher {
       out.end(null);
     };
 
-    if (info.resourcePath) {
+    if (context && info && info.resourcePath) {
       self.transformData(new Data(data), context, function (ddata: Data) {
         let storeto = Utils.absolute_path(ddata.values[':storeto']);
         if (!storeto) storeto = info.resourcePath;
@@ -385,7 +399,7 @@ class ResourceRequestHandler extends EventDispatcher {
       });
     }
     else {
-      render_error(new ErrorResource('invalid path ' + rpath));
+      render_error(new ErrorResource('invalid path [' + rpath + ']'));
     }
   }
 

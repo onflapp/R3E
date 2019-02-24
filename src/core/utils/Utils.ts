@@ -34,6 +34,11 @@ class Utils {
     }
   }
 
+  public static unescape(str: string): string {
+    if (!str) return str;
+    else return unescape(str);
+  }
+
   public static string2object(str: string, obj ? : object): object {
     if (!str) return obj ? obj : null;
 
@@ -138,7 +143,7 @@ class Utils {
     if (ext === 'xml') return 'text/xml';
     if (ext === 'js') return 'text/plain';
     if (ext === 'json') return 'text/plain';
-    if (ext === 'md') return 'text/markdown';
+    if (ext === 'md') return 'text/x-markdown';
     if (ext === 'hbs') return 'text/plain';
 
     return 'application/octet-stream';

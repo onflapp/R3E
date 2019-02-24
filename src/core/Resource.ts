@@ -81,7 +81,7 @@ abstract class Resource extends Data implements ContentReader {
   public static IO_TIMEOUT = 10000000;
   public static STORE_CONTENT_PROPERTY = '_content';
   public static STORE_RENDERTYPE_PROPERTY = '_rt';
-  public static STORE_SUPERTYPE_PROPERTY = '_st';
+  public static STORE_RESOURCETYPE_PROPERTY = '_pt';
 
   protected resourceName: string;
 
@@ -95,11 +95,11 @@ abstract class Resource extends Data implements ContentReader {
   }
 
   public getType(): string {
-    return 'resource/node';
+    return this.getSuperType();
   }
 
   public getSuperType(): string {
-    return null;
+    return 'resource/node';
   }
 
   public getName(): string {
@@ -115,11 +115,12 @@ abstract class Resource extends Data implements ContentReader {
     let rt = this.getRenderType();
     let st = this.getSuperType();
     let ct = this.getContentType();
+    let pt = this.getType();
 
     if (rt) rv.push(rt);
     if (ct) rv.push('mime/' + ct);
-    if (st) rv.push(st);
-    rv.push(this.getType());
+    rv.push(pt);
+    if (st && st !== pt) rv.push(st);
 
     return rv;
   }
@@ -159,10 +160,9 @@ abstract class Resource extends Data implements ContentReader {
       rv[Resource.STORE_RENDERTYPE_PROPERTY] = this.getRenderType();
     }
 
-    if (this.getSuperType()) {
-      rv[Resource.STORE_SUPERTYPE_PROPERTY] = this.getSuperType();
+    if (this.getSuperType() !== this.getType()) {
+      rv[Resource.STORE_RESOURCETYPE_PROPERTY] = this.getType();
     }
-
 
     if (this.isContentResource()) {
       rv[Resource.STORE_CONTENT_PROPERTY] = function (writer, callback) {
@@ -228,6 +228,8 @@ abstract class Resource extends Data implements ContentReader {
     let processing = 0;
     let ffunc = null;
     let ct = null;
+    let mime = Utils.filename_mime(this.getName());
+
     let done = function () {
       if (processing === 0 && callback) callback();
     }
@@ -244,6 +246,8 @@ abstract class Resource extends Data implements ContentReader {
       else if (k === Resource.STORE_CONTENT_PROPERTY && typeof v === 'string') {
         processing++;
         ct = data.values['_ct'];
+        if (!ct) ct = mime;
+
         ffunc = function (writer, callback) {
           writer.start(ct ? ct : 'text/plain');
           writer.write(v);

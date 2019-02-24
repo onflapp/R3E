@@ -5,7 +5,7 @@ class RemoteResource extends ObjectResource {
   private childNames = [];
 
   constructor(name: string, base: string, obj ? : any) {
-    super(name, obj ? obj : {});
+    super(obj ? obj : {}, name);
     this.baseName = name;
     this.baseURL = base;
   }

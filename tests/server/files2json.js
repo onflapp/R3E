@@ -9,7 +9,7 @@ if (!process.argv[2]) {
 }
 
 var input = new r.FileResource(process.argv[2]);
-var output = new r.ObjectResource('', {});
+var output = new r.ObjectResource({});
 var root = new r.RootResource({
   'in': input,
   'out': output

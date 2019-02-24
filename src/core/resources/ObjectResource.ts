@@ -1,6 +1,6 @@
 class ObjectResource extends Resource {
 
-  constructor(name: string, obj: any) {
+  constructor(obj: any, name: string) {
     super(name);
     if (!obj) throw new Error('no object for ObjectResource');
 
@@ -12,20 +12,20 @@ class ObjectResource extends Resource {
     return rt ? rt : null;
   }
 
-  public getSuperType(): string {
-    let st = this.values['_st'];
-    return st ? st : null;
+  public getType(): string {
+    let st = this.values['_pt'];
+    return st ? st : 'resource/node';
   }
 
   public resolveChildResource(name: string, callback: ResourceCallback, walking ? : boolean): void {
     let rv = this.values[name];
 
     if (typeof rv === 'object') {
-      if (rv['_content'] || rv['_content64'] || rv['_pt'] === 'resource/content') callback(new ObjectContentResource(name, rv));
-      else callback(new ObjectResource(name, rv));
+      if (rv['_content'] || rv['_content64'] || rv['_pt'] === 'resource/content') callback(new ObjectContentResource(rv, name));
+      else callback(new ObjectResource(rv, name));
     }
     else if (typeof rv === 'function') {
-      callback(new ObjectContentResource(name, rv));
+      callback(new ObjectContentResource(rv, name));
     }
     else {
       callback(null);
@@ -35,7 +35,7 @@ class ObjectResource extends Resource {
   public allocateChildResource(name: string, callback: ResourceCallback): void {
     let rv = {};
     this.values[name] = rv;
-    callback(new ObjectResource(name, rv));
+    callback(new ObjectResource(rv, name));
   }
 
   public listChildrenNames(callback: ChildrenNamesCallback) {
@@ -50,7 +50,7 @@ class ObjectResource extends Resource {
   }
 
   public importContent(func, callback) {
-    let res = new ObjectContentResource(this.resourceName, this.values);
+    let res = new ObjectContentResource(this.values, this.resourceName);
     func(res.getWriter(), callback);
   }
 
@@ -108,16 +108,12 @@ class ObjectContentResourceWriter implements ContentWriter {
 }
 
 class ObjectContentResource extends ObjectResource {
-  constructor(name: string, obj: any) {
-    super(name, obj);
+  constructor(obj: any, name: string) {
+    super(obj, name);
   }
 
   public getType(): string {
     return 'resource/content';
-  }
-
-  public getSuperType(): string {
-    return 'resource/node';
   }
 
   public isContentResource(): boolean {

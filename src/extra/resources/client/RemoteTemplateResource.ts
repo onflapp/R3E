@@ -61,10 +61,10 @@ class RemoteTemplateResource extends Resource {
 
       this.requestData(path, function (ctype, text) {
         if (text) {
-          res = new ObjectContentResource(name, {
+          res = new ObjectContentResource({
             _content: text,
             _ct: ctype
-          });
+          }, name);
           self.resources[name] = res;
           callback(res);
         }

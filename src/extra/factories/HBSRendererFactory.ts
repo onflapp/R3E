@@ -36,22 +36,22 @@ class HBSRendererFactory extends TemplateRendererFactory {
       if (!selector) selector = context.getCurrentSelector();
       if (!selector) selector = 'default';
 
-      path = self.expadPath(path, context);
-
-      let p = session.makeOutputPlaceholder();
-
-      context.renderResource(path, rtype, selector, context, function (contentType, content) {
+      let render = function (contentType, content) {
         if (contentType === 'object/javascript') {
           let out = '';
           if (Array.isArray(content)) {
             for (var i = 0; i < content.length; i++) {
               let it = content[i];
-              out += block.fn(it);
+
+              if (typeof block.fn === 'function') out += block.fn(it);
+              else out += JSON.stringify(it);
             }
           }
           else {
             let it = content;
-            out = block.fn(it);
+
+            if (typeof block.fn === 'function') out += block.fn(it);
+            else out += JSON.stringify(it);
           }
           if (safe) out = self.Handlebars.Utils.escapeExpression(out);
           p.write(out);
@@ -62,7 +62,18 @@ class HBSRendererFactory extends TemplateRendererFactory {
           p.write(content);
           p.end();
         }
-      });
+      };
+
+      let p = session.makeOutputPlaceholder();
+
+      if (typeof path === 'string') {
+        path = self.expadPath(path, context);
+        context.renderResource(path, rtype, selector, context, render);
+      }
+      else {
+        render('object/javascript', path);
+      }
+
       return p.placeholder;
     };
 
@@ -89,7 +100,7 @@ class HBSRendererFactory extends TemplateRendererFactory {
       }
     });
 
-    this.Handlebars.registerHelper('eq', function (lvalue, rvalue, result) {
+    this.Handlebars.registerHelper('eq', function (lvalue, rvalue, result, options) {
       if (lvalue === rvalue) return result;
       else return null;
     });

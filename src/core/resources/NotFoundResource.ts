@@ -1,9 +1,9 @@
 class NotFoundResource extends ObjectResource {
   constructor(name: string) {
-    super(name, {});
+    super({}, name);
   }
 
-  public getRenderType(): string {
+  public getType(): string {
     return 'resource/notfound';
   }
 }

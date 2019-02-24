@@ -19,7 +19,6 @@ class DOMContentWriter implements ContentWriter {
       let target = evt.target;
       let info = requestHandler.parseFormElement(target);
       evt.preventDefault();
-      evt.stopPropagation();
 
       setTimeout(function () {
         requestHandler.handleStore(info.formPath, info.formData);
@@ -33,7 +32,6 @@ class DOMContentWriter implements ContentWriter {
       if (!href) href = target.parentElement.getAttribute('href');
       if (href && href.charAt(0) === '/' && evt.button === 0 && !evt.ctrlKey && !evt.altKey && !evt.shiftKey) {
         evt.preventDefault();
-        evt.stopPropagation();
 
         setTimeout(function () {
           requestHandler.handleRequest(href);

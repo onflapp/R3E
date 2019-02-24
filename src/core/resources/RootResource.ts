@@ -1,13 +1,9 @@
 class RootResource extends ObjectResource {
   constructor(opts ? : any) {
-    super('', opts);
+    super(opts, '');
   }
 
   public getType(): string {
-    return 'resource/node';
-  }
-
-  public getSuperType(): string {
     return 'resource/root';
   }
 
@@ -29,6 +25,12 @@ class RootResource extends ObjectResource {
   }
 
   public importProperties(data: any, callback) {
+    let name = data['name'];
+    if (name) {
+      let res = new ObjectResource({}, name);
+      this.values[name] = res;
+    }
+
     callback();
   }
 

@@ -43,11 +43,6 @@ abstract class StoredResource extends Resource {
     else return 'resource/content';
   }
 
-  public getSuperType(): string {
-    if (this.getType() === 'resource/node') return null;
-    else return 'resource/node';
-  }
-
   public getRenderType(): string {
     return this.values['_rt'];
   }

@@ -3,14 +3,16 @@ var app = express();
 
 var r = require('../../dist/r3elib');
 
-//content resolver
-var root = new r.FileResource('./tests/content');
+var content = new r.FileResource('./tests/content');
+var temps = new r.FileResource('./templates');
+var root = new r.RootResource({
+  'content': content,
+  'templates': temps,
+});
 var rres = new r.ResourceResolver(root);
 
-//template resolvers
-
 //resource for default function-based renderers
-var def = new r.ObjectResource('', {
+var def = new r.ObjectResource({
   'resource': {
     'error': {
       'default': function (res, writer, context) {
@@ -21,19 +23,18 @@ var def = new r.ObjectResource('', {
   'any': {
     'default.func': function (res, writer, context) {
       //default is to take the existing resource path and render it as html
-      context.forwardRequest(context.getCurrentResourcePath() + '.xres-list');
+      context.forwardRequest(context.getCurrentResourcePath() + '.x-res-list');
     }
   }
 });
 
-//resource for file-based renderers
-var temps = new r.FileResource('./templates');
 
 //resolver will try the file-based renderers first and then fall-back on function-based ones
 var rtmp = new r.MultiResourceResolver([temps, def]);
 
 //configuration which is passed through context to the renderers
 var config = {
+  'X': '.x-',
   'BOOTSTRAP_CSS': 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css',
   'CODEMIRROR_JS': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/codemirror.min.js',
   'CODEMIRROR_CSS': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/codemirror.min.css',
@@ -43,6 +44,10 @@ var config = {
 //handlers for GET and POST for express
 app.get('/*', function (req, res) {
   var handler = new r.ServerRequestHandler(rres, rtmp, res);
+
+  // [path].x-[selector].[selectorArgs][dataPath]
+  // /cards/item1.x-json.-1.223/a/d
+  handler.setPathParserPattern('^(\\/.*?)(\\.x-([a-z,\\-_]+))(\\.([a-z0-9,\\-\\.]+))?(\\/.*?)?$');
   handler.setConfigProperties(config);
 
   //registering renderers
@@ -55,6 +60,10 @@ app.get('/*', function (req, res) {
 
 app.post('/*', function (req, res) {
   var handler = new r.ServerRequestHandler(rres, rtmp, res);
+
+  // [path].x-[selector].[selectorArgs][dataPath]
+  // /cards/item1.x-json.-1.223/a/d
+  handler.setPathParserPattern('^(\\/.*?)(\\.x-([a-z,\\-_]+))(\\.([a-z0-9,\\-\\.]+))?(\\/.*?)?$');
   handler.setConfigProperties(config);
 
   //registering renderers

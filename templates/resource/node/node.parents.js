@@ -2,7 +2,6 @@
   writer.start('object/javascript');
 
   var path = context.getCurrentResourcePath();
-  var props = context.getRequestProperties();
 
   var parentPaths = [];
   var ps = Utils.split_path(path);
@@ -11,14 +10,14 @@
   while (ps.length > 0) {
     var rpath = ps.join('/');
     var name = ps.pop();
+    var map = context.makeContextMap(res);
 
     if (name === '') continue;
 
-    parentPaths.unshift({
-      path: '/' + rpath,
-      name: name,
-      R: props
-    });
+    map['path'] = '/' + rpath;
+    map['name'] = name;
+
+    parentPaths.unshift(map);
   }
 
   writer.write(parentPaths);

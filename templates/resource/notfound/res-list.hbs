@@ -4,29 +4,49 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>not found</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+  <title>Delete</title>
 
   <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
 </head>
 
 <body>
 
-  <div class="container">
+  <div role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <a class="close" href="{{R.PATH_APPEND}}../{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
+          <h4 class="modal-title">Resource Not Found</h4>
+        </div>
+        <div class="modal-body">
 
-    <ol class="breadcrumb">
-      <li><a href="/{{R.SUFFIX}}">HOME</a></li>
-      {{#include "." "parents"}}
-        <li><a href="{{path}}{{R.SUFFIX}}">{{name}}</a></li>
-      {{/include}}
-      <li class="active">{{R.NAME}}</li>
-    </ol>
+          <ol class="breadcrumb">
+            <li><a href="/{{C.X}}res-list">HOME</a></li>
+            {{#include "." "parents"}}
+              <li><a href="{{path}}{{C.X}}res-list">{{name}}</a></li>
+            {{/include}}
+            <li class="active">{{R.NAME}}</li>
+          </ol>
 
-    <p>not found</p>
+          <h4>Resource"{{name}} not found, create?"</h4>
 
-    <a class="btn btn-default" href="{{R.PATH}}.xres-create">create</a>
+        </div>
+        <div class="modal-footer">
+          <form class="form-inline" method="post" action="{{R.PATH}}{{C.X}}res-list">
+            <a class="btn btn-default" href="{{R.PATH_APPEND}}../{{C.X}}res-list">Cancel</a>
+            <input type="hidden" name=":forward" value="{{R.PATH_APPEND}}{{C.X}}res-list">
+            <input class="btn btn-success" type="submit" value="Create">
+          </form>
 
-  </div>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+
 </body>
 
 </html>
+

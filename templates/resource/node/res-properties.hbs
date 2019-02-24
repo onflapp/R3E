@@ -18,7 +18,7 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <a class="close" href="{{R.PATH_APPEND}}../.xres-list"><span aria-hidden="true">&times;</span></a>
+          <a class="close" href="{{R.PATH}}{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
           <h4 class="modal-title">Resource Properties</h4>
         </div>
         <div class="modal-body">
@@ -30,29 +30,6 @@
             {{/include}}
             <li>{{R.NAME}}</li>
           </ol>
-
-          <h4>Other renderers</h4>
-          <div class="form-horizontal">
-            <form method="post" action="">
-              <div class="form-group">
-                <label class="col-sm-2">_rt</label>
-                <div class="col-sm-8">
-                  <select class="form-control" name="_rt">
-                    <option value="">not set</option>
-                    <option disabled>-</option>
-                    {{#include "/apps" "rendertypes"}}
-                      <option value="{{this}}" {{eq this ../renderType "selected"}}>{{this}}</option>
-                    {{/include}}
-                  </select>
-                </div>
-                <div class="col-sm-2">
-                  <button class="btn btn-success" type="submit">
-                    <span>set</span>
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
 
           <h4>properties:</h4>
 
@@ -94,8 +71,8 @@
       </div>
       <div class="modal-footer">
 
-        <form class="form-horizontal" class="form-inline" method="post" id="save_form" action="{{R.PATH}}.xres-list">
-          <a class="btn btn-default" href="{{R.PATH_APPEND}}../.xres-list">Cancel</a>
+        <form class="form-horizontal" class="form-inline" method="post" id="save_form" action="{{R.PATH}}{{C.X}}res-list">
+          <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-list">Cancel</a>
           <input class="btn btn-success" type="submit" value="Save">
         </form>
       </div>

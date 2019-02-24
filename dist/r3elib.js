@@ -48,6 +48,12 @@ var Utils = (function () {
             list.splice(x, 0, item);
         }
     };
+    Utils.unescape = function (str) {
+        if (!str)
+            return str;
+        else
+            return unescape(str);
+    };
     Utils.string2object = function (str, obj) {
         if (!str)
             return obj ? obj : null;
@@ -161,7 +167,7 @@ var Utils = (function () {
         if (ext === 'json')
             return 'text/plain';
         if (ext === 'md')
-            return 'text/markdown';
+            return 'text/x-markdown';
         if (ext === 'hbs')
             return 'text/plain';
         return 'application/octet-stream';
@@ -333,10 +339,10 @@ var Resource = (function (_super) {
             callback(this);
     };
     Resource.prototype.getType = function () {
-        return 'resource/node';
+        return this.getSuperType();
     };
     Resource.prototype.getSuperType = function () {
-        return null;
+        return 'resource/node';
     };
     Resource.prototype.getName = function () {
         return this.resourceName;
@@ -349,13 +355,14 @@ var Resource = (function (_super) {
         var rt = this.getRenderType();
         var st = this.getSuperType();
         var ct = this.getContentType();
+        var pt = this.getType();
         if (rt)
             rv.push(rt);
         if (ct)
             rv.push('mime/' + ct);
-        if (st)
+        rv.push(pt);
+        if (st && st !== pt)
             rv.push(st);
-        rv.push(this.getType());
         return rv;
     };
     Resource.prototype.resolveOrAllocateChildResource = function (name, callback, walking) {
@@ -383,8 +390,8 @@ var Resource = (function (_super) {
         if (this.getRenderType()) {
             rv[Resource.STORE_RENDERTYPE_PROPERTY] = this.getRenderType();
         }
-        if (this.getSuperType()) {
-            rv[Resource.STORE_SUPERTYPE_PROPERTY] = this.getSuperType();
+        if (this.getSuperType() !== this.getType()) {
+            rv[Resource.STORE_RESOURCETYPE_PROPERTY] = this.getType();
         }
         if (this.isContentResource()) {
             rv[Resource.STORE_CONTENT_PROPERTY] = function (writer, callback) {
@@ -441,6 +448,7 @@ var Resource = (function (_super) {
         var processing = 0;
         var ffunc = null;
         var ct = null;
+        var mime = Utils.filename_mime(this.getName());
         var done = function () {
             if (processing === 0 && callback)
                 callback();
@@ -456,6 +464,8 @@ var Resource = (function (_super) {
             else if (k === Resource.STORE_CONTENT_PROPERTY && typeof v === 'string') {
                 processing++;
                 ct = data.values['_ct'];
+                if (!ct)
+                    ct = mime;
                 ffunc = function (writer, callback) {
                     writer.start(ct ? ct : 'text/plain');
                     writer.write(v);
@@ -528,7 +538,7 @@ var Resource = (function (_super) {
     Resource.IO_TIMEOUT = 10000000;
     Resource.STORE_CONTENT_PROPERTY = '_content';
     Resource.STORE_RENDERTYPE_PROPERTY = '_rt';
-    Resource.STORE_SUPERTYPE_PROPERTY = '_st';
+    Resource.STORE_RESOURCETYPE_PROPERTY = '_pt';
     return Resource;
 }(Data));
 var ResourceResolver = (function () {
@@ -677,9 +687,7 @@ var ResourceRenderer = (function () {
                 var f = Utils.filename(renderTypes[i]);
                 for (var z = 0; z < selectors.length; z++) {
                     var sel = selectors[z];
-                    var p = renderTypes[i] + '.' + sel;
-                    rv.push(p + '.' + key);
-                    p = renderTypes[i] + '/' + f + '.' + sel;
+                    var p = renderTypes[i] + '/' + f + '.' + sel;
                     rv.push(p + '.' + key);
                     p = renderTypes[i] + '/' + sel;
                     rv.push(p + '.' + key);
@@ -830,7 +838,9 @@ var ResourceRequestContext = (function () {
         if (res instanceof Resource) {
             map['renderType'] = res.getRenderType();
             map['renderTypes'] = res.getRenderTypes();
-            map['superType'] = res.getSuperType();
+            if (res.getSuperType() !== res.getType()) {
+                map['superType'] = res.getSuperType();
+            }
             map['type'] = res.getType();
             map['name'] = res.getName();
             map['isContentResource'] = res.isContentResource();
@@ -885,6 +895,10 @@ var ResourceRequestHandler = (function (_super) {
         _this.templateResolver = templateResolver;
         _this.contentWriter = new OrderedContentWriter(contentWriter);
         _this.resourceRenderer = new ResourceRenderer(_this.templateResolver);
+        _this.pathParserRegexp = new RegExp(/^(\/.*?)(\.x-([a-z,\-_]+))(\.([a-z0-9,\-\.]+))?(\/.*?)?$/);
+        _this.configProperties = {
+            'X': '.x-'
+        };
         return _this;
     }
     ResourceRequestHandler.prototype.expandValue = function (val, data) {
@@ -954,6 +968,8 @@ var ResourceRequestHandler = (function (_super) {
         });
     };
     ResourceRequestHandler.prototype.makeContext = function (pathInfo) {
+        if (!pathInfo)
+            return null;
         pathInfo.referer = this.parsePath(this.refererPath);
         pathInfo.query = this.queryProperties;
         var context = new ResourceRequestContext(pathInfo, this);
@@ -1030,16 +1046,19 @@ var ResourceRequestHandler = (function (_super) {
             });
         }
     };
+    ResourceRequestHandler.prototype.setPathParserPattern = function (pattern) {
+        this.pathParserRegexp = new RegExp(pattern);
+    };
     ResourceRequestHandler.prototype.parsePath = function (rpath) {
         if (!rpath)
             return null;
         var info = new PathInfo();
         var path = rpath.replace(/\/+/g, '/');
-        var m = path.match(/^(\/.*?)(\.x([a-z,\-_]+))(\.([a-z0-9,\-\.]+))?(\/.*?)?$/);
+        var m = path.match(this.pathParserRegexp);
         if (m) {
-            info.dataPath = unescape(m[6] ? m[6] : null);
+            info.dataPath = Utils.unescape(m[6] ? m[6] : null);
             info.selectorArgs = m[5] ? m[5] : null;
-            info.path = unescape(Utils.absolute_path(m[1]));
+            info.path = Utils.unescape(Utils.absolute_path(m[1]));
             info.selector = m[3];
             info.suffix = m[2];
             info.dirname = Utils.filename_dir(info.path);
@@ -1051,7 +1070,7 @@ var ResourceRequestHandler = (function (_super) {
             return info;
         }
         else if (path.charAt(0) === '/') {
-            info.path = unescape(Utils.absolute_path(path));
+            info.path = Utils.unescape(Utils.absolute_path(path));
             info.selector = 'default';
             info.dirname = Utils.filename_dir(info.path);
             info.name = Utils.filename(info.path);
@@ -1157,7 +1176,7 @@ var ResourceRequestHandler = (function (_super) {
             rrend.renderResource(err, 'default', out, context);
             out.end(null);
         };
-        if (info.resourcePath) {
+        if (context && info && info.resourcePath) {
             self.transformData(new Data(data), context, function (ddata) {
                 var storeto = Utils.absolute_path(ddata.values[':storeto']);
                 if (!storeto)
@@ -1177,7 +1196,7 @@ var ResourceRequestHandler = (function (_super) {
             });
         }
         else {
-            render_error(new ErrorResource('invalid path ' + rpath));
+            render_error(new ErrorResource('invalid path [' + rpath + ']'));
         }
     };
     ResourceRequestHandler.prototype.storeResource = function (resourcePath, data, callback) {
@@ -1419,7 +1438,7 @@ var BufferedContentWriter = (function () {
 }());
 var ObjectResource = (function (_super) {
     __extends(ObjectResource, _super);
-    function ObjectResource(name, obj) {
+    function ObjectResource(obj, name) {
         var _this = _super.call(this, name) || this;
         if (!obj)
             throw new Error('no object for ObjectResource');
@@ -1430,20 +1449,20 @@ var ObjectResource = (function (_super) {
         var rt = this.values['_rt'];
         return rt ? rt : null;
     };
-    ObjectResource.prototype.getSuperType = function () {
-        var st = this.values['_st'];
-        return st ? st : null;
+    ObjectResource.prototype.getType = function () {
+        var st = this.values['_pt'];
+        return st ? st : 'resource/node';
     };
     ObjectResource.prototype.resolveChildResource = function (name, callback, walking) {
         var rv = this.values[name];
         if (typeof rv === 'object') {
             if (rv['_content'] || rv['_content64'] || rv['_pt'] === 'resource/content')
-                callback(new ObjectContentResource(name, rv));
+                callback(new ObjectContentResource(rv, name));
             else
-                callback(new ObjectResource(name, rv));
+                callback(new ObjectResource(rv, name));
         }
         else if (typeof rv === 'function') {
-            callback(new ObjectContentResource(name, rv));
+            callback(new ObjectContentResource(rv, name));
         }
         else {
             callback(null);
@@ -1452,7 +1471,7 @@ var ObjectResource = (function (_super) {
     ObjectResource.prototype.allocateChildResource = function (name, callback) {
         var rv = {};
         this.values[name] = rv;
-        callback(new ObjectResource(name, rv));
+        callback(new ObjectResource(rv, name));
     };
     ObjectResource.prototype.listChildrenNames = function (callback) {
         var rv = [];
@@ -1465,7 +1484,7 @@ var ObjectResource = (function (_super) {
         callback(rv);
     };
     ObjectResource.prototype.importContent = function (func, callback) {
-        var res = new ObjectContentResource(this.resourceName, this.values);
+        var res = new ObjectContentResource(this.values, this.resourceName);
         func(res.getWriter(), callback);
     };
     ObjectResource.prototype.removeChildResource = function (name, callback) {
@@ -1520,14 +1539,11 @@ var ObjectContentResourceWriter = (function () {
 }());
 var ObjectContentResource = (function (_super) {
     __extends(ObjectContentResource, _super);
-    function ObjectContentResource(name, obj) {
-        return _super.call(this, name, obj) || this;
+    function ObjectContentResource(obj, name) {
+        return _super.call(this, obj, name) || this;
     }
     ObjectContentResource.prototype.getType = function () {
         return 'resource/content';
-    };
-    ObjectContentResource.prototype.getSuperType = function () {
-        return 'resource/node';
     };
     ObjectContentResource.prototype.isContentResource = function () {
         return true;
@@ -1564,12 +1580,9 @@ var ObjectContentResource = (function (_super) {
 var RootResource = (function (_super) {
     __extends(RootResource, _super);
     function RootResource(opts) {
-        return _super.call(this, '', opts) || this;
+        return _super.call(this, opts, '') || this;
     }
     RootResource.prototype.getType = function () {
-        return 'resource/node';
-    };
-    RootResource.prototype.getSuperType = function () {
         return 'resource/root';
     };
     RootResource.prototype.resolveChildResource = function (name, callback, walking) {
@@ -1589,6 +1602,11 @@ var RootResource = (function (_super) {
         callback(null);
     };
     RootResource.prototype.importProperties = function (data, callback) {
+        var name = data['name'];
+        if (name) {
+            var res = new ObjectResource({}, name);
+            this.values[name] = res;
+        }
         callback();
     };
     return RootResource;
@@ -1787,7 +1805,7 @@ var ErrorResource = (function (_super) {
             err = obj;
         else
             err = '' + err;
-        _this = _super.call(this, '/', err) || this;
+        _this = _super.call(this, err, '/') || this;
         return _this;
     }
     ErrorResource.prototype.getType = function () {
@@ -1801,9 +1819,9 @@ var ErrorResource = (function (_super) {
 var NotFoundResource = (function (_super) {
     __extends(NotFoundResource, _super);
     function NotFoundResource(name) {
-        return _super.call(this, name, {}) || this;
+        return _super.call(this, {}, name) || this;
     }
-    NotFoundResource.prototype.getRenderType = function () {
+    NotFoundResource.prototype.getType = function () {
         return 'resource/notfound';
     };
     return NotFoundResource;
@@ -1878,20 +1896,24 @@ var HBSRendererFactory = (function (_super) {
                 selector = context.getCurrentSelector();
             if (!selector)
                 selector = 'default';
-            path = self.expadPath(path, context);
-            var p = session.makeOutputPlaceholder();
-            context.renderResource(path, rtype, selector, context, function (contentType, content) {
+            var render = function (contentType, content) {
                 if (contentType === 'object/javascript') {
                     var out = '';
                     if (Array.isArray(content)) {
                         for (var i = 0; i < content.length; i++) {
                             var it = content[i];
-                            out += block.fn(it);
+                            if (typeof block.fn === 'function')
+                                out += block.fn(it);
+                            else
+                                out += JSON.stringify(it);
                         }
                     }
                     else {
                         var it = content;
-                        out = block.fn(it);
+                        if (typeof block.fn === 'function')
+                            out += block.fn(it);
+                        else
+                            out += JSON.stringify(it);
                     }
                     if (safe)
                         out = self.Handlebars.Utils.escapeExpression(out);
@@ -1904,7 +1926,15 @@ var HBSRendererFactory = (function (_super) {
                     p.write(content);
                     p.end();
                 }
-            });
+            };
+            var p = session.makeOutputPlaceholder();
+            if (typeof path === 'string') {
+                path = self.expadPath(path, context);
+                context.renderResource(path, rtype, selector, context, render);
+            }
+            else {
+                render('object/javascript', path);
+            }
             return p.placeholder;
         };
         _this.Handlebars.registerHelper('include', include);
@@ -1924,7 +1954,7 @@ var HBSRendererFactory = (function (_super) {
                     return args[i];
             }
         });
-        _this.Handlebars.registerHelper('eq', function (lvalue, rvalue, result) {
+        _this.Handlebars.registerHelper('eq', function (lvalue, rvalue, result, options) {
             if (lvalue === rvalue)
                 return result;
             else
@@ -2087,12 +2117,6 @@ var StoredResource = (function (_super) {
         else
             return 'resource/content';
     };
-    StoredResource.prototype.getSuperType = function () {
-        if (this.getType() === 'resource/node')
-            return null;
-        else
-            return 'resource/node';
-    };
     StoredResource.prototype.getRenderType = function () {
         return this.values['_rt'];
     };
@@ -2195,7 +2219,7 @@ var StoredResource = (function (_super) {
 var RemoteResource = (function (_super) {
     __extends(RemoteResource, _super);
     function RemoteResource(name, base, obj) {
-        var _this = _super.call(this, name, obj ? obj : {}) || this;
+        var _this = _super.call(this, obj ? obj : {}, name) || this;
         _this.resolved = false;
         _this.childNames = [];
         _this.baseName = name;
@@ -2399,10 +2423,10 @@ var RemoteTemplateResource = (function (_super) {
             }
             this.requestData(path_1, function (ctype, text) {
                 if (text) {
-                    res = new ObjectContentResource(name, {
+                    res = new ObjectContentResource({
                         _content: text,
                         _ct: ctype
-                    });
+                    }, name);
                     self_4.resources[name] = res;
                     callback(res);
                 }
@@ -2450,7 +2474,6 @@ var DOMContentWriter = (function () {
             var target = evt.target;
             var info = requestHandler.parseFormElement(target);
             evt.preventDefault();
-            evt.stopPropagation();
             setTimeout(function () {
                 requestHandler.handleStore(info.formPath, info.formData);
             });
@@ -2462,7 +2485,6 @@ var DOMContentWriter = (function () {
                 href = target.parentElement.getAttribute('href');
             if (href && href.charAt(0) === '/' && evt.button === 0 && !evt.ctrlKey && !evt.altKey && !evt.shiftKey) {
                 evt.preventDefault();
-                evt.stopPropagation();
                 setTimeout(function () {
                     requestHandler.handleRequest(href);
                 });
@@ -2860,12 +2882,10 @@ var FileResource = (function (_super) {
         var path = this.getStoragePath();
         return new FileResource(name, path);
     };
-    FileResource.prototype.getSuperType = function () {
+    FileResource.prototype.getType = function () {
         var st = this.values['_st'];
         if (st)
             return st;
-        if (this.getType() === 'resource/node')
-            return null;
         else
             return 'resource/node';
     };
@@ -3507,12 +3527,6 @@ var GitHubResource = (function (_super) {
             return 'resource/node';
         else
             return 'resource/content';
-    };
-    GitHubResource.prototype.getSuperType = function () {
-        if (this.getType() === 'resource/node')
-            return null;
-        else
-            return 'resource/node';
     };
     GitHubResource.prototype.getRenderType = function () {
         return this.values['_rt'];

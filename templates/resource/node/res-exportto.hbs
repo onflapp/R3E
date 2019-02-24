@@ -26,9 +26,9 @@
     <h1>to</h1>
 
     <ol class="breadcrumb">
-      <li><a href="{{R.PATH}}.xres-exportto/">HOME</a></li>
+      <li><a href="{{R.PATH}}{{C.X}}res-exportto/">HOME</a></li>
       {{#include R.DATA_PATH "parents"}}
-        <li><a href="{{R.PATH}}.xres-exportto{{path}}">{{name}}</a></li>
+        <li><a href="{{R.PATH}}{{C.X}}res-exportto{{path}}">{{name}}</a></li>
       {{/include}}
       <li class="active">{{R.DATA_NAME}}</li>
     </ol>
@@ -50,7 +50,7 @@
             {{/match}}
             {{#default}}
               <td>
-                <i class="glyphicon glyphicon-folder-close"></i> <a href="{{R.PATH}}.xres-exportto{{path}}">{{name}}</a>
+                <i class="glyphicon glyphicon-folder-close"></i> <a href="{{R.PATH}}{{C.X}}res-exportto{{path}}">{{name}}</a>
               </td>
             {{/default}}
           </tr>
@@ -59,11 +59,11 @@
       {{/include}}
     </table>
 
-    <form method="post" action="{{R.PATH}}.xres-list">
+    <form method="post" action="{{R.PATH}}{{C.X}}res-list">
       <input name=":name|newUUID" value="{{R.NAME}}" autocomplete="off">
       <input type="hidden" name=":copyto" value="{{R.DATA_PATH_APPEND}}{:name}">
       <input type="submit" value="export">
-      <input type="hidden" name=":forward" value="{{R.DATA_PATH}}.xres-list">
+      <input type="hidden" name=":forward" value="{{R.DATA_PATH}}{{C.X}}res-list">
     </form>
   </div>
 </body>

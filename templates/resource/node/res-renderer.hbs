@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+  <title>renderer properties</title>
+
+  <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
+</head>
+
+<body>
+
+  <div role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <a class="close" href="{{R.PATH}}{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
+          <h4 class="modal-title">Renderer Properties</h4>
+        </div>
+        <div class="modal-body">
+
+          <ol class="breadcrumb">
+            <li class="active">HOME</li>
+            {{#include "." "parents"}}
+              <li class="active">{{name}}</li>
+            {{/include}}
+            <li>{{R.NAME}}</li>
+          </ol>
+
+          <p>Renderer will take following types into consideration</p>
+          <ol>
+            <li>renderType: {{renderType}}</li>
+            {{#if contentType}}
+            <li>contentType: mime/{{contentType}}</li>
+            {{/if}}
+            <li>resourceType: {{type}}</li>
+            <li>superType: {{superType}}</li>
+          </ol>
+
+          <h4>User Defined Renderers</h4>
+          <p>User defined renderer templates are stored in <a href="{{C.USER_TEMPLATES}}/{{renderType}}{{C.X}}res-list">{{C.USER_TEMPLATES}}/{{renderType}}</a></p>
+
+          <div class="form-horizontal">
+            <form method="post" action="{{R.PATH}}{{C.X}}res-renderer">
+              <div class="form-group">
+                <label class="col-sm-2">render type</label>
+                <div class="col-sm-8">
+                  <select class="form-control" name="_rt">
+                    <option value="">not found</option>
+                    <option disabled>-</option>
+                    {{#include C.USER_TEMPLATES "rendertemplates"}}
+                      <option value="{{this}}" {{eq this ../renderType "selected"}}>{{this}}</option>
+                    {{/include}}
+                  </select>
+                </div>
+                <div class="col-sm-2">
+                  <button class="btn btn-success" type="submit">
+                    <span>set</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+            {{#if renderType}}
+              <a class="btn btn-success" href="{{C.USER_TEMPLATES}}{{C.X}}res-create/{{renderType}}/default">Edit default template for type {{renderType}}</a>
+            {{/if}}
+          </div>
+
+      </div>
+      <div class="modal-footer">
+
+        <form class="form-horizontal" class="form-inline" method="post" id="save_form" action="{{R.PATH}}{{C.X}}res-list">
+          <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-list">Cancel</a>
+          <input class="btn btn-success" type="submit" value="Save">
+        </form>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+
+
+</body>
+
+</html>

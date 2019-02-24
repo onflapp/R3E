@@ -18,7 +18,7 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <a class="close" href="{{R.PATH_APPEND}}../.xres-list"><span aria-hidden="true">&times;</span></a>
+          <a class="close" href="{{R.PATH_APPEND}}../{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
           <h4 class="modal-title">Create New Resource</h4>
         </div>
         <div class="modal-body">
@@ -38,13 +38,13 @@
               <select class="form-control" name="_rt">
                 <option value="">not set</option>
                 <option disabled>-</option>
-                {{#include "/apps" "rendertypes"}}
+                {{#include C.USER_TEMPLATES "rendertemplates"}}
                   <option value="{{this}}">{{this}}</option>
                 {{/include}}
               </select>
 
               <input class="form-control" name=":name|newUUID" value="" autocomplete="off" placeholder="name">
-              <input type="hidden" name=":forward" value="{{R.PATH}}.xres-list">
+              <input type="hidden" name=":forward" value="{{R.PATH}}{{C.X}}res-list">
               <button class="form-control btn btn-success" type="submit">
                 <span class="glyphicon glyphicon-plus"></span>
               </button>
@@ -57,8 +57,8 @@
             <div class="form-group">
               <input class="form-control" name=":name|newUUID" value="" autocomplete="off" placeholder="file name">
               <input type="hidden" name="_content" value=""></input>
-              <input type="hidden" name="_ct" value="text/plain"></input>
-              <input type="hidden" name=":forward" value="{{R.PATH}}.xres-list">
+              <!--input type="hidden" name="_ct" value="text/plain"></input-->
+              <input type="hidden" name=":forward" value="{{R.PATH}}{{C.X}}res-list">
               <button class="form-control btn btn-success" type="submit">
                 <span class="glyphicon glyphicon-plus"></span>
               </button>
@@ -73,7 +73,7 @@
             <div class="form-group">
               <input class="form-control" type="file" name=":filename" value="">
               <input class="form-control" name=":name|:filename|newUUID" value="" autocomplete="off" placeholder="file name">
-              <input type="hidden" name=":forward" value="{{R.PATH}}.xres-list">
+              <input type="hidden" name=":forward" value="{{R.PATH}}{{C.X}}res-list">
               <button class="form-control btn btn-success" type="submit">
                 <span class="glyphicon glyphicon-plus"></span>
               </button>
@@ -85,7 +85,7 @@
           <form class="form-inline" method="post" enctype="multipart/form-data" action="{{R.PATH}}{{R.SUFFIX}}">
             <div class="form-group">
               <input class="form-control" type="file" name=":import" value="">
-              <input type="hidden" name=":forward" value="{{R.PATH}}.xres-list">
+              <input type="hidden" name=":forward" value="{{R.PATH}}{{C.X}}res-list">
 
               <button class="form-control btn btn-success" type="submit">
                 <span class="glyphicon glyphicon-plus"></span>
@@ -95,7 +95,7 @@
 
         </div>
         <div class="modal-footer">
-          <a class="btn btn-default" href="{{R.PATH_APPEND}}../.xres-list">Cancel</a>
+          <a class="btn btn-default" href="{{R.PATH_APPEND}}../{{C.X}}res-list">Cancel</a>
         </div>
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->

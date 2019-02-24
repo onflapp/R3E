@@ -24,10 +24,19 @@
       <li class="active">{{R.NAME}}</li>
     </ol>
 
-    <div class="btn-group btn-group-sm" style="margin-bottom:20px">
-      <a class="btn btn-default" href="{{R.PATH}}.xres-create"><span class="glyphicon glyphicon-plus"></span> Create</a>
-      <a class="btn btn-default" href="{{R.PATH}}.xres-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
+    <div style="margin-bottom:20px">
+    <div class="btn-group btn-group-sm">
+      <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-create"><span class="glyphicon glyphicon-plus"></span> Create</a>
+      <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-renderer"><span class="glyphicon glyphicon-fire"></span> Renderer</a>
+      <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
     </div>
+
+  {{#if renderType}}
+    <div class="btn-group btn-group-sm pull-right">
+      <a class="btn btn-default" target="_blank" href="{{path}}"><span class="glyphicon glyphicon-eye-open"></span> Render As Type "{{renderType}}"</a>
+    </div>
+  {{/if}}
+  </div>
 
     <table class="table table-bordered table-condensed small text-muted" style="background-color:lightgray">
       {{#include "." "properties"}}
@@ -40,21 +49,6 @@
           </td>
         </tr>
       {{/include}}
-      <tr>
-        <td>resource type</td>
-        <td>{{type}}</td>
-      </tr>
-
-      <tr>
-        <td>render type</td>
-        <td>{{renderType}}</td>
-      </tr>
-
-      <tr>
-        <td>super type</td>
-        <td>{{superType}}</td>
-      </tr>
-
     </table>
 
     <table class="table ui-dropzone">
@@ -63,7 +57,7 @@
         {{#if isContentResource}}
           <tr>
             <td>
-              <i class="glyphicon glyphicon-file"></i> <a href="{{path}}.xedit">{{name}}</a>
+              <i class="glyphicon glyphicon-file"></i> <a href="{{path}}{{C.X}}edit">{{name}}</a>
             </td>
             <td>
               {{contentType}}
@@ -79,7 +73,7 @@
             </td>
             <td>
               {{#if renderType}}
-                <a href="/apps/{{renderType}}.xres-list">{{renderType}}</a>
+                <a href="{{C.USER_TEMPLATES}}/{{renderType}}{{C.X}}res-list">{{renderType}}</a>
               {{else}}
                 {{type}}
               {{/if}}

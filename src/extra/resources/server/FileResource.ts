@@ -44,11 +44,10 @@ class FileResource extends StoredResource {
     return new FileResource(name, path);
   }
 
-  public getSuperType(): string {
+  public getType(): string {
     var st = this.values['_st'];
 
     if (st) return st;
-    if (this.getType() === 'resource/node') return null;
     else return 'resource/node';
   }
 

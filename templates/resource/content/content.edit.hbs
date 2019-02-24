@@ -36,9 +36,9 @@
     <div class="container">
 
       <ol class="breadcrumb">
-        <li><a href="/.xres-list">HOME</a></li>
+        <li><a href="/{{C.X}}res-list">HOME</a></li>
         {{#include "." "parents"}}
-          <li><a href="{{path}}.xres-list">{{name}}</a></li>
+          <li><a href="{{path}}{{C.X}}res-list">{{name}}</a></li>
         {{/include}}
         <li class="active">{{R.NAME}}</li>
       </ol>
@@ -47,8 +47,8 @@
         <form method="post" action="{{R.PATH}}{{R.SUFFIX}}">
 
           <div class="btn-group btn-group-sm">
-            <a class="btn btn-default" href="{{R.PATH}}/../.xres-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
-            <a class="btn btn-default" href="{{R.PATH}}.xres-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
+            <a class="btn btn-default" href="{{R.PATH}}/../{{C.X}}res-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
+            <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
           </div>
           <div class="btn-group btn-group-sm pull-right">
             <button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-floppy-save"></span> Save</button>
@@ -66,8 +66,8 @@
         <form method="post" action="{{R.PATH}}{{R.SUFFIX}}">
 
           <div class="btn-group btn-group-sm">
-            <a class="btn btn-default" href="{{R.PATH}}/../.xres-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
-            <a class="btn btn-default" href="{{R.PATH}}.xres-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
+            <a class="btn btn-default" href="{{R.PATH}}/../{{C.X}}res-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
+            <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
           </div>
           <div class="btn-group btn-group-sm pull-right">
             <button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-floppy-save"></span> Save</button>
@@ -84,8 +84,8 @@
       {{#match contentType "startsWith" "image/"}}
 
         <div class="btn-group btn-group-sm">
-          <a class="btn btn-default" href="{{R.PATH}}/../.xres-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
-          <a class="btn btn-default" href="{{R.PATH}}.xres-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
+          <a class="btn btn-default" href="{{R.PATH}}/../{{C.X}}res-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
+          <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
           <a class="btn btn-default" target="_blank" href="{{include "." "externalize"}}"><span class="glyphicon glyphicon-eye-open"></span> View</a>
         </div>
 
@@ -96,8 +96,8 @@
       {{#match contentType "startsWith" "application/pdf"}}
 
         <div class="btn-group btn-group-sm">
-          <a class="btn btn-default" href="{{R.PATH}}/../.xres-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
-          <a class="btn btn-default" href="{{R.PATH}}.xres-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
+          <a class="btn btn-default" href="{{R.PATH}}/../{{C.X}}res-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
+          <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
           <a class="btn btn-default" target="_blank" href="{{include "." "externalize"}}"><span class="glyphicon glyphicon-eye-open"></span> View</a>
         </div>
 
@@ -112,15 +112,17 @@
       {{/default}}
     </div>
     <script>
-      var ta = document.querySelector('textarea');
-      if (ta) {
-        var editor = CodeMirror.fromTextArea(ta, {
-          lineNumbers: true,
-          autofocus: true,
-          mode: 'javascript',
-          theme: 'solarized dark'
-        });
-      }
+      setTimeout(function() {
+        var ta = document.querySelector('textarea');
+        if (ta) {
+          var editor = CodeMirror.fromTextArea(ta, {
+            lineNumbers: true,
+            autofocus: true,
+            mode: 'javascript',
+            theme: 'solarized dark'
+          });
+        }
+      },1);
     </script>
   </body>
 

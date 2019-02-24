@@ -1,33 +1,57 @@
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+  <title>create</title>
+
   <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
 </head>
 
 <body>
-  <div class="container">
+  
+  <div role="dialog">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <a class="close" href="{{R.PATH_APPEND}}../{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
+          <h4 class="modal-title">Create New Template</h4>
+        </div>
+        <div class="modal-body">
+
     <ol class="breadcrumb">
-      <li>
-        <a href="/.xres-list">HOME</a>
-      </li>
+      <li class="active">HOME</li>
       {{#include "." "parents"}}
-        <li>
-          <a href="{{path}}.xres-list">{{name}}</a>
-        </li>
+        <li class="active">{{name}}</li>
       {{/include}}
-      <li class="active">
-        <a href="{{R.PATH}}.xres-list">{{R.NAME}}</a>
-      </li>
+      <li class="active">{{R.NAME}}</li>
     </ol>
 
     <h6>create renderer:</h6>
 
-    <div class="form-inline">
-      <form method="post" action="{{R.PATH}}/{:type}/{:name}/{:name}.{:sel}.{:ext}">
+        <div>
+          <p>
+            Renderer templates are resolved by scanning for a file matching specific naming convention pattern.
+          <p>
+            Pattern is composed of these parts: <br>
+            <span class="bg-info">resource type</span> - usually a directory<br>
+            <span class="bg-success">selector</span> - what gets appended after "{{C.X}}" or special selector like "default"
+          <p>
+            There are two pattern variants you can use, for example:
+          <ul>
+            <li><span class="bg-info">web/mycomponent</span><b>/</b><span class="bg-success">html</span></li>
+            <li><span class="bg-info">web/mycomponent</span>/mycomponent<b>.</b><span class="bg-success">html</span></li>
+          </ul>
+        </div>
+
+    <div class="form-horizontal">
+      <form method="post" action="{{R.PATH}}/{:name}.{:ext}">
         <div class="form-group">
+            <div class="col-sm-3">
           <select name=":ext" class="form-control">
             <option value="hbs">
               handlebars
@@ -36,34 +60,52 @@
               javascript
             </option>
           </select>
-        </div>
+          </div>
 
-        <div class="form-group">
-          <input class="form-control" name=":type" value="" placeholder="group" required="" autocomplete="off"> / <input class="form-control" name=":name" value="" placeholder="name" required="" autocomplete="off"> . <input class="form-control" name=":sel" value="" placeholder="selector" required="" autocomplete="off"> <input type="hidden" name="_content" value=""> <input type="hidden" name="_rt" value="resource/content"> <input type="hidden" name=":forward" value="{{R.PATH}}/{:type}/{:name}/{:name}.{:sel}.{:ext}.xedit">
-        </div>
 
-        <div class="form-group">
+            <div class="col-sm-7">
+          <input class="form-control" name=":name" value="{{R.DATA_PATH}}" placeholder="full template file path" required="" autocomplete="off">
+          <input type="hidden" name="_content" value=""> 
+          <input type="hidden" name="_rt" value="resource/content"> 
+          <input type="hidden" name=":forward" value="{{R.PATH}}/{:name}.{:ext}{{C.X}}edit">
+          </div>
+
+            <div class="col-sm-2">
+                <button class="btn btn-success" type="submit" value="add">
+                  <span class="glyphicon glyphicon-plus"></span>
+                </button>
+                </div>
         </div>
       </form>
     </div>
 
-    <h6>create group:</h6>
+    <h6>create directory:</h6>
 
-    <div class="form-horizontal">
       <div class="form-horizontal">
         <form method="post" action="{{R.PATH}}/{:name}">
           <div class="form-group">
             <div class="col-sm-8">
-              <input class="form-control" name=":name" value="" required="" autocomplete="off"> <input type="hidden" name=":forward" value="{{R.PATH}}.xres-list">
+              <input class="form-control" name=":name" value="" required="" autocomplete="off"> <input type="hidden" name=":forward" value="{{R.PATH}}{{C.X}}res-list">
             </div>
 
+
             <div class="col-sm-2">
+                <button class="btn btn-success" type="submit" value="add">
+                  <span class="glyphicon glyphicon-plus"></span>
+                </button>
             </div>
           </div>
         </form>
-      </div>
     </div>
-  </div>
+
+        </div>
+        <div class="modal-footer">
+          <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-list">Cancel</a>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div><!-- /.modal -->
+
 </body>
 
 </html>

@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>list</title>
+  <title>Root</title>
 
   <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
 </head>
@@ -22,7 +22,7 @@
     </ol>
 
     <div class="btn-group btn-group-sm" style="margin-bottom:20px">
-      <a class="btn btn-default" href="{{R.PATH}}.xres-create">mount</a>
+      <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-create"><span class="glyphicon glyphicon-hdd"></span> Mount Resource</a>
     </div>
 
     <table class="table ui-dropzone">
@@ -31,12 +31,10 @@
         {{#if isContentResource}}
           <tr>
             <td>
-              <i class="glyphicon glyphicon-file"></i> <a href="{{path}}.xedit">{{name}}</a>
+              <i class="glyphicon glyphicon-file"></i> <a href="{{path}}{{C.X}}edit">{{name}}</a>
             </td>
             <td>
               {{renderType}}
-            </td>
-            <td class="text-right">
             </td>
           </tr>
         {{else}}
@@ -46,14 +44,9 @@
             </td>
             <td>
               {{#if renderType}}
-                <a href="{{R.PATH}}/{{name}}.xres-renderer">{{renderType}}</a>
+                <a href="{{R.PATH}}/{{name}}{{C.X}}res-renderer">{{renderType}}</a>
               {{else}}
                 {{type}}
-              {{/if}}
-            </td>
-            <td class="text-right">
-              {{#if type}}
-                <a target="_blank" href="{{R.PATH}}/{{name}}.xhtml">[v]</a>
               {{/if}}
             </td>
           </tr>
