@@ -1,43 +1,47 @@
-window.data = {
-  a: {
-    b: {
-      _pt: 'xxx',
-      _rt: 'person',
-      name: 'Ondrej',
-      last: 'Florian'
-    },
-    c: {
-      _rt: 'personB',
-      name: 'Sonja'
-    }
-  },
-  'f.txt': {
+document.body.innerHTML = '';
+
+var userContentVal = {
+  'readme.txt': {
     _ct: 'text/plain',
-    _content: '\n\nhello  '
+    _content: 'this resource has editable text content'
   }
 };
 
-document.body.innerHTML = '';
+var userTemplateVal = {
+};
 
-var stemps = new ObjectResource(window.templates).wrap({
+function restoreLocalData() {
+  try {
+    //try restore data from the localStorage
+    var data = localStorage.getItem('userContent');
+    if (data) userContentVal = JSON.parse(data);
+
+    data = localStorage.getItem('userTemplate');
+    if (data) userTemplateVal = JSON.parse(data);
+  }
+  catch (ex) {
+    console.log('unable to persist data in localStorage');
+    console.log(ex);
+  }
+}
+
+restoreLocalData();
+
+//user content
+var userContent = new ObjectResource(userContentVal);
+
+//system templates loaded by <script> and exposed as window.templates
+var systemTemplates = new ObjectResource(window.templates).wrap({
   getType: function() { return 'resource/templates'; }
 });
 
-var utemps = new ObjectResource({}).wrap({
+//tempates for our own renderTypes
+var userTemplate = new ObjectResource(userTemplateVal).wrap({
   getType: function() { return 'resource/templates'; }
 });
 
-var root = new RootResource({
-  'content': new ObjectResource(window.data),
-  'system-templates': stemps,
-  'user-templates': utemps
-});
-var rres = new ResourceResolver(root);
-
-//template resolvers
-
-//resource for default function-based renderers
-var def = new ObjectResource({
+//default templates
+var defaultTemplates = new ObjectResource({
   'resource': {
     'error': {
       'default.func': function (res, writer, context) {
@@ -53,12 +57,18 @@ var def = new ObjectResource({
   }
 });
 
-//resource for file-based renderers
+//root resource can combine different resource together
+//we are exposing systemTemplates and userTemplate so that templates become accessible
+var root = new RootResource({
+  'content': userContent,
+  'system-templates': systemTemplates,
+  'user-templates': userTemplate
+});
 
-//resolver will try the file-based renderers first and then fall-back on function-based ones
-var rtmp = new MultiResourceResolver([utemps, stemps, def]);
+var rres = new ResourceResolver(root);
+var rtmp = new MultiResourceResolver([userTemplate, systemTemplates, defaultTemplates]);
 
-//configuration which is passed through context to the renderers
+//configuration which is passed through context to the renderer, accessible as C.something
 var config = {
   'X': '.x-',
   'USER_TEMPLATES':'/user-templates',
@@ -80,6 +90,19 @@ handler.registerFactory('js', new JSRendererFactory());
 handler.registerFactory('hbs', new HBSRendererFactory());
 handler.registerFactory('func', new InterFuncRendererFactory()); //internal functions, usefull for function-based renderers
 
+//persist data in localStorage
+handler.addEventListener('stored', function(path, data) {
+  try {
+    localStorage.setItem('userTemplate', JSON.stringify(userTemplate.values));
+    localStorage.setItem('userContent', JSON.stringify(userContent.values));
+  }
+  catch (ex) {
+    console.log('unable to persist data in localStorage');
+    console.log(ex);
+  }
+});
+
+//start by listing content of the root resource
 var path = location.hash.substr(1);
 if (!path) path = '/.x-res-list';
 handler.handleRequest(path);
