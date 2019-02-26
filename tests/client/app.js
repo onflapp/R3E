@@ -1,5 +1,7 @@
+//clear the body to reduce flashing
 document.body.innerHTML = '';
 
+//sample content as javascript object
 var userContentVal = {
   'readme.txt': {
     _ct: 'text/plain',
@@ -47,12 +49,12 @@ var defaultTemplates = new ObjectResource({
       'default.func': function (res, writer, context) {
         res.read(writer, null);
       }
-    }
-  },
-  'any': {
-    'default.func': function (res, writer, context) {
-      //default is to take the existing resource path and render it as html
-      context.forwardRequest(context.getCurrentResourcePath() + '.x-res-list');
+    },
+    'root': {
+      'default.func': function (res, writer, context) {
+        //default is to take the existing resource path and render it as html
+        context.forwardRequest(context.getCurrentResourcePath() + '.x-res-list');
+      }
     }
   }
 });

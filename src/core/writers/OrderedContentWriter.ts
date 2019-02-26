@@ -64,6 +64,7 @@ class OrderedContentWriter implements ContentWriter {
       //clear references, helps with garbage collection
       writer.parentWriter = null;
       writer.contentQueue = new Array();
+      writer.contentType = null;
     };
 
     delegate.start(this.contentType);

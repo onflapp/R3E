@@ -2,6 +2,6 @@
   var map = context.makeContextMap(res);
 
   writer.start('application/json');
-  writer.write(JSON.stringify(map));
+  writer.write(JSON.stringify(map, null, 2));
   writer.end();
 });

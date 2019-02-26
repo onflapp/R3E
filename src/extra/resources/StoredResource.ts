@@ -136,7 +136,17 @@ abstract class StoredResource extends Resource {
   }
 
   public importContent(func, callback) {
-    func(this.getWriter(), callback);
+    let self = this;
+    let path = this.getStoragePath();
+
+    this.ensurePathExists(path, function (rv) {
+      if (rv) {
+        func(self.getWriter(), callback);
+      }
+      else {
+        callback();
+      }
+    });
   }
 
   public removeChildResource(name: string, callback) {

@@ -3,6 +3,9 @@
 
   res.listChildrenResources(function (children) {
     var rv = [];
+    children.sort(function(a, b) {
+      return a.getName().localeCompare(b.getName());
+    });
 
     for (var i = 0; i < children.length; i++) {
       var res = children[i];

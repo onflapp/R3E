@@ -45,9 +45,7 @@ class FileResource extends StoredResource {
   }
 
   public getType(): string {
-    var st = this.values['_st'];
-
-    if (st) return st;
+    if (!this.isDirectory) return 'resource/content';
     else return 'resource/node';
   }
 
@@ -75,8 +73,7 @@ class FileResource extends StoredResource {
   }
 
   protected ensurePathExists(path, callback) {
-    let mask = '0755';
-    this.fs.mkdir(path, mask, function (err) {
+    this.fs.mkdirs(path, function (err) {
       if (!err) {
         callback(true);
       }
@@ -142,17 +139,10 @@ class FileResource extends StoredResource {
     });
   }
 
-  public importContent(func, callback) {
-    func(this.getWriter(), callback);
-  }
-
   public removeChildResource(name: string, callback) {
     let self = this;
+    let path = this.getStoragePath(name);
     super.removeChildResource(name, function () {
-      let resolve = require('path').resolve;
-      let path = Utils.filename_path_append(self.basePath, name);
-
-      path = resolve(path);
       if (path === '' || path === '/') {
         console.log('invalid path');
         callback(null);

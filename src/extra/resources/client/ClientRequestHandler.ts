@@ -14,6 +14,8 @@ class DOMContentWriter implements ContentWriter {
   }
 
   protected attachListeners() {
+    if (document.body.dataset['DOMContentWriter_attached']) return;
+
     let requestHandler = this.requestHandler;
     document.body.addEventListener('submit', function (evt) {
       let target = evt.target;
@@ -28,6 +30,7 @@ class DOMContentWriter implements ContentWriter {
     document.body.addEventListener('click', function (evt) {
       let target = evt.target as HTMLElement;
       let href = target.getAttribute('href');
+      let tar = target.getAttribute('target');
 
       if (!href) href = target.parentElement.getAttribute('href');
       if (href && href.charAt(0) === '/' && evt.button === 0 && !evt.ctrlKey && !evt.altKey && !evt.shiftKey) {
@@ -38,6 +41,8 @@ class DOMContentWriter implements ContentWriter {
         });
       }
     });
+
+    document.body.dataset['DOMContentWriter_attached'] = 'true';
   }
 
   protected compareElements(lista, listb) {

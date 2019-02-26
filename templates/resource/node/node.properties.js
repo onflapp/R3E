@@ -5,6 +5,10 @@
   var names = res.getPropertyNames();
   var props = context.getRequestProperties();
 
+  names.sort(function(a, b) {
+    return a.getName().localeCompare(b.getName());
+  });
+
   for (var i = 0; i < names.length; i++) {
     var name = names[i];
     var val = res.getProperty(name);

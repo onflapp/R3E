@@ -1400,6 +1400,7 @@ var OrderedContentWriter = (function () {
             }
             writer.parentWriter = null;
             writer.contentQueue = new Array();
+            writer.contentType = null;
         };
         delegate.start(this.contentType);
         writeOutQueue(this);
@@ -2205,7 +2206,16 @@ var StoredResource = (function (_super) {
         });
     };
     StoredResource.prototype.importContent = function (func, callback) {
-        func(this.getWriter(), callback);
+        var self = this;
+        var path = this.getStoragePath();
+        this.ensurePathExists(path, function (rv) {
+            if (rv) {
+                func(self.getWriter(), callback);
+            }
+            else {
+                callback();
+            }
+        });
     };
     StoredResource.prototype.removeChildResource = function (name, callback) {
         this.childNames.splice(this.childNames.indexOf(name), 1);
@@ -2469,6 +2479,8 @@ var DOMContentWriter = (function () {
         return p.innerHTML;
     };
     DOMContentWriter.prototype.attachListeners = function () {
+        if (document.body.dataset['DOMContentWriter_attached'])
+            return;
         var requestHandler = this.requestHandler;
         document.body.addEventListener('submit', function (evt) {
             var target = evt.target;
@@ -2481,6 +2493,7 @@ var DOMContentWriter = (function () {
         document.body.addEventListener('click', function (evt) {
             var target = evt.target;
             var href = target.getAttribute('href');
+            var tar = target.getAttribute('target');
             if (!href)
                 href = target.parentElement.getAttribute('href');
             if (href && href.charAt(0) === '/' && evt.button === 0 && !evt.ctrlKey && !evt.altKey && !evt.shiftKey) {
@@ -2490,6 +2503,7 @@ var DOMContentWriter = (function () {
                 });
             }
         });
+        document.body.dataset['DOMContentWriter_attached'] = 'true';
     };
     DOMContentWriter.prototype.compareElements = function (lista, listb) {
         var rv = [];
@@ -2883,9 +2897,8 @@ var FileResource = (function (_super) {
         return new FileResource(name, path);
     };
     FileResource.prototype.getType = function () {
-        var st = this.values['_st'];
-        if (st)
-            return st;
+        if (!this.isDirectory)
+            return 'resource/content';
         else
             return 'resource/node';
     };
@@ -2909,8 +2922,7 @@ var FileResource = (function (_super) {
         callback(true);
     };
     FileResource.prototype.ensurePathExists = function (path, callback) {
-        var mask = '0755';
-        this.fs.mkdir(path, mask, function (err) {
+        this.fs.mkdirs(path, function (err) {
             if (!err) {
                 callback(true);
             }
@@ -2970,15 +2982,10 @@ var FileResource = (function (_super) {
             }
         });
     };
-    FileResource.prototype.importContent = function (func, callback) {
-        func(this.getWriter(), callback);
-    };
     FileResource.prototype.removeChildResource = function (name, callback) {
         var self = this;
+        var path = this.getStoragePath(name);
         _super.prototype.removeChildResource.call(this, name, function () {
-            var resolve = require('path').resolve;
-            var path = Utils.filename_path_append(self.basePath, name);
-            path = resolve(path);
             if (path === '' || path === '/') {
                 console.log('invalid path');
                 callback(null);

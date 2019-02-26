@@ -31,11 +31,12 @@
       <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
     </div>
 
-  {{#if renderType}}
     <div class="btn-group btn-group-sm pull-right">
-      <a class="btn btn-default" target="_blank" href="{{path}}"><span class="glyphicon glyphicon-eye-open"></span> Render As Type "{{renderType}}"</a>
-    </div>
+      <a class="btn btn-default" target="_blank" href="{{path}}{{C.X}}context"><span class="glyphicon glyphicon-cutlery"></span> Context Dump</a>
+  {{#if renderType}}
+      <a class="btn btn-default" target="_blank" href="{{path}}"><span class="glyphicon glyphicon-eye-open"></span> Render As "{{renderType}}"</a>
   {{/if}}
+    </div>
   </div>
 
     <table class="table table-bordered table-condensed small text-muted" style="background-color:lightgray">

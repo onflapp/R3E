@@ -3,38 +3,45 @@ var app = express();
 
 var r = require('../../dist/r3elib');
 
-var content = new r.FileResource('./tests/content');
-var temps = new r.FileResource('./templates');
-var root = new r.RootResource({
-  'content': content,
-  'templates': temps,
-});
-var rres = new r.ResourceResolver(root);
-
-//resource for default function-based renderers
-var def = new r.ObjectResource({
+//default templates
+var defaultTemplates = new r.ObjectResource({
   'resource': {
     'error': {
-      'default': function (res, writer, context) {
+      'default.func': function (res, writer, context) {
         res.read(writer, null);
+      },
+    },
+    'root': {
+      'default.func': function (res, writer, context) {
+        //default is to take the existing resource path and render it as html
+        context.forwardRequest(context.getCurrentResourcePath() + '.x-res-list');
       }
-    }
-  },
-  'any': {
-    'default.func': function (res, writer, context) {
-      //default is to take the existing resource path and render it as html
-      context.forwardRequest(context.getCurrentResourcePath() + '.x-res-list');
     }
   }
 });
 
+var userContent = new r.FileResource('./tests/content');
+var userTemplate = new r.FileResource('./tests/templates').wrap({
+  getType: function() { return 'resource/templates'; }
+});
 
-//resolver will try the file-based renderers first and then fall-back on function-based ones
-var rtmp = new r.MultiResourceResolver([temps, def]);
+var systemTemplates = new r.FileResource('./templates').wrap({
+  getType: function() { return 'resource/templates'; }
+});
+
+var root = new r.RootResource({
+  'content': userContent,
+  'system-templates': systemTemplates,
+  'user-templates': userTemplate
+});
+
+var rres = new r.ResourceResolver(root);
+var rtmp = new r.MultiResourceResolver([userTemplate, systemTemplates, defaultTemplates]);
 
 //configuration which is passed through context to the renderers
 var config = {
   'X': '.x-',
+  'USER_TEMPLATES':'/user-templates',
   'BOOTSTRAP_CSS': 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css',
   'CODEMIRROR_JS': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/codemirror.min.js',
   'CODEMIRROR_CSS': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/codemirror.min.css',
