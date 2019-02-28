@@ -34,6 +34,5 @@ var handler = new r.ResourceRequestHandler(rres, tres, {
 
 handler.registerFactory('js', new r.JSRendererFactory());
 handler.handleStore('/in', {
-  ':copyto': '/out',
-  ':forward': '/out.xhtml'
+  ':copyto': '/out'
 });

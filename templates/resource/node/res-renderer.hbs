@@ -38,10 +38,13 @@
             <li>contentType: mime/{{contentType}}</li>
             {{/if}}
             <li>resourceType: {{type}}</li>
+            {{#if superType}}
             <li>superType: {{superType}}</li>
+            {{/if}}
+            <li>fallback: any/any</li>
           </ol>
 
-          <h4>User Defined Renderers</h4>
+          <h4>Set User Defined Renderers</h4>
           <p>User defined renderer templates are stored in <a href="{{C.USER_TEMPLATES}}/{{renderType}}{{C.X}}res-list">{{C.USER_TEMPLATES}}/{{renderType}}</a></p>
 
           <div class="form-horizontal">
@@ -64,9 +67,8 @@
                 </div>
               </div>
             </form>
-            {{#if renderType}}
-              <a class="btn btn-success" href="{{C.USER_TEMPLATES}}{{C.X}}res-create/{{renderType}}/default">Edit default template for type {{renderType}}</a>
-            {{/if}}
+            
+            <a class="btn btn-success" href="{{C.USER_TEMPLATES}}{{C.X}}res-create">Create New Template</a>
           </div>
 
       </div>

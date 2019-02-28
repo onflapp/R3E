@@ -21,32 +21,37 @@ class ResourceRenderer {
   constructor(resolver: ResourceResolver) {
     this.rendererResolver = resolver;
     this.rendererFactories = new Map();
-
-    //this.rendererFactories.set('', new InterFuncRendererFactory());
   }
 
   protected makeRenderTypePaths(renderTypes: Array < string > , selectors: Array < string > ): Array < string > {
     let rv = [];
     let factories = this.rendererFactories;
+    let self = this;
 
     for (let i = 0; i < renderTypes.length; i++) {
       factories.forEach(function (val, key, map) {
         if (key == '') return;
 
-        let f = Utils.filename(renderTypes[i]);
+        let name = Utils.filename(renderTypes[i]);
         for (let z = 0; z < selectors.length; z++) {
+          let rt = renderTypes[i];
           let sel = selectors[z];
-          //let p = renderTypes[i] + '.' + sel;
-          //rv.push(p + '.' + key);
 
-          let p = renderTypes[i] + '/' + f + '.' + sel;
-          rv.push(p + '.' + key);
-
-          p = renderTypes[i] + '/' + sel;
-          rv.push(p + '.' + key);
+          rv = rv.concat(self.makeRenderTypePatterns(key, rt, name, sel));
         }
       });
     }
+
+    return rv;
+  }
+
+  protected makeRenderTypePatterns(factoryType: string, renderType: string, name: string, sel: string): Array <string> {
+    let rv = [];
+    let p = renderType + '/' + name + '.' + sel;
+    rv.push(p + '.' + factoryType);
+
+    p = renderType + '/' + sel;
+    rv.push(p + '.' + factoryType);
 
     return rv;
   }

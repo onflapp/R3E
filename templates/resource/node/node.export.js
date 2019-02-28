@@ -19,7 +19,7 @@
       else data['_content'] = buff;
 
       if (count > 0) writer.write('\n,\n');
-      writer.write(JSON.stringify(data));
+      writer.write(JSON.stringify(data, null, 2));
 
       processing--;
       done();
@@ -46,7 +46,7 @@
       }
       else {
         if (count > 0) writer.write('\n,\n');
-        writer.write(JSON.stringify(data.values));
+        writer.write(JSON.stringify(data.values, null, 2));
       }
       count++;
     },

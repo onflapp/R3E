@@ -55,8 +55,7 @@ module.exports = function (grunt) {
       }
     },
     exec: {
-      archive_templates: '/bin/echo -n "window.templates=" > ./dist/templates.js ; node ./tests/server/files2json.js templates >> ./dist/templates.js',
-      archive_content: '/bin/echo -n "window.content="   > ./dist/content.js   ; node ./tests/server/files2json.js templates >> ./dist/content.js'
+      archive_templates: '/bin/echo -n "window.templates=" > ./dist/templates.js ; node ./tests/server/files2json.js templates >> ./dist/templates.js'
     },
     copy: {
       dist: {
@@ -91,7 +90,6 @@ module.exports = function (grunt) {
     'ts:compile_lib',
     'copy:dist',
     'exec:archive_templates',
-    'exec:archive_content',
     'appcache:all'
   ]);
 

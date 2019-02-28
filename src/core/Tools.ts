@@ -20,10 +20,9 @@ class Tools {
       processing++;
 
       res.listChildrenNames(function (names) {
-        processing--;
-        processing += names.length;
 
         for (var i = 0; i < names.length; i++) {
+          processing++;
           let name = names[i];
 
           res.resolveChildResource(name, function (r) {
@@ -40,6 +39,7 @@ class Tools {
           }, !resolve);
         }
 
+        processing--;
         done();
       });
     };

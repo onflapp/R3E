@@ -680,23 +680,30 @@ var ResourceRenderer = (function () {
     ResourceRenderer.prototype.makeRenderTypePaths = function (renderTypes, selectors) {
         var rv = [];
         var factories = this.rendererFactories;
+        var self = this;
         var _loop_3 = function (i) {
             factories.forEach(function (val, key, map) {
                 if (key == '')
                     return;
-                var f = Utils.filename(renderTypes[i]);
+                var name = Utils.filename(renderTypes[i]);
                 for (var z = 0; z < selectors.length; z++) {
+                    var rt = renderTypes[i];
                     var sel = selectors[z];
-                    var p = renderTypes[i] + '/' + f + '.' + sel;
-                    rv.push(p + '.' + key);
-                    p = renderTypes[i] + '/' + sel;
-                    rv.push(p + '.' + key);
+                    rv = rv.concat(self.makeRenderTypePatterns(key, rt, name, sel));
                 }
             });
         };
         for (var i = 0; i < renderTypes.length; i++) {
             _loop_3(i);
         }
+        return rv;
+    };
+    ResourceRenderer.prototype.makeRenderTypePatterns = function (factoryType, renderType, name, sel) {
+        var rv = [];
+        var p = renderType + '/' + name + '.' + sel;
+        rv.push(p + '.' + factoryType);
+        p = renderType + '/' + sel;
+        rv.push(p + '.' + factoryType);
         return rv;
     };
     ResourceRenderer.prototype.makeRenderingFunction = function (path, resource, callback) {
@@ -1264,9 +1271,8 @@ var Tools = (function () {
         var visit_children = function (path, name, res) {
             processing++;
             res.listChildrenNames(function (names) {
-                processing--;
-                processing += names.length;
                 var _loop_4 = function () {
+                    processing++;
                     var name_7 = names[i];
                     res.resolveChildResource(name_7, function (r) {
                         var rpath = Utils.filename_path_append(path, name_7);
@@ -1281,6 +1287,7 @@ var Tools = (function () {
                 for (var i = 0; i < names.length; i++) {
                     _loop_4();
                 }
+                processing--;
                 done();
             });
         };
