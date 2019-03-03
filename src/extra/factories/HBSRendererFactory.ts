@@ -147,7 +147,8 @@ class HBSRendererFactory extends TemplateRendererFactory {
       let result = null;
 
       if (arguments.length < 3) {
-        throw new Error("Handlerbars Helper 'compare' needs 2 parameters");
+        if (lvalue) return operator.fn(this);
+        else return operator.inverse(this);
       }
 
       if (options === undefined) {

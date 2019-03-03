@@ -64,6 +64,7 @@ class ObjectContentResourceWriter implements ContentWriter {
   private values;
   private isbase64;
   private istext;
+  private buffer = [];
 
   constructor(obj) {
     this.values = obj;
@@ -84,6 +85,15 @@ class ObjectContentResourceWriter implements ContentWriter {
   }
 
   public write(data: any) {
+    this.buffer.push(data);
+  }
+
+  public error(error: Error) {}
+
+  public end(callback: any) {
+    //TODO: handling of non-string data is very bad here, it needs to be fixed
+    let data = this.buffer[0];
+
     if (data instanceof ArrayBuffer) {
       if (this.istext && typeof window !== 'undefined') this.values['_content'] = new window['TextDecoder']('utf-8').decode(data);
       else this.values['_content64'] = Utils.ArrayBuffer2base64(data);
@@ -96,13 +106,10 @@ class ObjectContentResourceWriter implements ContentWriter {
       this.values['_content64'] = data;
     }
     else {
-      this.values['_content'] = data;
+      this.values['_content'] = this.buffer.join('');
     }
-  }
 
-  public error(error: Error) {}
-
-  public end(callback: any) {
+    this.buffer = [];
     if (callback) callback();
   }
 }

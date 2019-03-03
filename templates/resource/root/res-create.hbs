@@ -17,7 +17,7 @@
       <div class="modal-content">
         <div class="modal-header">
           <a class="close" href="{{R.PATH_APPEND}}../{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
-          <h4 class="modal-title">Mount Object Resource</h4>
+          <h4 class="modal-title">Create Temportary Object Resource</h4>
         </div>
         <div class="modal-body">
 
@@ -29,14 +29,14 @@
             <li>{{R.NAME}}</li>
           </ol>
 
-          <h6>Mount ObjectResource to:</h6>
+          <h6>Create ObjectResource as:</h6>
 
           <div class="form-horizontal">
             <div class="form-horizontal">
-              <form method="post" action="{{R.PATH}}">
+              <form method="post" action="{{R.PATH}}{:name}">
                 <div class="form-group">
                   <div class="col-sm-8">
-                    <input class="form-control" name="name" value="" autocomplete="off" placeholder="name">
+                    <input class="form-control" name=":name|newUUID" value="" autocomplete="off" placeholder="name">
                     <input type="hidden" name=":forward" value="{{R.PATH}}{{C.X}}res-list">
                   </div>
                   <div class="col-sm-2">

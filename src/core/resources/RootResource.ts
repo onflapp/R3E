@@ -17,21 +17,6 @@ class RootResource extends ObjectResource {
         callback(rv);
       });
     }
-    else callback(rv);
+    else super.resolveChildResource(name, callback, walking);
   }
-
-  public allocateChildResource(name: string, callback: ResourceCallback): void {
-    callback(null);
-  }
-
-  public importProperties(data: any, callback) {
-    let name = data['name'];
-    if (name) {
-      let res = new ObjectResource({}, name);
-      this.values[name] = res;
-    }
-
-    callback();
-  }
-
 }

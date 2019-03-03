@@ -57,12 +57,12 @@ class ResourceRequestContext {
     this.resourceRequestHandler.renderResource(resourcePath, selector, context, callback);
   }
 
-  public resolveResource(resourcePath: string, callback: any) {
+  public resolveResource(resourcePath: string, callback: ResourceCallback) {
     let rres = this.getResourceResolver();
     rres.resolveResource(resourcePath, callback);
   }
 
-  public resolveTemplateResource(resourcePath: string, callback: any) {
+  public resolveTemplateResource(resourcePath: string, callback: ResourceCallback) {
     let trres = this.getTemplateResourceResolver();
     trres.resolveResource(resourcePath, callback);
   }
@@ -91,10 +91,18 @@ class ResourceRequestContext {
     this.resourceRequestHandler.storeResource(resourcePath, data, callback);
   }
 
+  public storeAndResolveResource(resourcePath: string, data: any, callback) {
+    let rres = this.getResourceResolver();
+    this.resourceRequestHandler.storeResource(resourcePath, data, function() {
+      rres.resolveResource(resourcePath, callback);
+    });
+  }
+
   public makeContextMap(res: Data) {
     let map = {};
 
     if (res instanceof Resource) {
+
       map['renderType'] = res.getRenderType();
       map['renderTypes'] = res.getRenderTypes();
       if (res.getSuperType() !== res.getType()) {
@@ -103,7 +111,12 @@ class ResourceRequestContext {
       map['type'] = res.getType();
       map['name'] = res.getName();
       map['isContentResource'] = res.isContentResource();
-      map['contentType'] = res.getContentType();
+
+      let ctype = res.getContentType();
+      if (ctype) {
+        map['isTextContentResource'] = Utils.is_texttype(ctype);
+        map['contentType'] = ctype;
+      }
       map['path'] = this.pathInfo.resourcePath;
       map['_'] = res.getProperties();
     }

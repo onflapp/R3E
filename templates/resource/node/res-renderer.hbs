@@ -33,7 +33,11 @@
 
           <p>Renderer will take following types into consideration</p>
           <ol>
+            {{#if renderType}}
             <li>renderType: {{renderType}}</li>
+            {{else}}
+            <li>renderType: <b>no type set</b></li>
+            {{/if}}
             {{#if contentType}}
             <li>contentType: mime/{{contentType}}</li>
             {{/if}}
@@ -48,7 +52,7 @@
           <p>User defined renderer templates are stored in <a href="{{C.USER_TEMPLATES}}/{{renderType}}{{C.X}}res-list">{{C.USER_TEMPLATES}}/{{renderType}}</a></p>
 
           <div class="form-horizontal">
-            <form method="post" action="{{R.PATH}}{{C.X}}res-renderer">
+            <form method="post" action="{{R.PATH}}">
               <div class="form-group">
                 <label class="col-sm-2">render type</label>
                 <div class="col-sm-8">

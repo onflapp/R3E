@@ -19,11 +19,14 @@ class BufferedContentWriter implements ContentWriter {
     if (this.content.length === 0) {
       this.callback(this.contentType, null);
     }
-    else if (this.contentType && this.contentType.indexOf('text/') === 0) {
+    else if (this.contentType && Utils.is_texttype(this.contentType)) {
       this.callback(this.contentType, this.content.join(''));
     }
-    else {
+    else if (this.content.length == 1) {
       this.callback(this.contentType, this.content[0]);
+    }
+    else {
+      this.callback(this.contentType, this.content);
     }
   }
 }

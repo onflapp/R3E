@@ -43,26 +43,7 @@
         <li class="active">{{R.NAME}}</li>
       </ol>
 
-      {{#match contentType "startsWith" "application/javascript"}}
-        <form method="post" action="{{R.PATH}}{{R.SUFFIX}}">
-
-          <div class="btn-group btn-group-sm">
-            <a class="btn btn-default" href="{{R.PATH}}/../{{C.X}}res-list"><span class="glyphicon glyphicon-th-list"></span> List</a>
-            <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
-          </div>
-          <div class="btn-group btn-group-sm pull-right">
-            <button class="btn btn-default" type="submit"><span class="glyphicon glyphicon-floppy-save"></span> Save</button>
-          </div>
-
-          <div id="editor-container">
-            <textarea autocorrect="off" autocapitalize="none" autocomplete="off" autofocus="on" spellcheck="false" name="_content">
-{{include-safe "." "text"}}</textarea>
-          </div>
-          <input type="hidden" name="_rt" value="resource/content"></input>
-          <input type="hidden" name="_ct" value="{{contentType}}"></input>
-        </form>
-      {{/match}}
-      {{#match contentType "startsWith" "text/"}}
+      {{#match isTextContentResource}}
         <form method="post" action="{{R.PATH}}{{R.SUFFIX}}">
 
           <div class="btn-group btn-group-sm">

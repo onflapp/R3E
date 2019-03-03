@@ -237,7 +237,7 @@ class ResourceRequestHandler extends EventDispatcher {
     }
     else if (path.charAt(0) === '/') {
       info.path = Utils.unescape(Utils.absolute_path(path));
-      info.selector = 'default';
+      info.selector = null;
 
       info.dirname = Utils.filename_dir(info.path);
       info.name = Utils.filename(info.path);
@@ -289,15 +289,16 @@ class ResourceRequestHandler extends EventDispatcher {
     let info = this.parsePath(rpath);
     let context = this.makeContext(info);
     let out = this.contentWriter.makeNestedContentWriter();
+    let sel = info.selector?info.selector:'default';
 
     try {
 
       if (info) {
         rres.resolveResource(info.resourcePath, function (res) {
-          if (res) rrend.renderResource(res, info.selector, out, context);
+          if (res) rrend.renderResource(res, sel, out, context);
           else {
             let res = new NotFoundResource(info.resourcePath);
-            rrend.renderResource(res, info.selector, out, context);
+            rrend.renderResource(res, sel, out, context);
           }
           out.end(null);
         });
@@ -385,17 +386,25 @@ class ResourceRequestHandler extends EventDispatcher {
         let storeto = Utils.absolute_path(ddata.values[':storeto']);
         if (!storeto) storeto = info.resourcePath;
 
-        self.storeResource(storeto, ddata.values, function (error) {
-          if (!error) {
-            let forward = Utils.absolute_path(ddata.values[':forward']);
+        if (info.selector && ddata.values[':forward']) {
+          let forward = Utils.absolute_path(ddata.values[':forward']);
+          self.renderResource(info.resourcePath, info.selector, context, function(ctype, content) {
+            self.forwardRequest(forward);
+          });
+        }
+        else {
+          self.storeResource(storeto, ddata.values, function (error) {
+            if (!error) {
+              let forward = Utils.absolute_path(ddata.values[':forward']);
 
-            if (forward) self.forwardRequest(forward);
-            else self.renderRequest(rpath);
-          }
-          else {
-            render_error(error);
-          }
-        });
+              if (forward) self.forwardRequest(forward);
+              else self.renderRequest(rpath);
+            }
+            else {
+              render_error(error);
+            }
+          });
+        }
       });
     }
     else {

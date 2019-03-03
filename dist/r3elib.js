@@ -840,6 +840,12 @@ var ResourceRequestContext = (function () {
     ResourceRequestContext.prototype.storeResource = function (resourcePath, data, callback) {
         this.resourceRequestHandler.storeResource(resourcePath, data, callback);
     };
+    ResourceRequestContext.prototype.storeAndResolveResource = function (resourcePath, data, callback) {
+        var rres = this.getResourceResolver();
+        this.resourceRequestHandler.storeResource(resourcePath, data, function () {
+            rres.resolveResource(resourcePath, callback);
+        });
+    };
     ResourceRequestContext.prototype.makeContextMap = function (res) {
         var map = {};
         if (res instanceof Resource) {
@@ -851,7 +857,11 @@ var ResourceRequestContext = (function () {
             map['type'] = res.getType();
             map['name'] = res.getName();
             map['isContentResource'] = res.isContentResource();
-            map['contentType'] = res.getContentType();
+            var ctype = res.getContentType();
+            if (ctype) {
+                map['isTextContentResource'] = Utils.is_texttype(ctype);
+                map['contentType'] = ctype;
+            }
             map['path'] = this.pathInfo.resourcePath;
             map['_'] = res.getProperties();
         }
@@ -1078,7 +1088,7 @@ var ResourceRequestHandler = (function (_super) {
         }
         else if (path.charAt(0) === '/') {
             info.path = Utils.unescape(Utils.absolute_path(path));
-            info.selector = 'default';
+            info.selector = null;
             info.dirname = Utils.filename_dir(info.path);
             info.name = Utils.filename(info.path);
             info.resourcePath = info.path;
@@ -1121,14 +1131,15 @@ var ResourceRequestHandler = (function (_super) {
         var info = this.parsePath(rpath);
         var context = this.makeContext(info);
         var out = this.contentWriter.makeNestedContentWriter();
+        var sel = info.selector ? info.selector : 'default';
         try {
             if (info) {
                 rres.resolveResource(info.resourcePath, function (res) {
                     if (res)
-                        rrend.renderResource(res, info.selector, out, context);
+                        rrend.renderResource(res, sel, out, context);
                     else {
                         var res_1 = new NotFoundResource(info.resourcePath);
-                        rrend.renderResource(res_1, info.selector, out, context);
+                        rrend.renderResource(res_1, sel, out, context);
                     }
                     out.end(null);
                 });
@@ -1188,18 +1199,26 @@ var ResourceRequestHandler = (function (_super) {
                 var storeto = Utils.absolute_path(ddata.values[':storeto']);
                 if (!storeto)
                     storeto = info.resourcePath;
-                self.storeResource(storeto, ddata.values, function (error) {
-                    if (!error) {
-                        var forward = Utils.absolute_path(ddata.values[':forward']);
-                        if (forward)
-                            self.forwardRequest(forward);
-                        else
-                            self.renderRequest(rpath);
-                    }
-                    else {
-                        render_error(error);
-                    }
-                });
+                if (info.selector && ddata.values[':forward']) {
+                    var forward_1 = Utils.absolute_path(ddata.values[':forward']);
+                    self.renderResource(info.resourcePath, info.selector, context, function (ctype, content) {
+                        self.forwardRequest(forward_1);
+                    });
+                }
+                else {
+                    self.storeResource(storeto, ddata.values, function (error) {
+                        if (!error) {
+                            var forward = Utils.absolute_path(ddata.values[':forward']);
+                            if (forward)
+                                self.forwardRequest(forward);
+                            else
+                                self.renderRequest(rpath);
+                        }
+                        else {
+                            render_error(error);
+                        }
+                    });
+                }
             });
         }
         else {
@@ -1435,11 +1454,14 @@ var BufferedContentWriter = (function () {
         if (this.content.length === 0) {
             this.callback(this.contentType, null);
         }
-        else if (this.contentType && this.contentType.indexOf('text/') === 0) {
+        else if (this.contentType && Utils.is_texttype(this.contentType)) {
             this.callback(this.contentType, this.content.join(''));
         }
-        else {
+        else if (this.content.length == 1) {
             this.callback(this.contentType, this.content[0]);
+        }
+        else {
+            this.callback(this.contentType, this.content);
         }
     };
     return BufferedContentWriter;
@@ -1504,6 +1526,7 @@ var ObjectResource = (function (_super) {
 }(Resource));
 var ObjectContentResourceWriter = (function () {
     function ObjectContentResourceWriter(obj) {
+        this.buffer = [];
         this.values = obj;
     }
     ObjectContentResourceWriter.prototype.start = function (ctype) {
@@ -1519,6 +1542,11 @@ var ObjectContentResourceWriter = (function () {
         this.values['_pt'] = 'resource/content';
     };
     ObjectContentResourceWriter.prototype.write = function (data) {
+        this.buffer.push(data);
+    };
+    ObjectContentResourceWriter.prototype.error = function (error) { };
+    ObjectContentResourceWriter.prototype.end = function (callback) {
+        var data = this.buffer[0];
         if (data instanceof ArrayBuffer) {
             if (this.istext && typeof window !== 'undefined')
                 this.values['_content'] = new window['TextDecoder']('utf-8').decode(data);
@@ -1535,11 +1563,9 @@ var ObjectContentResourceWriter = (function () {
             this.values['_content64'] = data;
         }
         else {
-            this.values['_content'] = data;
+            this.values['_content'] = this.buffer.join('');
         }
-    };
-    ObjectContentResourceWriter.prototype.error = function (error) { };
-    ObjectContentResourceWriter.prototype.end = function (callback) {
+        this.buffer = [];
         if (callback)
             callback();
     };
@@ -1604,18 +1630,7 @@ var RootResource = (function (_super) {
             });
         }
         else
-            callback(rv);
-    };
-    RootResource.prototype.allocateChildResource = function (name, callback) {
-        callback(null);
-    };
-    RootResource.prototype.importProperties = function (data, callback) {
-        var name = data['name'];
-        if (name) {
-            var res = new ObjectResource({}, name);
-            this.values[name] = res;
-        }
-        callback();
+            _super.prototype.resolveChildResource.call(this, name, callback, walking);
     };
     return RootResource;
 }(ObjectResource));
@@ -1993,7 +2008,10 @@ var HBSRendererFactory = (function (_super) {
             var operators = null;
             var result = null;
             if (arguments.length < 3) {
-                throw new Error("Handlerbars Helper 'compare' needs 2 parameters");
+                if (lvalue)
+                    return operator.fn(this);
+                else
+                    return operator.inverse(this);
             }
             if (options === undefined) {
                 options = rvalue;

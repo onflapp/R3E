@@ -23,7 +23,7 @@
 
     <div class="btn-group btn-group-sm" style="margin-bottom:20px">
       <a class="btn btn-default" href="{{C.USER_TEMPLATES}}{{C.X}}res-create"><span class="glyphicon glyphicon-fire"></span> Create Template</a>
-      <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-create"><span class="glyphicon glyphicon-hdd"></span> Mount Resource</a>
+      <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-create"><span class="glyphicon glyphicon-hdd"></span> Create Temporary Resource</a>
     </div>
 
     <table class="table ui-dropzone">
@@ -37,6 +37,11 @@
             <td>
               {{renderType}}
             </td>
+            <td>
+              <div class="btn-group btn-group-xs pull-right">
+                <a class="btn btn-default glyphicon glyphicon-download-alt" href="{{path}}{{C.X}}res-exportto/"></a>
+              </div>
+            </td>
           </tr>
         {{else}}
           <tr>
@@ -49,6 +54,11 @@
               {{else}}
                 {{type}}
               {{/if}}
+            </td>
+            <td>
+              <div class="btn-group btn-group-xs pull-right">
+                <a class="btn btn-default glyphicon glyphicon-download-alt" href="{{path}}{{C.X}}res-exportto/"></a>
+              </div>
             </td>
           </tr>
         {{/if}}
