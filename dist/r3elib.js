@@ -1584,7 +1584,10 @@ var ObjectContentResource = (function (_super) {
     };
     ObjectContentResource.prototype.getContentType = function () {
         var contentType = this.values['_ct'];
-        return contentType;
+        if (contentType)
+            return contentType;
+        else
+            return Utils.filename_mime(this.getName());
     };
     ObjectContentResource.prototype.getWriter = function () {
         return new ObjectContentResourceWriter(this.values);

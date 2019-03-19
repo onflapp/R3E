@@ -129,7 +129,8 @@ class ObjectContentResource extends ObjectResource {
 
   public getContentType(): string {
     let contentType = this.values['_ct'];
-    return contentType;
+    if (contentType) return contentType;
+    else return Utils.filename_mime(this.getName());
   }
 
   public getWriter(): ContentWriter {

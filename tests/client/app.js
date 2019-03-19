@@ -3,6 +3,10 @@ document.body.innerHTML = '';
 
 //sample content as javascript object
 var userContentVal = {
+  'my simple web page': {
+    _rt:'web/page',
+    title: 'hello there'
+  },
   'readme.txt': {
     _ct: 'text/plain',
     _content: 'this resource has editable text content'
@@ -10,6 +14,13 @@ var userContentVal = {
 };
 
 var userTemplateVal = {
+  'web': {
+    'page': {
+      'default.hbs': {
+        _content: '<h1>{{_.title}}</h1><p>this is very simple, non-HTML-compliant page</p>'
+      }
+    }
+  }
 };
 
 function restoreLocalData() {

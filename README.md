@@ -23,7 +23,15 @@ Although R3E doesn't rely on traditional "repository" for storage, R3E resources
 
 You can test and play with R3E right in your browser https://onflapp.github.io/R3E/tests/client/app.html
 
-Or run the server-side
+Where:
+
+resource <a href="https://onflapp.github.io/R3E/tests/client/app.html#/content/my%20simple%20web%20page.x-res-list" target="_blank">my simple web page</a>
+using template <a href="https://onflapp.github.io/R3E/tests/client/app.html#/user-templates/web/page/default.hbs.x-edit" target="_blank">web/page/default.hbs</a>
+will be rendered as <a href="https://onflapp.github.io/R3E/tests/client/app.html#/content/my%20simple%20web%20page">web page</a>
+
+---
+
+*Or run in on the server-side*
 
 ```
 git clone https://github.com/onflapp/R3E.git
@@ -42,6 +50,79 @@ R3E is designed to be modular and customizable to fit various use-cases. It incl
 | resource renderer          | resolve 'template' and return it as renderer function                                                 |
 | request handler + context  | interprets user request (e.g. URL or mouse click), resolves 'data' and uses renderer to create output |
 | content writer             | writes 'output' to a channel (e.g. server response or DOM structure)                                  |
+
+# Programmatic Examples
+
+Data content
+
+```
+var data = new ObjectResource({
+	'my web page':{
+    _rt: web/page'
+    title: 'hello'
+	}
+});
+
+```
+
+Notice the *_rt* attribute, this is *path* to resolve template **web/page**
+
+
+Template as text string
+
+```
+var template = new ObjectResource({
+  'web': {
+    'page': {
+      'default.hbs': {
+        _content: '<h1>{{_.title}}</h1><p>this is very simple, non-HTML-compliant page</p>'
+      }
+    }
+  }
+});
+
+```
+
+Notice the way object is nested as **web/page**. Name of the object has special significance as well. **default** is selector name, whereas **hbs** extension indicates the text needs to go through handlebars script factory which will turn it into appropriate javascript function. You can add additional templating languages by mapping file extension to script factories. Selectors are passed to the render resolvers to 'select' the right renderer, *default* is just a default.
+
+Template can also be just a javascript function
+
+```
+var template = new ObjectResource({
+  'web': {
+    'page': {
+      'default.func': function (res, writer, context) {
+        writer.start('text/html');
+        writer.write('title: ' + res.getProperty('title'));
+        writer.end();
+      }
+    }
+  }
+});
+
+```
+
+Render resource using template
+
+```
+var rres = new ResourceResolver(data);
+var rrend = new ResourceResolver(template);
+
+rres.resolveResource('/my web page', function(res) {
+  var renderType = res.getType(); // usually comes from _rt
+  var selector = 'default';
+
+  rrend.renderResource(res, renderType, selector, {
+    start: function(ctype) {},
+    end: function() {},
+    write: function(output) {
+      console.log(output);
+    };
+  });
+});
+
+```
+
 
 # Points of Interest
 
