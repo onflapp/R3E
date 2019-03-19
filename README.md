@@ -55,7 +55,7 @@ R3E is designed to be modular and customizable to fit various use-cases. It incl
 
 Data content
 
-```
+```javascript
 var data = new ObjectResource({
 	'my web page':{
     _rt: web/page'
@@ -70,7 +70,7 @@ Notice the *_rt* attribute, this is *path* to resolve template **web/page**
 
 Template as text string
 
-```
+```javascript
 var template = new ObjectResource({
   'web': {
     'page': {
@@ -87,7 +87,7 @@ Notice the way object is nested as **web/page**. Name of the object has special 
 
 Template can also be just a javascript function
 
-```
+```javascript
 var template = new ObjectResource({
   'web': {
     'page': {
@@ -104,7 +104,7 @@ var template = new ObjectResource({
 
 Render resource using template
 
-```
+```javascript
 var rres = new ResourceResolver(data);
 var rrend = new ResourceResolver(template);
 
