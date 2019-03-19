@@ -19,7 +19,9 @@ R3E relies on naming convention to find the right *renderer*. It uses content *r
 The result of this experiment is compact and modular rendering engine.
 Although R3E doesn't rely on traditional "repository" for storage, R3E resources can be nestable and browsable, which means you'll get light-weight repository capability as nice side-effect.
 
----
+# Test
+
+### client-side
 
 You can test and play with R3E right in your browser https://onflapp.github.io/R3E/tests/client/app.html
 
@@ -29,9 +31,7 @@ resource <a href="https://onflapp.github.io/R3E/tests/client/app.html#/content/m
 using template <a href="https://onflapp.github.io/R3E/tests/client/app.html#/user-templates/web/page/default.hbs.x-edit" target="_blank">web/page/default.hbs</a>
 will be rendered as <a href="https://onflapp.github.io/R3E/tests/client/app.html#/content/my%20simple%20web%20page">web page</a>
 
----
-
-*Or run in on the server-side*
+### server-side
 
 ```
 git clone https://github.com/onflapp/R3E.git
@@ -53,7 +53,7 @@ R3E is designed to be modular and customizable to fit various use-cases. It incl
 
 # Programmatic Examples
 
-Data content
+### Data content
 
 ```javascript
 var data = new ObjectResource({
@@ -68,7 +68,7 @@ var data = new ObjectResource({
 Notice the *_rt* attribute, this is *path* to resolve template **web/page**
 
 
-Template as text string
+### Template as text string
 
 ```javascript
 var template = new ObjectResource({
@@ -85,7 +85,7 @@ var template = new ObjectResource({
 
 Notice the way object is nested as **web/page**. Name of the object has special significance as well. **default** is selector name, whereas **hbs** extension indicates the text needs to go through handlebars script factory which will turn it into appropriate javascript function. You can add additional templating languages by mapping file extension to script factories. Selectors are passed to the render resolvers to 'select' the right renderer, *default* is just a default.
 
-Template can also be just a javascript function
+### Template can also be just a javascript function
 
 ```javascript
 var template = new ObjectResource({
@@ -102,7 +102,7 @@ var template = new ObjectResource({
 
 ```
 
-Render resource using template
+### Render resource using template
 
 ```javascript
 var rres = new ResourceResolver(data);
