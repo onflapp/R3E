@@ -57,10 +57,10 @@ Data content
 
 ```javascript
 var data = new ObjectResource({
-	'my web page':{
+  'my web page':{
     _rt: web/page'
     title: 'hello'
-	}
+  }
 });
 
 ```
