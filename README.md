@@ -58,7 +58,7 @@ Data content
 ```javascript
 var data = new ObjectResource({
   'my web page':{
-    _rt: web/page'
+    _rt: web/page',
     title: 'hello'
   }
 });
