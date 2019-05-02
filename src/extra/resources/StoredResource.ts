@@ -47,6 +47,10 @@ abstract class StoredResource extends Resource {
     return this.values['_rt'];
   }
 
+  public getRenderSuperType(): string {
+    return this.values['_st'];
+  }
+
   public isContentResource(): boolean {
     return !this.isDirectory;
   }

@@ -49,10 +49,6 @@ class FileResource extends StoredResource {
     else return 'resource/node';
   }
 
-  public getRenderType(): string {
-    return this.values['_rt'];
-  }
-
   protected getMetadataPath(nm ? : string): string {
     if (nm) {
       return this.basePath + '/.' + nm + '.metadata.json';

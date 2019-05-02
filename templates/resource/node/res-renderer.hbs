@@ -38,6 +38,9 @@
             {{else}}
             <li>renderType: <b>no type set</b></li>
             {{/if}}
+            {{#if renderSuperType}}
+            <li>renderSuperType: {{renderSuperType}}</li>
+            {{/if}}
             {{#if contentType}}
             <li>contentType: mime/{{contentType}}</li>
             {{/if}}

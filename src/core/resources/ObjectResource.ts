@@ -12,6 +12,11 @@ class ObjectResource extends Resource {
     return rt ? rt : null;
   }
 
+  public getRenderSuperType(): string {
+    let st = this.values['_st'];
+    return st ? st : null;
+  }
+
   public getType(): string {
     let st = this.values['_pt'];
     return st ? st : 'resource/node';

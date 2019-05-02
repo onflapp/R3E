@@ -108,6 +108,9 @@ class ResourceRequestContext {
       if (res.getSuperType() !== res.getType()) {
         map['superType'] = res.getSuperType();
       }
+      if (res.getRenderSuperType()) {
+        map['renderSuperType'] = res.getRenderSuperType();
+      }
       map['type'] = res.getType();
       map['name'] = res.getName();
       map['isContentResource'] = res.isContentResource();

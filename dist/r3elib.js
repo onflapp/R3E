@@ -350,19 +350,25 @@ var Resource = (function (_super) {
     Resource.prototype.getRenderType = function () {
         return null;
     };
+    Resource.prototype.getRenderSuperType = function () {
+        return null;
+    };
     Resource.prototype.getRenderTypes = function () {
         var rv = [];
         var rt = this.getRenderType();
-        var st = this.getSuperType();
+        var st = this.getRenderSuperType();
+        var nt = this.getSuperType();
         var ct = this.getContentType();
         var pt = this.getType();
         if (rt)
             rv.push(rt);
+        if (st)
+            rv.push(st);
         if (ct)
             rv.push('mime/' + ct);
         rv.push(pt);
-        if (st && st !== pt)
-            rv.push(st);
+        if (nt && nt !== pt)
+            rv.push(nt);
         return rv;
     };
     Resource.prototype.resolveOrAllocateChildResource = function (name, callback, walking) {
@@ -676,6 +682,14 @@ var ResourceRenderer = (function () {
     function ResourceRenderer(resolver) {
         this.rendererResolver = resolver;
         this.rendererFactories = new Map();
+        this.makeRenderTypePatterns = function (factoryType, renderType, name, sel) {
+            var rv = [];
+            var p = renderType + '/' + name + '.' + sel;
+            rv.push(p + '.' + factoryType);
+            p = renderType + '/' + sel;
+            rv.push(p + '.' + factoryType);
+            return rv;
+        };
     }
     ResourceRenderer.prototype.makeRenderTypePaths = function (renderTypes, selectors) {
         var rv = [];
@@ -698,18 +712,15 @@ var ResourceRenderer = (function () {
         }
         return rv;
     };
-    ResourceRenderer.prototype.makeRenderTypePatterns = function (factoryType, renderType, name, sel) {
-        var rv = [];
-        var p = renderType + '/' + name + '.' + sel;
-        rv.push(p + '.' + factoryType);
-        p = renderType + '/' + sel;
-        rv.push(p + '.' + factoryType);
-        return rv;
-    };
     ResourceRenderer.prototype.makeRenderingFunction = function (path, resource, callback) {
         var ext = Utils.filename_ext(path);
         var fact = this.rendererFactories.get(ext);
         fact.makeRenderer(resource, callback);
+    };
+    ResourceRenderer.prototype.registerMakeRenderTypePatterns = function (func) {
+        if (func) {
+            this.makeRenderTypePatterns = func;
+        }
     };
     ResourceRenderer.prototype.registerFactory = function (typ, factory) {
         this.rendererFactories.set(typ, factory);
@@ -853,6 +864,9 @@ var ResourceRequestContext = (function () {
             map['renderTypes'] = res.getRenderTypes();
             if (res.getSuperType() !== res.getType()) {
                 map['superType'] = res.getSuperType();
+            }
+            if (res.getRenderSuperType()) {
+                map['renderSuperType'] = res.getRenderSuperType();
             }
             map['type'] = res.getType();
             map['name'] = res.getName();
@@ -1112,6 +1126,9 @@ var ResourceRequestHandler = (function (_super) {
     };
     ResourceRequestHandler.prototype.registerFactory = function (typ, factory) {
         this.resourceRenderer.registerFactory(typ, factory);
+    };
+    ResourceRequestHandler.prototype.registerMakeRenderTypePatterns = function (func) {
+        this.resourceRenderer.registerMakeRenderTypePatterns(func);
     };
     ResourceRequestHandler.prototype.handleRequest = function (rpath) {
         this.renderRequest(rpath);
@@ -1478,6 +1495,10 @@ var ObjectResource = (function (_super) {
     ObjectResource.prototype.getRenderType = function () {
         var rt = this.values['_rt'];
         return rt ? rt : null;
+    };
+    ObjectResource.prototype.getRenderSuperType = function () {
+        var st = this.values['_st'];
+        return st ? st : null;
     };
     ObjectResource.prototype.getType = function () {
         var st = this.values['_pt'];
@@ -2148,6 +2169,9 @@ var StoredResource = (function (_super) {
     };
     StoredResource.prototype.getRenderType = function () {
         return this.values['_rt'];
+    };
+    StoredResource.prototype.getRenderSuperType = function () {
+        return this.values['_st'];
     };
     StoredResource.prototype.isContentResource = function () {
         return !this.isDirectory;
@@ -2929,9 +2953,6 @@ var FileResource = (function (_super) {
             return 'resource/content';
         else
             return 'resource/node';
-    };
-    FileResource.prototype.getRenderType = function () {
-        return this.values['_rt'];
     };
     FileResource.prototype.getMetadataPath = function (nm) {
         if (nm) {

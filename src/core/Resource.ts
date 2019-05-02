@@ -110,17 +110,23 @@ abstract class Resource extends Data implements ContentReader {
     return null;
   }
 
+  public getRenderSuperType(): string {
+    return null;
+  }
+
   public getRenderTypes(): Array < string > {
     let rv = [];
     let rt = this.getRenderType();
-    let st = this.getSuperType();
+    let st = this.getRenderSuperType();
+    let nt = this.getSuperType();
     let ct = this.getContentType();
     let pt = this.getType();
 
     if (rt) rv.push(rt);
+    if (st) rv.push(st);
     if (ct) rv.push('mime/' + ct);
     rv.push(pt);
-    if (st && st !== pt) rv.push(st);
+    if (nt && nt !== pt) rv.push(nt);
 
     return rv;
   }

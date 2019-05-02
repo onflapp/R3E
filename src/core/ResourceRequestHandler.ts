@@ -270,6 +270,10 @@ class ResourceRequestHandler extends EventDispatcher {
     this.resourceRenderer.registerFactory(typ, factory);
   }
 
+  public registerMakeRenderTypePatterns(func: MakeRenderTypePatternsFunction) {
+    this.resourceRenderer.registerMakeRenderTypePatterns(func);
+  }
+
   public handleRequest(rpath: string) {
     this.renderRequest(rpath);
   }

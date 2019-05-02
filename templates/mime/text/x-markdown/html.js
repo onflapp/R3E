@@ -5,7 +5,7 @@
     var md = null;
     var result = '';
 
-    if (window && typeof window['markdownit'] !== 'undefined') {
+    if (typeof window !== 'undefined' && typeof window['markdownit'] !== 'undefined') {
       md = window.markdownit();
     }
     else {
