@@ -49,21 +49,6 @@ class FileResource extends StoredResource {
     else return 'resource/node';
   }
 
-  protected getMetadataPath(nm ? : string): string {
-    if (nm) {
-      return this.basePath + '/.' + nm + '.metadata.json';
-    }
-    else if (this.isDirectory) {
-      return this.getStoragePath('.metadata.json');
-    }
-    else {
-      let dirname = Utils.filename_dir(this.basePath);
-      let name = Utils.filename(this.basePath);
-
-      return dirname + '/.' + name + '.metadata.json';
-    }
-  }
-
   protected storeChildrenNames(callback) {
     callback(true);
   }
@@ -128,6 +113,8 @@ class FileResource extends StoredResource {
       if (err) callback(false);
       else {
         self.isDirectory = stats.isDirectory();
+        self.contentSize = stats.size;
+
         loadMetadata(self.getMetadataPath(), function () {
           callback(true);
         });
@@ -162,6 +149,7 @@ class FileResource extends StoredResource {
       this.isDirectory = false;
     }
 
+    this.loaded = false;
     return new FileResourceContentWriter(path);
   }
 

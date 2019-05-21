@@ -31,26 +31,6 @@
             <li>{{R.NAME}}</li>
           </ol>
 
-          <p>Renderer will take following types into consideration</p>
-          <ol>
-            {{#if renderType}}
-            <li>renderType: {{renderType}}</li>
-            {{else}}
-            <li>renderType: <b>no type set</b></li>
-            {{/if}}
-            {{#if renderSuperType}}
-            <li>renderSuperType: {{renderSuperType}}</li>
-            {{/if}}
-            {{#if contentType}}
-            <li>contentType: mime/{{contentType}}</li>
-            {{/if}}
-            <li>resourceType: {{type}}</li>
-            {{#if superType}}
-            <li>superType: {{superType}}</li>
-            {{/if}}
-            <li>fallback: any/any</li>
-          </ol>
-
           <h4>Set User Defined Renderers</h4>
           <p>User defined renderer templates are stored in <a href="{{C.USER_TEMPLATES}}/{{renderType}}{{C.X}}res-list">{{C.USER_TEMPLATES}}/{{renderType}}</a></p>
 
@@ -74,14 +54,35 @@
                 </div>
               </div>
             </form>
-            
-            <a class="btn btn-success" href="{{C.USER_TEMPLATES}}{{C.X}}res-create">Create New Template</a>
+ 
           </div>
+
+          <h4>Renderer will take following types into consideration</h4>
+          <ol>
+            {{#if renderType}}
+            <li>renderType: <b>{{renderType}}</b></li>
+            {{else}}
+            <li>renderType: <b>no type set</b></li>
+            {{/if}}
+            {{#if renderSuperType}}
+            <li>renderSuperType: <b>{{renderSuperType}}</b></li>
+            {{/if}}
+            {{#if contentType}}
+            <li>contentType: mime/<b>{{contentType}}</b></li>
+            {{/if}}
+            <li>resourceType: <b>{{type}}</b></li>
+            {{#if superType}}
+            <li>superType: <b>{{superType}}</b></li>
+            {{/if}}
+            <li>fallback: <b>any/any</b></li>
+          </ol>          
+
 
       </div>
       <div class="modal-footer">
 
         <form class="form-horizontal" class="form-inline" method="post" id="save_form" action="{{R.PATH}}{{C.X}}res-list">
+          <a class="btn btn-default pull-left" href="{{C.USER_TEMPLATES}}{{C.X}}res-create">Create New Template</a>
           <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-list">Cancel</a>
           <input class="btn btn-success" type="submit" value="Save">
         </form>

@@ -8,6 +8,8 @@ if (typeof module !== 'undefined') {
     JSRendererFactory: JSRendererFactory,
     InterFuncRendererFactory: InterFuncRendererFactory,
     ResourceRequestHandler: ResourceRequestHandler,
+    DropBoxResource: DropBoxResource,
+    GitHubResource: GitHubResource,
     FileResource: FileResource,
     RootResource: RootResource,
     Utils: Utils

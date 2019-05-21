@@ -141,8 +141,9 @@ class ServerRequestHandler extends ResourceRequestHandler {
             fs.closeSync(fd);
             fs.unlinkSync(path);
 
-            writer.end();
-            if (callback) callback();
+            writer.end(function() {
+              if (callback) callback();
+            });
           };
 
           break;

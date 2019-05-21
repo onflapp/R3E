@@ -12,7 +12,7 @@
     "grunt-contrib-concat": "^1.0.1",
     "grunt-contrib-copy": "^1.0.0",
     "grunt-exec": "^3.0.0",
-    "grunt-ts": "^6.0.0-beta.19",
+    "grunt-ts": "^6.0.0-beta.22",
     "typescript": "^2.7.2"
   },
   "dependencies": {

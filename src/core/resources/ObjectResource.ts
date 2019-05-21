@@ -104,14 +104,22 @@ class ObjectContentResourceWriter implements ContentWriter {
       else this.values['_content64'] = Utils.ArrayBuffer2base64(data);
     }
     else if (typeof Buffer !== 'undefined' && data instanceof Buffer) {
-      if (this.istext) this.values['_content'] = data.toString('utf8');
-      else this.values['_content64'] = data.toString('base64');
+      data = Buffer.concat(this.buffer);
+      if (this.istext) {
+        let t = data.toString('utf8');
+        this.values['_content'] = t;
+      }
+      else {
+        this.values['_content64'] = data.toString('base64');
+        this.values['_content64sz'] = data.length;
+      }
     }
     else if (this.isbase64) {
       this.values['_content64'] = data;
     }
-    else {
-      this.values['_content'] = this.buffer.join('');
+    else if (this.buffer) {
+      var t = this.buffer.join('');
+      this.values['_content'] = t;
     }
 
     this.buffer = [];
@@ -138,7 +146,19 @@ class ObjectContentResource extends ObjectResource {
     else return Utils.filename_mime(this.getName());
   }
 
+  public getContentSize(): number {
+    let t = this.values['_content'];
+    let z = this.values['_content64sz'];
+
+    if (z) return z;
+    else if (t) return t.length;
+    else return 0;
+  }
+
   public getWriter(): ContentWriter {
+    delete this.values['_content64sz'];
+    delete this.values['_content64'];
+    delete this.values['_content'];
     return new ObjectContentResourceWriter(this.values);
   }
 

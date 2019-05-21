@@ -29,7 +29,22 @@
           max-width: fit-content;
           width: 100%;
         }
-      </style>
+    </style>
+    <script>
+      window.addEventListener('DOMContentLoaded', function() {
+        var ta = document.querySelector('textarea');
+        if (ta) {
+          var editor = CodeMirror.fromTextArea(ta, {
+            lineNumbers: true,
+            autofocus: true,
+            tabSize: 2,
+            indentWithTabs: false,
+            mode: 'javascript',
+            theme: 'solarized dark'
+          });
+        }
+      });
+    </script>
   </head>
 
   <body>
@@ -92,19 +107,6 @@
         <a href="{{include "." "externalize"}}" download target="_blank">download</a>
       {{/default}}
     </div>
-    <script>
-      setTimeout(function() {
-        var ta = document.querySelector('textarea');
-        if (ta) {
-          var editor = CodeMirror.fromTextArea(ta, {
-            lineNumbers: true,
-            autofocus: true,
-            mode: 'javascript',
-            theme: 'solarized dark'
-          });
-        }
-      },100);
-    </script>
   </body>
 
 </html>

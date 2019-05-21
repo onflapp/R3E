@@ -31,102 +31,35 @@ class GitHubResourceContentWriter implements ContentWriter {
   }
 }
 
-class GitHubResource extends Resource {
+class GitHubResource extends StoredResource {
   protected repo: any;
-  protected filePath: string;
-  protected isDirectory: boolean = true;
   protected resources = null;
 
-  constructor(repo: any, path ? : string, name ? : string) {
-    super(name);
+  constructor(repo: any, name ? : string, base ? : string) {
+    super(name ? name : '', base ? base : '');
 
     this.repo = repo;
-    this.filePath = path ? path : '';
   }
 
-  public getType(): string {
-    if (this.isDirectory) return 'resource/node';
-    else return 'resource/content';
+  protected makeNewResource(name: string) {
+    let path = this.getStoragePath();
+    let res = new GitHubResource(this.repo, name, path);
+
+    return res;
   }
 
-  public getRenderType(): string {
-    return this.values['_rt'];
+  public getStoragePath(name ? : string): string {
+    let path = Utils.filename_path_append(this.basePath, this.baseName);
+    if (name) path = Utils.filename_path_append(path, name);
+
+    if (path.charAt(0) === '/') path = path.substr(1);
+    return path;
   }
 
-  protected makeMetadataPath(nm ? : string): string {
-    if (nm) {
-      return this.filePath + '/.' + nm + '.metadata.json';
-    }
-    else if (this.isDirectory) {
-      return Utils.filename_path_append(this.filePath, '.metadata.json');
-    }
-    else {
-      let dirname = Utils.filename_dir(this.filePath);
-      let name = Utils.filename(this.filePath);
-
-      return dirname + '/.' + name + '.metadata.json';
-    }
-  }
-
-  protected readResources(callback) {
+  public storeProperties(callback) {
     let self = this;
-    if (self.resources) {
-      callback(self.resources);
-    }
-    else if (self.isDirectory) {
-      self.repo.getContents('master', this.filePath, false)
-        .then(function (response) {
-          self.resources = {};
-
-          for (let i = 0; i < response.data.length; i++) {
-            let item = response.data[i];
-            let name = item.name;
-            if (name.charAt(0) === '.') continue;
-
-            let path = name;
-            if (self.filePath) path = Utils.filename_path_append(self.filePath, name);
-
-            let res = new GitHubResource(self.repo, path, name);
-
-            if (item['type'] === 'file') res.isDirectory = false;
-            else if (item['type'] === 'dir') res.isDirectory = true;
-            else continue;
-
-            self.resources[name] = res;
-          }
-          callback(self.resources);
-        })
-        .catch(function (error) {
-          callback();
-        });
-    }
-    else {
-      callback();
-    }
-  }
-
-  public allocateChildResource(name: string, callback: ResourceCallback, walking ? : boolean): void {
-    let self = this;
-    this.readResources(function (rls) {
-
-      let path = name;
-      if (self.filePath) path = Utils.filename_path_append(self.filePath, name);
-      let res = new GitHubResource(self.repo, path, name);
-
-      if (!self.resources) self.resources = {};
-      self.resources[name] = res;
-      callback(res);
-    });
-  }
-
-  public importContent(func, callback) {
-    func(this.getWriter(), callback);
-  }
-
-  public importProperties(data: any, callback) {
-    let self = this;
-    let path = this.makeMetadataPath();
-    let str = JSON.stringify(data);
+    let path = this.getMetadataPath();
+    let str = JSON.stringify(self.values);
     let opts = {
       encode: true
     };
@@ -136,9 +69,64 @@ class GitHubResource extends Resource {
     });
   }
 
+  protected loadProperties(callback) {
+    let self = this;
+    let storePath = this.getStoragePath();
+
+    self.repo.getContents('master', storePath, false)
+      .then(function (response) {
+        if (response.data.type && response.data.type === 'file') {
+          self.isDirectory = false;
+          self.contentSize = response.data.size;
+        }
+        else {
+          self.contentSize = 0;
+        }
+        callback(true);
+      })
+      .catch(function (error) {
+        callback(false);
+      });
+  }
+
+  public loadChildrenNames(callback: ChildrenNamesCallback) {
+    let self = this;
+    let storePath = this.getStoragePath();
+
+    self.repo.getContents('master', storePath, false)
+      .then(function (response) {
+
+        let rv = [];
+        for (let i = 0; i < response.data.length; i++) {
+          let item = response.data[i];
+          let name = item.name;
+          if (name.charAt(0) === '.') continue;
+
+          rv.push(name);
+        }
+        callback(rv);
+      })
+      .catch(function (error) {
+        callback([]);
+      });
+  }
+
+  public storeChildrenNames(callback) {
+    callback();
+  }
+
+  protected ensurePathExists(path: string, callback) {
+    callback(true);
+  }
+
+  public importContent(func, callback) {
+    func(this.getWriter(), callback);
+  }
+
   public removeChildResource(name: string, callback) {
     let self = this;
     let todelete = [];
+    let storePath = this.getStoragePath(name);
 
     let delete_paths = function (paths) {
       if (paths.length) {
@@ -180,13 +168,13 @@ class GitHubResource extends Resource {
         });
     };
 
-    self.repo.getContents('master', this.filePath, false)
+    self.repo.getContents('master', storePath, false)
       .then(function (response) {
         for (let i = 0; i < response.data.length; i++) {
           let item = response.data[i];
           if (item.name === name) {
             let path = name;
-            if (self.filePath) path = Utils.filename_path_append(self.filePath, name);
+            if (storePath) path = Utils.filename_path_append(storePath, name);
             if (item.type === 'dir') {
               collect_all(path);
               return;
@@ -204,64 +192,18 @@ class GitHubResource extends Resource {
         callback(null);
       });
 
-
-    this.resources = null;
-  }
-
-  public resolveChildResource(name: string, callback: ResourceCallback, walking ? : boolean): void {
-    if (walking) {
-      if (this.resources) {
-        callback(this.resources[name]);
-      }
-      else {
-        this.resources = {};
-        let path = name;
-        if (this.filePath) path = Utils.filename_path_append(this.filePath, name);
-
-        let res = new GitHubResource(this.repo, path, name);
-        this.resources[name] = res;
-        callback(res);
-      }
-    }
-    else {
-      this.readResources(function (rls) {
-        if (rls) callback(rls[name]);
-        else callback(null);
-      });
-    }
-  }
-
-  public listChildrenNames(callback: ChildrenNamesCallback) {
-    this.readResources(function (rls) {
-      if (!rls) callback([]);
-      else {
-        let ls = [];
-        for (let name in rls) {
-          ls.push(name);
-        }
-        callback(ls);
-      }
-    });
-  }
-
-  public isContentResource(): boolean {
-    return !this.isDirectory;
-  }
-
-  public getContentType(): string {
-    if (this.isDirectory) return null;
-
-    let contentType = this.values['_ct'];
-    if (contentType) return contentType;
-    else return Utils.filename_mime(this.getName());
+    this.childNames.splice(this.childNames.indexOf(name), 1);
+    this.clearCachedResource(name);
   }
 
   public getWriter(): ContentWriter {
+    let path = this.getStoragePath();
     if (this.isDirectory) {
       this.isDirectory = false;
     }
 
-    return new GitHubResourceContentWriter(this.repo, this.filePath);
+    this.loaded = false;
+    return new GitHubResourceContentWriter(this.repo, path);
   }
 
   public read(writer: ContentWriter, callback: any) {
@@ -269,10 +211,10 @@ class GitHubResource extends Resource {
       writer.end(callback);
     }
     else {
-      let path = this.filePath;
+      let storePath = this.getStoragePath();
       let ct = this.getContentType();
 
-      this.repo.getContents('master', this.filePath, false)
+      this.repo.getContents('master', storePath, false)
         .then(function (data) {
           let content = data.data.content;
           let encoding = data.data.encoding;

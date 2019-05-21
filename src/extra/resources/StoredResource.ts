@@ -3,6 +3,7 @@ abstract class StoredResource extends Resource {
   protected baseName: string;
   protected childNames;
   protected isDirectory: boolean = true;
+  protected contentSize: number = -1;
   protected resourceCache = {};
   protected loaded = false;
 
@@ -23,7 +24,7 @@ abstract class StoredResource extends Resource {
   }
 
   protected setCachedResource(name: string, res: Resource): Resource {
-    this.resourceCache[name] = res;
+    //this.resourceCache[name] = res;
     return res;
   }
 
@@ -36,6 +37,21 @@ abstract class StoredResource extends Resource {
     let path = Utils.filename_path_append(this.basePath, this.baseName);
     if (name) path = Utils.filename_path_append(path, name);
     return path;
+  }
+
+  public getMetadataPath(nm ? : string): string {
+    if (nm) {
+      return this.basePath + '/.' + nm + '.metadata.json';
+    }
+    else if (this.isDirectory) {
+      return this.getStoragePath('.metadata.json');
+    }
+    else {
+      let dirname = Utils.filename_dir(this.basePath);
+      let name = Utils.filename(this.basePath);
+
+      return dirname + '/.' + name + '.metadata.json';
+    }
   }
 
   public getType(): string {
@@ -61,6 +77,11 @@ abstract class StoredResource extends Resource {
     let contentType = this.values['_ct'];
     if (contentType) return contentType;
     else return Utils.filename_mime(this.getName());
+  }
+
+  public getContentSize(): number {
+    if (this.isDirectory) return 0;
+    else return this.contentSize;
   }
 
   public resolveItself(callback) {
@@ -114,17 +135,32 @@ abstract class StoredResource extends Resource {
   }
 
   public allocateChildResource(name: string, callback: ResourceCallback): void {
+    if (!this.childNames) this.childNames = [];
     if (this.childNames.indexOf(name) === -1) this.childNames.push(name);
 
     let res = this.makeNewResource(name);
+    callback(res);
+
+    /*
     this.storeChildrenNames(function () {
       callback(res);
     });
+    */
   }
 
   public importProperties(data: any, callback) {
+    if (!this.isDirectory) {
+      callback();
+      return;
+    }
+
     let self = this;
     let path = this.getStoragePath();
+
+    if (!this.isDirectory) {
+      path = this.basePath;
+    }
+
     super.importProperties(data, function () {
       self.ensurePathExists(path, function (rv) {
         if (rv) {
@@ -141,7 +177,9 @@ abstract class StoredResource extends Resource {
 
   public importContent(func, callback) {
     let self = this;
-    let path = this.getStoragePath();
+    let path = this.basePath;
+
+    this.isDirectory = false;
 
     this.ensurePathExists(path, function (rv) {
       if (rv) {

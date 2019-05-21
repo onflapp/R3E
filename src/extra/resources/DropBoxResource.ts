@@ -23,6 +23,10 @@ class DropBoxResourceContentWriter implements ContentWriter {
     let offset = 0;
     let fileid = null;
 
+    if (typeof this.buffer[0] === 'string') {
+      this.buffer = [Buffer.from(this.buffer.join(''))];
+    }
+
     let finish = function () {
       self.dbx.filesUploadSessionFinish({
           cursor: {
@@ -43,7 +47,7 @@ class DropBoxResourceContentWriter implements ContentWriter {
         });
     };
 
-    let store_chunk = function (data) {
+    let store_chunk_continue = function (data) {
       self.dbx.filesUploadSessionAppend({
           contents: data,
           offset: offset,
@@ -53,7 +57,7 @@ class DropBoxResourceContentWriter implements ContentWriter {
           if (data.length) offset += data.length;
           else if (data.byteLength) offset += data.byteLength;
 
-          if (self.buffer.length > 0) store_chunk(self.buffer.shift());
+          if (self.buffer.length > 0) store_chunk_continue(self.buffer.shift());
           else finish();
         })
         .catch(function (err) {
@@ -62,17 +66,31 @@ class DropBoxResourceContentWriter implements ContentWriter {
         });
     };
 
-    this.dbx.filesUploadSessionStart({
-        contents: null,
-        close: false
-      })
-      .then(function (response) {
-        fileid = response;
-        store_chunk(self.buffer.shift());
-      })
-      .catch(function (err) {
-        console.log(err);
-      });
+    let store_chunk = function (data) {
+      let close = false;
+      if (data === null) close = true;
+
+      self.dbx.filesUploadSessionStart({
+          contents: data,
+          close: close
+        })
+        .then(function (response) {
+          fileid = response;
+
+          if (data.length) offset += data.length;
+          else if (data.byteLength) offset += data.byteLength;
+
+
+          if (self.buffer.length > 0) store_chunk_continue(self.buffer.shift());
+          else finish();
+        })
+        .catch(function (err) {
+          console.log(err);
+          if (callback) callback();
+        });
+    }
+
+    store_chunk(self.buffer.shift());
   }
 }
 
@@ -88,21 +106,6 @@ class DropBoxResource extends StoredResource {
   protected makeNewResource(name: string) {
     let path = this.getStoragePath();
     return new DropBoxResource(this.dbx, name, path);
-  }
-
-  protected getMetadataPath(nm ? : string): string {
-    if (nm) {
-      return this.basePath + '/.' + nm + '.metadata.json';
-    }
-    else if (this.isDirectory) {
-      return this.getStoragePath('.metadata.json');
-    }
-    else {
-      let dirname = Utils.filename_dir(this.basePath);
-      let name = Utils.filename(this.basePath);
-
-      return dirname + '/.' + name + '.metadata.json';
-    }
   }
 
   protected storeProperties(callback) {
@@ -122,7 +125,6 @@ class DropBoxResource extends StoredResource {
         callback(null);
       });
   }
-
 
   protected loadProperties(callback) {
     let path = this.getStoragePath();
@@ -169,16 +171,19 @@ class DropBoxResource extends StoredResource {
   }
 
   public removeChildResource(name: string, callback) {
+    let self = this;
     let path = this.getStoragePath(name);
-    this.dbx.filesDelete({
-        path: path
-      })
-      .then(function (response) {
-        callback();
-      })
-      .catch(function (error) {
-        callback(null);
-      });
+    super.removeChildResource(name, function () {
+      self.dbx.filesDelete({
+          path: path
+        })
+        .then(function (response) {
+          callback();
+        })
+        .catch(function (error) {
+          callback(null);
+        });
+    });
   }
 
   public storeChildrenNames(callback) {
@@ -186,17 +191,22 @@ class DropBoxResource extends StoredResource {
   }
 
   protected ensurePathExists(path: string, callback) {
-    let self = this;
-    self.dbx.filesCreateFolder({
-        path: path
-      })
-      .then(function () {
-        callback(true);
-      })
-      .catch(function (error) {
-        if (error.status === 409) callback(true);
-        else callback(false);
-      });
+    if (path === '' || path === '/') {
+      callback(true);
+    }
+    else {
+      let self = this;
+      self.dbx.filesCreateFolder({
+          path: path
+        })
+        .then(function () {
+          callback(true);
+        })
+        .catch(function (error) {
+          if (error.status === 409) callback(true);
+          else callback(false);
+        });
+    }
   }
 
   public loadChildrenNames(callback: ChildrenNamesCallback) {
@@ -224,11 +234,13 @@ class DropBoxResource extends StoredResource {
   }
 
   public getWriter(): ContentWriter {
+    let path = this.getStoragePath();
     if (this.isDirectory) {
       this.isDirectory = false;
     }
 
-    return new DropBoxResourceContentWriter(this.dbx, this.basePath);
+    this.loaded = false;
+    return new DropBoxResourceContentWriter(this.dbx, path);
   }
 
   public read(writer: ContentWriter, callback: any) {
@@ -243,13 +255,20 @@ class DropBoxResource extends StoredResource {
           path: path
         })
         .then(function (data) {
-          let reader = new FileReader();
-          reader.onload = function (event) {
+          if (typeof window !== 'undefined') {
+            let reader = new FileReader();
+            reader.onload = function (event) {
+              writer.start(ct);
+              writer.write(reader.result);
+              writer.end(callback);
+            };
+            reader.readAsArrayBuffer(data.fileBlob);
+          }
+          else {
             writer.start(ct);
-            writer.write(reader.result);
+            writer.write(data.fileBinary);
             writer.end(callback);
-          };
-          reader.readAsArrayBuffer(data.fileBlob);
+          }
         })
         .catch(function (error) {
           writer.end(callback);

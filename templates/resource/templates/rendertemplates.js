@@ -4,7 +4,7 @@
 
   Tools.visitAllChidren(res, false, function (path, res) {
     if (path) {
-      if (res.isContentResource()) {
+      if (path.indexOf('.') > 0) {
         var name = Utils.filename(path);
         var dir = Utils.filename_dir(path).substr(1);
         if (!types.includes(dir)) types.push(dir);

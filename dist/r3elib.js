@@ -212,13 +212,19 @@ var Utils = (function () {
         return base64;
     };
     Utils.base642ArrayBuffer = function (base64) {
-        var binary_string = window.atob(base64);
-        var len = binary_string.length;
-        var bytes = new Uint8Array(len);
-        for (var i = 0; i < len; i++) {
-            bytes[i] = binary_string.charCodeAt(i);
+        if (typeof window !== 'undefined') {
+            var binary_string = window.atob(base64);
+            var len = binary_string.length;
+            var bytes = new Uint8Array(len);
+            for (var i = 0; i < len; i++) {
+                bytes[i] = binary_string.charCodeAt(i);
+            }
+            return bytes.buffer;
         }
-        return bytes.buffer;
+        else {
+            var buff = Buffer.from(base64, 'base64');
+            return buff;
+        }
     };
     return Utils;
 }());
@@ -497,13 +503,16 @@ var Resource = (function (_super) {
             }
             this.importContent(ffunc, function () {
                 processing--;
+                processing--;
                 done();
             });
         }
-        this.importProperties(props, function () {
-            processing--;
-            done();
-        });
+        else {
+            this.importProperties(props, function () {
+                processing--;
+                done();
+            });
+        }
     };
     Resource.prototype.listChildrenResources = function (callback) {
         var self = this;
@@ -533,6 +542,9 @@ var Resource = (function (_super) {
     };
     Resource.prototype.getContentType = function () {
         return null;
+    };
+    Resource.prototype.getContentSize = function () {
+        return -1;
     };
     Resource.prototype.getWriter = function () {
         return null;
@@ -1302,21 +1314,25 @@ var Tools = (function () {
         var done = function () {
             if (processing === 0) {
                 callback(null);
+                processing = -1;
+            }
+            else if (processing === -1) {
+                console.log('something is wrong, we should be finished by now!');
             }
         };
         var visit_children = function (path, name, res) {
             processing++;
             res.listChildrenNames(function (names) {
+                processing += names.length;
                 var _loop_4 = function () {
-                    processing++;
                     var name_7 = names[i];
                     res.resolveChildResource(name_7, function (r) {
                         var rpath = Utils.filename_path_append(path, name_7);
                         var skip = callback(rpath, r);
-                        processing--;
                         if (!skip) {
                             visit_children(rpath, name_7, r);
                         }
+                        processing--;
                         done();
                     }, !resolve);
                 };
@@ -1575,16 +1591,22 @@ var ObjectContentResourceWriter = (function () {
                 this.values['_content64'] = Utils.ArrayBuffer2base64(data);
         }
         else if (typeof Buffer !== 'undefined' && data instanceof Buffer) {
-            if (this.istext)
-                this.values['_content'] = data.toString('utf8');
-            else
+            data = Buffer.concat(this.buffer);
+            if (this.istext) {
+                var t_1 = data.toString('utf8');
+                this.values['_content'] = t_1;
+            }
+            else {
                 this.values['_content64'] = data.toString('base64');
+                this.values['_content64sz'] = data.length;
+            }
         }
         else if (this.isbase64) {
             this.values['_content64'] = data;
         }
-        else {
-            this.values['_content'] = this.buffer.join('');
+        else if (this.buffer) {
+            var t = this.buffer.join('');
+            this.values['_content'] = t;
         }
         this.buffer = [];
         if (callback)
@@ -1610,7 +1632,20 @@ var ObjectContentResource = (function (_super) {
         else
             return Utils.filename_mime(this.getName());
     };
+    ObjectContentResource.prototype.getContentSize = function () {
+        var t = this.values['_content'];
+        var z = this.values['_content64sz'];
+        if (z)
+            return z;
+        else if (t)
+            return t.length;
+        else
+            return 0;
+    };
     ObjectContentResource.prototype.getWriter = function () {
+        delete this.values['_content64sz'];
+        delete this.values['_content64'];
+        delete this.values['_content'];
         return new ObjectContentResourceWriter(this.values);
     };
     ObjectContentResource.prototype.read = function (writer, callback) {
@@ -2130,6 +2165,7 @@ var StoredResource = (function (_super) {
     function StoredResource(name, base) {
         var _this = _super.call(this, name) || this;
         _this.isDirectory = true;
+        _this.contentSize = -1;
         _this.resourceCache = {};
         _this.loaded = false;
         if (typeof base !== 'undefined') {
@@ -2146,7 +2182,6 @@ var StoredResource = (function (_super) {
         return this.resourceCache[name];
     };
     StoredResource.prototype.setCachedResource = function (name, res) {
-        this.resourceCache[name] = res;
         return res;
     };
     StoredResource.prototype.clearCachedResource = function (name) {
@@ -2160,6 +2195,19 @@ var StoredResource = (function (_super) {
         if (name)
             path = Utils.filename_path_append(path, name);
         return path;
+    };
+    StoredResource.prototype.getMetadataPath = function (nm) {
+        if (nm) {
+            return this.basePath + '/.' + nm + '.metadata.json';
+        }
+        else if (this.isDirectory) {
+            return this.getStoragePath('.metadata.json');
+        }
+        else {
+            var dirname = Utils.filename_dir(this.basePath);
+            var name_8 = Utils.filename(this.basePath);
+            return dirname + '/.' + name_8 + '.metadata.json';
+        }
     };
     StoredResource.prototype.getType = function () {
         if (this.isDirectory)
@@ -2184,6 +2232,12 @@ var StoredResource = (function (_super) {
             return contentType;
         else
             return Utils.filename_mime(this.getName());
+    };
+    StoredResource.prototype.getContentSize = function () {
+        if (this.isDirectory)
+            return 0;
+        else
+            return this.contentSize;
     };
     StoredResource.prototype.resolveItself = function (callback) {
         var self = this;
@@ -2234,16 +2288,23 @@ var StoredResource = (function (_super) {
         }
     };
     StoredResource.prototype.allocateChildResource = function (name, callback) {
+        if (!this.childNames)
+            this.childNames = [];
         if (this.childNames.indexOf(name) === -1)
             this.childNames.push(name);
         var res = this.makeNewResource(name);
-        this.storeChildrenNames(function () {
-            callback(res);
-        });
+        callback(res);
     };
     StoredResource.prototype.importProperties = function (data, callback) {
+        if (!this.isDirectory) {
+            callback();
+            return;
+        }
         var self = this;
         var path = this.getStoragePath();
+        if (!this.isDirectory) {
+            path = this.basePath;
+        }
         _super.prototype.importProperties.call(this, data, function () {
             self.ensurePathExists(path, function (rv) {
                 if (rv) {
@@ -2259,7 +2320,8 @@ var StoredResource = (function (_super) {
     };
     StoredResource.prototype.importContent = function (func, callback) {
         var self = this;
-        var path = this.getStoragePath();
+        var path = this.basePath;
+        this.isDirectory = false;
         this.ensurePathExists(path, function (rv) {
             if (rv) {
                 func(self.getWriter(), callback);
@@ -2699,7 +2761,7 @@ var ClientRequestHandler = (function (_super) {
             var type = p.type.toLowerCase();
             if (type === 'submit' || type == 'button')
                 return "continue";
-            var name_8 = p.name;
+            var name_9 = p.name;
             var value = p.value;
             if (type === 'file') {
                 value = p.files[0];
@@ -2707,12 +2769,12 @@ var ClientRequestHandler = (function (_super) {
                     return "continue";
                 var pref = '';
                 var ct = value.type;
-                if (name_8.lastIndexOf('/') > 0)
-                    pref = name_8.substr(0, name_8.lastIndexOf('/') + 1);
+                if (name_9.lastIndexOf('/') > 0)
+                    pref = name_9.substr(0, name_9.lastIndexOf('/') + 1);
                 var mime = Utils.filename_mime(value.name);
                 if (mime === 'application/octet-stream' && ct)
                     mime = ct;
-                rv[name_8] = value.name;
+                rv[name_9] = value.name;
                 rv[pref + '_ct'] = mime;
                 rv[pref + Resource.STORE_CONTENT_PROPERTY] = function (writer, callback) {
                     var reader = new FileReader();
@@ -2725,7 +2787,7 @@ var ClientRequestHandler = (function (_super) {
                 };
             }
             else {
-                rv[name_8] = value;
+                rv[name_9] = value;
             }
         };
         for (var i = 0; i < formElement.elements.length; i++) {
@@ -2861,9 +2923,10 @@ var ServerRequestHandler = (function (_super) {
                         }
                         fs.closeSync(fd);
                         fs.unlinkSync(path);
-                        writer.end();
-                        if (callback)
-                            callback();
+                        writer.end(function () {
+                            if (callback)
+                                callback();
+                        });
                     };
                     return "break";
                 };
@@ -2954,19 +3017,6 @@ var FileResource = (function (_super) {
         else
             return 'resource/node';
     };
-    FileResource.prototype.getMetadataPath = function (nm) {
-        if (nm) {
-            return this.basePath + '/.' + nm + '.metadata.json';
-        }
-        else if (this.isDirectory) {
-            return this.getStoragePath('.metadata.json');
-        }
-        else {
-            var dirname = Utils.filename_dir(this.basePath);
-            var name_9 = Utils.filename(this.basePath);
-            return dirname + '/.' + name_9 + '.metadata.json';
-        }
-    };
     FileResource.prototype.storeChildrenNames = function (callback) {
         callback(true);
     };
@@ -3025,6 +3075,7 @@ var FileResource = (function (_super) {
                 callback(false);
             else {
                 self.isDirectory = stats.isDirectory();
+                self.contentSize = stats.size;
                 loadMetadata(self.getMetadataPath(), function () {
                     callback(true);
                 });
@@ -3056,6 +3107,7 @@ var FileResource = (function (_super) {
             this.fs.removeSync(path);
             this.isDirectory = false;
         }
+        this.loaded = false;
         return new FileResourceContentWriter(path);
     };
     FileResource.prototype.read = function (writer, callback) {
@@ -3319,6 +3371,9 @@ var DropBoxResourceContentWriter = (function () {
         var self = this;
         var offset = 0;
         var fileid = null;
+        if (typeof this.buffer[0] === 'string') {
+            this.buffer = [Buffer.from(this.buffer.join(''))];
+        }
         var finish = function () {
             self.dbx.filesUploadSessionFinish({
                 cursor: {
@@ -3340,7 +3395,7 @@ var DropBoxResourceContentWriter = (function () {
                     callback();
             });
         };
-        var store_chunk = function (data) {
+        var store_chunk_continue = function (data) {
             self.dbx.filesUploadSessionAppend({
                 contents: data,
                 offset: offset,
@@ -3352,7 +3407,7 @@ var DropBoxResourceContentWriter = (function () {
                 else if (data.byteLength)
                     offset += data.byteLength;
                 if (self.buffer.length > 0)
-                    store_chunk(self.buffer.shift());
+                    store_chunk_continue(self.buffer.shift());
                 else
                     finish();
             })
@@ -3362,17 +3417,32 @@ var DropBoxResourceContentWriter = (function () {
                     callback();
             });
         };
-        this.dbx.filesUploadSessionStart({
-            contents: null,
-            close: false
-        })
-            .then(function (response) {
-            fileid = response;
-            store_chunk(self.buffer.shift());
-        })
-            .catch(function (err) {
-            console.log(err);
-        });
+        var store_chunk = function (data) {
+            var close = false;
+            if (data === null)
+                close = true;
+            self.dbx.filesUploadSessionStart({
+                contents: data,
+                close: close
+            })
+                .then(function (response) {
+                fileid = response;
+                if (data.length)
+                    offset += data.length;
+                else if (data.byteLength)
+                    offset += data.byteLength;
+                if (self.buffer.length > 0)
+                    store_chunk_continue(self.buffer.shift());
+                else
+                    finish();
+            })
+                .catch(function (err) {
+                console.log(err);
+                if (callback)
+                    callback();
+            });
+        };
+        store_chunk(self.buffer.shift());
     };
     return DropBoxResourceContentWriter;
 }());
@@ -3386,19 +3456,6 @@ var DropBoxResource = (function (_super) {
     DropBoxResource.prototype.makeNewResource = function (name) {
         var path = this.getStoragePath();
         return new DropBoxResource(this.dbx, name, path);
-    };
-    DropBoxResource.prototype.getMetadataPath = function (nm) {
-        if (nm) {
-            return this.basePath + '/.' + nm + '.metadata.json';
-        }
-        else if (this.isDirectory) {
-            return this.getStoragePath('.metadata.json');
-        }
-        else {
-            var dirname = Utils.filename_dir(this.basePath);
-            var name_10 = Utils.filename(this.basePath);
-            return dirname + '/.' + name_10 + '.metadata.json';
-        }
     };
     DropBoxResource.prototype.storeProperties = function (callback) {
         var self = this;
@@ -3461,34 +3518,42 @@ var DropBoxResource = (function (_super) {
         }
     };
     DropBoxResource.prototype.removeChildResource = function (name, callback) {
+        var self = this;
         var path = this.getStoragePath(name);
-        this.dbx.filesDelete({
-            path: path
-        })
-            .then(function (response) {
-            callback();
-        })
-            .catch(function (error) {
-            callback(null);
+        _super.prototype.removeChildResource.call(this, name, function () {
+            self.dbx.filesDelete({
+                path: path
+            })
+                .then(function (response) {
+                callback();
+            })
+                .catch(function (error) {
+                callback(null);
+            });
         });
     };
     DropBoxResource.prototype.storeChildrenNames = function (callback) {
         callback();
     };
     DropBoxResource.prototype.ensurePathExists = function (path, callback) {
-        var self = this;
-        self.dbx.filesCreateFolder({
-            path: path
-        })
-            .then(function () {
+        if (path === '' || path === '/') {
             callback(true);
-        })
-            .catch(function (error) {
-            if (error.status === 409)
+        }
+        else {
+            var self_5 = this;
+            self_5.dbx.filesCreateFolder({
+                path: path
+            })
+                .then(function () {
                 callback(true);
-            else
-                callback(false);
-        });
+            })
+                .catch(function (error) {
+                if (error.status === 409)
+                    callback(true);
+                else
+                    callback(false);
+            });
+        }
     };
     DropBoxResource.prototype.loadChildrenNames = function (callback) {
         var self = this;
@@ -3500,10 +3565,10 @@ var DropBoxResource = (function (_super) {
             .then(function (response) {
             for (var i = 0; i < response.entries.length; i++) {
                 var item = response.entries[i];
-                var name_11 = item.name;
-                if (name_11.charAt(0) === '.')
+                var name_10 = item.name;
+                if (name_10.charAt(0) === '.')
                     continue;
-                rv.push(name_11);
+                rv.push(name_10);
             }
             callback(rv);
         })
@@ -3512,10 +3577,12 @@ var DropBoxResource = (function (_super) {
         });
     };
     DropBoxResource.prototype.getWriter = function () {
+        var path = this.getStoragePath();
         if (this.isDirectory) {
             this.isDirectory = false;
         }
-        return new DropBoxResourceContentWriter(this.dbx, this.basePath);
+        this.loaded = false;
+        return new DropBoxResourceContentWriter(this.dbx, path);
     };
     DropBoxResource.prototype.read = function (writer, callback) {
         if (this.isDirectory) {
@@ -3528,13 +3595,20 @@ var DropBoxResource = (function (_super) {
                 path: path
             })
                 .then(function (data) {
-                var reader = new FileReader();
-                reader.onload = function (event) {
+                if (typeof window !== 'undefined') {
+                    var reader_2 = new FileReader();
+                    reader_2.onload = function (event) {
+                        writer.start(ct_2);
+                        writer.write(reader_2.result);
+                        writer.end(callback);
+                    };
+                    reader_2.readAsArrayBuffer(data.fileBlob);
+                }
+                else {
                     writer.start(ct_2);
-                    writer.write(reader.result);
+                    writer.write(data.fileBinary);
                     writer.end(callback);
-                };
-                reader.readAsArrayBuffer(data.fileBlob);
+                }
             })
                 .catch(function (error) {
                 writer.end(callback);
@@ -3570,92 +3644,29 @@ var GitHubResourceContentWriter = (function () {
 }());
 var GitHubResource = (function (_super) {
     __extends(GitHubResource, _super);
-    function GitHubResource(repo, path, name) {
-        var _this = _super.call(this, name) || this;
-        _this.isDirectory = true;
+    function GitHubResource(repo, name, base) {
+        var _this = _super.call(this, name ? name : '', base ? base : '') || this;
         _this.resources = null;
         _this.repo = repo;
-        _this.filePath = path ? path : '';
         return _this;
     }
-    GitHubResource.prototype.getType = function () {
-        if (this.isDirectory)
-            return 'resource/node';
-        else
-            return 'resource/content';
+    GitHubResource.prototype.makeNewResource = function (name) {
+        var path = this.getStoragePath();
+        var res = new GitHubResource(this.repo, name, path);
+        return res;
     };
-    GitHubResource.prototype.getRenderType = function () {
-        return this.values['_rt'];
+    GitHubResource.prototype.getStoragePath = function (name) {
+        var path = Utils.filename_path_append(this.basePath, this.baseName);
+        if (name)
+            path = Utils.filename_path_append(path, name);
+        if (path.charAt(0) === '/')
+            path = path.substr(1);
+        return path;
     };
-    GitHubResource.prototype.makeMetadataPath = function (nm) {
-        if (nm) {
-            return this.filePath + '/.' + nm + '.metadata.json';
-        }
-        else if (this.isDirectory) {
-            return Utils.filename_path_append(this.filePath, '.metadata.json');
-        }
-        else {
-            var dirname = Utils.filename_dir(this.filePath);
-            var name_12 = Utils.filename(this.filePath);
-            return dirname + '/.' + name_12 + '.metadata.json';
-        }
-    };
-    GitHubResource.prototype.readResources = function (callback) {
+    GitHubResource.prototype.storeProperties = function (callback) {
         var self = this;
-        if (self.resources) {
-            callback(self.resources);
-        }
-        else if (self.isDirectory) {
-            self.repo.getContents('master', this.filePath, false)
-                .then(function (response) {
-                self.resources = {};
-                for (var i = 0; i < response.data.length; i++) {
-                    var item = response.data[i];
-                    var name_13 = item.name;
-                    if (name_13.charAt(0) === '.')
-                        continue;
-                    var path = name_13;
-                    if (self.filePath)
-                        path = Utils.filename_path_append(self.filePath, name_13);
-                    var res = new GitHubResource(self.repo, path, name_13);
-                    if (item['type'] === 'file')
-                        res.isDirectory = false;
-                    else if (item['type'] === 'dir')
-                        res.isDirectory = true;
-                    else
-                        continue;
-                    self.resources[name_13] = res;
-                }
-                callback(self.resources);
-            })
-                .catch(function (error) {
-                callback();
-            });
-        }
-        else {
-            callback();
-        }
-    };
-    GitHubResource.prototype.allocateChildResource = function (name, callback, walking) {
-        var self = this;
-        this.readResources(function (rls) {
-            var path = name;
-            if (self.filePath)
-                path = Utils.filename_path_append(self.filePath, name);
-            var res = new GitHubResource(self.repo, path, name);
-            if (!self.resources)
-                self.resources = {};
-            self.resources[name] = res;
-            callback(res);
-        });
-    };
-    GitHubResource.prototype.importContent = function (func, callback) {
-        func(this.getWriter(), callback);
-    };
-    GitHubResource.prototype.importProperties = function (data, callback) {
-        var self = this;
-        var path = this.makeMetadataPath();
-        var str = JSON.stringify(data);
+        var path = this.getMetadataPath();
+        var str = JSON.stringify(self.values);
         var opts = {
             encode: true
         };
@@ -3663,9 +3674,56 @@ var GitHubResource = (function (_super) {
             callback();
         });
     };
+    GitHubResource.prototype.loadProperties = function (callback) {
+        var self = this;
+        var storePath = this.getStoragePath();
+        self.repo.getContents('master', storePath, false)
+            .then(function (response) {
+            if (response.data.type && response.data.type === 'file') {
+                self.isDirectory = false;
+                self.contentSize = response.data.size;
+            }
+            else {
+                self.contentSize = 0;
+            }
+            callback(true);
+        })
+            .catch(function (error) {
+            callback(false);
+        });
+    };
+    GitHubResource.prototype.loadChildrenNames = function (callback) {
+        var self = this;
+        var storePath = this.getStoragePath();
+        self.repo.getContents('master', storePath, false)
+            .then(function (response) {
+            var rv = [];
+            for (var i = 0; i < response.data.length; i++) {
+                var item = response.data[i];
+                var name_11 = item.name;
+                if (name_11.charAt(0) === '.')
+                    continue;
+                rv.push(name_11);
+            }
+            callback(rv);
+        })
+            .catch(function (error) {
+            callback([]);
+        });
+    };
+    GitHubResource.prototype.storeChildrenNames = function (callback) {
+        callback();
+    };
+    GitHubResource.prototype.ensurePathExists = function (path, callback) {
+        callback(true);
+    };
+    GitHubResource.prototype.importContent = function (func, callback) {
+        func(this.getWriter(), callback);
+    };
     GitHubResource.prototype.removeChildResource = function (name, callback) {
         var self = this;
         var todelete = [];
+        var storePath = this.getStoragePath(name);
         var delete_paths = function (paths) {
             if (paths.length) {
                 var path = paths.pop();
@@ -3704,14 +3762,14 @@ var GitHubResource = (function (_super) {
                 callback(null);
             });
         };
-        self.repo.getContents('master', this.filePath, false)
+        self.repo.getContents('master', storePath, false)
             .then(function (response) {
             for (var i = 0; i < response.data.length; i++) {
                 var item = response.data[i];
                 if (item.name === name) {
                     var path = name;
-                    if (self.filePath)
-                        path = Utils.filename_path_append(self.filePath, name);
+                    if (storePath)
+                        path = Utils.filename_path_append(storePath, name);
                     if (item.type === 'dir') {
                         collect_all(path);
                         return;
@@ -3728,71 +3786,25 @@ var GitHubResource = (function (_super) {
             .catch(function (error) {
             callback(null);
         });
-        this.resources = null;
-    };
-    GitHubResource.prototype.resolveChildResource = function (name, callback, walking) {
-        if (walking) {
-            if (this.resources) {
-                callback(this.resources[name]);
-            }
-            else {
-                this.resources = {};
-                var path = name;
-                if (this.filePath)
-                    path = Utils.filename_path_append(this.filePath, name);
-                var res = new GitHubResource(this.repo, path, name);
-                this.resources[name] = res;
-                callback(res);
-            }
-        }
-        else {
-            this.readResources(function (rls) {
-                if (rls)
-                    callback(rls[name]);
-                else
-                    callback(null);
-            });
-        }
-    };
-    GitHubResource.prototype.listChildrenNames = function (callback) {
-        this.readResources(function (rls) {
-            if (!rls)
-                callback([]);
-            else {
-                var ls = [];
-                for (var name_14 in rls) {
-                    ls.push(name_14);
-                }
-                callback(ls);
-            }
-        });
-    };
-    GitHubResource.prototype.isContentResource = function () {
-        return !this.isDirectory;
-    };
-    GitHubResource.prototype.getContentType = function () {
-        if (this.isDirectory)
-            return null;
-        var contentType = this.values['_ct'];
-        if (contentType)
-            return contentType;
-        else
-            return Utils.filename_mime(this.getName());
+        this.childNames.splice(this.childNames.indexOf(name), 1);
+        this.clearCachedResource(name);
     };
     GitHubResource.prototype.getWriter = function () {
+        var path = this.getStoragePath();
         if (this.isDirectory) {
             this.isDirectory = false;
         }
-        return new GitHubResourceContentWriter(this.repo, this.filePath);
+        this.loaded = false;
+        return new GitHubResourceContentWriter(this.repo, path);
     };
     GitHubResource.prototype.read = function (writer, callback) {
         if (this.isDirectory) {
             writer.end(callback);
         }
         else {
-            var path = this.filePath;
+            var storePath = this.getStoragePath();
             var ct_3 = this.getContentType();
-            this.repo.getContents('master', this.filePath, false)
+            this.repo.getContents('master', storePath, false)
                 .then(function (data) {
                 var content = data.data.content;
                 var encoding = data.data.encoding;
@@ -3806,7 +3818,7 @@ var GitHubResource = (function (_super) {
         }
     };
     return GitHubResource;
-}(Resource));
+}(StoredResource));
 if (typeof module !== 'undefined') {
     module.exports = {
         ServerRequestHandler: ServerRequestHandler,
@@ -3817,6 +3829,8 @@ if (typeof module !== 'undefined') {
         JSRendererFactory: JSRendererFactory,
         InterFuncRendererFactory: InterFuncRendererFactory,
         ResourceRequestHandler: ResourceRequestHandler,
+        DropBoxResource: DropBoxResource,
+        GitHubResource: GitHubResource,
         FileResource: FileResource,
         RootResource: RootResource,
         Utils: Utils

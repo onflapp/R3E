@@ -1,6 +1,3 @@
-var express = require('express');
-var app = express();
-
 var r = require('../../dist/r3elib');
 
 if (!process.argv[2]) {

@@ -278,15 +278,16 @@ abstract class Resource extends Data implements ContentReader {
 
       this.importContent(ffunc, function () {
         processing--;
+        processing--;
         done();
       });
     }
-
-    this.importProperties(props, function () {
-      processing--;
-      done();
-    });
-
+    else {
+      this.importProperties(props, function () {
+        processing--;
+        done();
+      });
+    }
   }
 
   public listChildrenResources(callback: any) {
@@ -318,6 +319,10 @@ abstract class Resource extends Data implements ContentReader {
 
   public getContentType(): string {
     return null;
+  }
+
+  public getContentSize(): number {
+    return -1;
   }
 
   public getWriter(): ContentWriter {
