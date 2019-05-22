@@ -5,6 +5,7 @@ abstract class StoredResource extends Resource {
   protected isDirectory: boolean = true;
   protected contentSize: number = -1;
   protected resourceCache = {};
+  protected timeOfLoading;
   protected loaded = false;
 
   constructor(name: string, base ? : string) {
@@ -20,11 +21,20 @@ abstract class StoredResource extends Resource {
   }
 
   protected getCachedResource(name: string): Resource {
-    return this.resourceCache[name];
+    let res = this.resourceCache[name];
+    if (res && (Date.now() - res.timeOfLoading) > (60*1000)) {
+      delete this.resourceCache[name];
+      return null;
+    }
+    else return res;
+
   }
 
-  protected setCachedResource(name: string, res: Resource): Resource {
-    //this.resourceCache[name] = res;
+  protected setCachedResource(name: string, res: StoredResource): Resource {
+    if (res) {
+      this.resourceCache[name] = res;
+      res.timeOfLoading = Date.now();
+    }
     return res;
   }
 

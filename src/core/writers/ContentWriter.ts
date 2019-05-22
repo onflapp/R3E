@@ -65,5 +65,9 @@ class ContentWriterAdapter implements ContentWriter {
       }
     }
     if (cb) cb();
+
+    //cleanup
+    this.callback = null;
+    this.data = null;
   }
 }

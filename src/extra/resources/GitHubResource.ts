@@ -20,10 +20,19 @@ class GitHubResourceContentWriter implements ContentWriter {
 
   public end(callback: any) {
     let self = this;
-    let data = this.buffer.join('');
+    let data = '';
     let opts = {
       encode: true
     };
+
+    if (typeof Buffer !== 'undefined' && this.buffer[0] instanceof Buffer) {
+      let b = Buffer.concat(this.buffer);
+      data = b.toString('base64');
+      opts.encode = false;
+    }
+    else if (typeof this.buffer[0] === 'string') {
+      data = this.buffer.join('');
+    }
 
     this.repo.writeFile('master', this.filePath, data, '', opts, function () {
       callback();
@@ -73,20 +82,46 @@ class GitHubResource extends StoredResource {
     let self = this;
     let storePath = this.getStoragePath();
 
-    self.repo.getContents('master', storePath, false)
-      .then(function (response) {
-        if (response.data.type && response.data.type === 'file') {
-          self.isDirectory = false;
-          self.contentSize = response.data.size;
-        }
-        else {
-          self.contentSize = 0;
-        }
-        callback(true);
-      })
-      .catch(function (error) {
-        callback(false);
-      });
+    let load_metadata = function() {
+      let metadata = self.getMetadataPath();
+      self.repo.getContents('master', metadata, false)
+        .then(function (response) {
+          if (response.data.content) {
+            let str = Utils.base642ArrayBuffer(response.data.content);
+            if (str) {
+              self.values = JSON.parse(str.toString());
+            }
+          }
+          
+          callback(true);
+        })
+        .catch(function (error) {
+          if (error.response.status === 404) callback(true);
+          else callback(false);
+        });
+
+    };
+
+    if (storePath) {
+      self.repo.getContents('master', storePath, false)
+        .then(function (response) {
+          if (response.data.type && response.data.type === 'file') {
+            self.isDirectory = false;
+            self.contentSize = response.data.size;
+            callback(true);
+          }
+          else {
+            self.contentSize = 0;
+            load_metadata();
+          }
+        })
+        .catch(function (error) {
+          callback(false);
+        });
+    }
+    else {
+      callback(true);
+    }
   }
 
   public loadChildrenNames(callback: ChildrenNamesCallback) {
@@ -126,7 +161,7 @@ class GitHubResource extends StoredResource {
   public removeChildResource(name: string, callback) {
     let self = this;
     let todelete = [];
-    let storePath = this.getStoragePath(name);
+    let storePath = Utils.filename_dir(this.getStoragePath(name));
 
     let delete_paths = function (paths) {
       if (paths.length) {
@@ -192,7 +227,7 @@ class GitHubResource extends StoredResource {
         callback(null);
       });
 
-    this.childNames.splice(this.childNames.indexOf(name), 1);
+    if (this.childNames) this.childNames.splice(this.childNames.indexOf(name), 1);
     this.clearCachedResource(name);
   }
 

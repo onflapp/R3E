@@ -156,10 +156,16 @@ class DropBoxResource extends StoredResource {
           path: path
         })
         .then(function (response) {
-          if (response['.tag'] === 'file') self.isDirectory = false;
-          else self.isDirectory = true;
-
-          load_metadata(callback);
+          if (response['.tag'] === 'file') {
+            self.isDirectory = false;
+            self.contentSize = response.size;
+            callback(true);
+          }
+          else {
+            self.contentSize = 0;
+            self.isDirectory = true;
+            load_metadata(callback);
+          }
         })
         .catch(function (error) {
           callback(false);

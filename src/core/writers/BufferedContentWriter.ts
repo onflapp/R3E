@@ -28,5 +28,9 @@ class BufferedContentWriter implements ContentWriter {
     else {
       this.callback(this.contentType, this.content);
     }
+
+    //cleanup
+    this.content = null;
+    this.callback = null;
   }
 }

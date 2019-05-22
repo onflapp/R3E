@@ -119,6 +119,7 @@ class ResourceRequestContext {
       if (ctype) {
         map['isTextContentResource'] = Utils.is_texttype(ctype);
         map['contentType'] = ctype;
+        map['contentSize'] = res.getContentSize();
       }
       map['path'] = this.pathInfo.resourcePath;
       map['_'] = res.getProperties();

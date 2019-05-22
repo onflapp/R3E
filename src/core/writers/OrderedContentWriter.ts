@@ -41,6 +41,11 @@ class OrderedContentWriter implements ContentWriter {
     }
     else if (p.instances == 0) {
       p.endAll();
+
+      //cleanup
+      this.contentQueue = null;
+      this.parentWriter = null;
+      this.delegateWriter = null;
     }
   }
 

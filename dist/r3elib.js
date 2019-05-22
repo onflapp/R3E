@@ -887,6 +887,7 @@ var ResourceRequestContext = (function () {
             if (ctype) {
                 map['isTextContentResource'] = Utils.is_texttype(ctype);
                 map['contentType'] = ctype;
+                map['contentSize'] = res.getContentSize();
             }
             map['path'] = this.pathInfo.resourcePath;
             map['_'] = res.getProperties();
@@ -1404,6 +1405,8 @@ var ContentWriterAdapter = (function () {
         }
         if (cb)
             cb();
+        this.callback = null;
+        this.data = null;
     };
     return ContentWriterAdapter;
 }());
@@ -1439,6 +1442,9 @@ var OrderedContentWriter = (function () {
         }
         else if (p.instances == 0) {
             p.endAll();
+            this.contentQueue = null;
+            this.parentWriter = null;
+            this.delegateWriter = null;
         }
     };
     OrderedContentWriter.prototype.endAll = function () {
@@ -1496,6 +1502,8 @@ var BufferedContentWriter = (function () {
         else {
             this.callback(this.contentType, this.content);
         }
+        this.content = null;
+        this.callback = null;
     };
     return BufferedContentWriter;
 }());
@@ -2179,9 +2187,19 @@ var StoredResource = (function (_super) {
         return _this;
     }
     StoredResource.prototype.getCachedResource = function (name) {
-        return this.resourceCache[name];
+        var res = this.resourceCache[name];
+        if (res && (Date.now() - res.timeOfLoading) > (60 * 1000)) {
+            delete this.resourceCache[name];
+            return null;
+        }
+        else
+            return res;
     };
     StoredResource.prototype.setCachedResource = function (name, res) {
+        if (res) {
+            this.resourceCache[name] = res;
+            res.timeOfLoading = Date.now();
+        }
         return res;
     };
     StoredResource.prototype.clearCachedResource = function (name) {
@@ -3503,11 +3521,16 @@ var DropBoxResource = (function (_super) {
                 path: path
             })
                 .then(function (response) {
-                if (response['.tag'] === 'file')
+                if (response['.tag'] === 'file') {
                     self.isDirectory = false;
-                else
+                    self.contentSize = response.size;
+                    callback(true);
+                }
+                else {
+                    self.contentSize = 0;
                     self.isDirectory = true;
-                load_metadata(callback);
+                    load_metadata(callback);
+                }
             })
                 .catch(function (error) {
                 callback(false);
@@ -3632,10 +3655,18 @@ var GitHubResourceContentWriter = (function () {
     };
     GitHubResourceContentWriter.prototype.end = function (callback) {
         var self = this;
-        var data = this.buffer.join('');
+        var data = '';
         var opts = {
             encode: true
         };
+        if (typeof Buffer !== 'undefined' && this.buffer[0] instanceof Buffer) {
+            var b = Buffer.concat(this.buffer);
+            data = b.toString('base64');
+            opts.encode = false;
+        }
+        else if (typeof this.buffer[0] === 'string') {
+            data = this.buffer.join('');
+        }
         this.repo.writeFile('master', this.filePath, data, '', opts, function () {
             callback();
         });
@@ -3677,20 +3708,45 @@ var GitHubResource = (function (_super) {
     GitHubResource.prototype.loadProperties = function (callback) {
         var self = this;
         var storePath = this.getStoragePath();
-        self.repo.getContents('master', storePath, false)
-            .then(function (response) {
-            if (response.data.type && response.data.type === 'file') {
-                self.isDirectory = false;
-                self.contentSize = response.data.size;
-            }
-            else {
-                self.contentSize = 0;
-            }
+        var load_metadata = function () {
+            var metadata = self.getMetadataPath();
+            self.repo.getContents('master', metadata, false)
+                .then(function (response) {
+                if (response.data.content) {
+                    var str = Utils.base642ArrayBuffer(response.data.content);
+                    if (str) {
+                        self.values = JSON.parse(str.toString());
+                    }
+                }
+                callback(true);
+            })
+                .catch(function (error) {
+                if (error.response.status === 404)
+                    callback(true);
+                else
+                    callback(false);
+            });
+        };
+        if (storePath) {
+            self.repo.getContents('master', storePath, false)
+                .then(function (response) {
+                if (response.data.type && response.data.type === 'file') {
+                    self.isDirectory = false;
+                    self.contentSize = response.data.size;
+                    callback(true);
+                }
+                else {
+                    self.contentSize = 0;
+                    load_metadata();
+                }
+            })
+                .catch(function (error) {
+                callback(false);
+            });
+        }
+        else {
             callback(true);
-        })
-            .catch(function (error) {
-            callback(false);
-        });
+        }
     };
     GitHubResource.prototype.loadChildrenNames = function (callback) {
         var self = this;
@@ -3723,7 +3779,7 @@ var GitHubResource = (function (_super) {
     GitHubResource.prototype.removeChildResource = function (name, callback) {
         var self = this;
         var todelete = [];
-        var storePath = this.getStoragePath(name);
+        var storePath = Utils.filename_dir(this.getStoragePath(name));
         var delete_paths = function (paths) {
             if (paths.length) {
                 var path = paths.pop();
@@ -3786,7 +3842,8 @@ var GitHubResource = (function (_super) {
             .catch(function (error) {
             callback(null);
         });
-        this.childNames.splice(this.childNames.indexOf(name), 1);
+        if (this.childNames)
+            this.childNames.splice(this.childNames.indexOf(name), 1);
         this.clearCachedResource(name);
     };
     GitHubResource.prototype.getWriter = function () {
