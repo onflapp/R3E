@@ -1093,11 +1093,16 @@ var ResourceRequestHandler = (function (_super) {
     ResourceRequestHandler.prototype.setPathParserPattern = function (pattern) {
         this.pathParserRegexp = new RegExp(pattern);
     };
+    ResourceRequestHandler.prototype.setPathContext = function (pref) {
+        this.pathContext = pref;
+    };
     ResourceRequestHandler.prototype.parsePath = function (rpath) {
         if (!rpath)
             return null;
         var info = new PathInfo();
         var path = rpath.replace(/\/+/g, '/');
+        if (this.pathContext)
+            path = path.substr(this.pathContext.length);
         var m = path.match(this.pathParserRegexp);
         if (m) {
             info.dataPath = Utils.unescape(m[6] ? m[6] : null);
@@ -1354,6 +1359,10 @@ var ContentWriterAdapter = (function () {
         this.callback = callback;
         this.conversion = typ;
     }
+    ContentWriterAdapter.prototype.__cleanup = function () {
+        this.callback = null;
+        this.data = null;
+    };
     ContentWriterAdapter.prototype.start = function (ctype) {
         this.ctype = ctype;
     };
@@ -1369,44 +1378,51 @@ var ContentWriterAdapter = (function () {
             var self_1 = this;
             if (!v) {
                 this.callback('', this.ctype);
+                self_1.__cleanup();
             }
             else if (typeof v === 'string') {
                 this.callback(this.data.join(''), this.ctype);
+                self_1.__cleanup();
             }
             else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(v)) {
                 var b = Buffer.concat(this.data);
                 this.callback(b.toString('utf8'), this.ctype);
+                self_1.__cleanup();
             }
             else if (v instanceof Blob && typeof window !== 'undefined') {
                 var reader_1 = new FileReader();
                 reader_1.onload = function () {
                     self_1.callback(reader_1.result, self_1.ctype);
+                    self_1.__cleanup();
                 };
                 reader_1.readAsText(v);
             }
             else if (v instanceof ArrayBuffer && typeof window !== 'undefined') {
                 var t = new window['TextDecoder']('utf-8').decode(v);
                 this.callback(t, this.ctype);
+                self_1.__cleanup();
             }
             else if (v) {
                 this.callback(this.data, this.ctype);
+                self_1.__cleanup();
             }
             else {
                 this.callback(null, this.ctype);
+                self_1.__cleanup();
             }
         }
         else {
             if (this.data.length === 1) {
                 this.callback(this.data[0], this.ctype);
+                this.__cleanup();
             }
             else {
                 this.callback(this.data, this.ctype);
+                this.__cleanup();
             }
         }
         if (cb)
             cb();
-        this.callback = null;
-        this.data = null;
     };
     return ContentWriterAdapter;
 }());
@@ -3174,10 +3190,21 @@ var PouchDBResourceContentWriter = (function () {
     };
     PouchDBResourceContentWriter.prototype.end = function (callback) {
         var self = this;
-        self.db.get(this.id).then(function (doc) {
-            var blob = new Blob(self.buffer, {
+        var blob = null;
+        if (typeof window !== 'undefined') {
+            blob = new Blob(self.buffer, {
                 type: self.ctype
             });
+        }
+        else {
+            if (typeof this.buffer[0] === 'string')
+                blob = new Buffer(this.buffer.join(''));
+            else if (this.buffer[0] instanceof Buffer)
+                blob = Buffer.concat(this.buffer);
+            else
+                blob = new Buffer('');
+        }
+        var update_doc = function (doc) {
             self.db.putAttachment(doc._id, 'content', doc._rev, blob, self.ctype).then(function () {
                 if (callback)
                     callback();
@@ -3187,11 +3214,21 @@ var PouchDBResourceContentWriter = (function () {
                 if (callback)
                     callback();
             });
+        };
+        self.db.get(this.id).then(function (doc) {
+            update_doc(doc);
         })
             .catch(function (err) {
-            console.log(err);
-            if (callback)
-                callback();
+            if (err.status === 404) {
+                update_doc({
+                    _id: self.id
+                });
+            }
+            else {
+                console.log(err);
+                if (callback)
+                    callback();
+            }
         });
     };
     return PouchDBResourceContentWriter;
@@ -3218,12 +3255,6 @@ var PouchDBResource = (function (_super) {
         else {
             return 'p:1/';
         }
-    };
-    PouchDBResource.prototype.isContentResource = function () {
-        if (this.contentType)
-            return true;
-        else
-            return false;
     };
     PouchDBResource.prototype.getContentType = function () {
         return this.contentType;
@@ -3289,6 +3320,14 @@ var PouchDBResource = (function (_super) {
                 if (v)
                     self.values[self.unescape_name(key)] = v;
             }
+            if (doc._attachments) {
+                self.contentType = doc._attachments.content.content_type;
+                self.contentSize = doc._attachments.content.length;
+                self.isDirectory = false;
+            }
+            else {
+                self.contentSize = 0;
+            }
             callback(true);
         })
             .catch(function (err) {
@@ -3309,16 +3348,18 @@ var PouchDBResource = (function (_super) {
         var self = this;
         var path = this.getStoragePath(name);
         var id = this.make_key(path);
-        self.db.get(id)
-            .then(function (doc) {
-            self.db.remove(doc);
-        })
-            .then(function (result) {
-            callback();
-        })
-            .catch(function (err) {
-            callback();
-            console.log(err);
+        _super.prototype.removeChildResource.call(this, name, function () {
+            self.db.get(id)
+                .then(function (doc) {
+                self.db.remove(doc);
+            })
+                .then(function (result) {
+                callback();
+            })
+                .catch(function (err) {
+                callback();
+                console.log(err);
+            });
         });
     };
     PouchDBResource.prototype.loadChildrenNames = function (callback) {
@@ -3346,6 +3387,7 @@ var PouchDBResource = (function (_super) {
     PouchDBResource.prototype.getWriter = function () {
         var path = this.getStoragePath();
         var id = this.make_key(path);
+        this.loaded = false;
         return new PouchDBResourceContentWriter(this.db, id);
     };
     PouchDBResource.prototype.read = function (writer, callback) {
@@ -3888,6 +3930,7 @@ if (typeof module !== 'undefined') {
         ResourceRequestHandler: ResourceRequestHandler,
         DropBoxResource: DropBoxResource,
         GitHubResource: GitHubResource,
+        PouchDBResource: PouchDBResource,
         FileResource: FileResource,
         RootResource: RootResource,
         Utils: Utils

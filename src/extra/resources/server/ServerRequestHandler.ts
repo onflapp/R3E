@@ -65,6 +65,7 @@ class ServerRequestHandler extends ResourceRequestHandler {
 
   public handleGetRequest(req) {
     let URL = require('url').URL;
+
     let rpath = unescape(req.path);
     let referer = req.headers.referrer || req.headers.referer;
 
@@ -79,6 +80,7 @@ class ServerRequestHandler extends ResourceRequestHandler {
 
   public handlePostRequest(req) {
     let URL = require('url').URL;
+
     let self = this;
     let rpath = unescape(req.path);
     let multiparty = require('multiparty');

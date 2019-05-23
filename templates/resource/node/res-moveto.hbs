@@ -17,7 +17,7 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <a class="close" href="{{R.PATH_APPEND}}../{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
+          <a class="close" href="{{C.P}}{{R.PATH_APPEND}}../{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
           <h4 class="modal-title">Move or Rename Resource</h4>
         </div>
         <div class="modal-body">
@@ -35,14 +35,14 @@
           <h1>to</h1>
 
           <ol class="breadcrumb">
-            <li><a href="{{R.PATH}}{{C.X}}res-moveto/">HOME</a></li>
+            <li><a href="{{C.P}}{{R.PATH}}{{C.X}}res-moveto/">HOME</a></li>
             {{#include R.DATA_PATH "parents"}}
-              <li><a href="{{R.PATH}}{{C.X}}res-moveto{{path}}">{{name}}</a></li>
+              <li><a href="{{C.P}}{{R.PATH}}{{C.X}}res-moveto{{path}}">{{name}}</a></li>
             {{/include}}
             <li class="active">{{R.DATA_NAME}}</li>
           </ol>
 
-          <form method="post" action="{{R.PATH}}">
+          <form method="post" action="{{C.P}}{{R.PATH}}">
 
             <table class="table">
               {{#include R.DATA_PATH "children"}}
@@ -56,7 +56,7 @@
                   <tr>
                     {{#match path "!startsWith" R.PATH}}
                       <td>
-                        <i class="glyphicon glyphicon-folder-close"></i> <a href="{{R.PATH}}{{C.X}}res-moveto{{path}}">{{name}}</a>
+                        <i class="glyphicon glyphicon-folder-close"></i> <a href="{{C.P}}{{R.PATH}}{{C.X}}res-moveto{{path}}">{{name}}</a>
                       </td>
                     {{/match}}
                   </tr>
@@ -65,7 +65,7 @@
               {{/include}}
               <tr>
                 <td>
-                  <input class="form-control" name=":name|newUUID" value="{{R.NAME}}" autocomplete="off">
+                  <input class="form-control" name=":name|newUUID" value="{{C.P}}{{R.NAME}}" autocomplete="off">
                 </td>
               </tr>
             </table>
@@ -73,8 +73,8 @@
 
             <div class="modal-footer">
               <input type="hidden" name=":moveto" value="{{R.DATA_PATH_APPEND}}{:name}">
-              <input type="hidden" name=":forward" value="{{R.DATA_PATH}}{{C.X}}res-list">
-              <a class="btn btn-default" href="{{R.PATH_APPEND}}../{{C.X}}res-list">Cancel</a>
+              <input type="hidden" name=":forward" value="{{C.P}}{{R.DATA_PATH}}{{C.X}}res-list">
+              <a class="btn btn-default" href="{{C.P}}{{R.PATH_APPEND}}../{{C.X}}res-list">Cancel</a>
               <input class="btn btn-success" type="submit" value="Move">
             </div>
 

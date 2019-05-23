@@ -13,6 +13,7 @@ class ResourceRequestHandler extends EventDispatcher {
   protected queryProperties: any;
   protected configProperties: any;
   protected pathParserRegexp: RegExp;
+  protected pathContext: string;
 
   constructor(resourceResolver: ResourceResolver, templateResolver: ResourceResolver, contentWriter: ContentWriter) {
     super();
@@ -209,11 +210,17 @@ class ResourceRequestHandler extends EventDispatcher {
     this.pathParserRegexp = new RegExp(pattern);
   }
 
+  public setPathContext(pref) {
+    this.pathContext = pref;
+  }
+
   public parsePath(rpath: string): PathInfo {
     if (!rpath) return null;
 
     let info = new PathInfo();
     let path = rpath.replace(/\/+/g, '/');
+
+    if (this.pathContext) path = path.substr(this.pathContext.length);
 
     let m = path.match(this.pathParserRegexp);
 

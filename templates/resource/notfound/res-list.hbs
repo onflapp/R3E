@@ -18,15 +18,15 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <a class="close" href="{{R.PATH_APPEND}}../{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
+          <a class="close" href="{{C.P}}{{R.PATH_APPEND}}../{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
           <h4 class="modal-title">Resource Not Found</h4>
         </div>
         <div class="modal-body">
 
           <ol class="breadcrumb">
-            <li><a href="/{{C.X}}res-list">HOME</a></li>
+            <li><a href="{{C.P}}/{{C.X}}res-list">HOME</a></li>
             {{#include "." "parents"}}
-              <li><a href="{{path}}{{C.X}}res-list">{{name}}</a></li>
+              <li><a href="{{C.P}}{{path}}{{C.X}}res-list">{{name}}</a></li>
             {{/include}}
             <li class="active">{{R.NAME}}</li>
           </ol>
@@ -35,9 +35,9 @@
 
         </div>
         <div class="modal-footer">
-          <form class="form-inline" method="post" action="{{R.PATH}}">
-            <a class="btn btn-default" href="{{R.PATH_APPEND}}../{{C.X}}res-list">Cancel</a>
-            <input type="hidden" name=":forward" value="{{R.PATH_APPEND}}{{C.X}}res-list">
+          <form class="form-inline" method="post" action="{{C.P}}{{R.PATH}}">
+            <a class="btn btn-default" href="{{C.P}}{{R.PATH_APPEND}}../{{C.X}}res-list">Cancel</a>
+            <input type="hidden" name=":forward" value="{{C.P}}{{R.PATH_APPEND}}{{C.X}}res-list">
             <input class="btn btn-success" type="submit" value="Create">
           </form>
 

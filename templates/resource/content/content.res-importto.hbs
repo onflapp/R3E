@@ -18,7 +18,7 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <a class="close" href="{{R.PATH_APPEND}}../{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
+          <a class="close" href="{{C.P}}{{R.PATH_APPEND}}../{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
           <h4 class="modal-title">Import Resources</h4>
         </div>
         <div class="modal-body">
@@ -36,14 +36,14 @@
           <h1>to</h1>
 
           <ol class="breadcrumb">
-            <li><a href="{{R.PATH}}{{C.X}}res-importto/">HOME</a></li>
+            <li><a href="{{C.P}}{{R.PATH}}{{C.X}}res-importto/">HOME</a></li>
             {{#include R.DATA_PATH "parents"}}
-              <li><a href="{{R.PATH}}{{C.X}}res-importto{{path}}">{{name}}</a></li>
+              <li><a href="{{C.P}}{{R.PATH}}{{C.X}}res-importto{{path}}">{{name}}</a></li>
             {{/include}}
             <li class="active">{{R.DATA_NAME}}</li>
           </ol>
 
-          <form method="post" action="{{R.PATH}}{{C.X}}import{{R.DATA_PATH}}">
+          <form method="post" action="{{C.P}}{{R.PATH}}{{C.X}}import{{R.DATA_PATH}}">
             <table class="table">
               {{#include R.DATA_PATH "children"}}
                 {{#if isContentResource}}
@@ -56,7 +56,7 @@
                   <tr>
                     {{#match path "!startsWith" R.PATH}}
                       <td>
-                        <i class="glyphicon glyphicon-folder-close"></i> <a href="{{R.PATH}}{{C.X}}res-importto{{path}}">{{name}}</a>
+                        <i class="glyphicon glyphicon-folder-close"></i> <a href="{{C.P}}{{R.PATH}}{{C.X}}res-importto{{path}}">{{name}}</a>
                       </td>
                     {{/match}}
                   </tr>
@@ -66,10 +66,10 @@
 
             </table>
 
-            <input type="hidden" name=":forward" value="{{R.DATA_PATH}}{{C.X}}res-list">
+            <input type="hidden" name=":forward" value="{{C.P}}{{R.DATA_PATH}}{{C.X}}res-list">
 
             <div class="modal-footer">
-              <a class="btn btn-default" href="{{R.PATH_APPEND}}../{{C.X}}res-list">Cancel</a>
+              <a class="btn btn-default" href="{{C.P}}{{R.PATH_APPEND}}../{{C.X}}res-list">Cancel</a>
               <input class="btn btn-success" type="submit" value="Import">
             </div>
 

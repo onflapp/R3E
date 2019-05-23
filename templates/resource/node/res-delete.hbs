@@ -18,7 +18,7 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <a class="close" href="{{R.PATH_APPEND}}../{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
+          <a class="close" href="{{C.P}}{{R.PATH_APPEND}}../{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
           <h4 class="modal-title">Delete Resource</h4>
         </div>
         <div class="modal-body">
@@ -35,10 +35,10 @@
 
         </div>
         <div class="modal-footer">
-          <form class="form-inline" method="post" action="{{R.PATH}}">
-            <a class="btn btn-default" href="{{R.PATH_APPEND}}../{{C.X}}res-list">Cancel</a>
+          <form class="form-inline" method="post" action="{{C.P}}{{R.PATH}}">
+            <a class="btn btn-default" href="{{C.P}}{{R.PATH_APPEND}}../{{C.X}}res-list">Cancel</a>
             <input type="hidden" name=":delete" value="{{R.PATH}}">
-            <input type="hidden" name=":forward" value="{{R.PATH_APPEND}}../{{C.X}}res-list">
+            <input type="hidden" name=":forward" value="{{C.P}}{{R.PATH_APPEND}}../{{C.X}}res-list">
             <input class="btn btn-danger" type="submit" value="Delete">
           </form>
 

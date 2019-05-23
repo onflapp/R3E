@@ -15,6 +15,11 @@ class ContentWriterAdapter implements ContentWriter {
     this.conversion = typ;
   }
 
+  protected __cleanup() {
+    this.callback = null;
+    this.data = null;
+  }
+
   public start(ctype: string) {
     this.ctype = ctype;
   }
@@ -30,44 +35,49 @@ class ContentWriterAdapter implements ContentWriter {
       let self = this;
       if (!v) {
         this.callback('', this.ctype);
+        self.__cleanup();
       }
       else if (typeof v === 'string') {
         this.callback(this.data.join(''), this.ctype);
+        self.__cleanup();
       }
       else if (typeof Buffer !== 'undefined' && Buffer.isBuffer(v)) {
         let b = Buffer.concat(this.data);
         this.callback(b.toString('utf8'), this.ctype);
+        self.__cleanup();
       }
       else if (v instanceof Blob && typeof window !== 'undefined') {
         let reader = new FileReader();
         reader.onload = function () {
           self.callback(reader.result, self.ctype);
+          self.__cleanup();
         };
         reader.readAsText(v);
       }
       else if (v instanceof ArrayBuffer && typeof window !== 'undefined') {
         let t = new window['TextDecoder']('utf-8').decode(v);
         this.callback(t, this.ctype);
+        self.__cleanup();
       }
       else if (v) {
         this.callback(this.data, this.ctype);
+        self.__cleanup();
       }
       else {
         this.callback(null, this.ctype);
+        self.__cleanup();
       }
     }
     else {
       if (this.data.length === 1) {
         this.callback(this.data[0], this.ctype);
+        this.__cleanup();
       }
       else {
         this.callback(this.data, this.ctype);
+        this.__cleanup();
       }
     }
     if (cb) cb();
-
-    //cleanup
-    this.callback = null;
-    this.data = null;
   }
 }

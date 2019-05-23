@@ -18,7 +18,7 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <a class="close" href="{{R.PATH}}{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
+          <a class="close" href="{{C.P}}{{R.PATH}}{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
           <h4 class="modal-title">Create New Resource</h4>
         </div>
         <div class="modal-body">
@@ -33,7 +33,7 @@
           </ol>
 
           <h5>Resource Node</h5>
-          <form class="form-inline" method="post" action="{{R.PATH_APPEND}}{:name}">
+          <form class="form-inline" method="post" action="{{C.P}}{{R.PATH_APPEND}}{:name}">
             <div class="form-group">
               <select class="form-control" name="_rt">
                 <option value="">not set</option>
@@ -44,7 +44,7 @@
               </select>
 
               <input class="form-control" name=":name|newUUID" value="" autocomplete="off" placeholder="name">
-              <input type="hidden" name=":forward" value="{{R.PATH}}{{C.X}}res-list">
+              <input type="hidden" name=":forward" value="{{C.P}}{{R.PATH}}{{C.X}}res-list">
               <button class="form-control btn btn-success" type="submit">
                 <span class="glyphicon glyphicon-plus"></span>
               </button>
@@ -53,12 +53,12 @@
 
           <h5>Create Empty File</h5>
 
-          <form class="form-inline" method="post" action="{{R.PATH_APPEND}}{:name}">
+          <form class="form-inline" method="post" action="{{C.P}}{{R.PATH_APPEND}}{:name}">
             <div class="form-group">
               <input class="form-control" name=":name|newUUID" value="" autocomplete="off" placeholder="file name">
               <input type="hidden" name="_content" value=""></input>
               <!--input type="hidden" name="_ct" value="text/plain"></input-->
-              <input type="hidden" name=":forward" value="{{R.PATH}}{{C.X}}res-list">
+              <input type="hidden" name=":forward" value="{{C.P}}{{R.PATH}}{{C.X}}res-list">
               <button class="form-control btn btn-success" type="submit">
                 <span class="glyphicon glyphicon-plus"></span>
               </button>
@@ -69,11 +69,11 @@
           <hr>
           <h5>Upload File</h5>
 
-          <form class="form-inline" method="post" enctype="multipart/form-data" action="{{R.PATH_APPEND}}{:name}">
+          <form class="form-inline" method="post" enctype="multipart/form-data" action="{{C.P}}{{R.PATH_APPEND}}{:name}">
             <div class="form-group">
               <input class="form-control" type="file" name=":filename" value="">
               <input class="form-control" name=":name|:filename|newUUID" value="" autocomplete="off" placeholder="file name">
-              <input type="hidden" name=":forward" value="{{R.PATH}}{{C.X}}res-list">
+              <input type="hidden" name=":forward" value="{{C.P}}{{R.PATH}}{{C.X}}res-list">
               <button class="form-control btn btn-success" type="submit">
                 <span class="glyphicon glyphicon-plus"></span>
               </button>
@@ -85,7 +85,7 @@
           <form class="form-inline" method="post" enctype="multipart/form-data" action="{{R.PATH}}">
             <div class="form-group">
               <input class="form-control" type="file" name=":import" value="">
-              <input type="hidden" name=":forward" value="{{R.PATH}}{{C.X}}res-list">
+              <input type="hidden" name=":forward" value="{{C.P}}{{R.PATH}}{{C.X}}res-list">
 
               <button class="form-control btn btn-success" type="submit">
                 <span class="glyphicon glyphicon-plus"></span>
@@ -95,7 +95,7 @@
 
         </div>
         <div class="modal-footer">
-          <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-list">Cancel</a>
+          <a class="btn btn-default" href="{{C.P}}{{R.PATH}}{{C.X}}res-list">Cancel</a>
         </div>
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->

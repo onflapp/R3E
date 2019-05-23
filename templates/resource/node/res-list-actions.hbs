@@ -1,11 +1,11 @@
 <div class="btn-group btn-group-xs">
-  <a class="btn btn-default glyphicon glyphicon-trash" href="{{path}}{{C.X}}res-delete"></a>
-  <a class="btn btn-default glyphicon glyphicon-duplicate" href="{{path}}{{C.X}}res-copyto{{path}}/.."></a>
-  <a class="btn btn-default glyphicon glyphicon-transfer" href="{{path}}{{C.X}}res-moveto{{path}}/.."></a>
+  <a class="btn btn-default glyphicon glyphicon-trash" href="{{C.P}}{{path}}{{C.X}}res-delete"></a>
+  <a class="btn btn-default glyphicon glyphicon-duplicate" href="{{C.P}}{{path}}{{C.X}}res-copyto{{path}}/.."></a>
+  <a class="btn btn-default glyphicon glyphicon-transfer" href="{{C.P}}{{path}}{{C.X}}res-moveto{{path}}/.."></a>
 </div>
 <div class="btn-group btn-group-xs">
   {{#if renderType}}
-    <a class="btn btn-default glyphicon glyphicon-eye-open" target="_blank" href="{{path}}"></a>
+    <a class="btn btn-default glyphicon glyphicon-eye-open" target="_blank" href="{{C.P}}{{path}}"></a>
   {{/if}}
-  <a class="btn btn-default btn-default glyphicon glyphicon-edit" href="{{path}}{{C.X}}res-properties"></a>
+  <a class="btn btn-default btn-default glyphicon glyphicon-edit" href="{{C.P}}{{path}}{{C.X}}res-properties"></a>
 </div>

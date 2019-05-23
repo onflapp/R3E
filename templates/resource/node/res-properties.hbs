@@ -18,7 +18,7 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <a class="close" href="{{R.PATH}}{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
+          <a class="close" href="{{C.P}}{{R.PATH}}{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
           <h4 class="modal-title">Resource Properties</h4>
         </div>
         <div class="modal-body">
@@ -41,7 +41,7 @@
                   <input class="form-control" name="{{name}}" value="{{value}}" form="save_form" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false">
                 </div>
                 <div class="col-sm-2">
-                  <form method="POST" action="{{R.PATH}}{{R.SUFFIX}}">
+                  <form method="POST" action="{{C.P}}{{R.PATH}}{{R.SUFFIX}}">
                     <input type="hidden" name="{{name}}" value="">
                     <button class="btn btn-danger" type="submit" name="{{name}}" value="">
                       <span class="glyphicon glyphicon-minus"></span>
@@ -52,7 +52,7 @@
             </div>
           {{/include}}
 
-          <form class="form-horizontal" method="post" action="{{R.PATH}}{{R.SUFFIX}}">
+          <form class="form-horizontal" method="post" action="{{C.P}}{{R.PATH}}{{R.SUFFIX}}">
             <div class="form-group">
               <div class="col-sm-2">
                 <input class="form-control" name=":name" value="" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="name">
@@ -71,11 +71,11 @@
       </div>
       <div class="modal-footer">
         <div class="pull-left">
-          <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-renderer">Renderer Properties...</a>
+          <a class="btn btn-default" href="{{C.P}}{{R.PATH}}{{C.X}}res-renderer">Renderer Properties...</a>
         </div>
 
-        <form class="form-horizontal" class="form-inline" method="post" id="save_form" action="{{R.PATH}}{{C.X}}res-list">
-          <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-list">Cancel</a>
+        <form class="form-horizontal" class="form-inline" method="post" id="save_form" action="{{C.P}}{{R.PATH}}{{C.X}}res-list">
+          <a class="btn btn-default" href="{{C.P}}{{R.PATH}}{{C.X}}res-list">Cancel</a>
           <input class="btn btn-success" type="submit" value="Save">
         </form>
       </div>

@@ -16,7 +16,7 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <a class="close" href="{{R.PATH_APPEND}}../{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
+          <a class="close" href="{{C.P}}{{R.PATH_APPEND}}../{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
           <h4 class="modal-title">Create Temportary Object Resource</h4>
         </div>
         <div class="modal-body">
@@ -33,11 +33,11 @@
 
           <div class="form-horizontal">
             <div class="form-horizontal">
-              <form method="post" action="{{R.PATH}}{:name}">
+              <form method="post" action="{{C.P}}{{R.PATH}}{:name}">
                 <div class="form-group">
                   <div class="col-sm-8">
                     <input class="form-control" name=":name|newUUID" value="" autocomplete="off" placeholder="name">
-                    <input type="hidden" name=":forward" value="{{R.PATH}}{{C.X}}res-list">
+                    <input type="hidden" name=":forward" value="{{C.P}}{{R.PATH}}{{C.X}}res-list">
                   </div>
                   <div class="col-sm-2">
                     <button class="form-control btn btn-success" type="submit">
@@ -51,7 +51,7 @@
 
         </div>
         <div class="modal-footer">
-          <a class="btn btn-default" href="{{R.PATH_APPEND}}../{{C.X}}res-list">Cancel</a>
+          <a class="btn btn-default" href="{{C.P}}{{R.PATH_APPEND}}../{{C.X}}res-list">Cancel</a>
         </div>
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->

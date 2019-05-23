@@ -10,6 +10,7 @@ if (typeof module !== 'undefined') {
     ResourceRequestHandler: ResourceRequestHandler,
     DropBoxResource: DropBoxResource,
     GitHubResource: GitHubResource,
+    PouchDBResource: PouchDBResource,
     FileResource: FileResource,
     RootResource: RootResource,
     Utils: Utils

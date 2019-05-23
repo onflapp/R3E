@@ -18,7 +18,7 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <a class="close" href="{{R.PATH}}{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
+          <a class="close" href="{{C.P}}{{R.PATH}}{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
           <h4 class="modal-title">Renderer Properties</h4>
         </div>
         <div class="modal-body">
@@ -32,10 +32,10 @@
           </ol>
 
           <h4>Set User Defined Renderers</h4>
-          <p>User defined renderer templates are stored in <a href="{{C.USER_TEMPLATES}}/{{renderType}}{{C.X}}res-list">{{C.USER_TEMPLATES}}/{{renderType}}</a></p>
+          <p>User defined renderer templates are stored in <a href="{{C.P}}{{C.USER_TEMPLATES}}/{{renderType}}{{C.X}}res-list">{{C.USER_TEMPLATES}}/{{renderType}}</a></p>
 
           <div class="form-horizontal">
-            <form method="post" action="{{R.PATH}}">
+            <form method="post" action="{{C.P}}{{R.PATH}}">
               <div class="form-group">
                 <label class="col-sm-2">render type</label>
                 <div class="col-sm-8">
@@ -81,9 +81,9 @@
       </div>
       <div class="modal-footer">
 
-        <form class="form-horizontal" class="form-inline" method="post" id="save_form" action="{{R.PATH}}{{C.X}}res-list">
-          <a class="btn btn-default pull-left" href="{{C.USER_TEMPLATES}}{{C.X}}res-create">Create New Template</a>
-          <a class="btn btn-default" href="{{R.PATH}}{{C.X}}res-list">Cancel</a>
+        <form class="form-horizontal" class="form-inline" method="post" id="save_form" action="{{C.P}}{{R.PATH}}{{C.X}}res-list">
+          <a class="btn btn-default pull-left" href="{{C.P}}{{C.USER_TEMPLATES}}{{C.X}}res-create">Create New Template</a>
+          <a class="btn btn-default" href="{{C.P}}{{R.PATH}}{{C.X}}res-list">Cancel</a>
           <input class="btn btn-success" type="submit" value="Save">
         </form>
       </div>
