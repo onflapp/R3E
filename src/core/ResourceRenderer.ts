@@ -20,7 +20,7 @@ interface MakeRenderTypePatternsFunction {
 
 class ResourceRenderer {
   protected rendererResolver: ResourceResolver;
-  protected rendererFactories: Map < string, RendererFactory > ;
+  protected rendererFactories: Map<string,RendererFactory> ;
   protected makeRenderTypePatterns: MakeRenderTypePatternsFunction;
 
   constructor(resolver: ResourceResolver) {
@@ -30,16 +30,21 @@ class ResourceRenderer {
     this.makeRenderTypePatterns = function(factoryType: string, renderType: string, name: string, sel: string): Array <string> {
       let rv = [];
       let p = renderType + '/' + name + '.' + sel;
-      rv.push(p + '.' + factoryType);
 
-      p = renderType + '/' + sel;
-      rv.push(p + '.' + factoryType);
+      if (factoryType !== sel) {
+        rv.push(p + '.' + factoryType);
+        p = renderType + '/' + sel;
+        rv.push(p + '.' + factoryType);
+      }
+      else {
+        rv.push(p);
+      }
 
       return rv;
     };
   }
 
-  protected makeRenderTypePaths(renderTypes: Array < string > , selectors: Array < string > ): Array < string > {
+  protected makeRenderTypePaths(renderTypes: Array<string> , selectors: Array<string> ): Array<string> {
     let rv = [];
     let factories = this.rendererFactories;
     let self = this;
@@ -90,7 +95,13 @@ class ResourceRenderer {
     let self = this;
     let selectors = [sel];
     let renderTypes = res.getRenderTypes();
-    renderTypes.push('any');
+
+    if (context.getCurrentRenderResourceType()) { //override the render type from the context, if any
+      renderTypes = [context.getCurrentRenderResourceType()];
+    }
+    else {
+      renderTypes.push('any');
+    }
 
     this.resolveRenderer(renderTypes, selectors, function (rend: ContentRendererFunction, error ? : Error) {
       if (rend) {
@@ -102,7 +113,7 @@ class ResourceRenderer {
     });
   }
 
-  public resolveRenderer(renderTypes: Array < string > , selectors: Array < string > , callback: RendererFactoryCallback) {
+  public resolveRenderer(renderTypes: Array<string> , selectors: Array<string> , callback: RendererFactoryCallback) {
     let rtypes = this.makeRenderTypePaths(renderTypes, selectors);
     if (rtypes.length === 0) throw new Error('no render factories registered?');
 

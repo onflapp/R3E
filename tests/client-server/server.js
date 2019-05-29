@@ -21,9 +21,17 @@ var defaultTemplates = new r.ObjectResource({
   }
 });
 
-db = new PouchDB('http://localhost:3000/db/contentdb');
+//start pouchdb database
+db = PouchDB.defaults({prefix:'/tmp/'});
+app.use('/db', require('express-pouchdb')(db, {
+  mode: 'minimumForPouchDB'
+}));
+new db('contentdb');
 
+//connect to the contentdb as client
+db = new PouchDB('http://localhost:3000/db/contentdb');
 var userContent = new r.PouchDBResource(db);
+
 var userTemplate = new r.FileResource('./tests/templates').wrap({
   getType: function() { return 'resource/templates'; }
 });
@@ -51,14 +59,6 @@ var config = {
   'CODEMIRROR_CSS': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/codemirror.min.css',
   'CODEMIRROR_THEME': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/theme/solarized.min.css'
 };
-
-//start pouchdb database
-db = PouchDB.defaults({prefix:'/tmp/'});
-app.use('/db', require('express-pouchdb')(db, {
-  mode: 'minimumForPouchDB'
-}));
-
-new db('contentdb');
 
 //handle all static local files for the client
 app.use('/', express.static(__dirname));

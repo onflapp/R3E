@@ -11,6 +11,8 @@ class HBSRendererFactory extends TemplateRendererFactory {
 
     //include "/path"
     //include "/path" "sel"
+    //include "/path" "render/type"
+    //include "/path" "render/type" "sel"
 
     let include = function (arg0, arg1) {
       let path = arg0;
@@ -19,7 +21,9 @@ class HBSRendererFactory extends TemplateRendererFactory {
       let rtype = null;
 
       if (arguments.length == 3) {
-        selector = arguments[1];
+        if (arguments[1].indexOf('/') > 0) rtype = arguments[1];
+        else selector = arguments[1];
+
         block = arguments[2];
       }
       else if (arguments.length == 4) {
@@ -79,6 +83,8 @@ class HBSRendererFactory extends TemplateRendererFactory {
 
     //include "/path"
     //include "/path" "sel"
+    //include "/path" "render/type"
+    //include "/path" "render/type" "sel"
 
     this.Handlebars.registerHelper('include', include);
     this.Handlebars.registerHelper('include-safe', include);
@@ -147,7 +153,10 @@ class HBSRendererFactory extends TemplateRendererFactory {
       let result = null;
 
       if (arguments.length < 3) {
-        if (lvalue) return operator.fn(this);
+        if (lvalue) {
+          operator.data.root._match_rval = true;
+          return operator.fn(this);
+        }
         else return operator.inverse(this);
       }
 

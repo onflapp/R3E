@@ -24,7 +24,7 @@ class PouchDBResourceContentWriter implements ContentWriter {
   public end(callback: any) {
     let self = this;
     let blob = null;
-    
+
     if (typeof window !== 'undefined') {
       blob = new Blob(self.buffer, {
         type: self.ctype
@@ -36,24 +36,39 @@ class PouchDBResourceContentWriter implements ContentWriter {
       else blob = new Buffer('');
     }
 
+    //---
     let update_doc = function(doc) {
-      self.db.putAttachment(doc._id, 'content', doc._rev, blob, self.ctype).then(function () {
-        if (callback) callback();
-      })
-      .catch(function (err) {
-        console.log(err);
-        if (callback) callback();
-      });
+      self.db.put(doc)
+        .then(function (rv) {
+          update_data({_id:rv.id,_rev:rv.rev});
+        })
+        .catch(function (err) {
+          console.log('X '+doc._id);
+          console.log(err);
+          if (callback) callback();
+        });
     };
 
-    self.db.get(this.id).then(function (doc) {
-        update_doc(doc);
+    //---
+    let update_data = function(doc) {
+      self.db.putAttachment(doc._id, 'content', doc._rev, blob, self.ctype)
+        .then(function () {
+          if (callback) callback();
+        })
+        .catch(function (err) {
+          console.log('A '+doc._id);
+          console.log(err);
+          if (callback) callback();
+        });
+    };
+
+    self.db.get(this.id)
+      .then(function (doc) {
+        update_data(doc);
       })
       .catch(function (err) {
         if (err.status === 404) {
-          update_doc({
-            _id:self.id
-          });
+          update_doc({ _id:self.id });
         }
         else {
           console.log(err);
@@ -82,22 +97,71 @@ class PouchDBResource extends StoredResource {
     return n.replace('%5F', '_');
   }
 
+  protected escape_path(n) {
+    return n.replace(/\//g, '!');
+  }
+
+  protected unescape_path(n) {
+    return n.replace(/!/g, '/');
+  }
+
   protected make_key(path): string {
     if (path) {
       let level = path.split('/').length;
-      return 'p:' + level + path;
+
+      if (level > 1000) level = 999;
+      else if (level <  9) level = '00'+level;
+      else if (level < 99) level = '0'+level;
+
+      return this.escape_path('p:' + level + path);
     }
     else {
-      return 'p:1/';
+      return this.escape_path('p:001/');
     }
-  }
-
-  public getContentType(): string {
-    return this.contentType;
   }
 
   protected ensurePathExists(path: string, callback) {
-    callback(true);
+    let self = this;
+    let p = path.split('/');
+    let b = [];
+    if (p.length > 2) {
+      b.push(p.shift());
+
+      let update_node = function(id, cb) {
+        self.db.put({_id:id})
+          .then(function() {
+            cb();
+          })
+          .catch(function(err) {
+            //console.log(err);
+            cb();
+          });
+      };
+
+      let get_node = function() {
+        if (p.length > 0) {
+          b.push(p.shift());
+          let bp = b.join('/');
+          let id = self.make_key(bp);
+
+          self.db.get(id)
+            .then(function() {
+              get_node();
+            })
+            .catch(function (err) {
+              update_node(id, get_node);
+            });
+        }
+        else {
+          callback(true);
+        }
+      };
+
+      get_node();
+    }
+    else {
+      callback(true);
+    }
   }
 
   public storeChildrenNames(callback) {
@@ -116,7 +180,8 @@ class PouchDBResource extends StoredResource {
         if (v && key) doc[self.escape_name(key)] = v;
       }
 
-      self.db.put(doc).then(function () {
+      self.db.put(doc)
+        .then(function () {
           callback(true);
         })
         .catch(function (err) {
@@ -135,12 +200,8 @@ class PouchDBResource extends StoredResource {
         update_doc(doc);
       })
       .catch(function (err) {
-        //not found, new?
         if (err.status === 404) {
-          let doc = {
-            _id: id
-          };
-
+          let doc = { _id: id };
           update_doc(doc);
         }
         else {
@@ -164,7 +225,6 @@ class PouchDBResource extends StoredResource {
           if (v) self.values[self.unescape_name(key)] = v;
         }
         if (doc._attachments) {
-          self.contentType = doc._attachments.content.content_type;
           self.contentSize = doc._attachments.content.length;
           self.isDirectory = false;
         }
@@ -179,7 +239,6 @@ class PouchDBResource extends StoredResource {
           callback(true);
         }
         else {
-          console.log(err);
           callback(false);
         }
       });
@@ -196,21 +255,62 @@ class PouchDBResource extends StoredResource {
     let id = this.make_key(path);
 
     super.removeChildResource(name, function () {
-      self.db.get(id)
-        .then(function (doc) {
-          self.db.remove(doc);
+
+      //---
+      let remove_attachment = function(doc) {
+        self.db.removeAttachment(doc._id, 'content', doc._rev)
+          .then(function() {
+            console.log('done');
+          })
+          .catch(function(err) {
+            console.log('4');
+            console.log(err);
+          });
+      };
+
+      //---
+      let remove_docs = function(todelete) {
+        self.db.bulkDocs(todelete)
+          .then(function() {
+            callback();
+          })
+          .catch(function(err) {
+            console.log('2');
+            console.log(err);
+            callback();
+          });
+      };
+
+      self.db.allDocs({
+          include_docs: true,
+          attachments: false
         })
-        .then(function (result) {
-          callback();
+        .then(function(rv) {
+          let todelete = [];
+          for (var i = 0; i < rv.rows.length; i++) {
+            var it = rv.rows[i];
+            var key = self.unescape_path(it.id.substr(5));
+            if (key.indexOf(path) === 0) {
+              it.doc._deleted = true;
+              todelete.push(it.doc);
+              console.log('D:' + key);
+
+              //remove_attachment(it.doc);
+            }
+          }
+
+          remove_docs(todelete);
         })
-        .catch(function (err) {
-          callback();
+        .catch(function(err) {
+          console.log('1');
           console.log(err);
+          callback();
         });
     });
   }
 
   public loadChildrenNames(callback: ChildrenNamesCallback) {
+    let self = this;
     let path = this.getStoragePath() + '/';
     let id = this.make_key(path);
 
@@ -224,12 +324,12 @@ class PouchDBResource extends StoredResource {
         let rv = [];
         for (var i = 0; i < result.rows.length; i++) {
           let it = result.rows[i];
-          rv.push(Utils.filename(it.id));
+          rv.push(Utils.filename(self.unescape_path(it.id)));
         }
         callback(rv);
       })
       .catch(function (err) {
-        callback(null);
+        callback([]);
         console.log(err);
       });
   }

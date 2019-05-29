@@ -1,6 +1,7 @@
 class ResourceRequestContext {
   private pathInfo: PathInfo;
   private resourceRequestHandler: ResourceRequestHandler;
+  private renderResourceType: string;
 
   constructor(pathInfo: PathInfo, handler: ResourceRequestHandler) {
     this.pathInfo = pathInfo;
@@ -41,6 +42,14 @@ class ResourceRequestContext {
     this.pathInfo.resourcePath = rpath;
   }
 
+  public _setCurrentSelector(sel: string) {
+    this.pathInfo.selector = sel;
+  }
+
+  public _getCurrentRenderResourceType(rpath: string) {
+    this.renderResourceType = rpath;
+  }
+
   public getCurrentSelector(): string {
     return this.pathInfo.selector;
   }
@@ -53,8 +62,12 @@ class ResourceRequestContext {
     return this.pathInfo.dataPath;
   }
 
+  public getCurrentRenderResourceType(): string {
+    return this.renderResourceType;
+  }
+
   public renderResource(resourcePath: string, rstype: string, selector: string, context: ResourceRequestContext, callback: any) {
-    this.resourceRequestHandler.renderResource(resourcePath, selector, context, callback);
+    this.resourceRequestHandler.renderResource(resourcePath, rstype, selector, context, callback);
   }
 
   public resolveResource(resourcePath: string, callback: ResourceCallback) {
@@ -85,6 +98,10 @@ class ResourceRequestContext {
 
   public forwardRequest(rpath: string) {
     this.resourceRequestHandler.forwardRequest(rpath);
+  }
+
+  public sendStatus(code: number) {
+    this.resourceRequestHandler.sendStatus(code);
   }
 
   public storeResource(resourcePath: string, data: any, callback) {

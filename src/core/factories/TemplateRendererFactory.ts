@@ -101,8 +101,13 @@ class TemplateRendererFactory implements RendererFactory {
 
   public expadPath(path: string, context: ResourceRequestContext): string {
     if (path === '.') return context.getCurrentResourcePath();
-    else if (path.charAt(0) === '/') return path;
-    else return Utils.filename_path_append(context.getCurrentResourcePath(), path);
+    else if (path.charAt(0) === '/') {
+      return Utils.absolute_path(path);
+    }
+    else {
+      let p = Utils.filename_path_append(context.getCurrentResourcePath(), path);
+      return Utils.absolute_path(p);
+    }
   }
 
   public makeRenderer(resource: Resource, callback: RendererFactoryCallback) {

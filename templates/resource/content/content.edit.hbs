@@ -15,6 +15,10 @@
       #editor-container {
           margin-top: 20px;
         }
+      #editor-container textarea {
+          width: 100%;
+        }
+
         #editor-container .CodeMirror {
           position: fixed;
           bottom: 0px;
@@ -30,8 +34,7 @@
           width: 100%;
         }
     </style>
-    <script>
-      window.addEventListener('DOMContentLoaded', function() {
+    <!-- script>
         var ta = document.querySelector('textarea');
         if (ta) {
           var editor = CodeMirror.fromTextArea(ta, {
@@ -43,8 +46,7 @@
             theme: 'solarized dark'
           });
         }
-      });
-    </script>
+    </script -->
   </head>
 
   <body>

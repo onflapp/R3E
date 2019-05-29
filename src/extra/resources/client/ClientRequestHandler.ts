@@ -14,7 +14,7 @@ class DOMContentWriter implements ContentWriter {
   }
 
   protected attachListeners() {
-    if (document.body.dataset['DOMContentWriter_attached']) return;
+    if (document.body.dataset['dom_content_writer_attached']) return;
 
     let requestHandler = this.requestHandler;
     document.body.addEventListener('submit', function (evt) {
@@ -42,7 +42,7 @@ class DOMContentWriter implements ContentWriter {
       }
     });
 
-    document.body.dataset['DOMContentWriter_attached'] = 'true';
+    document.body.dataset['dom_content_writer_attached'] = 'true';
   }
 
   protected compareElements(lista, listb) {
@@ -76,39 +76,51 @@ class DOMContentWriter implements ContentWriter {
     let removals = this.compareElements(document.head.children, doc.head.children);
 
     let done_loading = function () {
-      let scripts = document.body.querySelectorAll('script');
-      for (var i = 0; i < scripts.length; i++) {
-        let script = scripts[i];
-        let code = script.innerText;
-
-        if (script['__evaluated']) continue;
-        try {
-          eval(code);
-        }
-        catch (ex) {
-          console.log(ex);
-        }
-        script['__evaluated'] = true;
+      if (document.readyState !== 'complete') {
+        setTimeout(done_loading, 10);
+        return;
       }
+      window.requestAnimationFrame(function() {
+        let scripts = document.querySelectorAll('script');
+        for (var i = 0; i < scripts.length; i++) {
+          let script = scripts[i];
+          let code = script.innerText;
+
+          if (script['__evaluated']) continue;
+          try {
+            eval(code);
+          }
+          catch (ex) {
+            console.log(ex);
+          }
+          script['__evaluated'] = true;
+        }
+      });
     };
 
     for (let i = 0; i < additions.length; i++) {
       let el = additions[i];
       if (el.tagName === 'SCRIPT') {
-        if (el.src && this.externalResources[el.src]) continue;
+        if (!el.getAttribute('src')) {
+          document.head.appendChild(el);
+        }
+        else if (!this.externalResources[el.src]) {
+          processing++;
 
-        processing++;
+          el = document.createElement('script');
+          el.src = additions[i].src;
+          el.onload = el.onerror = function () {
+            processing--;
+            if (processing === 0) done_loading();
+          };
 
-        el = document.createElement('script');
-        el.src = additions[i].src;
-        el.onload = function () {
-          processing--;
-          if (processing === 0) done_loading();
-        };
-
-        this.externalResources[el.src] = 'y';
+          this.externalResources[el.src] = 'y';
+          document.head.appendChild(el);
+        }
       }
-      document.head.appendChild(el);
+      else {
+        document.head.appendChild(el);
+      }
     }
     for (let i = 0; i < removals.length; i++) {
       document.head.removeChild(removals[i]);
@@ -181,6 +193,10 @@ class ClientRequestHandler extends ResourceRequestHandler {
 
   public forwardRequest(rpath: string) {
     this.renderRequest(rpath);
+  }
+
+  public sendStatus(code: number) {
+    console.log('status:'+code);
   }
 
   public handleRequest(rpath: string) {

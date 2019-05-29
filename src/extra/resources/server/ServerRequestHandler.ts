@@ -51,6 +51,12 @@ class ResponseContentWriter implements ContentWriter {
     this.respose.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0');
     this.respose.redirect(301, rpath);
   }
+
+  public sendStatus(code: number) {
+    this.closed = true;
+    this.respose.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0');
+    this.respose.sendStatus(code);
+  }
 }
 
 class ServerRequestHandler extends ResourceRequestHandler {
@@ -191,4 +197,7 @@ class ServerRequestHandler extends ResourceRequestHandler {
     this.resposeContentWriter.redirect(rpath);
   }
 
+  public sendStatus(code: number) {
+    this.resposeContentWriter.sendStatus(code);
+  }
 }

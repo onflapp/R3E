@@ -81,6 +81,7 @@ abstract class Resource extends Data implements ContentReader {
   public static IO_TIMEOUT = 10000000;
   public static STORE_CONTENT_PROPERTY = '_content';
   public static STORE_RENDERTYPE_PROPERTY = '_rt';
+  public static STORE_RENDERSUPERTYPE_PROPERTY = '_st';
   public static STORE_RESOURCETYPE_PROPERTY = '_pt';
 
   protected resourceName: string;
@@ -166,6 +167,10 @@ abstract class Resource extends Data implements ContentReader {
       rv[Resource.STORE_RENDERTYPE_PROPERTY] = this.getRenderType();
     }
 
+    if (this.getRenderSuperType()) {
+      rv[Resource.STORE_RENDERSUPERTYPE_PROPERTY] = this.getRenderSuperType();
+    }
+
     if (this.getSuperType() !== this.getType()) {
       rv[Resource.STORE_RESOURCETYPE_PROPERTY] = this.getType();
     }
@@ -187,6 +192,7 @@ abstract class Resource extends Data implements ContentReader {
     let self = this;
     let processing = 0;
 
+    //---
     let done = function () {
       if (processing === 0) {
         writer.end(null);
@@ -194,6 +200,7 @@ abstract class Resource extends Data implements ContentReader {
       }
     };
 
+    //---
     let export_children = function (path, name, res) {
       processing++; //children
       processing++; //data

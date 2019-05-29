@@ -170,7 +170,7 @@ class ResourceRequestHandler extends EventDispatcher {
       if (key.indexOf(':') !== -1) continue;
 
       let v = data[key];
-      let x = key.indexOf('/');
+      let x = key.lastIndexOf('/');
       if (x != -1) {
         let p = resourcePath + '/' + key.substr(0, x);
         let n = key.substr(x + 1);
@@ -289,6 +289,9 @@ class ResourceRequestHandler extends EventDispatcher {
     this.renderRequest(rpath);
   }
 
+  public sendStatus(code: number) {
+  }
+
   protected renderRequest(rpath: string) {
     let rres = this.resourceResolver;
     let rrend = this.resourceRenderer;
@@ -327,7 +330,7 @@ class ResourceRequestHandler extends EventDispatcher {
     }
   }
 
-  public renderResource(resourcePath: string, selector: string, context: ResourceRequestContext, callback: any) {
+  public renderResource(resourcePath: string, rstype: string, selector: string, context: ResourceRequestContext, callback: any) {
     let out = new OrderedContentWriter(new BufferedContentWriter(callback));
     let rres = this.resourceResolver;
     let rrend = this.resourceRenderer;
@@ -335,6 +338,7 @@ class ResourceRequestHandler extends EventDispatcher {
     let sel = selector ? selector : 'default';
 
     ncontext._setCurrentResourcePath(resourcePath);
+    ncontext._getCurrentRenderResourceType(rstype);
 
     try {
 
@@ -399,7 +403,7 @@ class ResourceRequestHandler extends EventDispatcher {
 
         if (info.selector && ddata.values[':forward']) {
           let forward = Utils.absolute_path(ddata.values[':forward']);
-          self.renderResource(info.resourcePath, info.selector, context, function(ctype, content) {
+          self.renderResource(info.resourcePath, null, info.selector, context, function(ctype, content) {
             self.forwardRequest(forward);
           });
         }

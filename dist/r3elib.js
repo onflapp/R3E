@@ -402,6 +402,9 @@ var Resource = (function (_super) {
         if (this.getRenderType()) {
             rv[Resource.STORE_RENDERTYPE_PROPERTY] = this.getRenderType();
         }
+        if (this.getRenderSuperType()) {
+            rv[Resource.STORE_RENDERSUPERTYPE_PROPERTY] = this.getRenderSuperType();
+        }
         if (this.getSuperType() !== this.getType()) {
             rv[Resource.STORE_RESOURCETYPE_PROPERTY] = this.getType();
         }
@@ -556,6 +559,7 @@ var Resource = (function (_super) {
     Resource.IO_TIMEOUT = 10000000;
     Resource.STORE_CONTENT_PROPERTY = '_content';
     Resource.STORE_RENDERTYPE_PROPERTY = '_rt';
+    Resource.STORE_RENDERSUPERTYPE_PROPERTY = '_st';
     Resource.STORE_RESOURCETYPE_PROPERTY = '_pt';
     return Resource;
 }(Data));
@@ -697,9 +701,14 @@ var ResourceRenderer = (function () {
         this.makeRenderTypePatterns = function (factoryType, renderType, name, sel) {
             var rv = [];
             var p = renderType + '/' + name + '.' + sel;
-            rv.push(p + '.' + factoryType);
-            p = renderType + '/' + sel;
-            rv.push(p + '.' + factoryType);
+            if (factoryType !== sel) {
+                rv.push(p + '.' + factoryType);
+                p = renderType + '/' + sel;
+                rv.push(p + '.' + factoryType);
+            }
+            else {
+                rv.push(p);
+            }
             return rv;
         };
     }
@@ -749,7 +758,12 @@ var ResourceRenderer = (function () {
         var self = this;
         var selectors = [sel];
         var renderTypes = res.getRenderTypes();
-        renderTypes.push('any');
+        if (context.getCurrentRenderResourceType()) {
+            renderTypes = [context.getCurrentRenderResourceType()];
+        }
+        else {
+            renderTypes.push('any');
+        }
         this.resolveRenderer(renderTypes, selectors, function (rend, error) {
             if (rend) {
                 rend(res, writer, context);
@@ -825,6 +839,12 @@ var ResourceRequestContext = (function () {
     ResourceRequestContext.prototype._setCurrentResourcePath = function (rpath) {
         this.pathInfo.resourcePath = rpath;
     };
+    ResourceRequestContext.prototype._setCurrentSelector = function (sel) {
+        this.pathInfo.selector = sel;
+    };
+    ResourceRequestContext.prototype._getCurrentRenderResourceType = function (rpath) {
+        this.renderResourceType = rpath;
+    };
     ResourceRequestContext.prototype.getCurrentSelector = function () {
         return this.pathInfo.selector;
     };
@@ -834,8 +854,11 @@ var ResourceRequestContext = (function () {
     ResourceRequestContext.prototype.getCurrentDataPath = function () {
         return this.pathInfo.dataPath;
     };
+    ResourceRequestContext.prototype.getCurrentRenderResourceType = function () {
+        return this.renderResourceType;
+    };
     ResourceRequestContext.prototype.renderResource = function (resourcePath, rstype, selector, context, callback) {
-        this.resourceRequestHandler.renderResource(resourcePath, selector, context, callback);
+        this.resourceRequestHandler.renderResource(resourcePath, rstype, selector, context, callback);
     };
     ResourceRequestContext.prototype.resolveResource = function (resourcePath, callback) {
         var rres = this.getResourceResolver();
@@ -859,6 +882,9 @@ var ResourceRequestContext = (function () {
     };
     ResourceRequestContext.prototype.forwardRequest = function (rpath) {
         this.resourceRequestHandler.forwardRequest(rpath);
+    };
+    ResourceRequestContext.prototype.sendStatus = function (code) {
+        this.resourceRequestHandler.sendStatus(code);
     };
     ResourceRequestContext.prototype.storeResource = function (resourcePath, data, callback) {
         this.resourceRequestHandler.storeResource(resourcePath, data, callback);
@@ -1064,7 +1090,7 @@ var ResourceRequestHandler = (function (_super) {
             if (key.indexOf(':') !== -1)
                 continue;
             var v = data[key];
-            var x = key.indexOf('/');
+            var x = key.lastIndexOf('/');
             if (x != -1) {
                 var p = resourcePath + '/' + key.substr(0, x);
                 var n = key.substr(x + 1);
@@ -1154,6 +1180,8 @@ var ResourceRequestHandler = (function (_super) {
     ResourceRequestHandler.prototype.forwardRequest = function (rpath) {
         this.renderRequest(rpath);
     };
+    ResourceRequestHandler.prototype.sendStatus = function (code) {
+    };
     ResourceRequestHandler.prototype.renderRequest = function (rpath) {
         var rres = this.resourceResolver;
         var rrend = this.resourceRenderer;
@@ -1190,13 +1218,14 @@ var ResourceRequestHandler = (function (_super) {
             out.end(null);
         }
     };
-    ResourceRequestHandler.prototype.renderResource = function (resourcePath, selector, context, callback) {
+    ResourceRequestHandler.prototype.renderResource = function (resourcePath, rstype, selector, context, callback) {
         var out = new OrderedContentWriter(new BufferedContentWriter(callback));
         var rres = this.resourceResolver;
         var rrend = this.resourceRenderer;
         var ncontext = context.clone();
         var sel = selector ? selector : 'default';
         ncontext._setCurrentResourcePath(resourcePath);
+        ncontext._getCurrentRenderResourceType(rstype);
         try {
             if (resourcePath) {
                 rres.resolveResource(resourcePath, function (res) {
@@ -1236,7 +1265,7 @@ var ResourceRequestHandler = (function (_super) {
                     storeto = info.resourcePath;
                 if (info.selector && ddata.values[':forward']) {
                     var forward_1 = Utils.absolute_path(ddata.values[':forward']);
-                    self.renderResource(info.resourcePath, info.selector, context, function (ctype, content) {
+                    self.renderResource(info.resourcePath, null, info.selector, context, function (ctype, content) {
                         self.forwardRequest(forward_1);
                     });
                 }
@@ -1827,10 +1856,13 @@ var TemplateRendererFactory = (function () {
     TemplateRendererFactory.prototype.expadPath = function (path, context) {
         if (path === '.')
             return context.getCurrentResourcePath();
-        else if (path.charAt(0) === '/')
-            return path;
-        else
-            return Utils.filename_path_append(context.getCurrentResourcePath(), path);
+        else if (path.charAt(0) === '/') {
+            return Utils.absolute_path(path);
+        }
+        else {
+            var p = Utils.filename_path_append(context.getCurrentResourcePath(), path);
+            return Utils.absolute_path(p);
+        }
     };
     TemplateRendererFactory.prototype.makeRenderer = function (resource, callback) {
         var self = this;
@@ -1986,7 +2018,10 @@ var HBSRendererFactory = (function (_super) {
             var selector = null;
             var rtype = null;
             if (arguments.length == 3) {
-                selector = arguments[1];
+                if (arguments[1].indexOf('/') > 0)
+                    rtype = arguments[1];
+                else
+                    selector = arguments[1];
                 block = arguments[2];
             }
             else if (arguments.length == 4) {
@@ -2091,8 +2126,10 @@ var HBSRendererFactory = (function (_super) {
             var operators = null;
             var result = null;
             if (arguments.length < 3) {
-                if (lvalue)
+                if (lvalue) {
+                    operator.data.root._match_rval = true;
                     return operator.fn(this);
+                }
                 else
                     return operator.inverse(this);
             }
@@ -2204,17 +2241,11 @@ var StoredResource = (function (_super) {
     }
     StoredResource.prototype.getCachedResource = function (name) {
         var res = this.resourceCache[name];
-        if (res && (Date.now() - res.timeOfLoading) > (60 * 1000)) {
-            delete this.resourceCache[name];
-            return null;
-        }
-        else
-            return res;
+        return res;
     };
     StoredResource.prototype.setCachedResource = function (name, res) {
         if (res) {
             this.resourceCache[name] = res;
-            res.timeOfLoading = Date.now();
         }
         return res;
     };
@@ -2223,6 +2254,11 @@ var StoredResource = (function (_super) {
             delete this.resourceCache[name];
         else
             this.resourceCache = {};
+    };
+    StoredResource.prototype.flushResourceCache = function () {
+        this.resourceCache = {};
+        this.childNames = null;
+        this.loaded = false;
     };
     StoredResource.prototype.getStoragePath = function (name) {
         var path = Utils.filename_path_append(this.basePath, this.baseName);
@@ -2290,23 +2326,31 @@ var StoredResource = (function (_super) {
     };
     StoredResource.prototype.resolveChildResource = function (name, callback, walking) {
         var res = this.getCachedResource(name);
+        var self = this;
         if (res) {
-            res.resolveItself(callback);
-        }
-        else if (walking) {
-            res = this.setCachedResource(name, this.makeNewResource(name));
-            callback(res);
+            if (walking)
+                callback(res);
+            else
+                res.resolveItself(callback);
         }
         else {
-            var self_2 = this;
-            this.listChildrenNames(function (childNames) {
-                if (childNames && childNames.indexOf(name) >= 0) {
-                    res = self_2.setCachedResource(name, self_2.makeNewResource(name));
-                    res.resolveItself(callback);
-                }
-                else
-                    callback(null);
-            });
+            if (walking) {
+                this.childNames = null;
+                res = this.setCachedResource(name, this.makeNewResource(name));
+                callback(res);
+            }
+            else {
+                res = this.makeNewResource(name);
+                res.resolveItself(function (rv) {
+                    if (rv) {
+                        self.setCachedResource(name, res);
+                        self.childNames = null;
+                        callback(res);
+                    }
+                    else
+                        callback(null);
+                });
+            }
         }
     };
     StoredResource.prototype.listChildrenNames = function (callback) {
@@ -2322,11 +2366,8 @@ var StoredResource = (function (_super) {
         }
     };
     StoredResource.prototype.allocateChildResource = function (name, callback) {
-        if (!this.childNames)
-            this.childNames = [];
-        if (this.childNames.indexOf(name) === -1)
-            this.childNames.push(name);
-        var res = this.makeNewResource(name);
+        var res = this.setCachedResource(name, this.makeNewResource(name));
+        this.childNames = null;
         callback(res);
     };
     StoredResource.prototype.importProperties = function (data, callback) {
@@ -2366,8 +2407,10 @@ var StoredResource = (function (_super) {
         });
     };
     StoredResource.prototype.removeChildResource = function (name, callback) {
-        this.childNames.splice(this.childNames.indexOf(name), 1);
         this.clearCachedResource(name);
+        if (this.childNames) {
+            this.childNames.splice(this.childNames.indexOf(name), 1);
+        }
         this.storeChildrenNames(function () {
             callback();
         });
@@ -2442,10 +2485,10 @@ var RemoteResource = (function (_super) {
             callback(res);
         }
         else {
-            var self_3 = this;
+            var self_2 = this;
             this.resolveItself(function (rv) {
-                if (rv && self_3.childNames.indexOf(name) >= 0) {
-                    var res = self_3.makeNewResource(name, {});
+                if (rv && self_2.childNames.indexOf(name) >= 0) {
+                    var res = self_2.makeNewResource(name, {});
                     res.resolveItself(callback);
                 }
                 else
@@ -2572,7 +2615,7 @@ var RemoteTemplateResource = (function (_super) {
             callback(res);
         }
         else {
-            var self_4 = this;
+            var self_3 = this;
             var path_1 = this.baseURL + '/' + this.getPath() + '/' + name;
             path_1 = path_1.replace(/\/+/g, '/');
             if (RemoteTemplateResource.failedPaths[path_1]) {
@@ -2585,7 +2628,7 @@ var RemoteTemplateResource = (function (_super) {
                         _content: text,
                         _ct: ctype
                     }, name);
-                    self_4.resources[name] = res;
+                    self_3.resources[name] = res;
                     callback(res);
                 }
                 else {
@@ -2627,7 +2670,7 @@ var DOMContentWriter = (function () {
         return p.innerHTML;
     };
     DOMContentWriter.prototype.attachListeners = function () {
-        if (document.body.dataset['DOMContentWriter_attached'])
+        if (document.body.dataset['dom_content_writer_attached'])
             return;
         var requestHandler = this.requestHandler;
         document.body.addEventListener('submit', function (evt) {
@@ -2651,7 +2694,7 @@ var DOMContentWriter = (function () {
                 });
             }
         });
-        document.body.dataset['DOMContentWriter_attached'] = 'true';
+        document.body.dataset['dom_content_writer_attached'] = 'true';
     };
     DOMContentWriter.prototype.compareElements = function (lista, listb) {
         var rv = [];
@@ -2677,37 +2720,49 @@ var DOMContentWriter = (function () {
         var additions = this.compareElements(doc.head.children, document.head.children);
         var removals = this.compareElements(document.head.children, doc.head.children);
         var done_loading = function () {
-            var scripts = document.body.querySelectorAll('script');
-            for (var i = 0; i < scripts.length; i++) {
-                var script = scripts[i];
-                var code = script.innerText;
-                if (script['__evaluated'])
-                    continue;
-                try {
-                    eval(code);
-                }
-                catch (ex) {
-                    console.log(ex);
-                }
-                script['__evaluated'] = true;
+            if (document.readyState !== 'complete') {
+                setTimeout(done_loading, 10);
+                return;
             }
+            window.requestAnimationFrame(function () {
+                var scripts = document.querySelectorAll('script');
+                for (var i = 0; i < scripts.length; i++) {
+                    var script = scripts[i];
+                    var code = script.innerText;
+                    if (script['__evaluated'])
+                        continue;
+                    try {
+                        eval(code);
+                    }
+                    catch (ex) {
+                        console.log(ex);
+                    }
+                    script['__evaluated'] = true;
+                }
+            });
         };
         for (var i = 0; i < additions.length; i++) {
             var el = additions[i];
             if (el.tagName === 'SCRIPT') {
-                if (el.src && this.externalResources[el.src])
-                    continue;
-                processing++;
-                el = document.createElement('script');
-                el.src = additions[i].src;
-                el.onload = function () {
-                    processing--;
-                    if (processing === 0)
-                        done_loading();
-                };
-                this.externalResources[el.src] = 'y';
+                if (!el.getAttribute('src')) {
+                    document.head.appendChild(el);
+                }
+                else if (!this.externalResources[el.src]) {
+                    processing++;
+                    el = document.createElement('script');
+                    el.src = additions[i].src;
+                    el.onload = el.onerror = function () {
+                        processing--;
+                        if (processing === 0)
+                            done_loading();
+                    };
+                    this.externalResources[el.src] = 'y';
+                    document.head.appendChild(el);
+                }
             }
-            document.head.appendChild(el);
+            else {
+                document.head.appendChild(el);
+            }
         }
         for (var i = 0; i < removals.length; i++) {
             document.head.removeChild(removals[i]);
@@ -2778,6 +2833,9 @@ var ClientRequestHandler = (function (_super) {
     }
     ClientRequestHandler.prototype.forwardRequest = function (rpath) {
         this.renderRequest(rpath);
+    };
+    ClientRequestHandler.prototype.sendStatus = function (code) {
+        console.log('status:' + code);
     };
     ClientRequestHandler.prototype.handleRequest = function (rpath) {
         this.renderRequest(rpath);
@@ -2879,6 +2937,11 @@ var ResponseContentWriter = (function () {
         this.closed = true;
         this.respose.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0');
         this.respose.redirect(301, rpath);
+    };
+    ResponseContentWriter.prototype.sendStatus = function (code) {
+        this.closed = true;
+        this.respose.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0');
+        this.respose.sendStatus(code);
     };
     return ResponseContentWriter;
 }());
@@ -3003,6 +3066,9 @@ var ServerRequestHandler = (function (_super) {
     };
     ServerRequestHandler.prototype.forwardRequest = function (rpath) {
         this.resposeContentWriter.redirect(rpath);
+    };
+    ServerRequestHandler.prototype.sendStatus = function (code) {
+        this.resposeContentWriter.sendStatus(code);
     };
     return ServerRequestHandler;
 }(ResourceRequestHandler));
@@ -3205,24 +3271,37 @@ var PouchDBResourceContentWriter = (function () {
                 blob = new Buffer('');
         }
         var update_doc = function (doc) {
-            self.db.putAttachment(doc._id, 'content', doc._rev, blob, self.ctype).then(function () {
-                if (callback)
-                    callback();
+            self.db.put(doc)
+                .then(function (rv) {
+                update_data({ _id: rv.id, _rev: rv.rev });
             })
                 .catch(function (err) {
+                console.log('X ' + doc._id);
                 console.log(err);
                 if (callback)
                     callback();
             });
         };
-        self.db.get(this.id).then(function (doc) {
-            update_doc(doc);
+        var update_data = function (doc) {
+            self.db.putAttachment(doc._id, 'content', doc._rev, blob, self.ctype)
+                .then(function () {
+                if (callback)
+                    callback();
+            })
+                .catch(function (err) {
+                console.log('A ' + doc._id);
+                console.log(err);
+                if (callback)
+                    callback();
+            });
+        };
+        self.db.get(this.id)
+            .then(function (doc) {
+            update_data(doc);
         })
             .catch(function (err) {
             if (err.status === 404) {
-                update_doc({
-                    _id: self.id
-                });
+                update_doc({ _id: self.id });
             }
             else {
                 console.log(err);
@@ -3247,20 +3326,64 @@ var PouchDBResource = (function (_super) {
     PouchDBResource.prototype.unescape_name = function (n) {
         return n.replace('%5F', '_');
     };
+    PouchDBResource.prototype.escape_path = function (n) {
+        return n.replace(/\//g, '!');
+    };
+    PouchDBResource.prototype.unescape_path = function (n) {
+        return n.replace(/!/g, '/');
+    };
     PouchDBResource.prototype.make_key = function (path) {
         if (path) {
             var level = path.split('/').length;
-            return 'p:' + level + path;
+            if (level > 1000)
+                level = 999;
+            else if (level < 9)
+                level = '00' + level;
+            else if (level < 99)
+                level = '0' + level;
+            return this.escape_path('p:' + level + path);
         }
         else {
-            return 'p:1/';
+            return this.escape_path('p:001/');
         }
     };
-    PouchDBResource.prototype.getContentType = function () {
-        return this.contentType;
-    };
     PouchDBResource.prototype.ensurePathExists = function (path, callback) {
-        callback(true);
+        var self = this;
+        var p = path.split('/');
+        var b = [];
+        if (p.length > 2) {
+            b.push(p.shift());
+            var update_node_1 = function (id, cb) {
+                self.db.put({ _id: id })
+                    .then(function () {
+                    cb();
+                })
+                    .catch(function (err) {
+                    cb();
+                });
+            };
+            var get_node_1 = function () {
+                if (p.length > 0) {
+                    b.push(p.shift());
+                    var bp = b.join('/');
+                    var id_1 = self.make_key(bp);
+                    self.db.get(id_1)
+                        .then(function () {
+                        get_node_1();
+                    })
+                        .catch(function (err) {
+                        update_node_1(id_1, get_node_1);
+                    });
+                }
+                else {
+                    callback(true);
+                }
+            };
+            get_node_1();
+        }
+        else {
+            callback(true);
+        }
     };
     PouchDBResource.prototype.storeChildrenNames = function (callback) {
         callback();
@@ -3276,7 +3399,8 @@ var PouchDBResource = (function (_super) {
                 if (v && key)
                     doc[self.escape_name(key)] = v;
             }
-            self.db.put(doc).then(function () {
+            self.db.put(doc)
+                .then(function () {
                 callback(true);
             })
                 .catch(function (err) {
@@ -3296,9 +3420,7 @@ var PouchDBResource = (function (_super) {
         })
             .catch(function (err) {
             if (err.status === 404) {
-                var doc = {
-                    _id: id
-                };
+                var doc = { _id: id };
                 update_doc(doc);
             }
             else {
@@ -3321,7 +3443,6 @@ var PouchDBResource = (function (_super) {
                     self.values[self.unescape_name(key)] = v;
             }
             if (doc._attachments) {
-                self.contentType = doc._attachments.content.content_type;
                 self.contentSize = doc._attachments.content.length;
                 self.isDirectory = false;
             }
@@ -3335,7 +3456,6 @@ var PouchDBResource = (function (_super) {
                 callback(true);
             }
             else {
-                console.log(err);
                 callback(false);
             }
         });
@@ -3349,20 +3469,53 @@ var PouchDBResource = (function (_super) {
         var path = this.getStoragePath(name);
         var id = this.make_key(path);
         _super.prototype.removeChildResource.call(this, name, function () {
-            self.db.get(id)
-                .then(function (doc) {
-                self.db.remove(doc);
+            var remove_attachment = function (doc) {
+                self.db.removeAttachment(doc._id, 'content', doc._rev)
+                    .then(function () {
+                    console.log('done');
+                })
+                    .catch(function (err) {
+                    console.log('4');
+                    console.log(err);
+                });
+            };
+            var remove_docs = function (todelete) {
+                self.db.bulkDocs(todelete)
+                    .then(function () {
+                    callback();
+                })
+                    .catch(function (err) {
+                    console.log('2');
+                    console.log(err);
+                    callback();
+                });
+            };
+            self.db.allDocs({
+                include_docs: true,
+                attachments: false
             })
-                .then(function (result) {
-                callback();
+                .then(function (rv) {
+                var todelete = [];
+                for (var i = 0; i < rv.rows.length; i++) {
+                    var it = rv.rows[i];
+                    var key = self.unescape_path(it.id.substr(5));
+                    if (key.indexOf(path) === 0) {
+                        it.doc._deleted = true;
+                        todelete.push(it.doc);
+                        console.log('D:' + key);
+                    }
+                }
+                remove_docs(todelete);
             })
                 .catch(function (err) {
-                callback();
+                console.log('1');
                 console.log(err);
+                callback();
             });
         });
     };
     PouchDBResource.prototype.loadChildrenNames = function (callback) {
+        var self = this;
         var path = this.getStoragePath() + '/';
         var id = this.make_key(path);
         this.db.allDocs({
@@ -3375,12 +3528,12 @@ var PouchDBResource = (function (_super) {
             var rv = [];
             for (var i = 0; i < result.rows.length; i++) {
                 var it = result.rows[i];
-                rv.push(Utils.filename(it.id));
+                rv.push(Utils.filename(self.unescape_path(it.id)));
             }
             callback(rv);
         })
             .catch(function (err) {
-            callback(null);
+            callback([]);
             console.log(err);
         });
     };
@@ -3542,17 +3695,28 @@ var DropBoxResource = (function (_super) {
                 path: metadata
             })
                 .then(function (data) {
-                var reader = new FileReader();
-                reader.onload = function (event) {
-                    var txt = reader.result;
+                if (data.fileBinary) {
+                    var txt = data.fileBinary.toString();
                     try {
                         self.values = JSON.parse(txt);
                     }
                     catch (ignore) { }
                     ;
                     callback(true);
-                };
-                reader.readAsText(data.fileBlob);
+                }
+                else {
+                    var reader_2 = new FileReader();
+                    reader_2.onload = function (event) {
+                        var txt = reader_2.result;
+                        try {
+                            self.values = JSON.parse(txt);
+                        }
+                        catch (ignore) { }
+                        ;
+                        callback(true);
+                    };
+                    reader_2.readAsText(data.fileBlob);
+                }
             })
                 .catch(function (error) {
                 callback(true);
@@ -3605,8 +3769,8 @@ var DropBoxResource = (function (_super) {
             callback(true);
         }
         else {
-            var self_5 = this;
-            self_5.dbx.filesCreateFolder({
+            var self_4 = this;
+            self_4.dbx.filesCreateFolder({
                 path: path
             })
                 .then(function () {
@@ -3638,7 +3802,7 @@ var DropBoxResource = (function (_super) {
             callback(rv);
         })
             .catch(function (error) {
-            callback(null);
+            callback([]);
         });
     };
     DropBoxResource.prototype.getWriter = function () {
@@ -3661,13 +3825,13 @@ var DropBoxResource = (function (_super) {
             })
                 .then(function (data) {
                 if (typeof window !== 'undefined') {
-                    var reader_2 = new FileReader();
-                    reader_2.onload = function (event) {
+                    var reader_3 = new FileReader();
+                    reader_3.onload = function (event) {
                         writer.start(ct_2);
-                        writer.write(reader_2.result);
+                        writer.write(reader_3.result);
                         writer.end(callback);
                     };
-                    reader_2.readAsArrayBuffer(data.fileBlob);
+                    reader_3.readAsArrayBuffer(data.fileBlob);
                 }
                 else {
                     writer.start(ct_2);

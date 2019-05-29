@@ -135,16 +135,26 @@ class DropBoxResource extends StoredResource {
           path: metadata
         })
         .then(function (data) {
-          let reader = new FileReader();
-          reader.onload = function (event) {
-            let txt = reader.result;
+          if (data.fileBinary) {
+            let txt = data.fileBinary.toString();
             try {
               self.values = JSON.parse(txt);
             }
             catch (ignore) {};
             callback(true);
-          };
-          reader.readAsText(data.fileBlob);
+          }
+          else {
+            let reader = new FileReader();
+            reader.onload = function (event) {
+              let txt = reader.result;
+              try {
+                self.values = JSON.parse(txt);
+              }
+              catch (ignore) {};
+              callback(true);
+            };
+            reader.readAsText(data.fileBlob);
+          }
         })
         .catch(function (error) {
           callback(true);
@@ -235,7 +245,7 @@ class DropBoxResource extends StoredResource {
         callback(rv);
       })
       .catch(function (error) {
-        callback(null);
+        callback([]);
       });
   }
 
