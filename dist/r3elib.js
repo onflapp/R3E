@@ -2669,9 +2669,49 @@ var DOMContentWriter = (function () {
         p.appendChild(text);
         return p.innerHTML;
     };
+    DOMContentWriter.prototype.patchWindowObjects = function () {
+        var self = this;
+        if (window['__myevents']) {
+            for (var i = 0; i < window['__myevents'].length; i++) {
+                var v = window['__myevents'][i];
+                window.removeEventListener(v.event, v.func, v.cap);
+            }
+        }
+        window['__myevents'] = [];
+        if (!window['orig_addEventListener']) {
+            window['orig_addEventListener'] = window.addEventListener;
+            window.addEventListener = function (a, b, c) {
+                window['__myevents'].push({
+                    event: a,
+                    func: b,
+                    cap: c
+                });
+                window['orig_addEventListener'](a, b, c);
+            };
+        }
+        if (!window['XMLHttpRequest'].prototype.orig_open) {
+            window['XMLHttpRequest'].prototype.orig_open = window['XMLHttpRequest'].prototype.open;
+            window['XMLHttpRequest'].prototype.open = function (method, path, a) {
+                if (method.toUpperCase() === 'POST' && path.indexOf('#') !== -1) {
+                    this.__localpath = path.substr(path.indexOf('#') + 1);
+                }
+                else {
+                    window['XMLHttpRequest'].prototype.orig_open.call(this, method, path, a);
+                }
+            };
+            window['XMLHttpRequest'].prototype.orig_send = window['XMLHttpRequest'].prototype.send;
+            window['XMLHttpRequest'].prototype.send = function (data) {
+                if (this.__localpath) {
+                    var info = self.requestHandler.parseFormData(this.__localpath, data);
+                    self.requestHandler.handleStore(info.formPath, info.formData);
+                }
+                else {
+                    window['XMLHttpRequest'].prototype.orig_send.call(this, data);
+                }
+            };
+        }
+    };
     DOMContentWriter.prototype.attachListeners = function () {
-        if (document.body.dataset['dom_content_writer_attached'])
-            return;
         var requestHandler = this.requestHandler;
         document.body.addEventListener('submit', function (evt) {
             var target = evt.target;
@@ -2694,82 +2734,66 @@ var DOMContentWriter = (function () {
                 });
             }
         });
-        document.body.dataset['dom_content_writer_attached'] = 'true';
     };
-    DOMContentWriter.prototype.compareElements = function (lista, listb) {
-        var rv = [];
-        for (var i = 0; i < lista.length; i++) {
-            var itema = lista[i];
-            var found = false;
-            for (var z = 0; z < listb.length; z++) {
-                var itemb = listb[z];
-                if (itemb.isEqualNode(itema)) {
-                    found = true;
-                    break;
+    DOMContentWriter.prototype.evaluateScripts = function () {
+        var scripts = document.querySelectorAll('script');
+        for (var i = 0; i < scripts.length; i++) {
+            var script = scripts[i];
+            var code = script.innerText;
+            if (code && !script.src) {
+                try {
+                    eval(code);
+                }
+                catch (ex) {
+                    console.log(ex);
                 }
             }
-            if (!found)
-                rv.push(itema);
         }
-        return rv;
+    };
+    DOMContentWriter.prototype.loadExternal = function () {
+        var scripts = document.querySelectorAll('script');
+        var links = document.querySelectorAll('link');
+        var processing = 0;
+        var trigger_done = function () {
+            if (processing !== 0)
+                return;
+            setTimeout(function () {
+                var evt = document.createEvent('MutationEvents');
+                evt.initMutationEvent('DOMContentLoaded', true, true, document, '', '', '', 0);
+                document.dispatchEvent(evt);
+                var evt1 = document.createEvent('Event');
+                evt1.initEvent('load', false, false);
+                window.dispatchEvent(evt1);
+            });
+            processing = -1;
+        };
+        for (var i = 0; i < scripts.length; i++) {
+            var script = scripts[i];
+            var el = document.createElement('script');
+            if (script.src) {
+                processing++;
+                el.src = script.src;
+                script.parentElement.replaceChild(el, script);
+                el.onload = el.onerror = function () {
+                    processing--;
+                    trigger_done();
+                };
+            }
+        }
+        trigger_done();
     };
     DOMContentWriter.prototype.updateDocument = function (content) {
-        var processing = 0;
-        var doc = document.implementation.createHTMLDocument('');
-        doc.documentElement.innerHTML = content;
-        var additions = this.compareElements(doc.head.children, document.head.children);
-        var removals = this.compareElements(document.head.children, doc.head.children);
+        var self = this;
+        this.patchWindowObjects();
+        document.documentElement.innerHTML = content;
         var done_loading = function () {
-            if (document.readyState !== 'complete') {
-                setTimeout(done_loading, 10);
-                return;
-            }
-            window.requestAnimationFrame(function () {
-                var scripts = document.querySelectorAll('script');
-                for (var i = 0; i < scripts.length; i++) {
-                    var script = scripts[i];
-                    var code = script.innerText;
-                    if (script['__evaluated'])
-                        continue;
-                    try {
-                        eval(code);
-                    }
-                    catch (ex) {
-                        console.log(ex);
-                    }
-                    script['__evaluated'] = true;
-                }
-            });
+            self.evaluateScripts();
+            self.loadExternal();
+            self.attachListeners();
         };
-        for (var i = 0; i < additions.length; i++) {
-            var el = additions[i];
-            if (el.tagName === 'SCRIPT') {
-                if (!el.getAttribute('src')) {
-                    document.head.appendChild(el);
-                }
-                else if (!this.externalResources[el.src]) {
-                    processing++;
-                    el = document.createElement('script');
-                    el.src = additions[i].src;
-                    el.onload = el.onerror = function () {
-                        processing--;
-                        if (processing === 0)
-                            done_loading();
-                    };
-                    this.externalResources[el.src] = 'y';
-                    document.head.appendChild(el);
-                }
-            }
-            else {
-                document.head.appendChild(el);
-            }
-        }
-        for (var i = 0; i < removals.length; i++) {
-            document.head.removeChild(removals[i]);
-        }
-        document.body = doc.body;
-        if (processing === 0)
+        window.requestAnimationFrame(function () {
             done_loading();
+        });
     };
     DOMContentWriter.prototype.setRequestHandler = function (requestHandler) {
         this.requestHandler = requestHandler;
@@ -2809,7 +2833,6 @@ var DOMContentWriter = (function () {
             this.extdata.document.write('</pre>');
             this.extdata.document.close();
         }
-        this.attachListeners();
         this.htmldata = null;
         this.extdata = null;
     };
@@ -2844,6 +2867,21 @@ var ClientRequestHandler = (function (_super) {
         this.currentPath = rpath;
         location.hash = rpath;
         _super.prototype.renderRequest.call(this, rpath);
+    };
+    ClientRequestHandler.prototype.parseFormData = function (action, data) {
+        var rv = {};
+        var it = data.entries();
+        var result = it.next();
+        while (!result.done) {
+            rv[result.value[0]] = result.value[1];
+            result = it.next();
+        }
+        rv = this.transformValues(rv);
+        var path = this.expandValue(action, rv);
+        var info = new ClientFormInfo();
+        info.formData = rv;
+        info.formPath = path;
+        return info;
     };
     ClientRequestHandler.prototype.parseFormElement = function (formElement) {
         var action = formElement.getAttribute('action');

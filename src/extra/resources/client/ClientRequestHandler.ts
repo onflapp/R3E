@@ -13,9 +13,56 @@ class DOMContentWriter implements ContentWriter {
     return p.innerHTML;
   }
 
-  protected attachListeners() {
-    if (document.body.dataset['dom_content_writer_attached']) return;
+  protected patchWindowObjects() {
+    let self = this;
 
+    if (window['__myevents']) {
+      for (let i = 0; i < window['__myevents'].length; i++) {
+        let v = window['__myevents'][i];
+				window.removeEventListener(v.event, v.func, v.cap);
+			}
+    }
+
+    window['__myevents'] = [];
+   
+    if (!window['orig_addEventListener']) {
+      window['orig_addEventListener'] = window.addEventListener;
+      window.addEventListener = function(a, b, c) {
+        window['__myevents'].push({
+          event:a,
+          func:b,
+          cap:c
+        });
+
+        window['orig_addEventListener'](a, b, c);
+      };
+    }
+
+    if (!window['XMLHttpRequest'].prototype.orig_open) {
+      window['XMLHttpRequest'].prototype.orig_open = window['XMLHttpRequest'].prototype.open;
+      window['XMLHttpRequest'].prototype.open = function(method, path, a) {
+        if (method.toUpperCase() === 'POST' && path.indexOf('#') !== -1) {
+          this.__localpath = path.substr(path.indexOf('#')+1);
+        }
+        else {
+          window['XMLHttpRequest'].prototype.orig_open.call(this, method, path, a);
+        }
+      };
+
+      window['XMLHttpRequest'].prototype.orig_send = window['XMLHttpRequest'].prototype.send;
+      window['XMLHttpRequest'].prototype.send = function(data) {
+        if (this.__localpath) {
+          let info = self.requestHandler.parseFormData(this.__localpath, data);
+          self.requestHandler.handleStore(info.formPath, info.formData);
+        }
+        else {
+          window['XMLHttpRequest'].prototype.orig_send.call(this, data);
+        }
+      };
+    }
+  }
+
+  protected attachListeners() {
     let requestHandler = this.requestHandler;
     document.body.addEventListener('submit', function (evt) {
       let target = evt.target;
@@ -41,93 +88,81 @@ class DOMContentWriter implements ContentWriter {
         });
       }
     });
-
-    document.body.dataset['dom_content_writer_attached'] = 'true';
   }
 
-  protected compareElements(lista, listb) {
-    let rv = [];
-    for (let i = 0; i < lista.length; i++) {
-      let itema = lista[i];
-      let found = false;
-      for (let z = 0; z < listb.length; z++) {
-        let itemb = listb[z];
-        if (itemb.isEqualNode(itema)) {
-          found = true;
-          break;
+  protected evaluateScripts() {
+    let scripts = document.querySelectorAll('script');
+    for (var i = 0; i < scripts.length; i++) {
+      let script = scripts[i];
+      let code = script.innerText;
+
+      if (code && !script.src) {
+        try {
+          eval(code);
+        }
+        catch (ex) {
+          console.log(ex);
         }
       }
-
-      if (!found) rv.push(itema);
     }
+  }
 
-    return rv;
+  protected loadExternal() {
+    let scripts = document.querySelectorAll('script');
+    let links = document.querySelectorAll('link');
+    let processing = 0;
+    
+    let trigger_done = function() {
+      if (processing !== 0) return;
+
+      setTimeout(function() {
+        let evt = document.createEvent('MutationEvents'); 
+        evt.initMutationEvent('DOMContentLoaded', true, true, document, '', '', '', 0); 
+        document.dispatchEvent(evt);
+
+        let evt1 = document.createEvent('Event');  
+        evt1.initEvent('load', false, false);  
+        window.dispatchEvent(evt1);
+      });
+
+      processing = -1;
+    };
+
+    for (let i = 0; i < scripts.length; i++) {
+      let script = scripts[i];
+      let el = document.createElement('script');
+
+      if (script.src) {
+        processing++;
+
+        el.src = script.src;
+        script.parentElement.replaceChild(el, script);
+
+        el.onload = el.onerror = function () {
+          processing--;
+          trigger_done();
+        };
+      }
+		}
+    trigger_done();
   }
 
   protected updateDocument(content) {
-    //let parser = new DOMParser();
-    //let doc = parser.parseFromString(content, 'text/html');
+    let self = this;
 
-    let processing = 0;
-    let doc = document.implementation.createHTMLDocument('');
-    doc.documentElement.innerHTML = content;
+    this.patchWindowObjects();
 
-    let additions = this.compareElements(doc.head.children, document.head.children);
-    let removals = this.compareElements(document.head.children, doc.head.children);
+    document.documentElement.innerHTML = content;
 
     let done_loading = function () {
-      if (document.readyState !== 'complete') {
-        setTimeout(done_loading, 10);
-        return;
-      }
-      window.requestAnimationFrame(function() {
-        let scripts = document.querySelectorAll('script');
-        for (var i = 0; i < scripts.length; i++) {
-          let script = scripts[i];
-          let code = script.innerText;
-
-          if (script['__evaluated']) continue;
-          try {
-            eval(code);
-          }
-          catch (ex) {
-            console.log(ex);
-          }
-          script['__evaluated'] = true;
-        }
-      });
+      self.evaluateScripts();
+      self.loadExternal();
+      self.attachListeners();
     };
 
-    for (let i = 0; i < additions.length; i++) {
-      let el = additions[i];
-      if (el.tagName === 'SCRIPT') {
-        if (!el.getAttribute('src')) {
-          document.head.appendChild(el);
-        }
-        else if (!this.externalResources[el.src]) {
-          processing++;
-
-          el = document.createElement('script');
-          el.src = additions[i].src;
-          el.onload = el.onerror = function () {
-            processing--;
-            if (processing === 0) done_loading();
-          };
-
-          this.externalResources[el.src] = 'y';
-          document.head.appendChild(el);
-        }
-      }
-      else {
-        document.head.appendChild(el);
-      }
-    }
-    for (let i = 0; i < removals.length; i++) {
-      document.head.removeChild(removals[i]);
-    }
-
-    document.body = doc.body;
-    if (processing === 0) done_loading();
+    window.requestAnimationFrame(function() {
+      done_loading();
+    });
   }
 
   public setRequestHandler(requestHandler: ClientRequestHandler) {
@@ -169,7 +204,6 @@ class DOMContentWriter implements ContentWriter {
       this.extdata.document.write('</pre>');
       this.extdata.document.close();
     }
-    this.attachListeners();
     this.htmldata = null;
     this.extdata = null;
   }
@@ -207,6 +241,27 @@ class ClientRequestHandler extends ResourceRequestHandler {
     this.currentPath = rpath;
     location.hash = rpath;
     super.renderRequest(rpath);
+  }
+
+  public parseFormData(action:string, data:any): ClientFormInfo {
+    let rv = {};
+
+    let it = data.entries();
+    let result = it.next();
+    
+    while (!result.done) {
+      rv[result.value[0]] = result.value[1];
+      result = it.next();
+    }
+
+    rv = this.transformValues(rv);
+    let path = this.expandValue(action, rv);
+    let info = new ClientFormInfo();
+
+    info.formData = rv;
+    info.formPath = path;
+
+    return info;
   }
 
   public parseFormElement(formElement): ClientFormInfo {
