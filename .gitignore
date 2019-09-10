@@ -3,3 +3,4 @@ package-lock.json
 tests/client/private
 tags
 node_modules
+build
