@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Index Search</title>
+
+  <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
+</head>
+
+<body>
+  <div class="container">
+
+    <ol class="breadcrumb">
+      <li><a href="{{C.P}}/{{R.SUFFIX}}">HOME</a></li>
+      {{#include "." "parents"}}
+        <li><a href="{{C.P}}{{path}}{{R.SUFFIX}}">{{name}}</a></li>
+      {{/include}}
+      <li class="active">{{R.NAME}}</li>
+    </ol>
+
+    <div class="btn-group btn-group-sm" style="margin-bottom:20px">
+      <a class="btn btn-default" href="{{C.P}}{{R.PATH}}{{C.X}}res-create"><span class="glyphicon glyphicon-plus"></span> Create</a>
+
+    </div>
+
+    <div class="pull-right">
+      <form class="form-inline" method="get" action="/index{{C.X}}res-list">
+        <input class="form-control input-sm" name="q" type="text" placeholder="search" value="{{Q.q}}">
+      </form>
+    </div>
+
+    <table class="table ui-dropzone">
+      {{#include "." "children"}}
+
+        <tr>
+          <td>
+            <i class="glyphicon glyphicon-list-alt"></i> <a href="{{C.P}}{{_.reference}}{{R.SUFFIX}}">{{name}}</a>
+          </td>
+          <td>
+           {{_.score}}
+          </td>
+          <td>
+            <div class="btn-group btn-group-xs pull-right">
+              <a class="btn btn-default glyphicon glyphicon-trash" href="{{C.P}}{{path}}{{C.X}}res-delete"></a>
+            </div>
+          </td>
+        </tr>
+
+      {{/include}}
+    </table>
+
+  </div>
+</body>
+
+</html>

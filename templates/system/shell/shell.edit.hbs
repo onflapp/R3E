@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Console</title>
+
+  <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
+</head>
+  <style>
+    #commandline {
+      width: 100%;
+    }
+  </style>
+  <script>
+      window.addEventListener('DOMContentLoaded', function() {
+        var cmd = document.querySelector('#commandline');
+        if (cmd) {
+          cmd.focus();
+        }
+      });
+  </script>
+
+<body>
+  <div class="container">
+
+    <ol class="breadcrumb">
+      <li><a href="{{C.P}}/{{C.X}}res-list">HOME</a></li>
+      {{#include "." "parents"}}
+        <li><a href="{{C.P}}{{path}}{{C.X}}res-list">{{name}}</a></li>
+      {{/include}}
+      <li class="active">{{R.NAME}}</li>
+    </ol>
+
+    <pre>
+{{include-safe "." "text"}}
+    </pre>
+
+    <form method="post">
+      <input type="hidden" name="_rt" value="system/shell">
+      <input id="commandline" type="text" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" name=":command">
+    </form>
+
+  </div>
+</body>
+
+</html>
