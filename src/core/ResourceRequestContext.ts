@@ -30,7 +30,8 @@ class ResourceRequestContext {
     if (dplus !== '/') dplus = dplus + '/';
     p['DATA_PATH_APPEND'] = dplus;
 
-    if (this.pathInfo.referer) {
+    if (this.pathInfo.refererURL) {
+      p['REF_URL'] = this.pathInfo.refererURL;
       p['REF_PATH'] = this.pathInfo.referer.path;
       if (this.pathInfo.referer.suffix) p['REF_SUFFIX'] = this.pathInfo.referer.suffix;
     }
@@ -38,16 +39,16 @@ class ResourceRequestContext {
     return p;
   }
 
-  public _setCurrentResourcePath(rpath: string) {
-    this.pathInfo.resourcePath = rpath;
+  public __overrideCurrentResourcePath(resourcePath :string) {
+    this.pathInfo.resourcePath = resourcePath;
   }
 
-  public _setCurrentSelector(sel: string) {
-    this.pathInfo.selector = sel;
+  public __overrideCurrentSelector(selector :string) {
+    this.pathInfo.selector = selector;
   }
 
-  public _getCurrentRenderResourceType(rpath: string) {
-    this.renderResourceType = rpath;
+  public __overrideCurrentRenderResourceType(rstype :string) {
+    this.renderResourceType = rstype;
   }
 
   public getCurrentSelector(): string {
@@ -58,6 +59,10 @@ class ResourceRequestContext {
     return this.pathInfo.resourcePath;
   }
 
+  public getCurrentRequestPath(): string {
+    return this.pathInfo.path;
+  }
+
   public getCurrentDataPath(): string {
     return this.pathInfo.dataPath;
   }
@@ -66,8 +71,8 @@ class ResourceRequestContext {
     return this.renderResourceType;
   }
 
-  public renderResource(resourcePath: string, rstype: string, selector: string, context: ResourceRequestContext, callback: any) {
-    this.resourceRequestHandler.renderResource(resourcePath, rstype, selector, context, callback);
+  public renderResource(resourcePath: string, rstype: string, selector: string, callback: any) {
+    this.resourceRequestHandler.renderResource(resourcePath, rstype, selector, this, callback);
   }
 
   public resolveResource(resourcePath: string, callback: ResourceCallback) {
@@ -169,6 +174,7 @@ class PathInfo {
   public dataName: string;
   public resourcePath: string;
   public referer: PathInfo;
+  public refererURL: string;
   public query: any;
 
   public clone(): PathInfo {
@@ -187,6 +193,7 @@ class PathInfo {
     pi.resourcePath = this.resourcePath;
     pi.referer = this.referer;
     pi.query = this.query;
+    pi.refererURL = this.refererURL;
 
     return pi;
   }

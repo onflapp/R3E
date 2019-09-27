@@ -31,14 +31,12 @@ class ResourceRenderer {
       let rv = [];
       let p = renderType + '/' + name + '.' + sel;
 
-      if (factoryType !== sel) {
-        rv.push(p + '.' + factoryType);
-        p = renderType + '/' + sel;
-        rv.push(p + '.' + factoryType);
+      if (sel === 'default') {
+        rv.push(renderType + '/' + name + '.' + factoryType);
       }
-      else {
-        rv.push(p);
-      }
+      rv.push(p + '.' + factoryType);
+      p = renderType + '/' + sel;
+      rv.push(p + '.' + factoryType);
 
       return rv;
     };

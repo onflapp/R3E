@@ -88,6 +88,23 @@ class ResourceRequestHandler extends EventDispatcher {
         }
       }
     }
+    for (let key in data) {
+      let val = data[key];
+      if (key.indexOf('@') !== -1) {
+        let i = key.indexOf('@');
+        let k = key.substr(0, i);
+        let n = key.substr(i+1);
+
+        if (data[n]) {
+          data[k] = data[n];
+        }
+        else {
+          data[k] = data[key];
+        }
+
+        delete data[key];
+      }
+    }
 
     return data;
   }
@@ -112,6 +129,7 @@ class ResourceRequestHandler extends EventDispatcher {
   protected makeContext(pathInfo: PathInfo): ResourceRequestContext {
     if (!pathInfo) return null;
 
+    pathInfo.refererURL = this.refererPath;
     pathInfo.referer = this.parsePath(this.refererPath);
     pathInfo.query = this.queryProperties;
 
@@ -189,8 +207,9 @@ class ResourceRequestHandler extends EventDispatcher {
 
     for (let key in datas) {
       let v = datas[key];
+      let p = Utils.absolute_path(key);
 
-      rres.storeResource(key, new Data(v), function () {
+      rres.storeResource(p, new Data(v), function () {
         count--;
 
         if (count === 0) {
@@ -337,8 +356,9 @@ class ResourceRequestHandler extends EventDispatcher {
     let ncontext = context.clone();
     let sel = selector ? selector : 'default';
 
-    ncontext._setCurrentResourcePath(resourcePath);
-    ncontext._getCurrentRenderResourceType(rstype);
+    ncontext.__overrideCurrentResourcePath(resourcePath);
+    ncontext.__overrideCurrentRenderResourceType(rstype);
+    ncontext.__overrideCurrentSelector(selector);
 
     try {
 
@@ -431,22 +451,36 @@ class ResourceRequestHandler extends EventDispatcher {
     let self = this;
     let rres = this.resourceResolver;
 
+    let storedata = function() {
+      self.expandDataAndStore(resourcePath, data, function () {
+        self.dispatchAllEventsAsync('stored', resourcePath, data);
+        callback();
+      });
+    };
+
     try {
-      let remove = Utils.absolute_path(data[':delete']);
-      let copyto = Utils.absolute_path(data[':copyto']);
-      let moveto = Utils.absolute_path(data[':moveto']);
+      let remove   = Utils.absolute_path(data[':delete']);
+      let copyto   = Utils.absolute_path(data[':copyto']);
+      let copyfrom = Utils.absolute_path(data[':copyfrom']);
+      let moveto   = Utils.absolute_path(data[':moveto']);
       let importto = Utils.absolute_path(data[':import']);
 
       if (copyto) {
         rres.copyResource(resourcePath, copyto, function () {
           self.dispatchAllEventsAsync('stored', resourcePath, data);
-          callback();
+          storedata();
+        });
+      }
+      else if (copyfrom) {
+        rres.copyResource(copyfrom, resourcePath, function () {
+          self.dispatchAllEventsAsync('stored', resourcePath, data);
+          storedata();
         });
       }
       else if (moveto) {
         rres.moveResource(resourcePath, moveto, function () {
           self.dispatchAllEventsAsync('stored', resourcePath, data);
-          callback();
+          storedata();
         });
       }
       else if (remove) {
@@ -458,14 +492,11 @@ class ResourceRequestHandler extends EventDispatcher {
       else if (importto) {
         self.expandDataAndImport(resourcePath, data, function () {
           self.dispatchAllEventsAsync('stored', resourcePath, data);
-          callback();
+          storedata();
         });
       }
       else {
-        self.expandDataAndStore(resourcePath, data, function () {
-          self.dispatchAllEventsAsync('stored', resourcePath, data);
-          callback();
-        });
+        storedata();
       }
     }
     catch (ex) {

@@ -7,7 +7,7 @@ class EJSRendererFactory extends TemplateRendererFactory {
     else this.EJS = require('ejs');
   }
 
-  protected compileTemplate(template: string): string {
+  protected compileTemplate(template: string): function {
     return this.EJS.compile(template);
   }
 }

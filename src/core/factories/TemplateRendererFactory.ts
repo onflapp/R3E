@@ -135,16 +135,32 @@ class TemplateRendererFactory implements RendererFactory {
           map['_session'] = session;
           map['_context'] = context;
 
-          try {
-            let txt = tfunc(map);
+          let render_ouput = function(txt) {
             session.replaceOutputPlaceholders(txt, function (txt) {
               writer.start('text/html');
               writer.write(txt);
               writer.end(null);
             });
+          };
+
+          if (typeof tfunc === 'function') {
+           try {
+              let txt = tfunc(map);
+              render_ouput(txt);
+            }
+            catch (ex) {
+              callback(null, ex);
+            }
           }
-          catch (ex) {
-            callback(null, ex);
+          else if (typeof tfunc.callback === 'function') {
+            tfunc.callback(map, function(txt, error) {
+              if (txt) render_ouput(txt);
+              else callback(null, error);
+            });
+          }
+          else {
+            console.log(tfunc);
+            callback(null, new Error('invlid renderer function'));
           }
         });
       }

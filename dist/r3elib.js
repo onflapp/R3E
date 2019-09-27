@@ -701,14 +701,12 @@ var ResourceRenderer = (function () {
         this.makeRenderTypePatterns = function (factoryType, renderType, name, sel) {
             var rv = [];
             var p = renderType + '/' + name + '.' + sel;
-            if (factoryType !== sel) {
-                rv.push(p + '.' + factoryType);
-                p = renderType + '/' + sel;
-                rv.push(p + '.' + factoryType);
+            if (sel === 'default') {
+                rv.push(renderType + '/' + name + '.' + factoryType);
             }
-            else {
-                rv.push(p);
-            }
+            rv.push(p + '.' + factoryType);
+            p = renderType + '/' + sel;
+            rv.push(p + '.' + factoryType);
             return rv;
         };
     }
@@ -829,21 +827,22 @@ var ResourceRequestContext = (function () {
         if (dplus !== '/')
             dplus = dplus + '/';
         p['DATA_PATH_APPEND'] = dplus;
-        if (this.pathInfo.referer) {
+        if (this.pathInfo.refererURL) {
+            p['REF_URL'] = this.pathInfo.refererURL;
             p['REF_PATH'] = this.pathInfo.referer.path;
             if (this.pathInfo.referer.suffix)
                 p['REF_SUFFIX'] = this.pathInfo.referer.suffix;
         }
         return p;
     };
-    ResourceRequestContext.prototype._setCurrentResourcePath = function (rpath) {
-        this.pathInfo.resourcePath = rpath;
+    ResourceRequestContext.prototype.__overrideCurrentResourcePath = function (resourcePath) {
+        this.pathInfo.resourcePath = resourcePath;
     };
-    ResourceRequestContext.prototype._setCurrentSelector = function (sel) {
-        this.pathInfo.selector = sel;
+    ResourceRequestContext.prototype.__overrideCurrentSelector = function (selector) {
+        this.pathInfo.selector = selector;
     };
-    ResourceRequestContext.prototype._getCurrentRenderResourceType = function (rpath) {
-        this.renderResourceType = rpath;
+    ResourceRequestContext.prototype.__overrideCurrentRenderResourceType = function (rstype) {
+        this.renderResourceType = rstype;
     };
     ResourceRequestContext.prototype.getCurrentSelector = function () {
         return this.pathInfo.selector;
@@ -851,14 +850,17 @@ var ResourceRequestContext = (function () {
     ResourceRequestContext.prototype.getCurrentResourcePath = function () {
         return this.pathInfo.resourcePath;
     };
+    ResourceRequestContext.prototype.getCurrentRequestPath = function () {
+        return this.pathInfo.path;
+    };
     ResourceRequestContext.prototype.getCurrentDataPath = function () {
         return this.pathInfo.dataPath;
     };
     ResourceRequestContext.prototype.getCurrentRenderResourceType = function () {
         return this.renderResourceType;
     };
-    ResourceRequestContext.prototype.renderResource = function (resourcePath, rstype, selector, context, callback) {
-        this.resourceRequestHandler.renderResource(resourcePath, rstype, selector, context, callback);
+    ResourceRequestContext.prototype.renderResource = function (resourcePath, rstype, selector, callback) {
+        this.resourceRequestHandler.renderResource(resourcePath, rstype, selector, this, callback);
     };
     ResourceRequestContext.prototype.resolveResource = function (resourcePath, callback) {
         var rres = this.getResourceResolver();
@@ -948,6 +950,7 @@ var PathInfo = (function () {
         pi.resourcePath = this.resourcePath;
         pi.referer = this.referer;
         pi.query = this.query;
+        pi.refererURL = this.refererURL;
         return pi;
     };
     return PathInfo;
@@ -1021,6 +1024,21 @@ var ResourceRequestHandler = (function (_super) {
                 }
             }
         }
+        for (var key in data) {
+            var val = data[key];
+            if (key.indexOf('@') !== -1) {
+                var i_1 = key.indexOf('@');
+                var k = key.substr(0, i_1);
+                var n = key.substr(i_1 + 1);
+                if (data[n]) {
+                    data[k] = data[n];
+                }
+                else {
+                    data[k] = data[key];
+                }
+                delete data[key];
+            }
+        }
         return data;
     };
     ResourceRequestHandler.prototype.transformData = function (data, context, callback) {
@@ -1040,6 +1058,7 @@ var ResourceRequestHandler = (function (_super) {
     ResourceRequestHandler.prototype.makeContext = function (pathInfo) {
         if (!pathInfo)
             return null;
+        pathInfo.refererURL = this.refererPath;
         pathInfo.referer = this.parsePath(this.refererPath);
         pathInfo.query = this.queryProperties;
         var context = new ResourceRequestContext(pathInfo, this);
@@ -1108,7 +1127,8 @@ var ResourceRequestHandler = (function (_super) {
         }
         for (var key in datas) {
             var v = datas[key];
-            rres.storeResource(key, new Data(v), function () {
+            var p = Utils.absolute_path(key);
+            rres.storeResource(p, new Data(v), function () {
                 count--;
                 if (count === 0) {
                     callback();
@@ -1224,8 +1244,9 @@ var ResourceRequestHandler = (function (_super) {
         var rrend = this.resourceRenderer;
         var ncontext = context.clone();
         var sel = selector ? selector : 'default';
-        ncontext._setCurrentResourcePath(resourcePath);
-        ncontext._getCurrentRenderResourceType(rstype);
+        ncontext.__overrideCurrentResourcePath(resourcePath);
+        ncontext.__overrideCurrentRenderResourceType(rstype);
+        ncontext.__overrideCurrentSelector(selector);
         try {
             if (resourcePath) {
                 rres.resolveResource(resourcePath, function (res) {
@@ -1292,21 +1313,34 @@ var ResourceRequestHandler = (function (_super) {
     ResourceRequestHandler.prototype.storeResource = function (resourcePath, data, callback) {
         var self = this;
         var rres = this.resourceResolver;
+        var storedata = function () {
+            self.expandDataAndStore(resourcePath, data, function () {
+                self.dispatchAllEventsAsync('stored', resourcePath, data);
+                callback();
+            });
+        };
         try {
             var remove_1 = Utils.absolute_path(data[':delete']);
             var copyto = Utils.absolute_path(data[':copyto']);
+            var copyfrom = Utils.absolute_path(data[':copyfrom']);
             var moveto = Utils.absolute_path(data[':moveto']);
             var importto = Utils.absolute_path(data[':import']);
             if (copyto) {
                 rres.copyResource(resourcePath, copyto, function () {
                     self.dispatchAllEventsAsync('stored', resourcePath, data);
-                    callback();
+                    storedata();
+                });
+            }
+            else if (copyfrom) {
+                rres.copyResource(copyfrom, resourcePath, function () {
+                    self.dispatchAllEventsAsync('stored', resourcePath, data);
+                    storedata();
                 });
             }
             else if (moveto) {
                 rres.moveResource(resourcePath, moveto, function () {
                     self.dispatchAllEventsAsync('stored', resourcePath, data);
-                    callback();
+                    storedata();
                 });
             }
             else if (remove_1) {
@@ -1318,14 +1352,11 @@ var ResourceRequestHandler = (function (_super) {
             else if (importto) {
                 self.expandDataAndImport(resourcePath, data, function () {
                     self.dispatchAllEventsAsync('stored', resourcePath, data);
-                    callback();
+                    storedata();
                 });
             }
             else {
-                self.expandDataAndStore(resourcePath, data, function () {
-                    self.dispatchAllEventsAsync('stored', resourcePath, data);
-                    callback();
-                });
+                storedata();
             }
         }
         catch (ex) {
@@ -1884,16 +1915,33 @@ var TemplateRendererFactory = (function () {
                     var map = context.makeContextMap(data);
                     map['_session'] = session_1;
                     map['_context'] = context;
-                    try {
-                        var txt = tfunc_1(map);
+                    var render_ouput = function (txt) {
                         session_1.replaceOutputPlaceholders(txt, function (txt) {
                             writer.start('text/html');
                             writer.write(txt);
                             writer.end(null);
                         });
+                    };
+                    if (typeof tfunc_1 === 'function') {
+                        try {
+                            var txt = tfunc_1(map);
+                            render_ouput(txt);
+                        }
+                        catch (ex) {
+                            callback(null, ex);
+                        }
                     }
-                    catch (ex) {
-                        callback(null, ex);
+                    else if (typeof tfunc_1.callback === 'function') {
+                        tfunc_1.callback(map, function (txt, error) {
+                            if (txt)
+                                render_ouput(txt);
+                            else
+                                callback(null, error);
+                        });
+                    }
+                    else {
+                        console.log(tfunc_1);
+                        callback(null, new Error('invlid renderer function'));
                     }
                 });
             }
@@ -2071,7 +2119,7 @@ var HBSRendererFactory = (function (_super) {
             var p = session.makeOutputPlaceholder();
             if (typeof path === 'string') {
                 path = self.expadPath(path, context);
-                context.renderResource(path, rtype, selector, context, render);
+                context.renderResource(path, rtype, selector, render);
             }
             else {
                 render('object/javascript', path);
@@ -2202,7 +2250,7 @@ var HBSRendererFactory = (function (_super) {
         });
         _this.Handlebars.registerHelper('dump', function (block) {
             var rv = {};
-            var context = block.data.root;
+            var context = block['data'] ? block.data.root : block;
             for (var key in context) {
                 var val = context[key];
                 if (key === '_') {
@@ -4120,6 +4168,29 @@ var GitHubResource = (function (_super) {
     };
     return GitHubResource;
 }(StoredResource));
+var HTMLParser = (function () {
+    function HTMLParser() {
+    }
+    HTMLParser.parse = function (code) {
+        if (typeof window !== 'undefined' && typeof window['jQuery'] !== 'undefined') {
+            var parser = new DOMParser();
+            var doc_1 = parser.parseFromString(code, "text/html");
+            var jq = function (sel) {
+                return window['jQuery'](sel, doc_1);
+            };
+            jq['html'] = function () {
+                var ser = new XMLSerializer();
+                return ser.serializeToString(doc_1);
+            };
+            return jq;
+        }
+        else {
+            var cheerio = require('cheerio');
+            return cheerio.load(code);
+        }
+    };
+    return HTMLParser;
+}());
 if (typeof module !== 'undefined') {
     module.exports = {
         ServerRequestHandler: ServerRequestHandler,

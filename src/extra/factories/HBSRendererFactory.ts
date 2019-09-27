@@ -72,7 +72,7 @@ class HBSRendererFactory extends TemplateRendererFactory {
 
       if (typeof path === 'string') {
         path = self.expadPath(path, context);
-        context.renderResource(path, rtype, selector, context, render);
+        context.renderResource(path, rtype, selector, render);
       }
       else {
         render('object/javascript', path);
@@ -228,7 +228,7 @@ class HBSRendererFactory extends TemplateRendererFactory {
 
     this.Handlebars.registerHelper('dump', function (block) {
       var rv = {};
-      var context = block.data.root;
+      var context = block['data']?block.data.root:block;
 
       for (var key in context) {
         var val = context[key];
@@ -246,7 +246,7 @@ class HBSRendererFactory extends TemplateRendererFactory {
 
   }
 
-  protected compileTemplate(template: string): string {
+  protected compileTemplate(template: string): any {
     return this.Handlebars.compile(template);
   }
 }
