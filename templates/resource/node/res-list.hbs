@@ -17,24 +17,24 @@
   <div class="container">
 
     <ol class="breadcrumb">
-      <li><a href="{{C.P}}/{{R.SUFFIX}}">HOME</a></li>
+      <li><a href="{{req_path "/" R.SUFFIX}}">HOME</a></li>
       {{#include "." "parents"}}
-        <li><a href="{{C.P}}{{path}}{{R.SUFFIX}}">{{name}}</a></li>
+        <li><a href="{{req_path path R.SUFFIX}}">{{name}}</a></li>
       {{/include}}
       <li class="active">{{R.NAME}}</li>
     </ol>
 
     <div style="margin-bottom:20px">
     <div class="btn-group btn-group-sm">
-      <a class="btn btn-default" href="{{C.P}}{{R.PATH}}{{C.X}}res-create"><span class="glyphicon glyphicon-plus"></span> Create</a>
-      <a class="btn btn-default" href="{{C.P}}{{R.PATH}}{{C.X}}res-renderer"><span class="glyphicon glyphicon-fire"></span> Renderer</a>
-      <a class="btn btn-default" href="{{C.P}}{{R.PATH}}{{C.X}}res-properties"><span class="glyphicon glyphicon-edit"></span> Properties</a>
+      <a class="btn btn-default" href="{{req_path R.PATH "res-create"}}"><span class="glyphicon glyphicon-plus"></span> Create</a>
+      <a class="btn btn-default" href="{{req_path R.PATH "res-renderer"}}"><span class="glyphicon glyphicon-fire"></span> Renderer</a>
+      <a class="btn btn-default" href="{{req_path R.PATH "res-properties"}}"><span class="glyphicon glyphicon-edit"></span> Properties</a>
     </div>
 
     <div class="btn-group btn-group-sm pull-right">
-      <a class="btn btn-default" target="_blank" href="{{C.P}}{{path}}{{C.X}}context"><span class="glyphicon glyphicon-cutlery"></span> Context Dump</a>
+      <a class="btn btn-default" target="_blank" href="{{req_path path "context"}}"><span class="glyphicon glyphicon-cutlery"></span> Context Dump</a>
   {{#if renderType}}
-      <a class="btn btn-default" target="_blank" href="{{C.P}}{{path}}"><span class="glyphicon glyphicon-eye-open"></span> Render As "{{renderType}}"</a>
+      <a class="btn btn-default" target="_blank" href="{{req_path path}}"><span class="glyphicon glyphicon-eye-open"></span> Render As "{{renderType}}"</a>
   {{/if}}
     </div>
   </div>
@@ -58,7 +58,7 @@
         {{#if isContentResource}}
           <tr>
             <td>
-              <i class="glyphicon glyphicon-file"></i> <a href="{{C.P}}{{path}}{{C.X}}edit">{{name}}</a>
+              <i class="glyphicon glyphicon-file"></i> <a href="{{req_path path "edit"}}">{{name}}</a>
             </td>
             <td>
               {{contentType}} ({{contentSize}})
@@ -70,15 +70,15 @@
         {{else}}
           <tr>
             <td>
-              <i class="glyphicon glyphicon-folder-close"></i> <a href="{{C.P}}{{path}}{{R.SUFFIX}}">{{name}}</a>
+              <i class="glyphicon glyphicon-folder-close"></i> <a href="{{req_path path R.SUFFIX}}">{{name}}</a>
             </td>
             <td>
               {{#if renderType}}
-                <a href="{{C.P}}{{C.USER_TEMPLATES}}/{{renderType}}{{C.X}}res-list">{{renderType}}</a>
+                <a href="{{req_path C.USER_TEMPLATES "/" renderType "res-list"}}">{{renderType}}</a>
               {{else}}
                 {{type}}
               {{/if}}
-              <a class="btn btn-xs btn-default glyphicon glyphicon-fire" href="{{C.P}}{{path}}{{C.X}}res-renderer"></span></a>
+              <a class="btn btn-xs btn-default glyphicon glyphicon-fire" href="{{req_path path "res-renderer"}}"></span></a>
             </td>
             <td class="text-right">
               {{include path "res-list-actions"}}

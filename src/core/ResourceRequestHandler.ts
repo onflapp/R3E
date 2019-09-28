@@ -109,29 +109,20 @@ class ResourceRequestHandler extends EventDispatcher {
     return data;
   }
 
-  protected invokePreRenderer(resource: Resource, context: ResourceRequestContext, callback) {
-    let rrend = this.resourceRenderer;
-    let selectors = ['pre-render'];
-    let renderTypes = resource.getRenderTypes();
-    renderTypes.push('any');
-
-    rrend.resolveRenderer(renderTypes, selectors, function (rend: ContentRendererFunction, error ? : Error) {
-      if (rend) {
-        rend(resource, new ContentWriterAdapter('object', callback), context);
-      }
-      else {
-        callback(resource);
+  public transformObject(object: any, rstype: string, selector: string, context: ResourceRequestContext, callback) {
+    let data = new Data(object).wrap({
+      getRenderTypes:function() {
+        return [rstype];
       }
     });
+    this.transformResource(data, selector, context, callback);
   }
 
-  protected transformData(data: Data, context: ResourceRequestContext, callback) {
+  public transformResource(data: Data, selector: string, context: ResourceRequestContext, callback) {
     let rrend = this.resourceRenderer;
-    let selectors = ['pre-store'];
+    let selectors = [selector];
     let renderTypes = data.getRenderTypes();
     renderTypes.push('any');
-
-    data.values = this.expandValues(data.values, data.values);
 
     rrend.resolveRenderer(renderTypes, selectors, function (rend: ContentRendererFunction, error ? : Error) {
       if (rend) {
@@ -350,7 +341,7 @@ class ResourceRequestHandler extends EventDispatcher {
             res = new NotFoundResource(info.resourcePath);
           }
           
-          self.invokePreRenderer(res, context, function() {
+          self.transformResource(res, 'pre-render', context, function() {
             rrend.renderResource(res, sel, out, context);
             out.end(null);
           });
@@ -437,7 +428,10 @@ class ResourceRequestHandler extends EventDispatcher {
     };
 
     if (context && info && info.resourcePath) {
-      self.transformData(new Data(data), context, function (ddata: Data) {
+      let tdata = new Data(data);
+      tdata.values = this.expandValues(tdata.values, tdata.values);
+
+      self.transformResource(tdata, 'pre-store', context, function (ddata: Data) {
         let storeto = Utils.absolute_path(ddata.values[':storeto']);
         if (!storeto) storeto = info.resourcePath;
 

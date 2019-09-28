@@ -238,6 +238,9 @@ class ClientRequestHandler extends ResourceRequestHandler {
   }
 
   public renderRequest(rpath: string) {
+    if (rpath != this.currentPath) {
+      this.refererPath = this.currentPath;
+    }
     this.currentPath = rpath;
     location.hash = rpath;
     super.renderRequest(rpath);

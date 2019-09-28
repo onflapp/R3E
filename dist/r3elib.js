@@ -1040,26 +1040,19 @@ var ResourceRequestHandler = (function (_super) {
         }
         return data;
     };
-    ResourceRequestHandler.prototype.invokePreRenderer = function (resource, context, callback) {
-        var rrend = this.resourceRenderer;
-        var selectors = ['pre-render'];
-        var renderTypes = resource.getRenderTypes();
-        renderTypes.push('any');
-        rrend.resolveRenderer(renderTypes, selectors, function (rend, error) {
-            if (rend) {
-                rend(resource, new ContentWriterAdapter('object', callback), context);
-            }
-            else {
-                callback(resource);
+    ResourceRequestHandler.prototype.transformObject = function (object, rstype, selector, context, callback) {
+        var data = new Data(object).wrap({
+            getRenderTypes: function () {
+                return [rstype];
             }
         });
+        this.transformResource(data, selector, context, callback);
     };
-    ResourceRequestHandler.prototype.transformData = function (data, context, callback) {
+    ResourceRequestHandler.prototype.transformResource = function (data, selector, context, callback) {
         var rrend = this.resourceRenderer;
-        var selectors = ['pre-store'];
+        var selectors = [selector];
         var renderTypes = data.getRenderTypes();
         renderTypes.push('any');
-        data.values = this.expandValues(data.values, data.values);
         rrend.resolveRenderer(renderTypes, selectors, function (rend, error) {
             if (rend) {
                 rend(data, new ContentWriterAdapter('object', callback), context);
@@ -1236,7 +1229,7 @@ var ResourceRequestHandler = (function (_super) {
                     if (!res) {
                         res = new NotFoundResource(info.resourcePath);
                     }
-                    self.invokePreRenderer(res, context, function () {
+                    self.transformResource(res, 'pre-render', context, function () {
                         rrend.renderResource(res, sel, out, context);
                         out.end(null);
                     });
@@ -1295,7 +1288,9 @@ var ResourceRequestHandler = (function (_super) {
             out.end(null);
         };
         if (context && info && info.resourcePath) {
-            self.transformData(new Data(data), context, function (ddata) {
+            var tdata = new Data(data);
+            tdata.values = this.expandValues(tdata.values, tdata.values);
+            self.transformResource(tdata, 'pre-store', context, function (ddata) {
                 var storeto = Utils.absolute_path(ddata.values[':storeto']);
                 if (!storeto)
                     storeto = info.resourcePath;
@@ -2807,6 +2802,9 @@ var ClientRequestHandler = (function (_super) {
         this.renderRequest(rpath);
     };
     ClientRequestHandler.prototype.renderRequest = function (rpath) {
+        if (rpath != this.currentPath) {
+            this.refererPath = this.currentPath;
+        }
         this.currentPath = rpath;
         location.hash = rpath;
         _super.prototype.renderRequest.call(this, rpath);

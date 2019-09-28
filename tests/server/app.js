@@ -58,11 +58,15 @@ app.get('/*', function (req, res) {
   handler.setConfigProperties(config);
 
   //registering renderers
+  var hbs = new r.HBSRendererFactory();
+  handler.registerFactory('hbs', hbs); //handlebar templates
   handler.registerFactory('js', new r.JSRendererFactory()); //javascript code which is going to be eval'd
-  handler.registerFactory('hbs', new r.HBSRendererFactory()); //handlebar templates
   handler.registerFactory('func', new r.InterFuncRendererFactory()); //internal functions, usefull for function-based renderers
-
-  handler.handleGetRequest(req);
+  //we use the resolver to call initalization script for the factory
+  //this is where all Handlebars helpers are defined
+  handler.transformObject(hbs, 'factory/hbs', 'init-helpers', null, function() { 
+    handler.handleGetRequest(req);
+  });
 });
 
 app.post('/*', function (req, res) {
@@ -74,14 +78,17 @@ app.post('/*', function (req, res) {
   handler.setConfigProperties(config);
 
   //registering renderers
+  var hbs = new r.HBSRendererFactory();
+  handler.registerFactory('hbs', hbs); //handlebar templates
   handler.registerFactory('js', new r.JSRendererFactory());
-  handler.registerFactory('hbs', new r.HBSRendererFactory());
   handler.registerFactory('func', new r.InterFuncRendererFactory());
 
-  handler.handlePostRequest(req);
+  handler.transformObject(hbs, 'factory/hbs', 'init-helpers', null, function() { 
+    handler.handlePostRequest(req);
+  });
 });
 
-
+//start the server and listen
 app.listen(3000, function () {
   console.log('Example app listening on port 3000!')
 });

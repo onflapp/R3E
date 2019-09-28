@@ -99,11 +99,10 @@ handler.setPathParserPattern('^(\\/.*?)(\\.x-([a-z,\\-_]+))(\\.([a-z0-9,\\-\\.]+
 handler.setConfigProperties(config);
 
 //register renderers
+var hbs = new HBSRendererFactory();
+handler.registerFactory('hbs', hbs);
 handler.registerFactory('js', new JSRendererFactory());
-handler.registerFactory('hbs', new HBSRendererFactory());
 handler.registerFactory('func', new InterFuncRendererFactory()); //internal functions, usefull for function-based renderers
-
-handler.render(fact, )
 
 //persist data in localStorage
 handler.addEventListener('stored', function(path, data) {
@@ -117,7 +116,12 @@ handler.addEventListener('stored', function(path, data) {
   }
 });
 
-//start by listing content of the root resource
-var path = location.hash.substr(1);
-if (!path) path = '/.x-res-list';
-handler.handleRequest(path);
+//we use the resolver to call initalization script for the factory
+//this is where all Handlebars helpers are defined
+handler.transformObject(hbs, 'factory/hbs', 'init-helpers', null, function() { 
+
+  //start by listing content of the root resource
+  var path = location.hash.substr(1);
+  if (!path) path = '/.x-res-list';
+  handler.handleRequest(path);
+});
