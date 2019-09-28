@@ -109,10 +109,27 @@ class ResourceRequestHandler extends EventDispatcher {
     return data;
   }
 
+  protected invokePreRenderer(resource: Resource, context: ResourceRequestContext, callback) {
+    let rrend = this.resourceRenderer;
+    let selectors = ['pre-render'];
+    let renderTypes = resource.getRenderTypes();
+    renderTypes.push('any');
+
+    rrend.resolveRenderer(renderTypes, selectors, function (rend: ContentRendererFunction, error ? : Error) {
+      if (rend) {
+        rend(resource, new ContentWriterAdapter('object', callback), context);
+      }
+      else {
+        callback(resource);
+      }
+    });
+  }
+
   protected transformData(data: Data, context: ResourceRequestContext, callback) {
     let rrend = this.resourceRenderer;
-    let selectors = ['store'];
+    let selectors = ['pre-store'];
     let renderTypes = data.getRenderTypes();
+    renderTypes.push('any');
 
     data.values = this.expandValues(data.values, data.values);
 
@@ -314,6 +331,7 @@ class ResourceRequestHandler extends EventDispatcher {
   protected renderRequest(rpath: string) {
     let rres = this.resourceResolver;
     let rrend = this.resourceRenderer;
+    let self = this;
 
     if (!rres) throw new Error('no resource resolver');
     if (!rrend) throw new Error('no resource renderer');
@@ -328,12 +346,14 @@ class ResourceRequestHandler extends EventDispatcher {
 
       if (info) {
         rres.resolveResource(info.resourcePath, function (res) {
-          if (res) rrend.renderResource(res, sel, out, context);
-          else {
-            let res = new NotFoundResource(info.resourcePath);
-            rrend.renderResource(res, sel, out, context);
+          if (!res) {
+            res = new NotFoundResource(info.resourcePath);
           }
-          out.end(null);
+          
+          self.invokePreRenderer(res, context, function() {
+            rrend.renderResource(res, sel, out, context);
+            out.end(null);
+          });
         });
       }
       else {

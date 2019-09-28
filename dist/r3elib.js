@@ -319,7 +319,6 @@ var Data = (function () {
         var rt = this.values['_rt'];
         if (rt)
             rv.push(rt);
-        rv.push('any');
         return rv;
     };
     Data.prototype.wrap = function (wrapper) {
@@ -1041,10 +1040,25 @@ var ResourceRequestHandler = (function (_super) {
         }
         return data;
     };
+    ResourceRequestHandler.prototype.invokePreRenderer = function (resource, context, callback) {
+        var rrend = this.resourceRenderer;
+        var selectors = ['pre-render'];
+        var renderTypes = resource.getRenderTypes();
+        renderTypes.push('any');
+        rrend.resolveRenderer(renderTypes, selectors, function (rend, error) {
+            if (rend) {
+                rend(resource, new ContentWriterAdapter('object', callback), context);
+            }
+            else {
+                callback(resource);
+            }
+        });
+    };
     ResourceRequestHandler.prototype.transformData = function (data, context, callback) {
         var rrend = this.resourceRenderer;
-        var selectors = ['store'];
+        var selectors = ['pre-store'];
         var renderTypes = data.getRenderTypes();
+        renderTypes.push('any');
         data.values = this.expandValues(data.values, data.values);
         rrend.resolveRenderer(renderTypes, selectors, function (rend, error) {
             if (rend) {
@@ -1205,6 +1219,7 @@ var ResourceRequestHandler = (function (_super) {
     ResourceRequestHandler.prototype.renderRequest = function (rpath) {
         var rres = this.resourceResolver;
         var rrend = this.resourceRenderer;
+        var self = this;
         if (!rres)
             throw new Error('no resource resolver');
         if (!rrend)
@@ -1218,13 +1233,13 @@ var ResourceRequestHandler = (function (_super) {
         try {
             if (info) {
                 rres.resolveResource(info.resourcePath, function (res) {
-                    if (res)
-                        rrend.renderResource(res, sel, out, context);
-                    else {
-                        var res_1 = new NotFoundResource(info.resourcePath);
-                        rrend.renderResource(res_1, sel, out, context);
+                    if (!res) {
+                        res = new NotFoundResource(info.resourcePath);
                     }
-                    out.end(null);
+                    self.invokePreRenderer(res, context, function () {
+                        rrend.renderResource(res, sel, out, context);
+                        out.end(null);
+                    });
                 });
             }
             else {
@@ -1253,8 +1268,8 @@ var ResourceRequestHandler = (function (_super) {
                     if (res)
                         rrend.renderResource(res, sel, out, ncontext);
                     else {
-                        var res_2 = new NotFoundResource(resourcePath);
-                        rrend.renderResource(res_2, sel, out, ncontext);
+                        var res_1 = new NotFoundResource(resourcePath);
+                        rrend.renderResource(res_1, sel, out, ncontext);
                     }
                 });
             }
@@ -2128,126 +2143,6 @@ var HBSRendererFactory = (function (_super) {
         };
         _this.Handlebars.registerHelper('include', include);
         _this.Handlebars.registerHelper('include-safe', include);
-        _this.Handlebars.registerHelper('p', function (val, options) {
-            if (typeof val === 'object') {
-                return JSON.stringify(val);
-            }
-            else {
-                return val;
-            }
-        });
-        _this.Handlebars.registerHelper('or', function () {
-            var args = arguments;
-            for (var i in args) {
-                if (args[i] !== null && args[i] !== undefined)
-                    return args[i];
-            }
-        });
-        _this.Handlebars.registerHelper('eq', function (lvalue, rvalue, result, options) {
-            if (lvalue === rvalue)
-                return result;
-            else
-                return null;
-        });
-        _this.Handlebars.registerHelper('prop', function (path, block) {
-            var context = block.data.root._context;
-            var session = block.data.root._session;
-            if (path.charAt(0) !== '/')
-                path = self.expadPath(path, context);
-            var name = Utils.filename(path);
-            var base = Utils.filename_dir(path);
-            var p = session.makeOutputPlaceholder();
-            context.resolveResource(base, function (res) {
-                if (res) {
-                    var val = res.getProperty(name);
-                    p.write(val ? val : '');
-                    p.end();
-                }
-                else {
-                    p.write('non');
-                    p.end();
-                }
-            });
-            return new self.Handlebars.SafeString(p.placeholder);
-        });
-        _this.Handlebars.registerHelper('match', function (lvalue, operator, rvalue, options) {
-            var operators = null;
-            var result = null;
-            if (arguments.length < 3) {
-                if (lvalue) {
-                    operator.data.root._match_rval = true;
-                    return operator.fn(this);
-                }
-                else
-                    return operator.inverse(this);
-            }
-            if (options === undefined) {
-                options = rvalue;
-                rvalue = operator;
-                operator = "===";
-            }
-            operators = {
-                '==': function (l, r) {
-                    return l == r;
-                },
-                '===': function (l, r) {
-                    return l === r;
-                },
-                '!=': function (l, r) {
-                    return l != r;
-                },
-                '!==': function (l, r) {
-                    return l !== r;
-                },
-                '<': function (l, r) {
-                    return l < r;
-                },
-                '>': function (l, r) {
-                    return l > r;
-                },
-                '<=': function (l, r) {
-                    return l <= r;
-                },
-                '>=': function (l, r) {
-                    return l >= r;
-                },
-                'startsWith': function (l, r) {
-                    if (l && l.indexOf(r) === 0)
-                        return true;
-                    else
-                        return false;
-                },
-                '!startsWith': function (l, r) {
-                    if (l && l.indexOf(r) === 0)
-                        return false;
-                    else
-                        return true;
-                },
-                'typeof': function (l, r) {
-                    return typeof l == r;
-                }
-            };
-            if (!operators[operator]) {
-                throw new Error("Handlerbars Helper 'compare' doesn't know the operator " + operator);
-            }
-            result = operators[operator](lvalue, rvalue);
-            if (result)
-                options.data.root._match_rval = true;
-            if (result)
-                return options.fn(this);
-            else
-                return options.inverse(this);
-        });
-        _this.Handlebars.registerHelper('default', function (options) {
-            var result = false;
-            if (options.data.root._match_rval)
-                result = true;
-            delete options.data.root._match_rval;
-            if (!result)
-                return options.fn(this);
-            else
-                return options.inverse(this);
-        });
         _this.Handlebars.registerHelper('dump', function (block) {
             var rv = {};
             var context = block['data'] ? block.data.root : block;

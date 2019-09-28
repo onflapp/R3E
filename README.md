@@ -123,6 +123,33 @@ rres.resolveResource('/my web page', function(res) {
 
 ```
 
+# Resolving resources to renderers
+
+1. makeRenderTypePaths will return list of paths to try
+this can be fully customized by defining your own makeRenderTypePatterns function
+
+by default, the list of paths looks something like this:
+
+[full renderType path]/[last part of the render path].[selector].[scritpt extension]
+[full renderType path]/[selector].[script extension]
+
+this pattern will by tried for all render types returned by getRenderTypes()
+
+all possible render types are constructed from:
+
+render type
+render super type
+super type
+type
+
+and in case of content resources
+"mime/" + content type
+
+# Special selectors
+
+"default" - name will be used if no selector is specified
+"pre-store" - called before a resource is stored, can be used to change resource by returning new json structure
+"pre-render" - called before a resource gets rendered by the handler
 
 # Points of Interest
 

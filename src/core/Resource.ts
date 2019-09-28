@@ -60,7 +60,6 @@ class Data {
     let rt = this.values['_rt'];
 
     if (rt) rv.push(rt);
-    rv.push('any');
 
     return rv;
   }

@@ -103,6 +103,8 @@ handler.registerFactory('js', new JSRendererFactory());
 handler.registerFactory('hbs', new HBSRendererFactory());
 handler.registerFactory('func', new InterFuncRendererFactory()); //internal functions, usefull for function-based renderers
 
+handler.render(fact, )
+
 //persist data in localStorage
 handler.addEventListener('stored', function(path, data) {
   try {

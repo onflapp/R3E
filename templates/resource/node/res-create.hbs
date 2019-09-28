@@ -23,7 +23,6 @@
         </div>
         <div class="modal-body">
 
-
           <ol class="breadcrumb">
             <li class="active">HOME</li>
             {{#include "." "parents"}}
@@ -35,9 +34,10 @@
           <h5>Resource Node</h5>
           <form class="form-inline" method="post" action="{{C.P}}{{R.PATH_APPEND}}{:name}">
             <div class="form-group">
+              <input class="form-control" name="_rt" value="" autocomplete="off" placeholder="resource type">
               <select class="form-control" name="_rt">
-                <option value="">not set</option>
-                <option disabled>-</option>
+                <option value="">type not set</option>
+                <option disabled>user templates:</option>
                 {{#include C.USER_TEMPLATES "rendertemplates"}}
                   <option value="{{this}}">{{this}}</option>
                 {{/include}}
