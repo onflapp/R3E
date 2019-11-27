@@ -18,7 +18,7 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <a class="close" href="{{C.P}}{{R.PATH}}{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
+          <a class="close" href="{{req_path R.PATH "res-list"}}"><span aria-hidden="true">&times;</span></a>
           <h4 class="modal-title">Index Resource Content</h4>
         </div>
         <div class="modal-body">
@@ -38,7 +38,7 @@
             <div class="form-group">
               <input class="form-control" type="file" name=":filename" value="">
               <input class="form-control" name=":name|:filename|newUUID" value="" autocomplete="off" placeholder="file name">
-              <input type="hidden" name=":forward" value="{{C.P}}{{R.PATH}}{{C.X}}res-list">
+              <input type="hidden" name=":forward" value="{{req_path R.PATH "res-list"}}">
               <button class="form-control btn btn-success" type="submit">
                 <span class="glyphicon glyphicon-plus"></span>
               </button>
@@ -50,7 +50,7 @@
           <form class="form-inline" method="post" enctype="multipart/form-data" action="{{R.PATH}}">
             <div class="form-group">
               <input class="form-control" type="file" name=":import" value="">
-              <input type="hidden" name=":forward" value="{{C.P}}{{R.PATH}}{{C.X}}res-list">
+              <input type="hidden" name=":forward" value="{{req_path R.PATH "res-list"}}">
 
               <button class="form-control btn btn-success" type="submit">
                 <span class="glyphicon glyphicon-plus"></span>

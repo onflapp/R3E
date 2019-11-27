@@ -64,8 +64,8 @@ class ResourceRenderer {
     return rv;
   }
 
-  protected makeRenderingFunction(path: string, resource: Resource, callback: RendererFactoryCallback) {
-    let ext = Utils.filename_ext(path);
+  public makeRenderingFunction(resource: Resource, callback: RendererFactoryCallback) {
+    let ext = Utils.filename_ext(resource.getName());
     let fact = this.rendererFactories.get(ext);
 
     fact.makeRenderer(resource, callback);
@@ -124,7 +124,7 @@ class ResourceRenderer {
       self.rendererResolver.resolveResource(p, function (rend: Resource) {
         if (rend) {
           if (rend.isContentResource()) {
-            self.makeRenderingFunction(p, rend, callback);
+            self.makeRenderingFunction(rend, callback);
           }
           else {
             callback(null, new Error('no ContentResource at path :' + p));

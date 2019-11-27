@@ -18,7 +18,7 @@
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
-          <a class="close" href="{{C.P}}{{R.PATH}}{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
+          <a class="close" href="{{ref_path R.PATH "res-list"}}"><span aria-hidden="true">&times;</span></a>
           <h4 class="modal-title">Resource Properties</h4>
         </div>
         <div class="modal-body">
@@ -52,7 +52,7 @@
             </div>
           {{/include}}
 
-          <form class="form-horizontal" method="post" action="{{C.P}}{{R.PATH}}{{R.SUFFIX}}">
+          <form class="form-horizontal" method="post" action="{{R.PATH}}">
             <div class="form-group">
               <div class="col-sm-2">
                 <input class="form-control" name=":name" value="" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="name">
@@ -66,23 +66,24 @@
                 </button>
               </div>
             </div>
+            <input type="hidden" name=":forward" value="{{req_path R.PATH "res-properties"}}">
           </form>
 
       </div>
       <div class="modal-footer">
         <div class="pull-left">
-          <a class="btn btn-default" href="{{C.P}}{{R.PATH}}{{C.X}}res-renderer">Renderer Properties...</a>
+          <a class="btn btn-default" href="{{req_path R.PATH "res-renderer"}}">Renderer Properties...</a>
         </div>
 
-        <form class="form-horizontal" class="form-inline" method="post" id="save_form" action="{{C.P}}{{R.PATH}}{{C.X}}res-list">
-          <a class="btn btn-default" href="{{C.P}}{{R.PATH}}{{C.X}}res-list">Cancel</a>
+        <form class="form-horizontal" class="form-inline" method="POST" id="save_form" action="{{R.PATH}}">
+          <a class="btn btn-default" href="{{ref_path R.PATH "res-list"}}">Cancel</a>
+          <input type="hidden" name=":forward" value="{{ref_path R.PATH "res-list"}}">
           <input class="btn btn-success" type="submit" value="Save">
         </form>
       </div>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
   </div><!-- /.modal -->
-
 
 </body>
 

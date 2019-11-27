@@ -20,6 +20,31 @@ var Utils = (function () {
         });
         return uuid;
     };
+    Utils.listSortByNames = function (list, names) {
+        var rv = [];
+        var done = {};
+        for (var i = 0; i < names.length; i++) {
+            var x = list.indexOf(names[i]);
+            if (x != -1) {
+                rv.push(list[x]);
+                done[names[i]] = 'y';
+            }
+        }
+        for (var i = 0; i < list.length; i++) {
+            if (!done[list[i]])
+                rv.push(list[i]);
+        }
+        return rv;
+    };
+    Utils.listRemoveNames = function (list, names) {
+        var rv = [];
+        for (var i = 0; i < list.length; i++) {
+            if (names.indexOf(list[i]) === -1) {
+                rv.push(list[i]);
+            }
+        }
+        return rv;
+    };
     Utils.listMoveItem = function (list, item, ref, offset) {
         var x = 0;
         var v = list.indexOf(item);
@@ -158,6 +183,8 @@ var Utils = (function () {
             return 'image/gif';
         if (ext === 'txt')
             return 'text/plain';
+        if (ext === 'pdf')
+            return 'application/pdf';
         if (ext === 'html' || ext === 'htm')
             return 'text/html';
         if (ext === 'xml')
@@ -730,8 +757,8 @@ var ResourceRenderer = (function () {
         }
         return rv;
     };
-    ResourceRenderer.prototype.makeRenderingFunction = function (path, resource, callback) {
-        var ext = Utils.filename_ext(path);
+    ResourceRenderer.prototype.makeRenderingFunction = function (resource, callback) {
+        var ext = Utils.filename_ext(resource.getName());
         var fact = this.rendererFactories.get(ext);
         fact.makeRenderer(resource, callback);
     };
@@ -781,7 +808,7 @@ var ResourceRenderer = (function () {
             self.rendererResolver.resolveResource(p, function (rend) {
                 if (rend) {
                     if (rend.isContentResource()) {
-                        self.makeRenderingFunction(p, rend, callback);
+                        self.makeRenderingFunction(rend, callback);
                     }
                     else {
                         callback(null, new Error('no ContentResource at path :' + p));
@@ -1323,34 +1350,34 @@ var ResourceRequestHandler = (function (_super) {
     ResourceRequestHandler.prototype.storeResource = function (resourcePath, data, callback) {
         var self = this;
         var rres = this.resourceResolver;
-        var storedata = function () {
-            self.expandDataAndStore(resourcePath, data, function () {
-                self.dispatchAllEventsAsync('stored', resourcePath, data);
+        var storedata = function (path) {
+            self.expandDataAndStore(path, data, function () {
+                self.dispatchAllEventsAsync('stored', path, data);
                 callback();
             });
         };
         try {
             var remove_1 = Utils.absolute_path(data[':delete']);
-            var copyto = Utils.absolute_path(data[':copyto']);
+            var copyto_1 = Utils.absolute_path(data[':copyto']);
             var copyfrom = Utils.absolute_path(data[':copyfrom']);
-            var moveto = Utils.absolute_path(data[':moveto']);
+            var moveto_1 = Utils.absolute_path(data[':moveto']);
             var importto = Utils.absolute_path(data[':import']);
-            if (copyto) {
-                rres.copyResource(resourcePath, copyto, function () {
-                    self.dispatchAllEventsAsync('stored', resourcePath, data);
-                    storedata();
+            if (copyto_1) {
+                rres.copyResource(resourcePath, copyto_1, function () {
+                    self.dispatchAllEventsAsync('stored', copyto_1, data);
+                    storedata(copyto_1);
                 });
             }
             else if (copyfrom) {
                 rres.copyResource(copyfrom, resourcePath, function () {
                     self.dispatchAllEventsAsync('stored', resourcePath, data);
-                    storedata();
+                    storedata(resourcePath);
                 });
             }
-            else if (moveto) {
-                rres.moveResource(resourcePath, moveto, function () {
-                    self.dispatchAllEventsAsync('stored', resourcePath, data);
-                    storedata();
+            else if (moveto_1) {
+                rres.moveResource(resourcePath, moveto_1, function () {
+                    self.dispatchAllEventsAsync('stored', moveto_1, data);
+                    storedata(moveto_1);
                 });
             }
             else if (remove_1) {
@@ -1362,11 +1389,11 @@ var ResourceRequestHandler = (function (_super) {
             else if (importto) {
                 self.expandDataAndImport(resourcePath, data, function () {
                     self.dispatchAllEventsAsync('stored', resourcePath, data);
-                    storedata();
+                    storedata(resourcePath);
                 });
             }
             else {
-                storedata();
+                storedata(resourcePath);
             }
         }
         catch (ex) {
@@ -2952,6 +2979,13 @@ var ServerRequestHandler = (function (_super) {
         var multiparty = require('multiparty');
         var querystring = require('querystring');
         var referer = req.headers.referrer || req.headers.referer;
+        var first_val = function (val) {
+            for (var i = 0; i < val.length; i++) {
+                if (val[i])
+                    return val[i];
+            }
+            return val[val.length - 1];
+        };
         if (referer) {
             var r = new URL(referer);
             this.refererPath = r.pathname;
@@ -3012,7 +3046,7 @@ var ServerRequestHandler = (function (_super) {
                         break;
                 }
                 for (var k in fields) {
-                    var v = fields[k][0];
+                    var v = first_val(fields[k]);
                     data[k] = v;
                 }
                 data = self.transformValues(data);
@@ -3033,7 +3067,7 @@ var ServerRequestHandler = (function (_super) {
                 for (var k in fields) {
                     var v = fields[k];
                     if (Array.isArray(v))
-                        data[k] = v[0];
+                        data[k] = first_val(v);
                     else
                         data[k] = v;
                 }

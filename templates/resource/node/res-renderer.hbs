@@ -17,9 +17,9 @@
   <div role="dialog">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
-        <form class="form-horizontal" class="form-inline" method="post" id="save_form" action="{{C.P}}{{R.PATH}}{{C.X}}res-list">
+        <form class="form-horizontal" class="form-inline" method="POST" id="save_form" action="{{R.PATH}}">
         <div class="modal-header">
-          <a class="close" href="{{C.P}}{{R.PATH}}{{C.X}}res-list"><span aria-hidden="true">&times;</span></a>
+          <a class="close" href="{{ref_path R.PATH "res-list"}}"><span aria-hidden="true">&times;</span></a>
           <h4 class="modal-title">Renderer Properties</h4>
         </div>
         <div class="modal-body">
@@ -33,7 +33,7 @@
           </ol>
 
           <h4>Set User Defined Renderers</h4>
-          <p>User defined renderer templates are stored in <a href="{{C.P}}{{C.USER_TEMPLATES}}/{{renderType}}{{C.X}}res-list">{{C.USER_TEMPLATES}}/{{renderType}}</a></p>
+          <p>User defined renderer templates are stored in <a href="{{req_path C.USER_TEMPLATES "/" renderType "res-list"}}">{{C.USER_TEMPLATES}}/{{renderType}}</a></p>
 
           <div class="form-horizontal">
               <div class="form-group">
@@ -85,14 +85,14 @@
           </ol>          
 
 
-      </div>
-      <div class="modal-footer">
-
-          <a class="btn btn-default pull-left" href="{{C.P}}{{C.USER_TEMPLATES}}{{C.X}}res-create">Create New Template</a>
-          <a class="btn btn-default" href="{{C.P}}{{R.PATH}}{{C.X}}res-list">Cancel</a>
+        </div>
+        <div class="modal-footer">
+          <input type="hidden" name=":forward" value="{{ref_path R.PATH "res-list"}}">
+          <a class="btn btn-default pull-left" href="{{req_path C.USER_TEMPLATES "res-create"}}">Create New Template</a>
+          <a class="btn btn-default" href="{{ref_path R.PATH "res-list"}}">Cancel</a>
           <input class="btn btn-success" type="submit" value="Save">
-      </div>
-        </form>
+        </div>
+      </form>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
   </div><!-- /.modal -->

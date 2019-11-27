@@ -9,6 +9,33 @@ class Utils {
     return uuid;
   }
 
+  public static listSortByNames(list, names) {
+    let rv = [];
+    let done = {};
+    for (let i = 0; i < names.length; i++) {
+      let x = list.indexOf(names[i]);
+      if (x != -1) {
+        rv.push(list[x]);
+        done[names[i]] = 'y';
+      }
+    }
+    for (let i = 0; i < list.length; i++) {
+      if (!done[list[i]]) rv.push(list[i]);
+    }
+
+    return rv;
+  }
+
+  public static listRemoveNames(list, names) {
+    let rv = [];
+    for (let i = 0; i < list.length; i++) {
+      if (names.indexOf(list[i]) === -1) {
+        rv.push(list[i]);
+      }
+    }
+    return rv;
+  }
+
   public static listMoveItem(list, item, ref, offset) {
     let x = 0;
     let v = list.indexOf(item);
@@ -139,6 +166,7 @@ class Utils {
     if (ext === 'png') return 'image/png';
     if (ext === 'gif') return 'image/gif';
     if (ext === 'txt') return 'text/plain';
+    if (ext === 'pdf') return 'application/pdf';
     if (ext === 'html' || ext === 'htm') return 'text/html';
     if (ext === 'xml') return 'text/xml';
     if (ext === 'js') return 'text/plain';

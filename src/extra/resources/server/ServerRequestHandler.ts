@@ -93,6 +93,13 @@ class ServerRequestHandler extends ResourceRequestHandler {
     let querystring = require('querystring');
     let referer = req.headers.referrer || req.headers.referer;
 
+    let first_val = function(val) {
+      for(let i = 0; i < val.length; i++) {
+        if (val[i]) return val[i];
+      }
+      return val[val.length-1];
+    };
+
     if (referer) {
       let r = new URL(referer);
       this.refererPath = r.pathname;
@@ -158,7 +165,7 @@ class ServerRequestHandler extends ResourceRequestHandler {
         }
 
         for (var k in fields) {
-          var v = fields[k][0];
+          var v = first_val(fields[k]);
           data[k] = v;
         }
 
@@ -181,7 +188,7 @@ class ServerRequestHandler extends ResourceRequestHandler {
         for (var k in fields) {
           var v = fields[k];
 
-          if (Array.isArray(v)) data[k] = v[0];
+          if (Array.isArray(v)) data[k] = first_val(v);
           else data[k] = v;
         }
 

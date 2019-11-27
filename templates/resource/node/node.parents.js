@@ -3,24 +3,31 @@
 
   var path = context.getCurrentResourcePath();
 
+  var parentResources = [];
   var parentPaths = [];
   var ps = Utils.split_path(path);
   ps.pop();
 
-  while (ps.length > 0) {
+  var parentResource = function(callback) {
     var rpath = ps.join('/');
-    var name = ps.pop();
-    var map = context.makeContextMap(res);
+    if (rpath == '') {
+      callback();
+    }
+    else {
+      context.resolveResource('/'+rpath, function(pres) {
+        var map = context.makeContextMap(pres);
+        map.path = '/'+rpath;
+        parentResources.unshift(map);
 
-    if (name === '') continue;
+        ps.pop();
+        parentResource(callback);
+      });
+    }
+  };
 
-    map['path'] = '/' + rpath;
-    map['name'] = name;
-
-    parentPaths.unshift(map);
-  }
-
-  writer.write(parentPaths);
-  writer.end();
+  parentResource(function() {
+    writer.write(parentResources);
+    writer.end();
+  });
 
 });

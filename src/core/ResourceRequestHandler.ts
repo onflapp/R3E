@@ -465,9 +465,9 @@ class ResourceRequestHandler extends EventDispatcher {
     let self = this;
     let rres = this.resourceResolver;
 
-    let storedata = function() {
-      self.expandDataAndStore(resourcePath, data, function () {
-        self.dispatchAllEventsAsync('stored', resourcePath, data);
+    let storedata = function(path) {
+      self.expandDataAndStore(path, data, function () {
+        self.dispatchAllEventsAsync('stored', path, data);
         callback();
       });
     };
@@ -481,20 +481,20 @@ class ResourceRequestHandler extends EventDispatcher {
 
       if (copyto) {
         rres.copyResource(resourcePath, copyto, function () {
-          self.dispatchAllEventsAsync('stored', resourcePath, data);
-          storedata();
+          self.dispatchAllEventsAsync('stored', copyto, data);
+          storedata(copyto);
         });
       }
       else if (copyfrom) {
         rres.copyResource(copyfrom, resourcePath, function () {
           self.dispatchAllEventsAsync('stored', resourcePath, data);
-          storedata();
+          storedata(resourcePath);
         });
       }
       else if (moveto) {
         rres.moveResource(resourcePath, moveto, function () {
-          self.dispatchAllEventsAsync('stored', resourcePath, data);
-          storedata();
+          self.dispatchAllEventsAsync('stored', moveto, data);
+          storedata(moveto);
         });
       }
       else if (remove) {
@@ -506,11 +506,11 @@ class ResourceRequestHandler extends EventDispatcher {
       else if (importto) {
         self.expandDataAndImport(resourcePath, data, function () {
           self.dispatchAllEventsAsync('stored', resourcePath, data);
-          storedata();
+          storedata(resourcePath);
         });
       }
       else {
-        storedata();
+        storedata(resourcePath);
       }
     }
     catch (ex) {

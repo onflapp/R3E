@@ -52,6 +52,24 @@
     }
   });
 
+  Handlebars.registerHelper('val', function () {
+    var args = arguments;
+
+    if (!args[0]) return null;
+    else return args[1].replace('%s', args[0]);
+  });
+
+  Handlebars.registerHelper('and', function () {
+    var args = arguments;
+
+    for (var i in args) {
+      if (args[i]) return args[i+1];
+    }
+
+    return null;
+  });
+
+
   Handlebars.registerHelper('eq', function (lvalue, rvalue, result, options) {
     if (lvalue === rvalue) return result;
     else return null;

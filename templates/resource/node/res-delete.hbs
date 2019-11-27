@@ -37,6 +37,7 @@
         <div class="modal-footer">
           <form class="form-inline" method="post" action="{{res_path R.PATH}}">
             <a class="btn btn-default" href="{{ref_path R.PATH_APPEND "../" "res-list"}}">Cancel</a>
+            <input type="hidden" name="_rt" value="{{renderType}}">
             <input type="hidden" name=":delete" value="{{res_path R.PATH}}">
             <input type="hidden" name=":forward" value="{{ref_path R.PATH_APPEND "../" "res-list"}}">
             <input class="btn btn-danger" type="submit" value="Delete">
