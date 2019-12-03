@@ -1,130 +1,154 @@
-class RemoteResource extends ObjectResource {
-  private baseURL: string;
-  private baseName: string;
-  private resolved: boolean = false;
-  private childNames = [];
+class RemoteResourceContentWriter implements ContentWriter {
+  protected filePath: string;
+  protected contentType: string;
+  protected buffer = [];
 
-  constructor(name: string, base: string, obj ? : any) {
-    super(obj ? obj : {}, name);
-    this.baseName = name;
-    this.baseURL = base;
+  constructor(filePath: string) {
+    this.filePath = filePath;
   }
 
-  public getURL(name: string): string {
-    let path = this.baseURL + '/' + name;
-    return path;
+  public start(ctype: string) {
+    this.contentType = ctype;
   }
 
-  protected getChildrenStoreName() {
-    return 'children.json';
+  public write(data: any) {
+    this.buffer.push(data);
   }
 
-  protected getPropertiesStoreName() {
-    return 'properties.json';
+  public error(error: Error) {
+    console.log(error);
   }
 
-  protected makeNewResource(name: string, obj: any) {
-    let b = this.baseURL;
-    let n = name;
-    if (n) b += '/' + n;
-    return new RemoteResource(name, b, obj);
-  }
-
-  public resolveItself(callback) {
-    if (this.resolved) {
-      callback(this);
-      return;
-    }
-
+  public end(callback: any) {
+    let xhr = new XMLHttpRequest();
     let self = this;
-    let processed = 0;
-    let found = 0;
-    let done = function () {
-      if (processed == 2) {
-        if (found) {
-          callback(self);
-          self.resolved = true;
+    let data = this.buffer[0];
+
+    xhr.open('POST', this.filePath, true);
+
+    if (this.contentType) xhr.setRequestHeader('Content-Type', this.contentType);
+
+    xhr.onreadystatechange = function () {
+      var DONE = 4;
+      var OK = 200;
+      if (xhr.readyState === DONE) {
+        if (xhr.status === OK) {
+          callback();
         }
-        else callback(null);
+        else {
+          callback();
+        }
       }
     };
 
-    this.refresh(this.getPropertiesStoreName(), function (rv) {
-      if (rv) {
-        self.values = rv;
-        found++;
-      }
-      processed++;
-      done();
-    });
+    xhr.send(data);
+  }
+}
 
-    this.refresh(this.getChildrenStoreName(), function (rv) {
-      if (rv) {
-        self.childNames = rv;
-        found++;
-      }
-      processed++;
-      done();
-    });
+class RemoteResource extends StoredResource {
 
+  constructor(name: string, base ?: string) {
+    super(name, base);
+  }
+  
+  protected makeNewResource(name: string) {
+    let path = this.getStoragePath();
+    let res = new RemoteResource(name, path);
+
+    return res;
   }
 
-  public resolveChildResource(name: string, callback: ResourceCallback, walking ? : boolean): void {
-    if (walking) {
-      let res = this.makeNewResource(name, {});
-      callback(res);
-    }
-    else {
-      let self = this;
-      this.resolveItself(function (rv) {
-        if (rv && self.childNames.indexOf(name) >= 0) {
-          let res = self.makeNewResource(name, {});
-          res.resolveItself(callback);
-        }
-        else callback(null);
-      });
-    }
+  protected ensurePathExists(path: string, callback) {
+    callback(true);
   }
 
-  public listChildrenNames(callback: ChildrenNamesCallback) {
-    callback(this.childNames);
-  }
-
-  public allocateChildResource(name: string, callback: ResourceCallback): void {
-    if (this.childNames.indexOf(name) === -1) this.childNames.push(name);
-
-    let res = this.makeNewResource(name, {});
-    this.store(this.getChildrenStoreName(), this.childNames, function () {
-      callback(res);
-    });
-  }
-
-  public importProperties(data: any, callback) {
-    let self = this;
-    super.importProperties(data, function () {
-      self.store(self.getPropertiesStoreName(), self.values, function () {
-        callback();
-      });
-    });
+  protected storeChildrenNames(callback) {
+    callback();
   }
 
   public removeChildResource(name: string, callback) {
+    let url = this.getStoragePath(name);
     let self = this;
-    this.childNames.splice(this.childNames.indexOf(name), 1);
-    super.removeChildResource(name, function () {
-      self.store(self.getChildrenStoreName(), self.childNames, function () {
+    let val = {
+      ':delete':url
+    };
+
+    url += '/.metadata.json'
+    super.removeChildResource(name, function() {
+      self.remotePOST(url, val, function() {
         callback();
       });
     });
   }
 
-  protected store(name, values, callback): void {
-    let url = this.getURL(name);
-    let data = JSON.stringify(values);
+  protected loadChildrenNames(callback) {
+    if (this.isDirectory) {
+      let url = this.getStoragePath('.children.json');
+
+      this.remoteGET(url, true, function(values) {
+        callback(values?values:[]);
+      });
+    }
+    else {
+      callback([]);
+    }
+  }
+
+  protected storeProperties(callback) {
+    let url = this.getStoragePath('.metadata.json');
+
+    this.remotePOST(url, this.values, function() {
+      callback();
+    });
+  }
+
+  protected loadProperties(callback) {
+    let url = this.getMetadataPath();
+    let self = this;
+
+    this.remoteGET(url, true, function(values) {
+      if (values) {
+        if (values._pt === 'resource/content') self.isDirectory = false;
+        if (values._contentsz) self.contentSize = values._contentsz;
+      }
+
+      self.values = values?values:{};
+
+      callback(true);
+    });
+  }
+
+  public getWriter(): ContentWriter {
+    let path = this.getStoragePath();
+    if (this.isDirectory) {
+      this.isDirectory = false;
+    }
+
+    this.loaded = false;
+    return new RemoteResourceContentWriter(path);
+  }
+
+  public read(writer: ContentWriter, callback: any) {
+    if (this.isDirectory) {
+      writer.end(callback);
+    }
+    else {
+      let url = this.getStoragePath();
+      let ct = this.getContentType();
+
+      this.remoteGET(url, false, function(data) {
+        writer.start(ct);
+        writer.write(data);
+        writer.end(callback);
+      });
+    }
+  }
+
+  protected remotePOST(url, values, callback): void {
     let xhr = new XMLHttpRequest();
     let self = this;
 
-    xhr.open('POST', url);
+    xhr.open('POST', url, true);
 
     xhr.setRequestHeader('Content-Type', 'application/json'); //;charset=UTF-8');
     xhr.onreadystatechange = function () {
@@ -140,28 +164,34 @@ class RemoteResource extends ObjectResource {
       }
     };
 
+    let data = JSON.stringify(values);
     xhr.send(data);
   }
 
-  protected refresh(name, callback): void {
-    let url = this.getURL(name);
+  protected remoteGET(url, json, callback): void {
     let xhr = new XMLHttpRequest();
 
-    xhr.open('GET', url);
+    if (!json) xhr.responseType = 'arraybuffer';
+    xhr.open('GET', url, true);
     xhr.onreadystatechange = function () {
       var DONE = 4;
       var OK = 200;
       if (xhr.readyState === DONE) {
         if (xhr.status === OK) {
-          let val = null;
-          let data = xhr.responseText;
-          if (data) {
-            try {
-              val = JSON.parse(data);
+          if (json) {
+            let data = xhr.responseText;
+            let val = null;
+            if (data) {
+              try {
+                val = JSON.parse(data);
+              }
+              catch (ex) {}
             }
-            catch (ex) {}
+            callback(val);
           }
-          callback(val);
+          else {
+            callback(xhr.response);
+          }
         }
         else {
           callback(null);

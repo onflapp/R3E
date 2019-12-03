@@ -446,39 +446,41 @@ var Resource = (function (_super) {
     };
     Resource.prototype.exportChilrenResources = function (level, writer, incSource) {
         var self = this;
-        var processing = 0;
+        var processingc = 0;
+        var processingd = 0;
+        var processingn = 0;
         var done = function () {
-            if (processing === 0) {
+            if (processingc === 0 && processingd === 0 && processingn === 0) {
                 writer.end(null);
-                processing = -1;
             }
         };
         var export_children = function (path, name, res) {
-            processing++;
-            processing++;
+            processingc++;
+            processingd++;
             res.exportData(function (data) {
                 if (name)
                     data.values[':name'] = name;
                 if (path)
                     data.values[':path'] = path;
                 writer.write(data);
-                processing--;
+                processingd--;
                 done();
             });
             res.listChildrenNames(function (names) {
-                processing += names.length;
+                processingn += names.length;
                 var _loop_1 = function () {
                     var name_5 = names[i];
                     res.resolveChildResource(name_5, function (r) {
                         var rpath = Utils.filename_path_append(path, name_5);
                         export_children(rpath, name_5, r);
-                        processing--;
+                        processingn--;
+                        done();
                     });
                 };
                 for (var i = 0; i < names.length; i++) {
                     _loop_1();
                 }
-                processing--;
+                processingc--;
                 done();
             });
         };
@@ -486,31 +488,30 @@ var Resource = (function (_super) {
         export_children(incSource ? this.getName() : '', this.getName(), this);
     };
     Resource.prototype.importData = function (data, callback) {
-        var processing = 0;
+        var processingf = 0;
+        var processingp = 0;
         var ffunc = null;
         var ct = null;
+        var self = this;
         var mime = Utils.filename_mime(this.getName());
         var done = function () {
-            if (processing === 0 && callback)
+            if (processingf === 0 && processingp === 0 && callback)
                 callback();
         };
-        processing++;
         var props = {};
         var _loop_2 = function (k) {
             var v = data.values[k];
             if (k === Resource.STORE_CONTENT_PROPERTY && typeof v === 'function') {
-                processing++;
                 ffunc = v;
             }
             else if (k === Resource.STORE_CONTENT_PROPERTY && typeof v === 'string') {
-                processing++;
                 ct = data.values['_ct'];
                 if (!ct)
                     ct = mime;
-                ffunc = function (writer, callback) {
+                ffunc = function (writer, cb) {
                     writer.start(ct ? ct : 'text/plain');
                     writer.write(v);
-                    writer.end(callback);
+                    writer.end(cb);
                 };
             }
             else if (typeof v === 'function' || typeof v === 'object') {
@@ -530,15 +531,16 @@ var Resource = (function (_super) {
             if (ct && ct.indexOf('base64:') === 0) {
                 props['_ct'] = ct.substr(7);
             }
+            processingf++;
             this.importContent(ffunc, function () {
-                processing--;
-                processing--;
+                processingf--;
                 done();
             });
         }
         else {
+            processingp++;
             this.importProperties(props, function () {
-                processing--;
+                processingp--;
                 done();
             });
         }
@@ -699,6 +701,7 @@ var ResourceResolver = (function () {
         var processing = 0;
         var ended = false;
         var done = function () {
+            console.log("done:" + processing);
             if (processing === 0 && ended) {
                 callback(arguments);
             }
@@ -707,12 +710,14 @@ var ResourceResolver = (function () {
             if (data) {
                 var path = Utils.filename_path_append(toPath, data.values[':path']);
                 processing++;
+                console.log("xxx " + path);
                 self.storeResource(path, data, function () {
                     processing--;
                     done();
                 });
             }
             else {
+                console.log("END");
                 ended = true;
                 done();
             }
@@ -2382,119 +2387,129 @@ var StoredResource = (function (_super) {
     };
     return StoredResource;
 }(Resource));
-var RemoteResource = (function (_super) {
-    __extends(RemoteResource, _super);
-    function RemoteResource(name, base, obj) {
-        var _this = _super.call(this, obj ? obj : {}, name) || this;
-        _this.resolved = false;
-        _this.childNames = [];
-        _this.baseName = name;
-        _this.baseURL = base;
-        return _this;
+var RemoteResourceContentWriter = (function () {
+    function RemoteResourceContentWriter(filePath) {
+        this.buffer = [];
+        this.filePath = filePath;
     }
-    RemoteResource.prototype.getURL = function (name) {
-        var path = this.baseURL + '/' + name;
-        return path;
+    RemoteResourceContentWriter.prototype.start = function (ctype) {
+        this.contentType = ctype;
     };
-    RemoteResource.prototype.getChildrenStoreName = function () {
-        return 'children.json';
+    RemoteResourceContentWriter.prototype.write = function (data) {
+        this.buffer.push(data);
     };
-    RemoteResource.prototype.getPropertiesStoreName = function () {
-        return 'properties.json';
+    RemoteResourceContentWriter.prototype.error = function (error) {
+        console.log(error);
     };
-    RemoteResource.prototype.makeNewResource = function (name, obj) {
-        var b = this.baseURL;
-        var n = name;
-        if (n)
-            b += '/' + n;
-        return new RemoteResource(name, b, obj);
-    };
-    RemoteResource.prototype.resolveItself = function (callback) {
-        if (this.resolved) {
-            callback(this);
-            return;
-        }
-        var self = this;
-        var processed = 0;
-        var found = 0;
-        var done = function () {
-            if (processed == 2) {
-                if (found) {
-                    callback(self);
-                    self.resolved = true;
-                }
-                else
-                    callback(null);
-            }
-        };
-        this.refresh(this.getPropertiesStoreName(), function (rv) {
-            if (rv) {
-                self.values = rv;
-                found++;
-            }
-            processed++;
-            done();
-        });
-        this.refresh(this.getChildrenStoreName(), function (rv) {
-            if (rv) {
-                self.childNames = rv;
-                found++;
-            }
-            processed++;
-            done();
-        });
-    };
-    RemoteResource.prototype.resolveChildResource = function (name, callback, walking) {
-        if (walking) {
-            var res = this.makeNewResource(name, {});
-            callback(res);
-        }
-        else {
-            var self_2 = this;
-            this.resolveItself(function (rv) {
-                if (rv && self_2.childNames.indexOf(name) >= 0) {
-                    var res = self_2.makeNewResource(name, {});
-                    res.resolveItself(callback);
-                }
-                else
-                    callback(null);
-            });
-        }
-    };
-    RemoteResource.prototype.listChildrenNames = function (callback) {
-        callback(this.childNames);
-    };
-    RemoteResource.prototype.allocateChildResource = function (name, callback) {
-        if (this.childNames.indexOf(name) === -1)
-            this.childNames.push(name);
-        var res = this.makeNewResource(name, {});
-        this.store(this.getChildrenStoreName(), this.childNames, function () {
-            callback(res);
-        });
-    };
-    RemoteResource.prototype.importProperties = function (data, callback) {
-        var self = this;
-        _super.prototype.importProperties.call(this, data, function () {
-            self.store(self.getPropertiesStoreName(), self.values, function () {
-                callback();
-            });
-        });
-    };
-    RemoteResource.prototype.removeChildResource = function (name, callback) {
-        var self = this;
-        this.childNames.splice(this.childNames.indexOf(name), 1);
-        _super.prototype.removeChildResource.call(this, name, function () {
-            self.store(self.getChildrenStoreName(), self.childNames, function () {
-                callback();
-            });
-        });
-    };
-    RemoteResource.prototype.store = function (name, values, callback) {
-        var url = this.getURL(name);
-        var data = JSON.stringify(values);
+    RemoteResourceContentWriter.prototype.end = function (callback) {
         var xhr = new XMLHttpRequest();
         var self = this;
-        xhr.open('POST', url);
+        var data = this.buffer[0];
+        xhr.open('POST', this.filePath, true);
+        if (this.contentType)
+            xhr.setRequestHeader('Content-Type', this.contentType);
+        xhr.onreadystatechange = function () {
+            var DONE = 4;
+            var OK = 200;
+            if (xhr.readyState === DONE) {
+                if (xhr.status === OK) {
+                    callback();
+                }
+                else {
+                    callback();
+                }
+            }
+        };
+        xhr.send(data);
+    };
+    return RemoteResourceContentWriter;
+}());
+var RemoteResource = (function (_super) {
+    __extends(RemoteResource, _super);
+    function RemoteResource(name, base) {
+        return _super.call(this, name, base) || this;
+    }
+    RemoteResource.prototype.makeNewResource = function (name) {
+        var path = this.getStoragePath();
+        var res = new RemoteResource(name, path);
+        return res;
+    };
+    RemoteResource.prototype.ensurePathExists = function (path, callback) {
+        callback(true);
+    };
+    RemoteResource.prototype.storeChildrenNames = function (callback) {
+        callback();
+    };
+    RemoteResource.prototype.removeChildResource = function (name, callback) {
+        var url = this.getStoragePath(name);
+        var self = this;
+        var val = {
+            ':delete': url
+        };
+        url += '/.metadata.json';
+        _super.prototype.removeChildResource.call(this, name, function () {
+            self.remotePOST(url, val, function () {
+                callback();
+            });
+        });
+    };
+    RemoteResource.prototype.loadChildrenNames = function (callback) {
+        if (this.isDirectory) {
+            var url = this.getStoragePath('.children.json');
+            this.remoteGET(url, true, function (values) {
+                callback(values ? values : []);
+            });
+        }
+        else {
+            callback([]);
+        }
+    };
+    RemoteResource.prototype.storeProperties = function (callback) {
+        var url = this.getStoragePath('.metadata.json');
+        this.remotePOST(url, this.values, function () {
+            callback();
+        });
+    };
+    RemoteResource.prototype.loadProperties = function (callback) {
+        var url = this.getMetadataPath();
+        var self = this;
+        this.remoteGET(url, true, function (values) {
+            if (values) {
+                if (values._pt === 'resource/content')
+                    self.isDirectory = false;
+                if (values._contentsz)
+                    self.contentSize = values._contentsz;
+            }
+            self.values = values ? values : {};
+            callback(true);
+        });
+    };
+    RemoteResource.prototype.getWriter = function () {
+        var path = this.getStoragePath();
+        if (this.isDirectory) {
+            this.isDirectory = false;
+        }
+        this.loaded = false;
+        return new RemoteResourceContentWriter(path);
+    };
+    RemoteResource.prototype.read = function (writer, callback) {
+        if (this.isDirectory) {
+            writer.end(callback);
+        }
+        else {
+            var url = this.getStoragePath();
+            var ct_1 = this.getContentType();
+            this.remoteGET(url, false, function (data) {
+                writer.start(ct_1);
+                writer.write(data);
+                writer.end(callback);
+            });
+        }
+    };
+    RemoteResource.prototype.remotePOST = function (url, values, callback) {
+        var xhr = new XMLHttpRequest();
+        var self = this;
+        xhr.open('POST', url, true);
         xhr.setRequestHeader('Content-Type', 'application/json');
         xhr.onreadystatechange = function () {
             var DONE = 4;
@@ -2508,26 +2523,33 @@ var RemoteResource = (function (_super) {
                 }
             }
         };
+        var data = JSON.stringify(values);
         xhr.send(data);
     };
-    RemoteResource.prototype.refresh = function (name, callback) {
-        var url = this.getURL(name);
+    RemoteResource.prototype.remoteGET = function (url, json, callback) {
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', url);
+        if (!json)
+            xhr.responseType = 'arraybuffer';
+        xhr.open('GET', url, true);
         xhr.onreadystatechange = function () {
             var DONE = 4;
             var OK = 200;
             if (xhr.readyState === DONE) {
                 if (xhr.status === OK) {
-                    var val = null;
-                    var data = xhr.responseText;
-                    if (data) {
-                        try {
-                            val = JSON.parse(data);
+                    if (json) {
+                        var data = xhr.responseText;
+                        var val = null;
+                        if (data) {
+                            try {
+                                val = JSON.parse(data);
+                            }
+                            catch (ex) { }
                         }
-                        catch (ex) { }
+                        callback(val);
                     }
-                    callback(val);
+                    else {
+                        callback(xhr.response);
+                    }
                 }
                 else {
                     callback(null);
@@ -2537,7 +2559,7 @@ var RemoteResource = (function (_super) {
         xhr.send();
     };
     return RemoteResource;
-}(ObjectResource));
+}(StoredResource));
 var RemoteTemplateResource = (function (_super) {
     __extends(RemoteTemplateResource, _super);
     function RemoteTemplateResource(base, path, name) {
@@ -2580,7 +2602,7 @@ var RemoteTemplateResource = (function (_super) {
             callback(res);
         }
         else {
-            var self_3 = this;
+            var self_2 = this;
             var path_1 = this.baseURL + '/' + this.getPath() + '/' + name;
             path_1 = path_1.replace(/\/+/g, '/');
             if (RemoteTemplateResource.failedPaths[path_1]) {
@@ -2593,7 +2615,7 @@ var RemoteTemplateResource = (function (_super) {
                         _content: text,
                         _ct: ctype
                     }, name);
-                    self_3.resources[name] = res;
+                    self_2.resources[name] = res;
                     callback(res);
                 }
                 else {
@@ -2605,7 +2627,7 @@ var RemoteTemplateResource = (function (_super) {
     };
     RemoteTemplateResource.prototype.requestData = function (path, callback) {
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', path);
+        xhr.open('GET', path, true);
         xhr.onreadystatechange = function () {
             var DONE = 4;
             var OK = 200;
@@ -2812,6 +2834,10 @@ var ClientRequestHandler = (function (_super) {
         writer.setRequestHandler(_this);
         var self = _this;
         window.addEventListener('hashchange', function (evt) {
+            if (self.deferHashChange) {
+                self.deferHashChange = false;
+                return;
+            }
             var path = window.location.hash.substr(1);
             if (path !== self.currentPath) {
                 self.renderRequest(path);
@@ -2819,6 +2845,14 @@ var ClientRequestHandler = (function (_super) {
         });
         return _this;
     }
+    ClientRequestHandler.prototype.setLocationHash = function (path) {
+        var self = this;
+        this.deferHashChange = true;
+        location.hash = path;
+        setTimeout(function () {
+            self.deferHashChange = false;
+        }, 10);
+    };
     ClientRequestHandler.prototype.forwardRequest = function (rpath) {
         this.renderRequest(rpath);
     };
@@ -2833,7 +2867,7 @@ var ClientRequestHandler = (function (_super) {
             this.refererPath = this.currentPath;
         }
         this.currentPath = rpath;
-        location.hash = rpath;
+        this.setLocationHash(rpath);
         _super.prototype.renderRequest.call(this, rpath);
     };
     ClientRequestHandler.prototype.parseFormData = function (action, data) {
@@ -3002,12 +3036,12 @@ var ServerRequestHandler = (function (_super) {
                     var v_1 = files[file][0];
                     var f = v_1['originalFilename'];
                     var n = v_1['fieldName'];
-                    var ct_1 = v_1['headers']['content-type'];
+                    var ct_2 = v_1['headers']['content-type'];
                     var path = v_1['path'];
                     var pref = '';
                     var mime = Utils.filename_mime(n);
-                    if (mime === 'application/octet-stream' && ct_1)
-                        mime = ct_1;
+                    if (mime === 'application/octet-stream' && ct_2)
+                        mime = ct_2;
                     if (n.lastIndexOf('/') > 0)
                         pref = n.substr(0, n.lastIndexOf('/') + 1);
                     data[n] = f;
@@ -3782,8 +3816,8 @@ var DropBoxResource = (function (_super) {
             callback(true);
         }
         else {
-            var self_4 = this;
-            self_4.dbx.filesCreateFolder({
+            var self_3 = this;
+            self_3.dbx.filesCreateFolder({
                 path: path
             })
                 .then(function () {
@@ -3832,7 +3866,7 @@ var DropBoxResource = (function (_super) {
         }
         else {
             var path = this.getStoragePath();
-            var ct_2 = this.getContentType();
+            var ct_3 = this.getContentType();
             this.dbx.filesDownload({
                 path: path
             })
@@ -3840,14 +3874,14 @@ var DropBoxResource = (function (_super) {
                 if (typeof window !== 'undefined') {
                     var reader_3 = new FileReader();
                     reader_3.onload = function (event) {
-                        writer.start(ct_2);
+                        writer.start(ct_3);
                         writer.write(reader_3.result);
                         writer.end(callback);
                     };
                     reader_3.readAsArrayBuffer(data.fileBlob);
                 }
                 else {
-                    writer.start(ct_2);
+                    writer.start(ct_3);
                     writer.write(data.fileBinary);
                     writer.end(callback);
                 }
@@ -4079,12 +4113,12 @@ var GitHubResource = (function (_super) {
         }
         else {
             var storePath = this.getStoragePath();
-            var ct_3 = this.getContentType();
+            var ct_4 = this.getContentType();
             this.repo.getContents('master', storePath, false)
                 .then(function (data) {
                 var content = data.data.content;
                 var encoding = data.data.encoding;
-                writer.start(ct_3);
+                writer.start(ct_4);
                 writer.write(Utils.base642ArrayBuffer(content));
                 writer.end(callback);
             })

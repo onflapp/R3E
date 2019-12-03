@@ -79,7 +79,7 @@ class RemoteTemplateResource extends Resource {
   protected requestData(path: string, callback): void {
     let xhr = new XMLHttpRequest();
 
-    xhr.open('GET', path);
+    xhr.open('GET', path, true);
     xhr.onreadystatechange = function () {
       var DONE = 4;
       var OK = 200;

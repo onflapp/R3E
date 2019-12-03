@@ -211,6 +211,8 @@ class DOMContentWriter implements ContentWriter {
 
 class ClientRequestHandler extends ResourceRequestHandler {
   protected currentPath: string;
+  private deferHashChange: boolean;
+
   constructor(resourceResolver: ResourceResolver, templateResolver: ResourceResolver, contentWriter: DOMContentWriter) {
     let writer = contentWriter ? contentWriter : new DOMContentWriter();
     super(resourceResolver, templateResolver, writer);
@@ -218,11 +220,25 @@ class ClientRequestHandler extends ResourceRequestHandler {
     let self = this;
 
     window.addEventListener('hashchange', function (evt) {
+      if (self.deferHashChange) {
+        self.deferHashChange = false;
+        return;
+      }
+
       let path = window.location.hash.substr(1);
       if (path !== self.currentPath) {
         self.renderRequest(path);
       }
     });
+  }
+
+  protected setLocationHash(path: string) {
+    let self = this;
+    this.deferHashChange = true;
+    location.hash = path;
+    setTimeout(function() {
+      self.deferHashChange = false;
+    }, 10);
   }
 
   public forwardRequest(rpath: string) {
@@ -242,7 +258,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
       this.refererPath = this.currentPath;
     }
     this.currentPath = rpath;
-    location.hash = rpath;
+    this.setLocationHash(rpath);
     super.renderRequest(rpath);
   }
 

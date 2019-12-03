@@ -189,32 +189,33 @@ abstract class Resource extends Data implements ContentReader {
 
   public exportChilrenResources(level, writer: ContentWriter, incSource ? : boolean): void {
     let self = this;
-    let processing = 0;
+    let processingc = 0;
+    let processingd = 0;
+    let processingn = 0;
 
     //---
     let done = function () {
-      if (processing === 0) {
+      if (processingc === 0 && processingd === 0 && processingn === 0) {
         writer.end(null);
-        processing = -1;
       }
     };
 
     //---
     let export_children = function (path, name, res) {
-      processing++; //children
-      processing++; //data
+      processingc++; //children
+      processingd++; //data
 
       res.exportData(function (data: Data) {
         if (name) data.values[':name'] = name;
         if (path) data.values[':path'] = path;
 
         writer.write(data);
-        processing--; //data
+        processingd--; //data
         done();
       });
 
       res.listChildrenNames(function (names) {
-        processing += names.length; //names
+        processingn += names.length; //names
 
         for (var i = 0; i < names.length; i++) {
           let name = names[i];
@@ -223,11 +224,12 @@ abstract class Resource extends Data implements ContentReader {
             let rpath = Utils.filename_path_append(path, name);
 
             export_children(rpath, name, r);
-            processing--; //names
+            processingn--; //names
+            done();
           });
         }
 
-        processing--; //children
+        processingc--; //children
         done();
       });
     };
@@ -237,33 +239,32 @@ abstract class Resource extends Data implements ContentReader {
   }
 
   public importData(data: Data, callback) {
-    let processing = 0;
+    let processingf = 0;
+    let processingp = 0;
     let ffunc = null;
     let ct = null;
+    let self = this;
     let mime = Utils.filename_mime(this.getName());
 
     let done = function () {
-      if (processing === 0 && callback) callback();
+      if (processingf === 0 && processingp === 0 && callback) callback();
     }
 
-    processing++;
     let props = {};
     for (let k in data.values) {
       let v = data.values[k];
 
       if (k === Resource.STORE_CONTENT_PROPERTY && typeof v === 'function') {
-        processing++;
         ffunc = v;
       }
       else if (k === Resource.STORE_CONTENT_PROPERTY && typeof v === 'string') {
-        processing++;
         ct = data.values['_ct'];
         if (!ct) ct = mime;
 
-        ffunc = function (writer, callback) {
+        ffunc = function (writer, cb) {
           writer.start(ct ? ct : 'text/plain');
           writer.write(v);
-          writer.end(callback);
+          writer.end(cb);
         };
       }
       else if (typeof v === 'function' || typeof v === 'object') {
@@ -282,15 +283,16 @@ abstract class Resource extends Data implements ContentReader {
         props['_ct'] = ct.substr(7);
       }
 
+      processingf++;
       this.importContent(ffunc, function () {
-        processing--;
-        processing--;
+        processingf--;
         done();
       });
     }
     else {
+      processingp++;
       this.importProperties(props, function () {
-        processing--;
+        processingp--;
         done();
       });
     }
