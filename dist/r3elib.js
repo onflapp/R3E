@@ -701,7 +701,6 @@ var ResourceResolver = (function () {
         var processing = 0;
         var ended = false;
         var done = function () {
-            console.log("done:" + processing);
             if (processing === 0 && ended) {
                 callback(arguments);
             }
@@ -710,14 +709,12 @@ var ResourceResolver = (function () {
             if (data) {
                 var path = Utils.filename_path_append(toPath, data.values[':path']);
                 processing++;
-                console.log("xxx " + path);
                 self.storeResource(path, data, function () {
                     processing--;
                     done();
                 });
             }
             else {
-                console.log("END");
                 ended = true;
                 done();
             }
@@ -2613,7 +2610,6 @@ var RemoteTemplateResource = (function (_super) {
                 if (text) {
                     res = new ObjectContentResource({
                         _content: text,
-                        _ct: ctype
                     }, name);
                     self_2.resources[name] = res;
                     callback(res);
@@ -2718,7 +2714,7 @@ var DOMContentWriter = (function () {
                 evt.preventDefault();
                 setTimeout(function () {
                     requestHandler.handleRequest(href);
-                });
+                }, 10);
             }
         });
     };

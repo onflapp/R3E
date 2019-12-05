@@ -63,7 +63,6 @@ class RemoteTemplateResource extends Resource {
         if (text) {
           res = new ObjectContentResource({
             _content: text,
-            _ct: ctype
           }, name);
           self.resources[name] = res;
           callback(res);

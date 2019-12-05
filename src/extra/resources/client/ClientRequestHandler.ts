@@ -85,7 +85,7 @@ class DOMContentWriter implements ContentWriter {
 
         setTimeout(function () {
           requestHandler.handleRequest(href);
-        });
+        },10);
       }
     });
   }
