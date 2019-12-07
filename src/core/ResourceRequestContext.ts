@@ -89,8 +89,19 @@ class ResourceRequestContext {
     return this.pathInfo.query;
   }
 
+  public getQueryProperty(name: string) {
+    if (this.pathInfo.query) return this.pathInfo.query[name];
+    else return null;
+  }
+
   public getConfigProperties() {
     return this.resourceRequestHandler.getConfigProperties();
+  }
+
+  public getConfigProperty(name: string) {
+    var p = this.resourceRequestHandler.getConfigProperties();
+    if (p) return p[name];
+    else null;
   }
 
   public getResourceResolver(): ResourceResolver {

@@ -47,7 +47,7 @@ class ObjectResource extends Resource {
     var rv = [];
     for (var k in this.values) {
       var v = this.values[k];
-      if (typeof v === 'object' && k.charAt(0) !== '_') {
+      if (typeof v === 'object' && k.charAt(0) !== '.') {
         rv.push(k);
       }
     }

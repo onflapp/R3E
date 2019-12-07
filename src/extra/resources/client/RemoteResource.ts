@@ -109,12 +109,14 @@ class RemoteResource extends StoredResource {
     this.remoteGET(url, true, function(values) {
       if (values) {
         if (values._pt === 'resource/content') self.isDirectory = false;
-        if (values._contentsz) self.contentSize = values._contentsz;
+        if (typeof values._contentsz !== 'undefined') self.contentSize = values._contentsz;
+
+        self.values = values;
+        callback(true);
       }
-
-      self.values = values?values:{};
-
-      callback(true);
+      else {
+        callback(false);
+      }
     });
   }
 

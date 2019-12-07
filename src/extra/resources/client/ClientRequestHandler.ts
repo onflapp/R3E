@@ -227,7 +227,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
 
       let path = window.location.hash.substr(1);
       if (path !== self.currentPath) {
-        self.renderRequest(path);
+        self.handleRequest(path);
       }
     });
   }
@@ -242,7 +242,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
   }
 
   public forwardRequest(rpath: string) {
-    this.renderRequest(rpath);
+    this.handleRequest(rpath);
   }
 
   public sendStatus(code: number) {
@@ -250,7 +250,27 @@ class ClientRequestHandler extends ResourceRequestHandler {
   }
 
   public handleRequest(rpath: string) {
-    this.renderRequest(rpath);
+    var path = rpath;
+    var x = rpath.indexOf('?');
+    if (x > 0) {
+      var q = rpath.substr(x+1);
+      var p = {};
+      path = rpath.substr(0, x);
+
+      var a = q.split('&');
+      for (var i = 0; i < a.length; i++) {
+        var c = a[i].indexOf('=');
+        if (c > 0) {
+          var n = a[i].substr(0, c);
+          var v = a[i].substr(c+1);
+
+          p[unescape(n)] = unescape(v);
+        }
+      }
+
+      this.queryProperties = p;
+    }
+    this.renderRequest(path);
   }
 
   public renderRequest(rpath: string) {

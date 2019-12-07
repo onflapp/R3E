@@ -52,14 +52,8 @@ abstract class StoredResource extends Resource {
     if (nm) {
       return this.basePath + '/.' + nm + '.metadata.json';
     }
-    else if (this.isDirectory) {
-      return this.getStoragePath('.metadata.json');
-    }
     else {
-      let dirname = Utils.filename_dir(this.basePath);
-      let name = Utils.filename(this.basePath);
-
-      return dirname + '/.' + name + '.metadata.json';
+      return this.getStoragePath('.metadata.json');
     }
   }
 
