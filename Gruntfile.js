@@ -42,6 +42,7 @@ module.exports = function (grunt) {
           "src/extra/resources/StoredResource.ts",
           "src/extra/resources/client/RemoteResource.ts",
           "src/extra/resources/client/CachedRemoteTemplateResource.ts",
+          "src/extra/resources/client/DOMTemplateResource.ts",
           "src/extra/resources/client/ClientRequestHandler.ts",
           "src/extra/resources/server/ServerRequestHandler.ts",
           "src/extra/resources/server/FileResource.ts",

@@ -12,6 +12,10 @@ class CachedRemoteTemplateResource extends ObjectResource {
     return this.path;
   }
 
+  protected makeNewResource(obj: any, base: string, path: string, name: string): CachedRemoteTemplateResource {
+    return new CachedRemoteTemplateResource(obj, base, path, name);
+  }
+
   public resolveChildResource(name: string, callback: ResourceCallback, walking ? : boolean): void {
     let rv = this.values[name];
 
@@ -19,7 +23,7 @@ class CachedRemoteTemplateResource extends ObjectResource {
       if (rv['_content'] || rv['_content64'] || rv['_pt'] === 'resource/content') callback(new ObjectContentResource(rv, name));
       else {
         let path = Utils.filename_path_append(this.getPath(), name);
-        callback(new CachedRemoteTemplateResource(rv, this.baseURL, path, name));
+        callback(this.makeNewResource(rv, this.baseURL, path, name));
       }
     }
     else if (typeof rv === 'function') {
@@ -29,7 +33,7 @@ class CachedRemoteTemplateResource extends ObjectResource {
       let path = Utils.filename_path_append(this.getPath(), name);
       rv = {};
       this.values[name] = rv;
-      callback(new CachedRemoteTemplateResource(rv, this.baseURL, path, name));
+      callback(this.makeNewResource(rv, this.baseURL, path, name));
     }
     else if (rv && rv === 'NA') {
         callback(null);

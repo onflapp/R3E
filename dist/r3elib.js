@@ -2579,6 +2579,9 @@ var CachedRemoteTemplateResource = (function (_super) {
     CachedRemoteTemplateResource.prototype.getPath = function () {
         return this.path;
     };
+    CachedRemoteTemplateResource.prototype.makeNewResource = function (obj, base, path, name) {
+        return new CachedRemoteTemplateResource(obj, base, path, name);
+    };
     CachedRemoteTemplateResource.prototype.resolveChildResource = function (name, callback, walking) {
         var rv = this.values[name];
         if (typeof rv === 'object') {
@@ -2586,7 +2589,7 @@ var CachedRemoteTemplateResource = (function (_super) {
                 callback(new ObjectContentResource(rv, name));
             else {
                 var path = Utils.filename_path_append(this.getPath(), name);
-                callback(new CachedRemoteTemplateResource(rv, this.baseURL, path, name));
+                callback(this.makeNewResource(rv, this.baseURL, path, name));
             }
         }
         else if (typeof rv === 'function') {
@@ -2596,7 +2599,7 @@ var CachedRemoteTemplateResource = (function (_super) {
             var path = Utils.filename_path_append(this.getPath(), name);
             rv = {};
             this.values[name] = rv;
-            callback(new CachedRemoteTemplateResource(rv, this.baseURL, path, name));
+            callback(this.makeNewResource(rv, this.baseURL, path, name));
         }
         else if (rv && rv === 'NA') {
             callback(null);
@@ -2641,6 +2644,24 @@ var CachedRemoteTemplateResource = (function (_super) {
     };
     return CachedRemoteTemplateResource;
 }(ObjectResource));
+var DOMTemplateResource = (function (_super) {
+    __extends(DOMTemplateResource, _super);
+    function DOMTemplateResource(obj, base, path, name) {
+        return _super.call(this, obj, base, path, name) || this;
+    }
+    DOMTemplateResource.prototype.requestData = function (path, callback) {
+        var did = path.replace(/\//g, '_');
+        var el = document.getElementById(did);
+        if (el)
+            callback(el['type'], el.innerHTML);
+        else
+            callback(null);
+    };
+    DOMTemplateResource.prototype.makeNewResource = function (obj, base, path, name) {
+        return new DOMTemplateResource(obj, base, path, name);
+    };
+    return DOMTemplateResource;
+}(CachedRemoteTemplateResource));
 var DOMContentWriter = (function () {
     function DOMContentWriter() {
         this.externalResources = {};
