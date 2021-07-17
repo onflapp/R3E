@@ -47,13 +47,13 @@ class RemoteResourceContentWriter implements ContentWriter {
 
 class RemoteResource extends StoredResource {
 
-  constructor(name: string, base ?: string) {
-    super(name, base);
+  constructor(name: string, base ?: string, prefix ?:string) {
+    super(name, base, prefix);
   }
   
   protected makeNewResource(name: string) {
     let path = this.getStoragePath();
-    let res = new RemoteResource(name, path);
+    let res = new RemoteResource(name, path, this.basePrefix);
 
     return res;
   }
@@ -68,9 +68,15 @@ class RemoteResource extends StoredResource {
 
   public removeChildResource(name: string, callback) {
     let url = this.getStoragePath(name);
+    let rpath = url;
     let self = this;
+
+    if (this.basePrefix && url.indexOf(this.basePrefix) == 0) {
+      rpath = url.substr(this.basePrefix.length);
+    }
+
     let val = {
-      ':delete':url
+      ':delete':rpath
     };
 
     url += '/.metadata.json'

@@ -2203,7 +2203,7 @@ var HBSRendererFactory = (function (_super) {
 }(TemplateRendererFactory));
 var StoredResource = (function (_super) {
     __extends(StoredResource, _super);
-    function StoredResource(name, base) {
+    function StoredResource(name, base, prefix) {
         var _this = _super.call(this, name) || this;
         _this.isDirectory = true;
         _this.contentSize = -1;
@@ -2212,10 +2212,12 @@ var StoredResource = (function (_super) {
         if (typeof base !== 'undefined') {
             _this.baseName = name;
             _this.basePath = base;
+            _this.basePrefix = prefix;
         }
         else {
             _this.baseName = '';
             _this.basePath = name;
+            _this.basePrefix = name;
         }
         return _this;
     }
@@ -2431,12 +2433,12 @@ var RemoteResourceContentWriter = (function () {
 }());
 var RemoteResource = (function (_super) {
     __extends(RemoteResource, _super);
-    function RemoteResource(name, base) {
-        return _super.call(this, name, base) || this;
+    function RemoteResource(name, base, prefix) {
+        return _super.call(this, name, base, prefix) || this;
     }
     RemoteResource.prototype.makeNewResource = function (name) {
         var path = this.getStoragePath();
-        var res = new RemoteResource(name, path);
+        var res = new RemoteResource(name, path, this.basePrefix);
         return res;
     };
     RemoteResource.prototype.ensurePathExists = function (path, callback) {
@@ -2447,9 +2449,13 @@ var RemoteResource = (function (_super) {
     };
     RemoteResource.prototype.removeChildResource = function (name, callback) {
         var url = this.getStoragePath(name);
+        var rpath = url;
         var self = this;
+        if (this.basePrefix && url.indexOf(this.basePrefix) == 0) {
+            rpath = url.substr(this.basePrefix.length);
+        }
         var val = {
-            ':delete': url
+            ':delete': rpath
         };
         url += '/.metadata.json';
         _super.prototype.removeChildResource.call(this, name, function () {

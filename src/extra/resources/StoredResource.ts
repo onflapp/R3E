@@ -1,21 +1,24 @@
 abstract class StoredResource extends Resource {
   protected basePath: string;
   protected baseName: string;
+  protected basePrefix: string;
   protected childNames;
   protected isDirectory: boolean = true;
   protected contentSize: number = -1;
   protected resourceCache = {};
   protected loaded = false;
 
-  constructor(name: string, base ? : string) {
+  constructor(name: string, base ? : string, prefix ? : string) {
     super(name);
     if (typeof base !== 'undefined') {
       this.baseName = name;
       this.basePath = base;
+      this.basePrefix = prefix;
     }
     else {
       this.baseName = '';
       this.basePath = name;
+      this.basePrefix = name;
     }
   }
 
