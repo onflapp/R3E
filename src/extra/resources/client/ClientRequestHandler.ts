@@ -38,25 +38,25 @@ class DOMContentWriter implements ContentWriter {
       };
     }
 
-    if (!window['XMLHttpRequest'].prototype.orig_open) {
-      window['XMLHttpRequest'].prototype.orig_open = window['XMLHttpRequest'].prototype.open;
-      window['XMLHttpRequest'].prototype.open = function(method, path, a) {
+    if (!window['XMLHttpRequest']['_prototype_orig_open']) {
+      window['XMLHttpRequest']['_prototype_orig_open'] = window['XMLHttpRequest'].prototype.open;
+      window['XMLHttpRequest'].prototype.open = function(method, path) {
         if (method.toUpperCase() === 'POST' && path.indexOf('#') !== -1) {
           this.__localpath = path.substr(path.indexOf('#')+1);
         }
         else {
-          window['XMLHttpRequest'].prototype.orig_open.call(this, method, path, a);
+          window['XMLHttpRequest']['_prototype_orig_open'].call(this, method, path);
         }
       };
 
-      window['XMLHttpRequest'].prototype.orig_send = window['XMLHttpRequest'].prototype.send;
+      window['XMLHttpRequest']['_prototype_orig_send'] = window['XMLHttpRequest'].prototype.send;
       window['XMLHttpRequest'].prototype.send = function(data) {
         if (this.__localpath) {
           let info = self.requestHandler.parseFormData(this.__localpath, data);
           self.requestHandler.handleStore(info.formPath, info.formData);
         }
         else {
-          window['XMLHttpRequest'].prototype.orig_send.call(this, data);
+          window['XMLHttpRequest']['_prototype_orig_send'].call(this, data);
         }
       };
     }
@@ -65,13 +65,26 @@ class DOMContentWriter implements ContentWriter {
   protected attachListeners() {
     let requestHandler = this.requestHandler;
     document.body.addEventListener('submit', function (evt) {
-      let target = evt.target;
+      let target = evt.target as HTMLFormElement;
+      let action = target.getAttribute('action');
       let info = requestHandler.parseFormElement(target);
       evt.preventDefault();
-
-      setTimeout(function () {
-        requestHandler.handleStore(info.formPath, info.formData);
-      });
+      
+      if (target.method.toUpperCase() === 'POST') {
+        setTimeout(function () {
+          requestHandler.handleStore(info.formPath, info.formData);
+        });
+      }
+      else {
+        let q = [];
+        for (let k in info.formData) {
+          let v = info.formData[k];
+          q.push(k+'='+escape(v));
+        }
+        setTimeout(function () {
+          requestHandler.handleRequest(action+'?'+q.join('&'));
+        },10);
+      }
     });
 
     document.body.addEventListener('click', function (evt) {

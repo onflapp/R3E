@@ -53,6 +53,8 @@ var userTemplate = new ObjectResource(userTemplateVal).wrap({
   getType: function() { return 'resource/templates'; }
 });
 
+var lunrIndex = new LunrIndexResource();
+
 //default templates
 var defaultTemplates = new ObjectResource({
   'resource': {
@@ -73,6 +75,7 @@ var defaultTemplates = new ObjectResource({
 //root resource can combine different resource together
 //we are exposing systemTemplates and userTemplate so that templates become accessible
 var root = new RootResource({
+  'index': lunrIndex,
   'content': userContent,
   'system-templates': systemTemplates,
   'user-templates': userTemplate
@@ -99,8 +102,7 @@ handler.setPathParserPattern('^(\\/.*?)(\\.x-([a-z,\\-_]+))(\\.([a-z0-9,\\-\\.]+
 handler.setConfigProperties(config);
 
 //register renderers
-var hbs = new HBSRendererFactory();
-handler.registerFactory('hbs', hbs);
+handler.registerFactory('hbs', new HBSRendererFactory());
 handler.registerFactory('js', new JSRendererFactory());
 handler.registerFactory('func', new InterFuncRendererFactory()); //internal functions, usefull for function-based renderers
 
@@ -116,12 +118,7 @@ handler.addEventListener('stored', function(path, data) {
   }
 });
 
-//we use the resolver to call initalization script for the factory
-//this is where all Handlebars helpers are defined
-handler.transformObject(hbs, 'factory/hbs', 'init-helpers', null, function() { 
-
-  //start by listing content of the root resource
-  var path = location.hash.substr(1);
-  if (!path) path = '/.x-res-list';
-  handler.handleRequest(path);
-});
+//start by listing content of the root resource
+var path = location.hash.substr(1);
+if (!path) path = '/.x-res-list';
+handler.handleRequest(path);

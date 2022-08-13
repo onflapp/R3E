@@ -34,7 +34,8 @@
           <h5>Resource Node</h5>
           <form class="form-inline" method="post" action="{{C.P}}{{R.PATH_APPEND}}{:name}">
             <div class="form-group">
-              <input class="form-control" name="_rt" value="" autocomplete="off" placeholder="resource type">
+              <input class="form-control" name=":name|newUUID" value="" autocomplete="off" placeholder="name">
+
               <select class="form-control" name="_rt">
                 <option value="">type not set</option>
                 <option disabled>user templates:</option>
@@ -43,7 +44,6 @@
                 {{/include}}
               </select>
               
-              <input class="form-control" name=":name|newUUID" value="" autocomplete="off" placeholder="name">
               <input type="hidden" name=":forward" value="{{C.P}}{{R.PATH}}{{C.X}}res-list">
               <button class="form-control btn btn-success" type="submit">
                 <span class="glyphicon glyphicon-plus"></span>

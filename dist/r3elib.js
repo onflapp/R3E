@@ -1,8 +1,22 @@
+var __spreadArray = (this && this.__spreadArray) || function (to, from, pack) {
+    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
+        if (ar || !(i in from)) {
+            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
+            ar[i] = from[i];
+        }
+    }
+    return to.concat(ar || Array.prototype.slice.call(from));
+};
 var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    var extendStatics = function (d, b) {
+        extendStatics = Object.setPrototypeOf ||
+            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
+        return extendStatics(d, b);
+    };
     return function (d, b) {
+        if (typeof b !== "function" && b !== null)
+            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
         extendStatics(d, b);
         function __() { this.constructor = d; }
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
@@ -294,7 +308,7 @@ var EventDispatcher = (function () {
         }
         var self = this;
         setTimeout(function () {
-            self.dispatchAllEvents.apply(self, [evt].concat(args));
+            self.dispatchAllEvents.apply(self, __spreadArray([evt], args, false));
         }, 0);
     };
     return EventDispatcher;
@@ -762,7 +776,22 @@ var ResourceRenderer = (function () {
     ResourceRenderer.prototype.makeRenderingFunction = function (resource, callback) {
         var ext = Utils.filename_ext(resource.getName());
         var fact = this.rendererFactories.get(ext);
-        fact.makeRenderer(resource, callback);
+        var self = this;
+        fact.makeRenderer(resource, function (render, error) {
+            if (render) {
+                self.resolveRenderer(['factory/' + ext], ['pre-render'], function (rend, error) {
+                    if (rend) {
+                        rend(new Data(fact), new ContentWriterAdapter('object', function () { callback(render, error); }), null);
+                    }
+                    else {
+                        callback(render, error);
+                    }
+                });
+            }
+            else {
+                callback(render, error);
+            }
+        });
     };
     ResourceRenderer.prototype.registerMakeRenderTypePatterns = function (func) {
         if (func) {
@@ -2037,14 +2066,12 @@ var JSRendererFactory = (function () {
 var ErrorResource = (function (_super) {
     __extends(ErrorResource, _super);
     function ErrorResource(obj) {
-        var _this = this;
         var err = obj;
         if (typeof err === 'string')
             err = obj;
         else
             err = '' + err;
-        _this = _super.call(this, err, '/') || this;
-        return _this;
+        return _super.call(this, err, '/') || this;
     }
     ErrorResource.prototype.getType = function () {
         return 'resource/error';
@@ -2102,6 +2129,86 @@ var MultiResourceResolver = (function (_super) {
     };
     return MultiResourceResolver;
 }(ResourceResolver));
+var IndexResource = (function (_super) {
+    __extends(IndexResource, _super);
+    function IndexResource(name, base, index) {
+        var _this = _super.call(this, {}, name) || this;
+        if (typeof base !== 'undefined') {
+            _this.baseName = name;
+            _this.basePath = base;
+        }
+        else {
+            _this.baseName = '';
+            _this.basePath = name;
+        }
+        _this.parentIndexResource = index;
+        return _this;
+    }
+    IndexResource.prototype.getType = function () {
+        return 'resource/index';
+    };
+    IndexResource.prototype.getIndexEngine = function () {
+        var indx = this.parentIndexResource ? this.parentIndexResource.indx : this.indx;
+        return indx;
+    };
+    IndexResource.prototype.resolveChildResource = function (name, callback, walking) {
+        this.allocateChildResource(name, callback);
+    };
+    IndexResource.prototype.resolveItself = function (callback) {
+        var self = this;
+        if (!this.parentIndexResource && !this.indx) {
+            this.initIndexEngine(function (indx) {
+                self.indx = indx;
+                if (callback)
+                    callback(self);
+            });
+        }
+        else {
+            if (callback)
+                callback(self);
+        }
+    };
+    IndexResource.prototype.getStoragePath = function (name) {
+        var path = Utils.filename_path_append(this.basePath, this.baseName);
+        if (name)
+            path = Utils.filename_path_append(path, name);
+        return path;
+    };
+    IndexResource.prototype.allocateChildResource = function (name, callback) {
+        var path = this.getStoragePath();
+        var ctr = this.constructor;
+        callback(new ctr(name, path, this.parentIndexResource ? this.parentIndexResource : this));
+    };
+    IndexResource.prototype.importContent = function (func, callback) {
+        var self = this;
+        var text = null;
+        func(new ContentWriterAdapter('utf8', function (data, ctype) {
+            text = data;
+        }), function () {
+            if (text) {
+                self.indexTextData(text, callback);
+            }
+            else if (callback)
+                callback();
+        });
+    };
+    IndexResource.prototype.importProperties = function (data, callback) {
+        var text = [];
+        var self = this;
+        for (var k in data) {
+            var v = data[k];
+            this.values[k] = v;
+            if (v && k)
+                text.push(k + ' = ' + v);
+        }
+        if (text.length > 0) {
+            self.indexTextData(text.join('\n'), callback);
+        }
+        else if (callback)
+            callback();
+    };
+    return IndexResource;
+}(ObjectResource));
 var HBSRendererFactory = (function (_super) {
     __extends(HBSRendererFactory, _super);
     function HBSRendererFactory() {
@@ -2698,24 +2805,24 @@ var DOMContentWriter = (function () {
                 window['orig_addEventListener'](a, b, c);
             };
         }
-        if (!window['XMLHttpRequest'].prototype.orig_open) {
-            window['XMLHttpRequest'].prototype.orig_open = window['XMLHttpRequest'].prototype.open;
-            window['XMLHttpRequest'].prototype.open = function (method, path, a) {
+        if (!window['XMLHttpRequest']['_prototype_orig_open']) {
+            window['XMLHttpRequest']['_prototype_orig_open'] = window['XMLHttpRequest'].prototype.open;
+            window['XMLHttpRequest'].prototype.open = function (method, path) {
                 if (method.toUpperCase() === 'POST' && path.indexOf('#') !== -1) {
                     this.__localpath = path.substr(path.indexOf('#') + 1);
                 }
                 else {
-                    window['XMLHttpRequest'].prototype.orig_open.call(this, method, path, a);
+                    window['XMLHttpRequest']['_prototype_orig_open'].call(this, method, path);
                 }
             };
-            window['XMLHttpRequest'].prototype.orig_send = window['XMLHttpRequest'].prototype.send;
+            window['XMLHttpRequest']['_prototype_orig_send'] = window['XMLHttpRequest'].prototype.send;
             window['XMLHttpRequest'].prototype.send = function (data) {
                 if (this.__localpath) {
                     var info = self.requestHandler.parseFormData(this.__localpath, data);
                     self.requestHandler.handleStore(info.formPath, info.formData);
                 }
                 else {
-                    window['XMLHttpRequest'].prototype.orig_send.call(this, data);
+                    window['XMLHttpRequest']['_prototype_orig_send'].call(this, data);
                 }
             };
         }
@@ -2724,11 +2831,24 @@ var DOMContentWriter = (function () {
         var requestHandler = this.requestHandler;
         document.body.addEventListener('submit', function (evt) {
             var target = evt.target;
+            var action = target.getAttribute('action');
             var info = requestHandler.parseFormElement(target);
             evt.preventDefault();
-            setTimeout(function () {
-                requestHandler.handleStore(info.formPath, info.formData);
-            });
+            if (target.method.toUpperCase() === 'POST') {
+                setTimeout(function () {
+                    requestHandler.handleStore(info.formPath, info.formData);
+                });
+            }
+            else {
+                var q_1 = [];
+                for (var k in info.formData) {
+                    var v = info.formData[k];
+                    q_1.push(k + '=' + escape(v));
+                }
+                setTimeout(function () {
+                    requestHandler.handleRequest(action + '?' + q_1.join('&'));
+                }, 10);
+            }
         });
         document.body.addEventListener('click', function (evt) {
             var target = evt.target;
@@ -3784,7 +3904,8 @@ var DropBoxResource = (function (_super) {
                 if (data.fileBinary) {
                     var txt = data.fileBinary.toString();
                     try {
-                        self.values = JSON.parse(txt);
+                        var a = JSON.parse(txt);
+                        self.values = a;
                     }
                     catch (ignore) { }
                     ;
@@ -3795,7 +3916,8 @@ var DropBoxResource = (function (_super) {
                     reader_2.onload = function (event) {
                         var txt = reader_2.result;
                         try {
-                            self.values = JSON.parse(txt);
+                            var a = JSON.parse(txt);
+                            self.values = a;
                         }
                         catch (ignore) { }
                         ;
@@ -4168,6 +4290,59 @@ var GitHubResource = (function (_super) {
     };
     return GitHubResource;
 }(StoredResource));
+var LunrIndexResource = (function (_super) {
+    __extends(LunrIndexResource, _super);
+    function LunrIndexResource(name, base, index) {
+        return _super.call(this, name, base, index) || this;
+    }
+    LunrIndexResource.prototype.searchChildrenResources = function (qry, callback) {
+        var indx = this.getIndexEngine();
+        var list = [];
+        var rv = indx.search(qry);
+        for (var i = 0; i < rv.length; i++) {
+            var doc = rv[i];
+            var ref = doc['ref'];
+            var score = doc['score'];
+            if (score > 0) {
+                var res = new ObjectResource({ 'reference': ref, 'score': doc['score'] }, ref);
+                list.push(res);
+            }
+        }
+        callback(list);
+    };
+    LunrIndexResource.prototype.initIndexEngine = function (callback) {
+        var Lunr = window['lunr'];
+        Lunr.tokenizer.seperator = /[\W]+/;
+        var index = Lunr(function () {
+            this.ref('id');
+            this.field('body');
+            this.field('path');
+            this.field('name');
+        });
+        callback(index);
+    };
+    LunrIndexResource.prototype.indexTextData = function (text, callback) {
+        var name = this.baseName;
+        var path = this.getStoragePath();
+        var id = '/' + path;
+        var indx = this.getIndexEngine();
+        indx.update({
+            id: id,
+            name: name,
+            path: path,
+            body: text
+        });
+        callback();
+    };
+    LunrIndexResource.prototype.removeChildResource = function (name, callback) {
+        var path = this.getStoragePath(name);
+        var id = '/' + path;
+        var indx = this.getIndexEngine();
+        indx.remove({ id: id });
+        callback();
+    };
+    return LunrIndexResource;
+}(IndexResource));
 var HTMLParser = (function () {
     function HTMLParser() {
     }
@@ -4204,6 +4379,7 @@ if (typeof module !== 'undefined') {
         DropBoxResource: DropBoxResource,
         GitHubResource: GitHubResource,
         PouchDBResource: PouchDBResource,
+        LunrIndexResource: LunrIndexResource,
         FileResource: FileResource,
         RootResource: RootResource,
         Utils: Utils

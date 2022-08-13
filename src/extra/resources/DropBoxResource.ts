@@ -138,7 +138,8 @@ class DropBoxResource extends StoredResource {
           if (data.fileBinary) {
             let txt = data.fileBinary.toString();
             try {
-              self.values = JSON.parse(txt);
+              let a = JSON.parse(txt);
+              self.values = a;
             }
             catch (ignore) {};
             callback(true);
@@ -146,9 +147,10 @@ class DropBoxResource extends StoredResource {
           else {
             let reader = new FileReader();
             reader.onload = function (event) {
-              let txt = reader.result;
+              let txt = reader.result as string;
               try {
-                self.values = JSON.parse(txt);
+                let a = JSON.parse(txt);
+                self.values = a;
               }
               catch (ignore) {};
               callback(true);

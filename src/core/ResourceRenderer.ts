@@ -67,8 +67,23 @@ class ResourceRenderer {
   public makeRenderingFunction(resource: Resource, callback: RendererFactoryCallback) {
     let ext = Utils.filename_ext(resource.getName());
     let fact = this.rendererFactories.get(ext);
+    let self = this;
 
-    fact.makeRenderer(resource, callback);
+    fact.makeRenderer(resource, function(render, error) {
+      if (render) {
+        self.resolveRenderer(['factory/'+ext], ['pre-render'], function(rend: ContentRendererFunction, error ? : Error) {
+          if (rend) {
+            rend(new Data(fact), new ContentWriterAdapter('object', function() { callback(render, error); }), null);
+          }
+          else {
+            callback(render, error);
+          }
+        });
+      }
+      else {
+        callback(render, error);
+      }
+    });
   }
 
   public registerMakeRenderTypePatterns(func: MakeRenderTypePatternsFunction) {

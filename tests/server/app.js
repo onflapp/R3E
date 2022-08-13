@@ -58,15 +58,10 @@ app.get('/*', function (req, res) {
   handler.setConfigProperties(config);
 
   //registering renderers
-  var hbs = new r.HBSRendererFactory();
-  handler.registerFactory('hbs', hbs); //handlebar templates
+  handler.registerFactory('hbs', new r.HBSRendererFactory());
   handler.registerFactory('js', new r.JSRendererFactory()); //javascript code which is going to be eval'd
   handler.registerFactory('func', new r.InterFuncRendererFactory()); //internal functions, usefull for function-based renderers
-  //we use the resolver to call initalization script for the factory
-  //this is where all Handlebars helpers are defined
-  handler.transformObject(hbs, 'factory/hbs', 'init-helpers', null, function() { 
-    handler.handleGetRequest(req);
-  });
+  handler.handleGetRequest(req);
 });
 
 app.post('/*', function (req, res) {

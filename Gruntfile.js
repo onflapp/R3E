@@ -38,6 +38,7 @@ module.exports = function (grunt) {
           "src/core/resources/ErrorResource.ts",
           "src/core/resources/NotFoundResource.ts",
           "src/core/resources/MultiResourceResolver.ts",
+          "src/core/resources/IndexResource.ts",
           "src/extra/factories/HBSRendererFactory.ts",
           "src/extra/resources/StoredResource.ts",
           "src/extra/resources/client/RemoteResource.ts",
@@ -49,6 +50,7 @@ module.exports = function (grunt) {
           "src/extra/resources/PouchDBResource.ts",
           "src/extra/resources/DropBoxResource.ts",
           "src/extra/resources/GitHubResource.ts",
+          "src/extra/resources/LunrIndexResource.ts",
           "src/extra/utils/HTMLParser.ts",
           "src/exports.ts"
 

@@ -11,6 +11,7 @@ if (typeof module !== 'undefined') {
     DropBoxResource: DropBoxResource,
     GitHubResource: GitHubResource,
     PouchDBResource: PouchDBResource,
+    LunrIndexResource: LunrIndexResource,
     FileResource: FileResource,
     RootResource: RootResource,
     Utils: Utils
