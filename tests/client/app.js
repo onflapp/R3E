@@ -118,6 +118,10 @@ handler.addEventListener('stored', function(path, data) {
   }
 });
 
+window.addEventListener('storage', function() {
+  window.location.reload();
+});
+
 //start by listing content of the root resource
 var path = location.hash.substr(1);
 if (!path) path = '/.x-res-list';
