@@ -19,6 +19,7 @@ module.exports = function (grunt) {
           target: 'es5'
         },
         src: [
+          "src/api/ScriptContext.ts",
           "src/core/utils/Utils.ts",
           "src/core/utils/EventDispatcher.ts",
           "src/core/Resource.ts",

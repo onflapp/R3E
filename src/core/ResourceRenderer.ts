@@ -11,7 +11,7 @@ interface ContentReader {
 }
 
 interface ContentRendererFunction {
-  (data: Data, writer: ContentWriter, context: ResourceRequestContext);
+  (data: any, writer: ContentWriter, context: ResourceRequestContext);
 }
 
 interface MakeRenderTypePatternsFunction {
@@ -73,15 +73,21 @@ class ResourceRenderer {
       if (render) {
         self.resolveRenderer(['factory/'+ext], ['pre-render'], function(rend: ContentRendererFunction, error ? : Error) {
           if (rend) {
-            rend(new Data(fact), new ContentWriterAdapter('object', function() { callback(render, error); }), null);
+            try {
+              rend(fact, new ContentWriterAdapter('object', function() { callback(render, error); }), null);
+            }
+            catch(ex) {
+              console.log(ex);
+              callback(null, error);
+            }
           }
           else {
-            callback(render, error);
+            callback(null, error);
           }
         });
       }
       else {
-        callback(render, error);
+        callback(null, error);
       }
     });
   }
@@ -118,7 +124,14 @@ class ResourceRenderer {
 
     this.resolveRenderer(renderTypes, selectors, function (rend: ContentRendererFunction, error ? : Error) {
       if (rend) {
-        rend(res, writer, context);
+        context.makeCurrentResource(res);
+        let map = context.makePropertiesForResource(res);
+        let rv = rend(map, writer, context);
+        if (rv && rv.constructor.name === 'Promise') {
+          rv.then(function () {
+            writer.end(null);
+          });
+        }
       }
       else {
         self.renderError('unable to render selector ' + sel, res, error, writer);

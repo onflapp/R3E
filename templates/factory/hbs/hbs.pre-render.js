@@ -1,5 +1,5 @@
-(function (res, writer, context) {
-  var Handlebars = res.values.Handlebars;
+(function (res, writer, ctx) {
+  var Handlebars = res.Handlebars;
   
   var path_func = function () {
     var args = arguments;

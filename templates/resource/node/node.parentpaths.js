@@ -1,7 +1,7 @@
-(function (res, writer, context) {
+(function (res, writer, ctx) {
   writer.start('object/javascript');
 
-  var path = context.getCurrentResourcePath();
+  var path = ctx.getCurrentResourcePath();
 
   var parentPaths = [];
   var ps = Utils.split_path(path);
@@ -10,7 +10,7 @@
   while (ps.length > 0) {
     var rpath = ps.join('/');
     var name = ps.pop();
-    var map = context.makeContextMap(res);
+    var map = res.clone();
 
     if (name === '') continue;
 

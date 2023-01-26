@@ -118,10 +118,12 @@ class ResourceRequestHandler extends EventDispatcher {
     this.transformResource(data, selector, context, callback);
   }
 
-  public transformResource(data: Data, selector: string, context: ResourceRequestContext, callback) {
+  public transformResource(data: any, selector: string, context: ResourceRequestContext, callback) {
     let rrend = this.resourceRenderer;
     let selectors = [selector];
-    let renderTypes = data.getRenderTypes();
+    let renderTypes = [];
+
+    if (data['renderTypes']) renderTypes = renderTypes.concat(data['renderTypes']);
     renderTypes.push('any');
 
     rrend.resolveRenderer(renderTypes, selectors, function (rend: ContentRendererFunction, error ? : Error) {
@@ -388,6 +390,7 @@ class ResourceRequestHandler extends EventDispatcher {
 
     }
     catch (ex) {
+      console.log(resourcePath + ',' + selector);
       console.log(ex);
       rrend.renderResource(new ErrorResource(ex), 'default', out, ncontext);
     }
@@ -428,23 +431,22 @@ class ResourceRequestHandler extends EventDispatcher {
     };
 
     if (context && info && info.resourcePath) {
-      let tdata = new Data(data);
-      tdata.values = this.expandValues(tdata.values, tdata.values);
+      data = this.expandValues(data, data);
 
-      self.transformResource(tdata, 'pre-store', context, function (ddata: Data) {
-        let storeto = Utils.absolute_path(ddata.values[':storeto']);
+      self.transformResource(data, 'pre-store', context, function (values: any) {
+        let storeto = Utils.absolute_path(values[':storeto']);
         if (!storeto) storeto = info.resourcePath;
 
-        if (info.selector && ddata.values[':forward']) {
-          let forward = Utils.absolute_path(ddata.values[':forward']);
+        if (info.selector && values[':forward']) {
+          let forward = Utils.absolute_path(values[':forward']);
           self.renderResource(info.resourcePath, null, info.selector, context, function(ctype, content) {
             self.forwardRequest(forward);
           });
         }
         else {
-          self.storeResource(storeto, ddata.values, function (error) {
+          self.storeResource(storeto, values, function (error) {
             if (!error) {
-              let forward = Utils.absolute_path(ddata.values[':forward']);
+              let forward = Utils.absolute_path(values[':forward']);
 
               if (forward) self.forwardRequest(forward);
               else self.renderRequest(rpath);

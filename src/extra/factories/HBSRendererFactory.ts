@@ -72,7 +72,9 @@ class HBSRendererFactory extends TemplateRendererFactory {
 
       if (typeof path === 'string') {
         path = self.expadPath(path, context);
-        context.renderResource(path, rtype, selector, render);
+        context.renderResource(path, rtype, selector).then(function (rv) {
+          render(rv.contentType, rv.content);
+        });
       }
       else {
         render('object/javascript', path);

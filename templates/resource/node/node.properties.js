@@ -1,9 +1,8 @@
-(function (res, writer, context) {
+(function (res, writer, ctx) {
   writer.start('object/javascript');
-  var rv = [];
-
-  var names = res.getPropertyNames();
-  var props = context.getRequestProperties();
+  
+  let rv = [];
+  let names = Object.keys(res._);
 
   names.sort(function(a, b) {
     return a.localeCompare(b);
@@ -11,16 +10,14 @@
 
   for (var i = 0; i < names.length; i++) {
     var name = names[i];
-    var val = res.getProperty(name);
+    var val = res._[name];
 
     rv.push({
       name: name,
-      value: val,
-      R: props
+      value: val
     });
   }
 
   writer.write(rv);
   writer.end();
-
 })

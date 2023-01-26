@@ -19,7 +19,9 @@ var tres = new r.ResourceResolver(templates);
 
 var handler = new r.ResourceRequestHandler(rres, tres, {
   start: function () {},
-  write: function (data) {},
+  write: function (data) {
+    //console.error(data);
+  },
   error: function (err) {
     console.error(err);
   },

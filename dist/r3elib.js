@@ -781,15 +781,21 @@ var ResourceRenderer = (function () {
             if (render) {
                 self.resolveRenderer(['factory/' + ext], ['pre-render'], function (rend, error) {
                     if (rend) {
-                        rend(new Data(fact), new ContentWriterAdapter('object', function () { callback(render, error); }), null);
+                        try {
+                            rend(fact, new ContentWriterAdapter('object', function () { callback(render, error); }), null);
+                        }
+                        catch (ex) {
+                            console.log(ex);
+                            callback(null, error);
+                        }
                     }
                     else {
-                        callback(render, error);
+                        callback(null, error);
                     }
                 });
             }
             else {
-                callback(render, error);
+                callback(null, error);
             }
         });
     };
@@ -821,7 +827,14 @@ var ResourceRenderer = (function () {
         }
         this.resolveRenderer(renderTypes, selectors, function (rend, error) {
             if (rend) {
-                rend(res, writer, context);
+                context.makeCurrentResource(res);
+                var map = context.makePropertiesForResource(res);
+                var rv = rend(map, writer, context);
+                if (rv && rv.constructor.name === 'Promise') {
+                    rv.then(function () {
+                        writer.end(null);
+                    });
+                }
             }
             else {
                 self.renderError('unable to render selector ' + sel, res, error, writer);
@@ -863,6 +876,145 @@ var ResourceRequestContext = (function () {
         this.pathInfo = pathInfo;
         this.resourceRequestHandler = handler;
     }
+    ResourceRequestContext.prototype.__overrideCurrentResourcePath = function (resourcePath) {
+        this.pathInfo.resourcePath = resourcePath;
+    };
+    ResourceRequestContext.prototype.__overrideCurrentSelector = function (selector) {
+        this.pathInfo.selector = selector;
+    };
+    ResourceRequestContext.prototype.__overrideCurrentRenderResourceType = function (rstype) {
+        this.renderResourceType = rstype;
+    };
+    ResourceRequestContext.prototype.getCurrentSelector = function () {
+        return this.pathInfo.selector;
+    };
+    ResourceRequestContext.prototype.getCurrentResourcePath = function () {
+        return this.pathInfo.resourcePath;
+    };
+    ResourceRequestContext.prototype.getCurrentRequestPath = function () {
+        return this.pathInfo.path;
+    };
+    ResourceRequestContext.prototype.getCurrentDataPath = function () {
+        return this.pathInfo.dataPath;
+    };
+    ResourceRequestContext.prototype.getCurrentRenderResourceType = function () {
+        return this.renderResourceType;
+    };
+    ResourceRequestContext.prototype.getResourceResolver = function () {
+        return this.resourceRequestHandler.getResourceResolver();
+    };
+    ResourceRequestContext.prototype.getTemplateResourceResolver = function () {
+        return this.resourceRequestHandler.getTemplateResourceResolver();
+    };
+    ResourceRequestContext.prototype.renderResource = function (resourcePath, rstype, selector) {
+        var self = this;
+        return new Promise(function (resolve) {
+            self.resourceRequestHandler.renderResource(resourcePath, rstype, selector, self, function (contentType, content) {
+                resolve({ contentType: contentType, content: content });
+            });
+        });
+    };
+    ResourceRequestContext.prototype.resolveResource = function (resourcePath) {
+        var rres = this.getResourceResolver();
+        var self = this;
+        return new Promise(function (resolve) {
+            rres.resolveResource(resourcePath, function (res) {
+                var map = self.makePropertiesForResource(res);
+                resolve(map);
+            });
+        });
+    };
+    ResourceRequestContext.prototype.listResourceNames = function (resourcePath) {
+        var self = this;
+        return new Promise(function (resolve) {
+            if (resourcePath === '.' && self.currentResource) {
+                self.currentResource.listChildrenNames(function (ls) {
+                    resolve(ls);
+                });
+            }
+            else {
+                resolve([]);
+            }
+        });
+    };
+    ResourceRequestContext.prototype.listResources = function (resourcePath) {
+        var self = this;
+        var base = this.getCurrentResourcePath();
+        var res = self.currentResource;
+        return new Promise(function (resolve) {
+            if (resourcePath === '.' && res) {
+                res.listChildrenResources(function (ls) {
+                    var rv = [];
+                    for (var i = 0; i < ls.length; i++) {
+                        var map = self.makePropertiesForResource(ls[i]);
+                        map['path'] = Utils.filename_path_append(base, ls[i].getName());
+                        rv.push(map);
+                    }
+                    resolve(rv);
+                });
+            }
+            else {
+                resolve([]);
+            }
+        });
+    };
+    ResourceRequestContext.prototype.readResource = function (resourcePath, writer, callback) {
+        if (resourcePath === '.' && this.currentResource) {
+            this.currentResource.read(writer, callback);
+        }
+    };
+    ResourceRequestContext.prototype.resolveTemplateResource = function (resourcePath) {
+        var trres = this.getTemplateResourceResolver();
+        return new Promise(function (resolve) {
+            trres.resolveResource(resourcePath, function (res) {
+                resolve(res);
+            });
+        });
+    };
+    ResourceRequestContext.prototype.getQueryProperties = function () {
+        return this.pathInfo.query;
+    };
+    ResourceRequestContext.prototype.getQueryProperty = function (name) {
+        if (this.pathInfo.query)
+            return this.pathInfo.query[name];
+        else
+            return null;
+    };
+    ResourceRequestContext.prototype.getConfigProperties = function () {
+        return this.resourceRequestHandler.getConfigProperties();
+    };
+    ResourceRequestContext.prototype.getConfigProperty = function (name) {
+        var p = this.resourceRequestHandler.getConfigProperties();
+        if (p)
+            return p[name];
+        else
+            null;
+    };
+    ResourceRequestContext.prototype.forwardRequest = function (rpath) {
+        this.resourceRequestHandler.forwardRequest(rpath);
+    };
+    ResourceRequestContext.prototype.sendStatus = function (code) {
+        this.resourceRequestHandler.sendStatus(code);
+    };
+    ResourceRequestContext.prototype.storeResource = function (resourcePath, data) {
+        var self = this;
+        return new Promise(function (resolve) {
+            self.resourceRequestHandler.storeResource(resourcePath, data, function () {
+                resolve();
+            });
+        });
+    };
+    ResourceRequestContext.prototype.storeAndResolveResource = function (resourcePath, data) {
+        var rres = this.getResourceResolver();
+        var self = this;
+        return new Promise(function (resolve) {
+            this.resourceRequestHandler.storeResource(resourcePath, data, function () {
+                rres.resolveResource(resourcePath, function (res) {
+                    resolve(res);
+                });
+            });
+        });
+    };
     ResourceRequestContext.prototype.getRequestProperties = function () {
         var p = {};
         p['PREFIX'] = this.pathInfo.prefix;
@@ -892,84 +1044,17 @@ var ResourceRequestContext = (function () {
         }
         return p;
     };
-    ResourceRequestContext.prototype.__overrideCurrentResourcePath = function (resourcePath) {
-        this.pathInfo.resourcePath = resourcePath;
+    ResourceRequestContext.prototype.makeCurrentResource = function (res) {
+        if (res && res instanceof Resource) {
+            this.currentResource = res;
+        }
+        else {
+            this.currentResource = null;
+        }
     };
-    ResourceRequestContext.prototype.__overrideCurrentSelector = function (selector) {
-        this.pathInfo.selector = selector;
-    };
-    ResourceRequestContext.prototype.__overrideCurrentRenderResourceType = function (rstype) {
-        this.renderResourceType = rstype;
-    };
-    ResourceRequestContext.prototype.getCurrentSelector = function () {
-        return this.pathInfo.selector;
-    };
-    ResourceRequestContext.prototype.getCurrentResourcePath = function () {
-        return this.pathInfo.resourcePath;
-    };
-    ResourceRequestContext.prototype.getCurrentRequestPath = function () {
-        return this.pathInfo.path;
-    };
-    ResourceRequestContext.prototype.getCurrentDataPath = function () {
-        return this.pathInfo.dataPath;
-    };
-    ResourceRequestContext.prototype.getCurrentRenderResourceType = function () {
-        return this.renderResourceType;
-    };
-    ResourceRequestContext.prototype.renderResource = function (resourcePath, rstype, selector, callback) {
-        this.resourceRequestHandler.renderResource(resourcePath, rstype, selector, this, callback);
-    };
-    ResourceRequestContext.prototype.resolveResource = function (resourcePath, callback) {
-        var rres = this.getResourceResolver();
-        rres.resolveResource(resourcePath, callback);
-    };
-    ResourceRequestContext.prototype.resolveTemplateResource = function (resourcePath, callback) {
-        var trres = this.getTemplateResourceResolver();
-        trres.resolveResource(resourcePath, callback);
-    };
-    ResourceRequestContext.prototype.getQueryProperties = function () {
-        return this.pathInfo.query;
-    };
-    ResourceRequestContext.prototype.getQueryProperty = function (name) {
-        if (this.pathInfo.query)
-            return this.pathInfo.query[name];
-        else
-            return null;
-    };
-    ResourceRequestContext.prototype.getConfigProperties = function () {
-        return this.resourceRequestHandler.getConfigProperties();
-    };
-    ResourceRequestContext.prototype.getConfigProperty = function (name) {
-        var p = this.resourceRequestHandler.getConfigProperties();
-        if (p)
-            return p[name];
-        else
-            null;
-    };
-    ResourceRequestContext.prototype.getResourceResolver = function () {
-        return this.resourceRequestHandler.getResourceResolver();
-    };
-    ResourceRequestContext.prototype.getTemplateResourceResolver = function () {
-        return this.resourceRequestHandler.getTemplateResourceResolver();
-    };
-    ResourceRequestContext.prototype.forwardRequest = function (rpath) {
-        this.resourceRequestHandler.forwardRequest(rpath);
-    };
-    ResourceRequestContext.prototype.sendStatus = function (code) {
-        this.resourceRequestHandler.sendStatus(code);
-    };
-    ResourceRequestContext.prototype.storeResource = function (resourcePath, data, callback) {
-        this.resourceRequestHandler.storeResource(resourcePath, data, callback);
-    };
-    ResourceRequestContext.prototype.storeAndResolveResource = function (resourcePath, data, callback) {
-        var rres = this.getResourceResolver();
-        this.resourceRequestHandler.storeResource(resourcePath, data, function () {
-            rres.resolveResource(resourcePath, callback);
-        });
-    };
-    ResourceRequestContext.prototype.makeContextMap = function (res) {
+    ResourceRequestContext.prototype.makePropertiesForResource = function (res) {
         var map = {};
-        if (res instanceof Resource) {
+        if (res && res instanceof Resource) {
             map['renderType'] = res.getRenderType();
             map['renderTypes'] = res.getRenderTypes();
             if (res.getSuperType() !== res.getType()) {
@@ -990,6 +1075,10 @@ var ResourceRequestContext = (function () {
             map['path'] = this.pathInfo.resourcePath;
             map['_'] = res.getProperties();
         }
+        return map;
+    };
+    ResourceRequestContext.prototype.makeContextMap = function (res) {
+        var map = this.makePropertiesForResource(res);
         map['R'] = this.getRequestProperties();
         map['Q'] = this.getQueryProperties();
         map['C'] = this.getConfigProperties();
@@ -1122,7 +1211,9 @@ var ResourceRequestHandler = (function (_super) {
     ResourceRequestHandler.prototype.transformResource = function (data, selector, context, callback) {
         var rrend = this.resourceRenderer;
         var selectors = [selector];
-        var renderTypes = data.getRenderTypes();
+        var renderTypes = [];
+        if (data['renderTypes'])
+            renderTypes = renderTypes.concat(data['renderTypes']);
         renderTypes.push('any');
         rrend.resolveRenderer(renderTypes, selectors, function (rend, error) {
             if (rend) {
@@ -1342,6 +1433,7 @@ var ResourceRequestHandler = (function (_super) {
             }
         }
         catch (ex) {
+            console.log(resourcePath + ',' + selector);
             console.log(ex);
             rrend.renderResource(new ErrorResource(ex), 'default', out, ncontext);
         }
@@ -1359,22 +1451,21 @@ var ResourceRequestHandler = (function (_super) {
             out.end(null);
         };
         if (context && info && info.resourcePath) {
-            var tdata = new Data(data);
-            tdata.values = this.expandValues(tdata.values, tdata.values);
-            self.transformResource(tdata, 'pre-store', context, function (ddata) {
-                var storeto = Utils.absolute_path(ddata.values[':storeto']);
+            data = this.expandValues(data, data);
+            self.transformResource(data, 'pre-store', context, function (values) {
+                var storeto = Utils.absolute_path(values[':storeto']);
                 if (!storeto)
                     storeto = info.resourcePath;
-                if (info.selector && ddata.values[':forward']) {
-                    var forward_1 = Utils.absolute_path(ddata.values[':forward']);
+                if (info.selector && values[':forward']) {
+                    var forward_1 = Utils.absolute_path(values[':forward']);
                     self.renderResource(info.resourcePath, null, info.selector, context, function (ctype, content) {
                         self.forwardRequest(forward_1);
                     });
                 }
                 else {
-                    self.storeResource(storeto, ddata.values, function (error) {
+                    self.storeResource(storeto, values, function (error) {
                         if (!error) {
-                            var forward = Utils.absolute_path(ddata.values[':forward']);
+                            var forward = Utils.absolute_path(values[':forward']);
                             if (forward)
                                 self.forwardRequest(forward);
                             else
@@ -2278,7 +2369,9 @@ var HBSRendererFactory = (function (_super) {
             var p = session.makeOutputPlaceholder();
             if (typeof path === 'string') {
                 path = self.expadPath(path, context);
-                context.renderResource(path, rtype, selector, render);
+                context.renderResource(path, rtype, selector).then(function (rv) {
+                    render(rv.contentType, rv.content);
+                });
             }
             else {
                 render('object/javascript', path);

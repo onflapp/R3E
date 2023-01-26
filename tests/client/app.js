@@ -59,8 +59,8 @@ var lunrIndex = new LunrIndexResource();
 var defaultTemplates = new ObjectResource({
   'resource': {
     'error': {
-      'default.func': function (res, writer, context) {
-        res.read(writer, null);
+      'default.func': function (res, writer, ctx) {
+        ctx.readResource('.', writer, null);
       }
     },
     'root': {

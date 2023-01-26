@@ -1,42 +1,12 @@
-class ResourceRequestContext {
+class ResourceRequestContext implements ScriptContext {
   private pathInfo: PathInfo;
   private resourceRequestHandler: ResourceRequestHandler;
   private renderResourceType: string;
+  private currentResource: Resource;
 
   constructor(pathInfo: PathInfo, handler: ResourceRequestHandler) {
     this.pathInfo = pathInfo;
     this.resourceRequestHandler = handler;
-  }
-
-  public getRequestProperties(): any {
-    let p = {};
-    p['PREFIX'] = this.pathInfo.prefix;
-    p['SUFFIX'] = this.pathInfo.suffix;
-    p['PATH'] = this.pathInfo.path;
-    p['NAME'] = this.pathInfo.name;
-    p['DIRNAME'] = this.pathInfo.dirname;
-    p['DATA_PATH'] = this.pathInfo.dataPath;
-    p['DATA_NAME'] = this.pathInfo.dataName;
-
-    let pplus = this.pathInfo.path;
-    if (pplus !== '/') pplus = pplus + '/';
-    p['PATH_APPEND'] = pplus;
-
-    let dpplus = this.pathInfo.dirname;
-    if (dpplus !== '/') dpplus = dpplus + '/';
-    p['DIRNAME_APPEND'] = dpplus;
-
-    let dplus = this.pathInfo.dataPath ? this.pathInfo.dataPath : '';
-    if (dplus !== '/') dplus = dplus + '/';
-    p['DATA_PATH_APPEND'] = dplus;
-
-    if (this.pathInfo.refererURL) {
-      p['REF_URL'] = this.pathInfo.refererURL;
-      p['REF_PATH'] = this.pathInfo.referer.path;
-      if (this.pathInfo.referer.suffix) p['REF_SUFFIX'] = this.pathInfo.referer.suffix;
-    }
-
-    return p;
   }
 
   public __overrideCurrentResourcePath(resourcePath :string) {
@@ -71,18 +41,84 @@ class ResourceRequestContext {
     return this.renderResourceType;
   }
 
-  public renderResource(resourcePath: string, rstype: string, selector: string, callback: any) {
-    this.resourceRequestHandler.renderResource(resourcePath, rstype, selector, this, callback);
+  public getResourceResolver(): ResourceResolver {
+    return this.resourceRequestHandler.getResourceResolver();
   }
 
-  public resolveResource(resourcePath: string, callback: ResourceCallback) {
+  public getTemplateResourceResolver(): ResourceResolver {
+    return this.resourceRequestHandler.getTemplateResourceResolver();
+  }
+
+  public renderResource(resourcePath: string, rstype: string, selector: string) : Promise<any>{
+    let self = this;
+    return new Promise(function (resolve) {
+      self.resourceRequestHandler.renderResource(resourcePath, rstype, selector, self, function(contentType, content) {
+        resolve({ contentType:contentType, content:content });
+      });
+    });
+  }
+
+  public resolveResource(resourcePath: string) : Promise<any> {
     let rres = this.getResourceResolver();
-    rres.resolveResource(resourcePath, callback);
+    let self = this;
+    return new Promise(function (resolve) {
+      rres.resolveResource(resourcePath, function(res) {
+        let map = self.makePropertiesForResource(res);
+        resolve(map);
+      });
+    });
   }
 
-  public resolveTemplateResource(resourcePath: string, callback: ResourceCallback) {
+  public listResourceNames(resourcePath: string) : Promise<any> {
+    let self = this;
+    return new Promise(function (resolve) {
+      if (resourcePath === '.' && self.currentResource) {
+        self.currentResource.listChildrenNames(function(ls) {
+          resolve(ls);
+        });
+      }
+      else {
+        resolve([]);
+      }
+    });
+  }
+
+  public listResources(resourcePath: string) : Promise<any> {
+    let self = this;
+    let base = this.getCurrentResourcePath();
+    let res = self.currentResource;
+
+    return new Promise(function (resolve) {
+      if (resourcePath === '.' && res) {
+        res.listChildrenResources(function(ls) {
+          let rv = [];
+          for (let i = 0; i < ls.length; i++) {
+            let map = self.makePropertiesForResource(ls[i]);
+            map['path'] = Utils.filename_path_append(base, ls[i].getName());
+            rv.push(map);
+          }
+          resolve(rv);
+        });
+      }
+      else {
+        resolve([]);
+      }
+    });
+  }
+
+  public readResource(resourcePath: string, writer: ContentWriter, callback: any) {
+    if (resourcePath === '.' && this.currentResource) {
+      this.currentResource.read(writer, callback);
+    }
+  }
+
+  public resolveTemplateResource(resourcePath: string) : Promise<Resource> {
     let trres = this.getTemplateResourceResolver();
-    trres.resolveResource(resourcePath, callback);
+    return new Promise(function (resolve) {
+      trres.resolveResource(resourcePath, function(res) {
+        resolve(res);
+      });
+    });
   }
 
   public getQueryProperties() {
@@ -104,14 +140,6 @@ class ResourceRequestContext {
     else null;
   }
 
-  public getResourceResolver(): ResourceResolver {
-    return this.resourceRequestHandler.getResourceResolver();
-  }
-
-  public getTemplateResourceResolver(): ResourceResolver {
-    return this.resourceRequestHandler.getTemplateResourceResolver();
-  }
-
   public forwardRequest(rpath: string) {
     this.resourceRequestHandler.forwardRequest(rpath);
   }
@@ -120,22 +148,73 @@ class ResourceRequestContext {
     this.resourceRequestHandler.sendStatus(code);
   }
 
-  public storeResource(resourcePath: string, data: any, callback) {
-    this.resourceRequestHandler.storeResource(resourcePath, data, callback);
-  }
-
-  public storeAndResolveResource(resourcePath: string, data: any, callback) {
-    let rres = this.getResourceResolver();
-    this.resourceRequestHandler.storeResource(resourcePath, data, function() {
-      rres.resolveResource(resourcePath, callback);
+  public storeResource(resourcePath: string, data: any) : Promise<void> {
+    let self = this;
+    return new Promise(function (resolve) {
+      self.resourceRequestHandler.storeResource(resourcePath, data, function() {
+        resolve();
+      });
     });
   }
 
-  public makeContextMap(res: Data) {
+  public storeAndResolveResource(resourcePath: string, data: any) : Promise<Resource> {
+    let rres = this.getResourceResolver();
+    let self = this;
+
+    return new Promise(function (resolve) {
+      this.resourceRequestHandler.storeResource(resourcePath, data, function() {
+        rres.resolveResource(resourcePath, function(res) {
+          resolve(res);
+        });
+      });
+    });
+  }
+
+  public getRequestProperties(): any {
+    let p = {};
+    p['PREFIX'] = this.pathInfo.prefix;
+    p['SUFFIX'] = this.pathInfo.suffix;
+    p['PATH'] = this.pathInfo.path;
+    p['NAME'] = this.pathInfo.name;
+    p['DIRNAME'] = this.pathInfo.dirname;
+    p['DATA_PATH'] = this.pathInfo.dataPath;
+    p['DATA_NAME'] = this.pathInfo.dataName;
+
+    let pplus = this.pathInfo.path;
+    if (pplus !== '/') pplus = pplus + '/';
+    p['PATH_APPEND'] = pplus;
+
+    let dpplus = this.pathInfo.dirname;
+    if (dpplus !== '/') dpplus = dpplus + '/';
+    p['DIRNAME_APPEND'] = dpplus;
+
+    let dplus = this.pathInfo.dataPath ? this.pathInfo.dataPath : '';
+    if (dplus !== '/') dplus = dplus + '/';
+    p['DATA_PATH_APPEND'] = dplus;
+
+    if (this.pathInfo.refererURL) {
+      p['REF_URL'] = this.pathInfo.refererURL;
+      p['REF_PATH'] = this.pathInfo.referer.path;
+      if (this.pathInfo.referer.suffix) p['REF_SUFFIX'] = this.pathInfo.referer.suffix;
+    }
+
+    return p;
+  }
+
+  public makeCurrentResource(res: Data) {
+
+    if (res && res instanceof Resource) {
+      this.currentResource = res;
+    }
+    else {
+      this.currentResource = null;
+    }
+  }
+
+  public makePropertiesForResource(res: Data) {
     let map = {};
 
-    if (res instanceof Resource) {
-
+    if (res && res instanceof Resource) {
       map['renderType'] = res.getRenderType();
       map['renderTypes'] = res.getRenderTypes();
       if (res.getSuperType() !== res.getType()) {
@@ -157,6 +236,12 @@ class ResourceRequestContext {
       map['path'] = this.pathInfo.resourcePath;
       map['_'] = res.getProperties();
     }
+
+    return map;
+  }
+
+  public makeContextMap(res: Data) {
+    let map = this.makePropertiesForResource(res);
 
     map['R'] = this.getRequestProperties();
     map['Q'] = this.getQueryProperties();
