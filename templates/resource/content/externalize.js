@@ -1,6 +1,6 @@
-(function (res, writer, context) {
+(function (res, writer, ctx) {
   var clientside = (typeof window != 'undefined');
-  var xref = res.getProperty('_xref');
+  var xref = res['_xref'];
 
   if (xref) {
     var url = escape(xref);
@@ -9,8 +9,8 @@
     writer.end();
   }
   else if (clientside) {
-    if (res.isContentResource()) {
-      res.read(new ContentWriterAdapter('blob', function (data, ctype) {
+    if (res['isContentResource']) {
+      ctx.readResource('.', new ContentWriterAdapter('blob', function (data, ctype) {
         var blob = new Blob([data], {
           type: ctype ? ctype : 'application/octet-binary'
         });
@@ -27,7 +27,7 @@
     }
   }
   else {
-    var url = context.pathInfo.resourcePath;
+    var url = ctx.pathInfo.resourcePath;
     writer.start('text/plain');
     writer.write(url);
     writer.end();

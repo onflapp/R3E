@@ -6,7 +6,10 @@ class ResourceResolver {
 
   public resolveResource(path: string, callback: ResourceCallback) {
     let self = this;
+    Utils.log_trace_resolve('??', path);
+
     if (path === '/' || path === '') {
+      Utils.log_trace_resolve('=>', path);
       this.resource.resolveItself(callback);
     }
     else {
@@ -22,6 +25,7 @@ class ResourceResolver {
             callback(null);
           }
           else if (paths.length == 0) {
+            Utils.log_trace_resolve('=>', path);
             callback(rv);
           }
           else {

@@ -62,10 +62,23 @@ class ResourceRequestContext implements ScriptContext {
     let rres = this.getResourceResolver();
     let self = this;
     return new Promise(function (resolve) {
-      rres.resolveResource(resourcePath, function(res) {
-        let map = self.makePropertiesForResource(res);
+      if (resourcePath === '.' && self.currentResource) {
+        let map = self.makePropertiesForResource(self.currentResource);
+        map['path'] = self.getCurrentResourcePath();
         resolve(map);
-      });
+      }
+      else {
+        rres.resolveResource(resourcePath, function(res) {
+          if (res) {
+            let map = self.makePropertiesForResource(res);
+            map['path'] = resourcePath;
+            resolve(map);
+          }
+          else {
+            resolve(null);
+          }
+        });
+      }
     });
   }
 
@@ -179,6 +192,7 @@ class ResourceRequestContext implements ScriptContext {
     p['DIRNAME'] = this.pathInfo.dirname;
     p['DATA_PATH'] = this.pathInfo.dataPath;
     p['DATA_NAME'] = this.pathInfo.dataName;
+    p['RES_PATH'] = this.pathInfo.resourcePath;
 
     let pplus = this.pathInfo.path;
     if (pplus !== '/') pplus = pplus + '/';
@@ -233,19 +247,9 @@ class ResourceRequestContext implements ScriptContext {
         map['contentType'] = ctype;
         map['contentSize'] = res.getContentSize();
       }
-      map['path'] = this.pathInfo.resourcePath;
       map['_'] = res.getProperties();
+      map['path'] = this.getCurrentResourcePath();
     }
-
-    return map;
-  }
-
-  public makeContextMap(res: Data) {
-    let map = this.makePropertiesForResource(res);
-
-    map['R'] = this.getRequestProperties();
-    map['Q'] = this.getQueryProperties();
-    map['C'] = this.getConfigProperties();
 
     return map;
   }

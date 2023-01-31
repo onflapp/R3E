@@ -302,8 +302,8 @@ class ResourceRequestHandler extends EventDispatcher {
     this.configProperties = cfg;
   }
 
-  public registerFactory(typ: string, factory: RendererFactory) {
-    this.resourceRenderer.registerFactory(typ, factory);
+  public registerFactory(typ: string, factory: RendererFactory, channels?: any) {
+    this.resourceRenderer.registerFactory(typ, factory, channels);
   }
 
   public registerMakeRenderTypePatterns(func: MakeRenderTypePatternsFunction) {
@@ -343,6 +343,7 @@ class ResourceRequestHandler extends EventDispatcher {
             res = new NotFoundResource(info.resourcePath);
           }
           
+          Utils.log_trace('transformResource', '[pre-render]');
           self.transformResource(res, 'pre-render', context, function() {
             rrend.renderResource(res, sel, out, context);
             out.end(null);

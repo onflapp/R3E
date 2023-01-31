@@ -1,6 +1,8 @@
 //clear the body to reduce flashing
 document.body.innerHTML = '';
 
+Utils.ENABLE_TRACE_LOG = 1;
+
 //sample content as javascript object
 var userContentVal = {
   'my simple web page': {
@@ -84,9 +86,12 @@ var root = new RootResource({
 var rres = new ResourceResolver(root);
 var rtmp = new MultiResourceResolver([userTemplate, systemTemplates, defaultTemplates]);
 
+var app_path = window.location.protocol + '//' + window.location.host + window.location.pathname + '#';
+
 //configuration which is passed through context to the renderer, accessible as C.something
 var config = {
   'X': '.x-',
+  'APP_PREFIX':app_path,
   'USER_TEMPLATES':'/user-templates',
   'BOOTSTRAP_CSS': 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css',
   'CODEMIRROR_JS': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/codemirror.min.js',
@@ -102,7 +107,7 @@ handler.setPathParserPattern('^(\\/.*?)(\\.x-([a-z,\\-_]+))(\\.([a-z0-9,\\-\\.]+
 handler.setConfigProperties(config);
 
 //register renderers
-handler.registerFactory('hbs', new HBSRendererFactory());
+handler.registerFactory('hbs', new HBSRendererFactory(), ['web']);
 handler.registerFactory('js', new JSRendererFactory());
 handler.registerFactory('func', new InterFuncRendererFactory()); //internal functions, usefull for function-based renderers
 

@@ -1,8 +1,11 @@
-(function (res, writer, context) {
+(async function (res, writer, ctx) {
   writer.start('object/javascript');
-  var types = [];
+  
+  /*
+  let types = [];
+  let currentRes = await ctx.resolveResource('.');
 
-  Tools.visitAllChidren(res, false, function (path, res) {
+  Tools.visitAllChidren(currentRes, false, function (path, r) {
     if (path) {
       if (path.indexOf('.') > 0) {
         var name = Utils.filename(path);
@@ -15,5 +18,7 @@
       writer.end();
     }
   });
+  */
 
+  writer.end();
 });

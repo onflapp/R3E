@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+  <title>properties</title>
+</head>
+
+<body>
+
+  <h4 class="modal-title">Resource Properties</h4>
+
+  <ol>
+    <li>HOME</li>
+{{#include "." "parents"}}
+    <li>{{name}}</li>
+{{/include}}
+    <li>{{R.NAME}}</li>
+  </ol>
+
+  <h4>properties:</h4>
+
+{{#include "." "properties"}}
+  <label>{{name}}</label>
+  <input name="{{name}}" value="{{value}}" form="save_form" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false">
+  
+  <form method="POST" action="{{R.PATH}}">
+    <input type="hidden" name="{{name}}" value="">
+    <input type="hidden" name=":forward" value="{{req_path}}">
+    <button type="submit" name="{{name}}" value="">del</button>
+  </form>
+{{/include}}
+
+  <form method="POST" action="{{R.PATH}}">
+    <input name=":name" value="" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="name">
+    <input name="{:name}" value="" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="value">
+    <button type="submit" value="add">add</button>
+    <input type="hidden" name=":forward" value="{{req_path R.PATH "res-properties"}}">
+  </form>
+
+  <a href="{{req_path R.PATH "res-renderer"}}">Renderer Properties...</a>
+
+  <form method="POST" id="save_form" action="{{R.PATH}}">
+    <a href="{{req_path "." "res-list"}}">Cancel</a>
+    <input type="hidden" name=":forward" value="{{req_path "." "res-list"}}">
+    <input type="submit" value="Save">
+  </form>
+
+</body>
+
+</html>

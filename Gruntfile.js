@@ -16,7 +16,7 @@ module.exports = function (grunt) {
           module: 'amd',
           sourceMap: false,
           strict: false,
-          target: 'es5'
+          target: 'es6'
         },
         src: [
           "src/api/ScriptContext.ts",

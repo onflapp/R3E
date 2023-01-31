@@ -69,6 +69,11 @@ class DOMContentWriter implements ContentWriter {
       let action = target.getAttribute('action');
       let info = requestHandler.parseFormElement(target);
       evt.preventDefault();
+
+      let forward = info.formData[':forward'];
+      if (forward && forward.indexOf('#')) {
+        info.formData[':forward'] = forward.substr(forward.indexOf('#')+1);
+      }
       
       if (target.method.toUpperCase() === 'POST') {
         setTimeout(function () {
@@ -87,6 +92,7 @@ class DOMContentWriter implements ContentWriter {
       }
     });
 
+    /*
     document.body.addEventListener('click', function (evt) {
       let target = evt.target as HTMLElement;
       let href = target.getAttribute('href');
@@ -101,6 +107,7 @@ class DOMContentWriter implements ContentWriter {
         },10);
       }
     });
+   */
   }
 
   protected evaluateScripts() {
@@ -183,7 +190,7 @@ class DOMContentWriter implements ContentWriter {
   }
 
   public start(ctype) {
-    if (ctype === 'text/html') this.htmldata = [];
+    if (ctype.indexOf('text/') == 0) this.htmldata = [];
     else {
       this.extdata = window.open('about:blank');
       if (this.extdata) { //may happen if popup windows are blocked

@@ -129,8 +129,12 @@ class TemplateRendererFactory implements RendererFactory {
 
         let session = new TemplateRendererSession();
 
-        callback(function (data: Data, writer: ContentWriter, context: ResourceRequestContext) {
-          let map = context.makeContextMap(data);
+        callback(function (data: any, writer: ContentWriter, context: ResourceRequestContext) {
+          let map = Object.assign({}, data);
+
+          map['R'] = context.getRequestProperties();
+          map['Q'] = context.getQueryProperties();
+          map['C'] = context.getConfigProperties();
 
           map['_session'] = session;
           map['_context'] = context;

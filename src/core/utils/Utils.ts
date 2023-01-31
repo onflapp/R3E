@@ -265,4 +265,18 @@ class Utils {
       return buff;
     }
   }
+
+  static ENABLE_TRACE_LOG: boolean = false;
+
+  static log_trace(typ, msg) {
+    if (Utils.ENABLE_TRACE_LOG) {
+      console.log(typ+':'+msg);
+    }
+  }
+
+  static log_trace_resolve(typ, path) {
+    if (Utils.ENABLE_TRACE_LOG) {
+      console.log(typ+'resolve:'+path);
+    }
+  }
 }

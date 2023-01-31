@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+  <title>create</title>
+</head>
+
+<body>
+
+  <h4>Create New Resource</h4>
+
+  <ol>
+    <li>HOME</li>
+{{#include "." "parents"}}
+    <li>{{name}}</li>
+{{/include}}
+    <li>{{R.NAME}}</li>
+  </ol>
+
+  <h5>Resource Node</h5>
+  
+  <form method="post" action="{{R.PATH_APPEND}}{:name}">
+    <input name=":name|newUUID" value="" autocomplete="off" placeholder="name">
+
+    <select name="_rt">
+      <option value="">type not set</option>
+      <option disabled>user templates:</option>
+{{#include C.USER_TEMPLATES "rendertemplates"}}
+      <option value="{{this}}">{{this}}</option>
+{{/include}}
+    </select>
+              
+    <input type="hidden" name=":forward" value="{{req_path R.PATH "res-list"}}">
+    <button type="submit">add</button>
+  </form>
+
+  <h5>Create Empty File</h5>
+
+  <form method="post" action="{{R.PATH_APPEND}}{:name}">
+    <input name=":name|newUUID" value="" autocomplete="off" placeholder="file name">
+    <input type="hidden" name="_content" value=""></input>
+    
+    <input type="hidden" name=":forward" value="{{req_path "." "res-list"}}">
+    <button type="submit">add</button>
+  </form>
+
+  <h5>Upload File</h5>
+
+  <form method="post" enctype="multipart/form-data" action="{{R.PATH_APPEND}}{:name}">
+    <input type="file" name=":filename" value="">
+    <input name=":name|:filename|newUUID" value="" autocomplete="off" placeholder="file name">
+    <input type="hidden" name=":forward" value="{{req_path "." "res-list"}}">
+    <button type="submit">add</button>
+  </form>
+
+  <h5>Import File</h5>
+  
+  <form method="post" enctype="multipart/form-data" action="{{R.PATH}}">
+    <input type="file" name=":import" value="">
+    <input type="hidden" name=":forward" value="{{req_path "." "res-list"}}">
+
+    <button type="submit">add</button>
+  </form>
+  <a href="{{req_path "." "res-list"}}">Cancel</a>
+
+</body>
+</html>

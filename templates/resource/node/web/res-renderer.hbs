@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+  <title>renderer properties</title>
+</head>
+
+<body>
+
+  <h4 class="modal-title">Renderer Properties</h4>
+  
+
+  <ol>
+    <li>HOME</li>
+{{#include "." "parents"}}
+    <li>{{name}}</li>
+{{/include}}
+    <li>{{R.NAME}}</li>
+  </ol>
+
+  <form method="POST" id="save_form" action="{{R.PATH}}">
+    <h4>Set User Defined Renderers</h4>
+    
+    <p>User defined renderer templates are stored in <a href="{{req_path C.USER_TEMPLATES "/" renderType "res-list"}}">{{C.USER_TEMPLATES}}/{{renderType}}</a></p>
+
+    <label>render type</label>
+    <select name="_rt">
+      <option value="">not set</option>
+      <option disabled>-</option>
+{{#include C.USER_TEMPLATES "rendertemplates"}}
+      <option value="{{this}}" {{eq this ../renderType "selected"}}>{{this}}</option>
+{{/include}}
+    </select>
+            
+    <label class="col-sm-4">render super type</label>
+    <select class="form-control" name="_st">
+      <option value="">not set</option>
+      <option disabled>-</option>
+{{#include C.USER_TEMPLATES "rendertemplates"}}
+      <option value="{{this}}" {{eq this ../renderSuperType "selected"}}>{{this}}</option>
+{{/include}}
+    </select>
+
+    <h4>Renderer will take following types into consideration</h4>
+    <ol>
+{{#if renderType}}
+      <li>renderType: <b>{{renderType}}</b></li>
+{{else}}
+      <li>renderType: <b>no type set</b></li>
+{{/if}}
+{{#if renderSuperType}}
+      <li>renderSuperType: <b>{{renderSuperType}}</b></li>
+{{/if}}
+{{#if contentType}}
+      <li>contentType: mime/<b>{{contentType}}</b></li>
+{{/if}}
+      <li>resourceType: <b>{{type}}</b></li>
+{{#if superType}}
+      <li>superType: <b>{{superType}}</b></li>
+{{/if}}
+      <li>fallback: <b>any/any</b></li>
+    </ol>          
+
+    <input type="hidden" name=":forward" value="{{ref_path R.PATH "res-list"}}">
+    
+    <a href="{{req_path C.USER_TEMPLATES "res-create"}}">Create New Template</a>
+    <a href="{{req_path R.PATH "res-list"}}">Cancel</a>
+  
+    <input type="submit" value="Save">
+  </form>
+
+</body>
+
+</html>

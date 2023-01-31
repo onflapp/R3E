@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+  <title>copy to</title>
+</head>
+
+<body>
+  <h1>Copy from</h1>
+
+  <ol>
+    <li>HOME</li>
+{{#include "." "parents"}}
+    <li>{{name}}</li>
+{{/include}}
+    <li>{{R.NAME}}</li>
+  </ol>
+
+  <h1>to</h1>
+
+  <ol>
+    <li><a href="{{req_path "." "res-copyto"}}/">HOME</a></li>
+{{#include R.DATA_PATH "parents"}}
+    <li><a href="{{req_path "." "res-copyto"}}{{path}}">{{name}}</a></li>
+{{/include}}
+    <li class="active">{{R.DATA_NAME}}</li>
+  </ol>
+
+  <form method="POST" action="{{R.PATH}}">
+    <table>
+{{#include R.DATA_PATH "children"}}
+  {{#if isContentResource}}
+      <tr>
+        <td>{{name}}</td>
+      </tr>
+  {{else}}
+      <tr>
+    {{#match path "!startsWith" R.PATH}}
+        <td>
+          <a href="{{req_path "." "res-copyto"}}{{path}}">{{name}}</a>
+        </td>
+    {{/match}}
+      </tr>
+  {{/if}}
+{{/include}}
+      <tr>
+        <td>
+          <input name=":name|newUUID" value="Copy of {{R.NAME}}" autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false">
+        </td>
+      </tr>
+    </table>
+
+    <input type="hidden" name=":copyto" value="{{R.DATA_PATH_APPEND}}{:name}">
+    <input type="hidden" name=":forward" value="{{req_path R.DATA_PATH "res-list"}}">
+
+    <a target="_blank" href="{{C.P}}{{R.PATH}}{{C.X}}export">Export</a>
+    <a href="{{C.P}}{{R.PATH}}{{C.X}}res-exportto{{R.DATA_PATH}}">Export to...</a>
+{{#if isContentResource}}
+    <a href="{{C.P}}{{R.PATH}}{{C.X}}res-importto{{R.DATA_PATH}}">Import to...</a>
+{{/if}}
+
+    <a href="{{req_path R.PATH_APPEND "../" "res-list"}}">Cancel</a>
+    <input class="btn btn-success" type="submit" value="Copy">
+  </form>
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+  <style>
+    textarea {
+      display: block;
+      width: 100%;
+      height: 400px;
+    }
+  </style>
+
+  <title>edit</title>
+</head>
+
+<body>
+  <ol>
+    <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
+{{#include "." "parents"}}
+    <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
+{{/include}}
+    <li class="active">{{R.NAME}}</li>
+  </ol>
+
+{{#match isTextContentResource}}
+
+  <form method="post" action="{{C.P}}{{R.PATH}}{{R.SUFFIX}}">
+    <a href="{{req_path R.DIRNAME_APPEND "res-list"}}">List</a>
+    
+    <button type="submit">Save</button>
+
+    <textarea autocorrect="off" autocapitalize="none" autocomplete="off" autofocus="on" spellcheck="false" name="_content">{{include-safe "." "text"}}</textarea>
+
+    <input type="hidden" name="_rt" value="resource/content"></input>
+    <input type="hidden" name="_ct" value="{{contentType}}"></input>
+  </form>
+
+{{/match}}
+{{#match contentType "startsWith" "image/"}}
+
+    <a href="{{req_path R.DIRNAME_APPEND "res-list"}}">List</a>
+    <a target="_blank" href="{{include "." "externalize"}}">View</a>
+
+    <img class="image" src="{{include "." "externalize"}}"></img>
+
+{{/match}}
+{{#match contentType "startsWith" "application/pdf"}}
+
+    <a href="{{req_path R.DIRNAME_APPEND "res-list"}}">List</a>
+    <a target="_blank" href="{{include "." "externalize"}}">View</a>
+
+    <iframe class="pdf" src="{{include "." "externalize"}}"></iframe>
+
+{{/match}}
+{{#default}}
+
+    <div>unknown file type of {{contentType}}</div>
+    <a href="{{include "." "externalize"}}" download target="_blank">Download</a>
+
+{{/default}}
+
+</body>
+
+</html>

@@ -1,6 +1,6 @@
-(function (res, writer, context) {
-  if (res.isContentResource()) {
-    res.read(new ContentWriterAdapter('utf8', function (data, ctype) {
+(function (res, writer, ctx) {
+  if (res['isContentResource']) {
+    ctx.readResource('.', new ContentWriterAdapter('utf8', function (data, ctype) {
       writer.start('text/plain');
       writer.write(data);
       writer.end();

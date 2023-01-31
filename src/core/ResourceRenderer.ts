@@ -20,23 +20,30 @@ interface MakeRenderTypePatternsFunction {
 
 class ResourceRenderer {
   protected rendererResolver: ResourceResolver;
-  protected rendererFactories: Map<string,RendererFactory> ;
+  protected rendererFactories: Map<string,RendererFactory>;
+  protected rendererChannels: Map<string, any>;
   protected makeRenderTypePatterns: MakeRenderTypePatternsFunction;
 
   constructor(resolver: ResourceResolver) {
     this.rendererResolver = resolver;
     this.rendererFactories = new Map();
+    this.rendererChannels = new Map();
 
     this.makeRenderTypePatterns = function(factoryType: string, renderType: string, name: string, sel: string): Array <string> {
       let rv = [];
-      let p = renderType + '/' + name + '.' + sel;
+      let channels = this.rendererChannels.get(factoryType);
+      if (!channels) channels = [''];
 
       if (sel === 'default') {
-        rv.push(renderType + '/' + name + '.' + factoryType);
+        channels.forEach(function(val) {
+          let p = val?(val+'/'):'';
+          rv.push(renderType + '/' + p + name + '.' + factoryType);
+        });
       }
-      rv.push(p + '.' + factoryType);
-      p = renderType + '/' + sel;
-      rv.push(p + '.' + factoryType);
+      channels.forEach(function(val) {
+        let p = val?(val+'/'):'';
+        rv.push(renderType + '/' + p + sel + '.' + factoryType);
+      });
 
       return rv;
     };
@@ -70,11 +77,17 @@ class ResourceRenderer {
     let self = this;
 
     fact.makeRenderer(resource, function(render, error) {
-      if (render) {
+      if (ext == 'js' || ext == 'func') {
+        callback(render, error);
+      }
+      else if (render) {
+        Utils.log_trace('makeRenderingFunction', `factory/[${ext}] pre-render`);
         self.resolveRenderer(['factory/'+ext], ['pre-render'], function(rend: ContentRendererFunction, error ? : Error) {
           if (rend) {
             try {
-              rend(fact, new ContentWriterAdapter('object', function() { callback(render, error); }), null);
+              rend(fact, new ContentWriterAdapter('object', function() { 
+                callback(render, error); 
+              }), null);
             }
             catch(ex) {
               console.log(ex);
@@ -87,7 +100,7 @@ class ResourceRenderer {
         });
       }
       else {
-        callback(null, error);
+        callback(render, error);
       }
     });
   }
@@ -98,14 +111,17 @@ class ResourceRenderer {
     }
   }
 
-  public registerFactory(typ: string, factory: RendererFactory) {
+  public registerFactory(typ: string, factory: RendererFactory, channels?: any) {
     this.rendererFactories.set(typ, factory);
+    if (channels) {
+      this.rendererChannels.set(typ, channels);
+    }
   }
 
   protected renderError(message: string, resource: Resource, error: Error, writer: ContentWriter) {
     writer.start('text/plain');
     writer.write(message + '\n');
-    writer.write('resource ' + resource.getName() + ':' + resource.getType() + '\n');
+    writer.write('resource:[' + resource.getName() + '] with type:[' + resource.getType() + ']\n');
     if (error) writer.write(error.message + '\n' + error.stack);
     writer.end(null);
   }
@@ -122,19 +138,31 @@ class ResourceRenderer {
       renderTypes.push('any');
     }
 
+    Utils.log_trace('resolveRenderer', `renderTypes:[${renderTypes}] selectors:[${selectors}]`);
     this.resolveRenderer(renderTypes, selectors, function (rend: ContentRendererFunction, error ? : Error) {
       if (rend) {
         context.makeCurrentResource(res);
-        let map = context.makePropertiesForResource(res);
-        let rv = rend(map, writer, context);
-        if (rv && rv.constructor.name === 'Promise') {
-          rv.then(function () {
-            writer.end(null);
-          });
+        try {
+          let map = context.makePropertiesForResource(res);
+
+          let rv = rend(map, writer, context);
+          if (rv && rv.constructor.name === 'Promise') {
+            rv.then(function () {
+              writer.end(null);
+            })
+            .catch(function(err) {
+              console.log(err);
+              self.renderError('unable to render selector:[' + sel + "]", res, err, writer);
+            });
+          }
+        }
+        catch(ex) {
+          console.log(ex);
+          self.renderError('unable to render selector:[' + sel + "]", res, ex, writer);
         }
       }
       else {
-        self.renderError('unable to render selector ' + sel, res, error, writer);
+        self.renderError('unable to render selector:[' + sel + "]", res, error, writer);
       }
     });
   }
@@ -163,7 +191,7 @@ class ResourceRenderer {
           resolve_renderer(p);
         }
         else {
-          callback(null, new Error('paths:' + plist.join('\n')));
+          callback(null, null);
         }
       })
     };
