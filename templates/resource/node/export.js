@@ -1,14 +1,14 @@
 (function (res, writer, context) {
-  var out = writer;
-  var processing = 0;
-  var ended = false;
-  var count = 0;
-  var path = context.getCurrentDataPath();
+  let out = writer;
+  let processing = 0;
+  let ended = false;
+  let count = 0;
+  let path = context.getCurrentDataPath();
 
-  var export_content = function (data) {
-    var func = data['_content'];
-    var ct = data['_ct'];
-    var bin = true;
+  let export_content = function (data) {
+    let func = data['_content'];
+    let ct = data['_ct'];
+    let bin = true;
 
     if (Utils.is_texttype(ct)) bin = false;
 
@@ -28,7 +28,7 @@
     }));
   };
 
-  var done = function () {
+  let done = function () {
     if (processing === 0 && ended) {
       out.write('\n]');
       out.end();
@@ -36,8 +36,9 @@
     }
   };
 
-  var export_children = function () {
-    res.exportChilrenResources(0, {
+  let export_children = function () {
+    let path = res['path'];
+    context.exportAllResources(path, 0, {
       start: function (ctype) {
         out.start('application/json');
         out.write('[\n');

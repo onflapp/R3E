@@ -187,57 +187,6 @@ abstract class Resource extends Data implements ContentReader {
     callback(new Data(rv));
   }
 
-  public exportChilrenResources(level, writer: ContentWriter, incSource ? : boolean): void {
-    let self = this;
-    let processingc = 0;
-    let processingd = 0;
-    let processingn = 0;
-
-    //---
-    let done = function () {
-      if (processingc === 0 && processingd === 0 && processingn === 0) {
-        writer.end(null);
-      }
-    };
-
-    //---
-    let export_children = function (path, name, res) {
-      processingc++; //children
-      processingd++; //data
-
-      res.exportData(function (data: Data) {
-        if (name) data.values[':name'] = name;
-        if (path) data.values[':path'] = path;
-
-        writer.write(data);
-        processingd--; //data
-        done();
-      });
-
-      res.listChildrenNames(function (names) {
-        processingn += names.length; //names
-
-        for (var i = 0; i < names.length; i++) {
-          let name = names[i];
-
-          res.resolveChildResource(name, function (r) {
-            let rpath = Utils.filename_path_append(path, name);
-
-            export_children(rpath, name, r);
-            processingn--; //names
-            done();
-          });
-        }
-
-        processingc--; //children
-        done();
-      });
-    };
-
-    writer.start('object/javascript');
-    export_children(incSource ? this.getName() : '', this.getName(), this);
-  }
-
   public importData(data: Data, callback) {
     let processingf = 0;
     let processingp = 0;

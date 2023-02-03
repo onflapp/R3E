@@ -74,7 +74,7 @@ class ResourceResolver {
   public exportResources(path: string, callback) {
     this.resolveResource(path, function (res: Resource) {
       if (res) {
-        res.exportChilrenResources(0, {
+        Tools.exportChilrenResources(res, 0, {
           start: function (ctype) {},
           write: function (data) {
             callback(data);

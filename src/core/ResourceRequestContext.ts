@@ -217,6 +217,27 @@ class ResourceRequestContext implements ScriptContext {
     }
   }
 
+  public exportAllResources(resourcePath: string, level, writer: ContentWriter, incSource ? : boolean): void {
+    let self = this;
+    let rres = this.getResourceResolver();
+    let base = this.getCurrentResourcePath();
+
+    if (resourcePath === '.' && this.currentResource) {
+      Tools.exportChilrenResources(this.currentResource, level, writer, incSource);
+    }
+    else {
+      resourcePath = Utils.absolute_path(resourcePath, base);
+      rres.resolveResource(resourcePath, function(res) {
+        if (res) {
+          Tools.exportChilrenResources(res, level, writer, incSource);
+        }
+        else {
+          writer.end(null);
+        }
+      });
+    }
+  }
+
   public resolveTemplateResource(resourcePath: string) : Promise<Resource> {
     let trres = this.getTemplateResourceResolver();
     return new Promise(function (resolve) {

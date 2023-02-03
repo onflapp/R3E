@@ -439,46 +439,6 @@ class Resource extends Data {
         }
         callback(new Data(rv));
     }
-    exportChilrenResources(level, writer, incSource) {
-        let self = this;
-        let processingc = 0;
-        let processingd = 0;
-        let processingn = 0;
-        let done = function () {
-            if (processingc === 0 && processingd === 0 && processingn === 0) {
-                writer.end(null);
-            }
-        };
-        let export_children = function (path, name, res) {
-            processingc++;
-            processingd++;
-            res.exportData(function (data) {
-                if (name)
-                    data.values[':name'] = name;
-                if (path)
-                    data.values[':path'] = path;
-                writer.write(data);
-                processingd--;
-                done();
-            });
-            res.listChildrenNames(function (names) {
-                processingn += names.length;
-                for (var i = 0; i < names.length; i++) {
-                    let name = names[i];
-                    res.resolveChildResource(name, function (r) {
-                        let rpath = Utils.filename_path_append(path, name);
-                        export_children(rpath, name, r);
-                        processingn--;
-                        done();
-                    });
-                }
-                processingc--;
-                done();
-            });
-        };
-        writer.start('object/javascript');
-        export_children(incSource ? this.getName() : '', this.getName(), this);
-    }
     importData(data, callback) {
         let processingf = 0;
         let processingp = 0;
@@ -645,7 +605,7 @@ class ResourceResolver {
     exportResources(path, callback) {
         this.resolveResource(path, function (res) {
             if (res) {
-                res.exportChilrenResources(0, {
+                Tools.exportChilrenResources(res, 0, {
                     start: function (ctype) { },
                     write: function (data) {
                         callback(data);
@@ -1058,6 +1018,25 @@ class ResourceRequestContext {
                 }
                 else {
                     writer.end(callback);
+                }
+            });
+        }
+    }
+    exportAllResources(resourcePath, level, writer, incSource) {
+        let self = this;
+        let rres = this.getResourceResolver();
+        let base = this.getCurrentResourcePath();
+        if (resourcePath === '.' && this.currentResource) {
+            Tools.exportChilrenResources(this.currentResource, level, writer, incSource);
+        }
+        else {
+            resourcePath = Utils.absolute_path(resourcePath, base);
+            rres.resolveResource(resourcePath, function (res) {
+                if (res) {
+                    Tools.exportChilrenResources(res, level, writer, incSource);
+                }
+                else {
+                    writer.end(null);
                 }
             });
         }
@@ -1636,6 +1615,45 @@ class Tools {
             let bi = order.indexOf(b.getName());
             return (ai - bi);
         });
+    }
+    static exportChilrenResources(resource, level, writer, incSource) {
+        let processingc = 0;
+        let processingd = 0;
+        let processingn = 0;
+        let done = function () {
+            if (processingc === 0 && processingd === 0 && processingn === 0) {
+                writer.end(null);
+            }
+        };
+        let export_children = function (path, name, res) {
+            processingc++;
+            processingd++;
+            res.exportData(function (data) {
+                if (name)
+                    data.values[':name'] = name;
+                if (path)
+                    data.values[':path'] = path;
+                writer.write(data);
+                processingd--;
+                done();
+            });
+            res.listChildrenNames(function (names) {
+                processingn += names.length;
+                for (var i = 0; i < names.length; i++) {
+                    let name = names[i];
+                    res.resolveChildResource(name, function (r) {
+                        let rpath = Utils.filename_path_append(path, name);
+                        export_children(rpath, name, r);
+                        processingn--;
+                        done();
+                    });
+                }
+                processingc--;
+                done();
+            });
+        };
+        writer.start('object/javascript');
+        export_children(incSource ? resource.getName() : '', resource.getName(), resource);
     }
     static visitAllChidren(res, resolve, callback) {
         let processing = 0;
