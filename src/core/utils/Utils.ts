@@ -115,8 +115,18 @@ class Utils {
     }
   }
 
-  public static absolute_path(path) {
+  public static absolute_path(path:string, cpath?:string) {
     if (!path) return null;
+
+    if (path.charAt(0) !== '/' && cpath) {
+      path = cpath+'/'+path;
+    }
+    else if (path === '.' && cpath) {
+      path = cpath;
+    }
+    else if (path.indexOf('./') == 0 && cpath) {
+      path = cpath+path.substr(1);
+    }
 
     let stack = path.split('/');
     let rv = [];

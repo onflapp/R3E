@@ -190,13 +190,18 @@ class DOMContentWriter implements ContentWriter {
   }
 
   public start(ctype) {
-    if (ctype.indexOf('text/') == 0) this.htmldata = [];
-    else {
+    if (ctype && ctype.indexOf('text/') == 0) {
+      this.htmldata = [];
+    }
+    else if (ctype) {
       this.extdata = window.open('about:blank');
       if (this.extdata) { //may happen if popup windows are blocked
         this.extdata.document.open(ctype);
         this.extdata.document.write('<pre>\n');
       }
+    }
+    else {
+      this.htmldata = [];
     }
   }
 
@@ -226,12 +231,13 @@ class DOMContentWriter implements ContentWriter {
     }
     this.htmldata = null;
     this.extdata = null;
+
+    this.requestHandler.handleEnd();
   }
 }
 
 class ClientRequestHandler extends ResourceRequestHandler {
   protected currentPath: string;
-  private deferHashChange: boolean;
 
   constructor(resourceResolver: ResourceResolver, templateResolver: ResourceResolver, contentWriter: DOMContentWriter) {
     let writer = contentWriter ? contentWriter : new DOMContentWriter();
@@ -240,11 +246,6 @@ class ClientRequestHandler extends ResourceRequestHandler {
     let self = this;
 
     window.addEventListener('hashchange', function (evt) {
-      if (self.deferHashChange) {
-        self.deferHashChange = false;
-        return;
-      }
-
       let path = window.location.hash.substr(1);
       if (path !== self.currentPath) {
         self.handleRequest(path);
@@ -252,21 +253,24 @@ class ClientRequestHandler extends ResourceRequestHandler {
     });
   }
 
-  protected setLocationHash(path: string) {
-    let self = this;
-    this.deferHashChange = true;
-    location.hash = path;
-    setTimeout(function() {
-      self.deferHashChange = false;
-    }, 10);
-  }
-
-  public forwardRequest(rpath: string) {
-    this.handleRequest(rpath);
-  }
-
   public sendStatus(code: number) {
     console.log('status:'+code);
+  }
+
+  public handleEnd() {
+    if (this.pendingForward) {
+      let p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + this.pendingForward;
+      if (p == window.location.toString()) {
+        let self = this;
+        let p = this.pendingForward;
+        setTimeout(function() {
+          self.handleRequest(p);
+        },10);
+      }
+      else {
+        window.location.replace(p);
+      }
+    }
   }
 
   public handleRequest(rpath: string) {
@@ -298,7 +302,6 @@ class ClientRequestHandler extends ResourceRequestHandler {
       this.refererPath = this.currentPath;
     }
     this.currentPath = rpath;
-    this.setLocationHash(rpath);
     super.renderRequest(rpath);
   }
 

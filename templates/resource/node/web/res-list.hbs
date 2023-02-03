@@ -40,7 +40,7 @@
   </div>
 
   <table>
-{{#include "." "properties"}}
+{{#include "." "keyvalues"}}
     <tr>
       <td>
         {{name}}
@@ -57,7 +57,7 @@
   {{#if isContentResource}}
     <tr>
       <td>
-        <a href="{{req_path path "edit"}}">{{name}}</a>
+        <a href="{{req_path path "edit"}}">{{or _.title name}}</a>
       </td>
       <td>
         {{contentType}} ({{contentSize}})
@@ -69,7 +69,7 @@
   {{else}}
     <tr>
       <td>
-        <a href="{{req_path path}}">{{name}}</a>
+        <a href="{{req_path path}}">{{or _.title name}}</a>
       </td>
       <td>
     {{#if renderType}}

@@ -116,9 +116,18 @@ class Utils {
             return ext;
         }
     }
-    static absolute_path(path) {
+    static absolute_path(path, cpath) {
         if (!path)
             return null;
+        if (path.charAt(0) !== '/' && cpath) {
+            path = cpath + '/' + path;
+        }
+        else if (path === '.' && cpath) {
+            path = cpath;
+        }
+        else if (path.indexOf('./') == 0 && cpath) {
+            path = cpath + path.substr(1);
+        }
         let stack = path.split('/');
         let rv = [];
         for (var i = 0; i < stack.length; i++) {
@@ -817,6 +826,7 @@ class ResourceRenderer {
                             writer.end(null);
                         })
                             .catch(function (err) {
+                            console.log(rend);
                             console.log(err);
                             self.renderError('unable to render selector:[' + sel + "]", res, err, writer);
                         });
@@ -907,6 +917,7 @@ class ResourceRequestContext {
     resolveResource(resourcePath) {
         let rres = this.getResourceResolver();
         let self = this;
+        let base = this.getCurrentResourcePath();
         return new Promise(function (resolve) {
             if (resourcePath === '.' && self.currentResource) {
                 let map = self.makePropertiesForResource(self.currentResource);
@@ -914,6 +925,7 @@ class ResourceRequestContext {
                 resolve(map);
             }
             else {
+                resourcePath = Utils.absolute_path(resourcePath, base);
                 rres.resolveResource(resourcePath, function (res) {
                     if (res) {
                         let map = self.makePropertiesForResource(res);
@@ -929,6 +941,8 @@ class ResourceRequestContext {
     }
     listResourceNames(resourcePath) {
         let self = this;
+        let rres = this.getResourceResolver();
+        let base = this.getCurrentResourcePath();
         return new Promise(function (resolve) {
             if (resourcePath === '.' && self.currentResource) {
                 self.currentResource.listChildrenNames(function (ls) {
@@ -936,34 +950,116 @@ class ResourceRequestContext {
                 });
             }
             else {
-                resolve([]);
+                resourcePath = Utils.absolute_path(resourcePath, base);
+                rres.resolveResource(resourcePath, function (res) {
+                    if (res) {
+                        res.listChildrenNames(function (ls) {
+                            resolve(ls);
+                        });
+                    }
+                    else {
+                        resolve(null);
+                    }
+                });
             }
         });
     }
-    listResources(resourcePath) {
+    listAllResourceNames(resourcePath, callback) {
         let self = this;
+        let rres = this.getResourceResolver();
+        let base = this.getCurrentResourcePath();
+        let ls = [];
+        return new Promise(function (resolve) {
+            let visit_all = function (res) {
+                Tools.visitAllChidren(res, false, function (rpath) {
+                    if (rpath) {
+                        let rv = callback(rpath);
+                        if (rv)
+                            ls.push(rpath);
+                        return rv;
+                    }
+                    else {
+                        resolve(ls);
+                        return false;
+                    }
+                });
+            };
+            if (resourcePath === '.' && self.currentResource) {
+                visit_all(self.currentResource);
+            }
+            else {
+                resourcePath = Utils.absolute_path(resourcePath, base);
+                rres.resolveResource(resourcePath, function (res) {
+                    if (res) {
+                        visit_all(self.currentResource);
+                    }
+                    else {
+                        resolve(null);
+                    }
+                });
+            }
+        });
+    }
+    listResources(resourcePath, cond) {
+        let self = this;
+        let rres = this.getResourceResolver();
         let base = this.getCurrentResourcePath();
         let res = self.currentResource;
         return new Promise(function (resolve) {
-            if (resourcePath === '.' && res) {
-                res.listChildrenResources(function (ls) {
-                    let rv = [];
-                    for (let i = 0; i < ls.length; i++) {
-                        let map = self.makePropertiesForResource(ls[i]);
-                        map['path'] = Utils.filename_path_append(base, ls[i].getName());
+            let return_list = function (ls) {
+                let rv = [];
+                for (let i = 0; i < ls.length; i++) {
+                    let map = self.makePropertiesForResource(ls[i]);
+                    map['path'] = Utils.filename_path_append(base, ls[i].getName());
+                    if (cond) {
+                        try {
+                            if (cond(map))
+                                rv.push(map);
+                        }
+                        catch (ex) {
+                            console.log(ex);
+                        }
+                    }
+                    else {
                         rv.push(map);
                     }
-                    resolve(rv);
-                });
+                }
+                resolve(rv);
+            };
+            if (resourcePath === '.' && res) {
+                res.listChildrenResources(return_list);
             }
             else {
-                resolve([]);
+                resourcePath = Utils.absolute_path(resourcePath, base);
+                rres.resolveResource(resourcePath, function (res) {
+                    base = resourcePath;
+                    if (res) {
+                        res.listChildrenResources(return_list);
+                    }
+                    else {
+                        resolve(null);
+                    }
+                });
             }
         });
     }
     readResource(resourcePath, writer, callback) {
+        let self = this;
+        let rres = this.getResourceResolver();
+        let base = this.getCurrentResourcePath();
         if (resourcePath === '.' && this.currentResource) {
             this.currentResource.read(writer, callback);
+        }
+        else {
+            resourcePath = Utils.absolute_path(resourcePath, base);
+            rres.resolveResource(resourcePath, function (res) {
+                if (res) {
+                    res.read(writer, callback);
+                }
+                else {
+                    writer.end(callback);
+                }
+            });
         }
     }
     resolveTemplateResource(resourcePath) {
@@ -1028,18 +1124,6 @@ class ResourceRequestContext {
         p['DATA_PATH'] = this.pathInfo.dataPath;
         p['DATA_NAME'] = this.pathInfo.dataName;
         p['RES_PATH'] = this.pathInfo.resourcePath;
-        let pplus = this.pathInfo.path;
-        if (pplus !== '/')
-            pplus = pplus + '/';
-        p['PATH_APPEND'] = pplus;
-        let dpplus = this.pathInfo.dirname;
-        if (dpplus !== '/')
-            dpplus = dpplus + '/';
-        p['DIRNAME_APPEND'] = dpplus;
-        let dplus = this.pathInfo.dataPath ? this.pathInfo.dataPath : '';
-        if (dplus !== '/')
-            dplus = dplus + '/';
-        p['DATA_PATH_APPEND'] = dplus;
         if (this.pathInfo.refererURL) {
             p['REF_URL'] = this.pathInfo.refererURL;
             p['REF_PATH'] = this.pathInfo.referer.path;
@@ -1116,6 +1200,10 @@ class ResourceRequestHandler extends EventDispatcher {
         this.templateResolver = templateResolver;
         this.contentWriter = new OrderedContentWriter(contentWriter);
         this.resourceRenderer = new ResourceRenderer(this.templateResolver);
+        this.valueTransformers = new Map();
+        this.valueTransformers['newUUID'] = function () {
+            return Utils.makeUUID();
+        };
         this.pathParserRegexp = new RegExp(/^(\/.*?)(\.x-([a-z,\-_]+))(\.([a-z0-9,\-\.]+))?(\/.*?)?$/);
         this.configProperties = {
             'X': '.x-'
@@ -1161,8 +1249,9 @@ class ResourceRequestHandler extends EventDispatcher {
                 let a = key.split('|');
                 for (var i = 1; i < a.length; i++) {
                     let t = a[i];
-                    if (t === 'newUUID' && !val) {
-                        val = Utils.makeUUID();
+                    let f = this.valueTransformers[t];
+                    if (f && !val) {
+                        val = f();
                     }
                     else if (!val) {
                         val = data[t];
@@ -1213,13 +1302,20 @@ class ResourceRequestHandler extends EventDispatcher {
         });
     }
     makeContext(pathInfo) {
-        if (!pathInfo)
-            return null;
-        pathInfo.refererURL = this.refererPath;
-        pathInfo.referer = this.parsePath(this.refererPath);
-        pathInfo.query = this.queryProperties;
-        let context = new ResourceRequestContext(pathInfo, this);
-        return context;
+        if (pathInfo) {
+            pathInfo.refererURL = this.refererPath;
+            pathInfo.referer = this.parsePath(this.refererPath);
+            pathInfo.query = this.queryProperties;
+            let context = new ResourceRequestContext(pathInfo, this);
+            return context;
+        }
+        else {
+            let pi = new PathInfo();
+            pi.path = '/';
+            pi.resourcePath = '/';
+            let context = new ResourceRequestContext(pi, this);
+            return context;
+        }
     }
     expandDataAndImport(resourcePath, data, callback) {
         let rres = this.resourceResolver;
@@ -1351,15 +1447,19 @@ class ResourceRequestHandler extends EventDispatcher {
     registerMakeRenderTypePatterns(func) {
         this.resourceRenderer.registerMakeRenderTypePatterns(func);
     }
+    registerValueTranformer(name, func) {
+        this.valueTransformers[name] = func;
+    }
     handleRequest(rpath) {
         this.renderRequest(rpath);
     }
     forwardRequest(rpath) {
-        this.renderRequest(rpath);
+        this.pendingForward = rpath;
     }
     sendStatus(code) {
     }
     renderRequest(rpath) {
+        this.pendingForward = null;
         let rres = this.resourceResolver;
         let rrend = this.resourceRenderer;
         let self = this;
@@ -1370,11 +1470,11 @@ class ResourceRequestHandler extends EventDispatcher {
         if (!this.contentWriter)
             throw new Error('no content writer');
         let info = this.parsePath(rpath);
-        let context = this.makeContext(info);
         let out = this.contentWriter.makeNestedContentWriter();
-        let sel = info.selector ? info.selector : 'default';
+        let context = this.makeContext(info);
         try {
             if (info) {
+                let sel = info.selector ? info.selector : 'default';
                 rres.resolveResource(info.resourcePath, function (res) {
                     if (!res) {
                         res = new NotFoundResource(info.resourcePath);
@@ -1449,6 +1549,7 @@ class ResourceRequestHandler extends EventDispatcher {
                     let forward = Utils.absolute_path(values[':forward']);
                     self.renderResource(info.resourcePath, null, info.selector, context, function (ctype, content) {
                         self.forwardRequest(forward);
+                        self.handleEnd();
                     });
                 }
                 else {
@@ -1459,6 +1560,7 @@ class ResourceRequestHandler extends EventDispatcher {
                                 self.forwardRequest(forward);
                             else
                                 self.renderRequest(rpath);
+                            self.handleEnd();
                         }
                         else {
                             render_error(error);
@@ -1523,6 +1625,8 @@ class ResourceRequestHandler extends EventDispatcher {
         catch (ex) {
             callback(new ErrorResource(ex));
         }
+    }
+    handleEnd() {
     }
 }
 class Tools {
@@ -2124,7 +2228,7 @@ class ErrorResource extends ObjectResource {
             err = obj;
         else
             err = '' + err;
-        super(err, '/');
+        super({ message: err }, '/');
     }
     getType() {
         return 'resource/error';
@@ -2134,8 +2238,12 @@ class ErrorResource extends ObjectResource {
     }
 }
 class NotFoundResource extends ObjectResource {
-    constructor(name) {
-        super({}, name);
+    constructor(path) {
+        let name = Utils.filename(path);
+        let data = {
+            notFoundPath: path
+        };
+        super(data, name);
     }
     getType() {
         return 'resource/notfound';
@@ -2293,11 +2401,6 @@ class HBSRendererFactory extends TemplateRendererFactory {
                     if (Array.isArray(content)) {
                         for (var i = 0; i < content.length; i++) {
                             let it = content[i];
-                            if (it) {
-                                it['R'] = block.data.root['R'];
-                                it['Q'] = block.data.root['Q'];
-                                it['C'] = block.data.root['C'];
-                            }
                             if (typeof block.fn === 'function')
                                 out += block.fn(it);
                             else
@@ -2306,11 +2409,6 @@ class HBSRendererFactory extends TemplateRendererFactory {
                     }
                     else {
                         let it = content;
-                        if (it) {
-                            it['R'] = block.data.root['R'];
-                            it['Q'] = block.data.root['Q'];
-                            it['C'] = block.data.root['C'];
-                        }
                         if (typeof block.fn === 'function')
                             out += block.fn(it);
                         else
@@ -2961,14 +3059,18 @@ class DOMContentWriter {
         this.requestHandler = requestHandler;
     }
     start(ctype) {
-        if (ctype.indexOf('text/') == 0)
+        if (ctype && ctype.indexOf('text/') == 0) {
             this.htmldata = [];
-        else {
+        }
+        else if (ctype) {
             this.extdata = window.open('about:blank');
             if (this.extdata) {
                 this.extdata.document.open(ctype);
                 this.extdata.document.write('<pre>\n');
             }
+        }
+        else {
+            this.htmldata = [];
         }
     }
     write(content) {
@@ -2997,6 +3099,7 @@ class DOMContentWriter {
         }
         this.htmldata = null;
         this.extdata = null;
+        this.requestHandler.handleEnd();
     }
 }
 class ClientRequestHandler extends ResourceRequestHandler {
@@ -3006,29 +3109,29 @@ class ClientRequestHandler extends ResourceRequestHandler {
         writer.setRequestHandler(this);
         let self = this;
         window.addEventListener('hashchange', function (evt) {
-            if (self.deferHashChange) {
-                self.deferHashChange = false;
-                return;
-            }
             let path = window.location.hash.substr(1);
             if (path !== self.currentPath) {
                 self.handleRequest(path);
             }
         });
     }
-    setLocationHash(path) {
-        let self = this;
-        this.deferHashChange = true;
-        location.hash = path;
-        setTimeout(function () {
-            self.deferHashChange = false;
-        }, 10);
-    }
-    forwardRequest(rpath) {
-        this.handleRequest(rpath);
-    }
     sendStatus(code) {
         console.log('status:' + code);
+    }
+    handleEnd() {
+        if (this.pendingForward) {
+            let p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + this.pendingForward;
+            if (p == window.location.toString()) {
+                let self = this;
+                let p = this.pendingForward;
+                setTimeout(function () {
+                    self.handleRequest(p);
+                }, 10);
+            }
+            else {
+                window.location.replace(p);
+            }
+        }
     }
     handleRequest(rpath) {
         var path = rpath;
@@ -3055,7 +3158,6 @@ class ClientRequestHandler extends ResourceRequestHandler {
             this.refererPath = this.currentPath;
         }
         this.currentPath = rpath;
-        this.setLocationHash(rpath);
         super.renderRequest(rpath);
     }
     parseFormData(action, data) {

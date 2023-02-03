@@ -18,7 +18,7 @@
 {{#include "." "parents"}}
     <li>{{name}}</li>
 {{/include}}
-    <li>{{R.NAME}}</li>
+    <li>{{name}}</li>
   </ol>
 
   <h1>to</h1>
@@ -55,7 +55,7 @@
       </tr>
     </table>
 
-    <input type="hidden" name=":copyto" value="{{R.DATA_PATH_APPEND}}{:name}">
+    <input type="hidden" name=":copyto" value="{{res_path R.DATA_PATH "{:name}"}}">
     <input type="hidden" name=":forward" value="{{req_path R.DATA_PATH "res-list"}}">
 
     <a target="_blank" href="{{C.P}}{{R.PATH}}{{C.X}}export">Export</a>
@@ -64,8 +64,8 @@
     <a href="{{C.P}}{{R.PATH}}{{C.X}}res-importto{{R.DATA_PATH}}">Import to...</a>
 {{/if}}
 
-    <a href="{{req_path R.PATH_APPEND "../" "res-list"}}">Cancel</a>
-    <input class="btn btn-success" type="submit" value="Copy">
+    <a href="{{req_path "../" "res-list"}}">Cancel</a>
+    <input type="submit" value="Copy">
   </form>
 
 </body>

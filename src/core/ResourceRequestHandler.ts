@@ -9,6 +9,9 @@ class ResourceRequestHandler extends EventDispatcher {
   private configResolver: ResourceResolver;
   private contentWriter: OrderedContentWriter;
   private resourceRenderer: ResourceRenderer;
+  private valueTransformers: Map<string, any>;
+
+  protected pendingForward: string; 
   protected refererPath: string;
   protected queryProperties: any;
   protected configProperties: any;
@@ -22,6 +25,12 @@ class ResourceRequestHandler extends EventDispatcher {
     this.templateResolver = templateResolver;
     this.contentWriter = new OrderedContentWriter(contentWriter);
     this.resourceRenderer = new ResourceRenderer(this.templateResolver);
+
+    //register default trandformers
+    this.valueTransformers = new Map();
+    this.valueTransformers['newUUID'] = function() {
+      return Utils.makeUUID();
+    };
 
     //set defaults for path parsing
     this.pathParserRegexp = new RegExp(/^(\/.*?)(\.x-([a-z,\-_]+))(\.([a-z0-9,\-\.]+))?(\/.*?)?$/);
@@ -78,8 +87,10 @@ class ResourceRequestHandler extends EventDispatcher {
         let a = key.split('|');
         for (var i = 1; i < a.length; i++) {
           let t = a[i];
-          if (t === 'newUUID' && !val) {
-            val = Utils.makeUUID();
+          let f = this.valueTransformers[t];
+
+          if (f && !val) {
+            val = f();
           }
           else if (!val) {
             val = data[t];
@@ -137,14 +148,21 @@ class ResourceRequestHandler extends EventDispatcher {
   }
 
   protected makeContext(pathInfo: PathInfo): ResourceRequestContext {
-    if (!pathInfo) return null;
+    if (pathInfo) {
+      pathInfo.refererURL = this.refererPath;
+      pathInfo.referer = this.parsePath(this.refererPath);
+      pathInfo.query = this.queryProperties;
 
-    pathInfo.refererURL = this.refererPath;
-    pathInfo.referer = this.parsePath(this.refererPath);
-    pathInfo.query = this.queryProperties;
-
-    let context = new ResourceRequestContext(pathInfo, this);
-    return context;
+      let context = new ResourceRequestContext(pathInfo, this);
+      return context;
+    }
+    else {
+      let pi = new PathInfo();
+      pi.path = '/';
+      pi.resourcePath = '/';
+      let context = new ResourceRequestContext(pi, this);
+      return context;
+    }
   }
 
   protected expandDataAndImport(resourcePath: string, data: any, callback) {
@@ -310,18 +328,24 @@ class ResourceRequestHandler extends EventDispatcher {
     this.resourceRenderer.registerMakeRenderTypePatterns(func);
   }
 
+  public registerValueTranformer(name: string, func: any) {
+    this.valueTransformers[name] = func;
+  }
+
   public handleRequest(rpath: string) {
     this.renderRequest(rpath);
   }
 
   public forwardRequest(rpath: string) {
-    this.renderRequest(rpath);
+    this.pendingForward = rpath;
   }
 
   public sendStatus(code: number) {
   }
 
   protected renderRequest(rpath: string) {
+    this.pendingForward = null;
+
     let rres = this.resourceResolver;
     let rrend = this.resourceRenderer;
     let self = this;
@@ -331,13 +355,13 @@ class ResourceRequestHandler extends EventDispatcher {
     if (!this.contentWriter) throw new Error('no content writer');
 
     let info = this.parsePath(rpath);
-    let context = this.makeContext(info);
     let out = this.contentWriter.makeNestedContentWriter();
-    let sel = info.selector?info.selector:'default';
+    let context = this.makeContext(info);
 
     try {
-
       if (info) {
+        let sel = info.selector?info.selector:'default';
+
         rres.resolveResource(info.resourcePath, function (res) {
           if (!res) {
             res = new NotFoundResource(info.resourcePath);
@@ -442,6 +466,7 @@ class ResourceRequestHandler extends EventDispatcher {
           let forward = Utils.absolute_path(values[':forward']);
           self.renderResource(info.resourcePath, null, info.selector, context, function(ctype, content) {
             self.forwardRequest(forward);
+            self.handleEnd();
           });
         }
         else {
@@ -451,6 +476,8 @@ class ResourceRequestHandler extends EventDispatcher {
 
               if (forward) self.forwardRequest(forward);
               else self.renderRequest(rpath);
+
+              self.handleEnd();
             }
             else {
               render_error(error);
@@ -519,5 +546,8 @@ class ResourceRequestHandler extends EventDispatcher {
     catch (ex) {
       callback(new ErrorResource(ex));
     }
+  }
+
+  public handleEnd() {
   }
 }

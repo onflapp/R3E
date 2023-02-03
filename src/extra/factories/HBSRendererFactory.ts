@@ -46,11 +46,6 @@ class HBSRendererFactory extends TemplateRendererFactory {
           if (Array.isArray(content)) {
             for (var i = 0; i < content.length; i++) {
               let it = content[i];
-              if (it) {
-                it['R'] = block.data.root['R'];
-                it['Q'] = block.data.root['Q'];
-                it['C'] = block.data.root['C'];
-              }
 
               if (typeof block.fn === 'function') out += block.fn(it);
               else out += JSON.stringify(it);
@@ -58,11 +53,6 @@ class HBSRendererFactory extends TemplateRendererFactory {
           }
           else {
             let it = content;
-            if (it) {
-              it['R'] = block.data.root['R'];
-              it['Q'] = block.data.root['Q'];
-              it['C'] = block.data.root['C'];
-            }
 
             if (typeof block.fn === 'function') out += block.fn(it);
             else out += JSON.stringify(it);

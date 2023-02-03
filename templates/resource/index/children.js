@@ -5,6 +5,7 @@
 
   if (qp && qp['q']) qry = qp['q'];
 
+  /*
   res.searchChildrenResources(qry, function (children) {
     var rv = [];
 
@@ -20,7 +21,8 @@
     }
 
     writer.write(rv);
-    writer.end();
   });
+  */
+  writer.end();
 
 })

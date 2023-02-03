@@ -1,11 +1,12 @@
-(function (res, writer, context) {
-  var path = context.getCurrentDataPath();
+(function (res, writer, ctx) {
+  var path = ctx.getCurrentDataPath();
 
-  res.read(new ContentWriterAdapter('utf8', function (buff) {
-    context.storeResource(path, {
+  ctx.readResource('.', new ContentWriterAdapter('utf8', function (buff) {
+    ctx.storeResource(path, {
       '_content':buff,
       ':import':path
-    }, function() {
+    }, 
+    function() {
       writer.start('text/plain');
       writer.write('done');
       writer.end();

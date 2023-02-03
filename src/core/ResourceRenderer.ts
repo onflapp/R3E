@@ -151,6 +151,7 @@ class ResourceRenderer {
               writer.end(null);
             })
             .catch(function(err) {
+              console.log(rend);
               console.log(err);
               self.renderError('unable to render selector:[' + sel + "]", res, err, writer);
             });

@@ -62,7 +62,9 @@ var defaultTemplates = new ObjectResource({
   'resource': {
     'error': {
       'default.func': function (res, writer, ctx) {
-        ctx.readResource('.', writer, null);
+        writer.start('text/html');
+        writer.write('<pre>'+res._['message']+'</pre>');
+        writer.end();
       }
     },
     'root': {
@@ -105,6 +107,12 @@ var handler = new ClientRequestHandler(rres, rtmp);
 // /cards/item1.x-json.-1.223/a/d
 handler.setPathParserPattern('^(\\/.*?)(\\.x-([a-z,\\-_]+))(\\.([a-z0-9,\\-\\.]+))?(\\/.*?)?$');
 handler.setConfigProperties(config);
+
+/*
+handler.registerValueTranformer('newUUID', function() {
+  return '1';
+});
+*/
 
 //register renderers
 handler.registerFactory('hbs', new HBSRendererFactory(), ['web']);

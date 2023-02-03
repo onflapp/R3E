@@ -19,12 +19,12 @@
 {{#include "." "parents"}}
     <li>{{name}}</li>
 {{/include}}
-    <li>{{R.NAME}}</li>
+    <li>{{name}}</li>
   </ol>
 
   <h5>Resource Node</h5>
   
-  <form method="post" action="{{R.PATH_APPEND}}{:name}">
+  <form method="post" action="{{res_path R.PATH "{:name}"}}">
     <input name=":name|newUUID" value="" autocomplete="off" placeholder="name">
 
     <select name="_rt">
@@ -41,7 +41,7 @@
 
   <h5>Create Empty File</h5>
 
-  <form method="post" action="{{R.PATH_APPEND}}{:name}">
+  <form method="post" action="{{res_path R.PATH "{:name}"}}">
     <input name=":name|newUUID" value="" autocomplete="off" placeholder="file name">
     <input type="hidden" name="_content" value=""></input>
     
@@ -51,7 +51,7 @@
 
   <h5>Upload File</h5>
 
-  <form method="post" enctype="multipart/form-data" action="{{R.PATH_APPEND}}{:name}">
+  <form method="post" enctype="multipart/form-data" action="{{res_path R.PATH "{:name}"}}">
     <input type="file" name=":filename" value="">
     <input name=":name|:filename|newUUID" value="" autocomplete="off" placeholder="file name">
     <input type="hidden" name=":forward" value="{{req_path "." "res-list"}}">

@@ -61,6 +61,8 @@ class ResourceRequestContext implements ScriptContext {
   public resolveResource(resourcePath: string) : Promise<any> {
     let rres = this.getResourceResolver();
     let self = this;
+    let base = this.getCurrentResourcePath();
+
     return new Promise(function (resolve) {
       if (resourcePath === '.' && self.currentResource) {
         let map = self.makePropertiesForResource(self.currentResource);
@@ -68,6 +70,7 @@ class ResourceRequestContext implements ScriptContext {
         resolve(map);
       }
       else {
+        resourcePath = Utils.absolute_path(resourcePath, base);
         rres.resolveResource(resourcePath, function(res) {
           if (res) {
             let map = self.makePropertiesForResource(res);
@@ -84,6 +87,9 @@ class ResourceRequestContext implements ScriptContext {
 
   public listResourceNames(resourcePath: string) : Promise<any> {
     let self = this;
+    let rres = this.getResourceResolver();
+    let base = this.getCurrentResourcePath();
+
     return new Promise(function (resolve) {
       if (resourcePath === '.' && self.currentResource) {
         self.currentResource.listChildrenNames(function(ls) {
@@ -91,37 +97,123 @@ class ResourceRequestContext implements ScriptContext {
         });
       }
       else {
-        resolve([]);
+        resourcePath = Utils.absolute_path(resourcePath, base);
+        rres.resolveResource(resourcePath, function(res) {
+          if (res) {
+            res.listChildrenNames(function(ls) {
+              resolve(ls);
+            });
+          }
+          else {
+            resolve(null);
+          }
+        });
       }
     });
   }
 
-  public listResources(resourcePath: string) : Promise<any> {
+  public listAllResourceNames(resourcePath: string, callback:any) : Promise<any> {
     let self = this;
+    let rres = this.getResourceResolver();
+    let base = this.getCurrentResourcePath();
+    let ls = [];
+
+    return new Promise(function (resolve) {
+      let visit_all = function(res) {
+        Tools.visitAllChidren(res, false, function(rpath) {
+          if (rpath) {
+            let rv = callback(rpath);
+            if (rv) ls.push(rpath);
+            return rv;
+          }
+          else {
+            resolve(ls);
+            return false;
+          }
+        });
+      };
+
+      if (resourcePath === '.' && self.currentResource) {
+        visit_all(self.currentResource);
+      }
+      else {
+        resourcePath = Utils.absolute_path(resourcePath, base);
+        rres.resolveResource(resourcePath, function(res) {
+          if (res) {
+            visit_all(self.currentResource);
+          }
+          else {
+            resolve(null);
+          }
+        });
+      }
+    });
+  }
+
+  public listResources(resourcePath: string, cond?:any) : Promise<any> {
+    let self = this;
+    let rres = this.getResourceResolver();
     let base = this.getCurrentResourcePath();
     let res = self.currentResource;
 
     return new Promise(function (resolve) {
-      if (resourcePath === '.' && res) {
-        res.listChildrenResources(function(ls) {
-          let rv = [];
-          for (let i = 0; i < ls.length; i++) {
-            let map = self.makePropertiesForResource(ls[i]);
-            map['path'] = Utils.filename_path_append(base, ls[i].getName());
+      let return_list = function(ls) {
+        let rv = [];
+        for (let i = 0; i < ls.length; i++) {
+          let map = self.makePropertiesForResource(ls[i]);
+          map['path'] = Utils.filename_path_append(base, ls[i].getName());
+
+          if (cond) {
+            try {
+              if (cond(map)) rv.push(map);
+            }
+            catch(ex) {
+              console.log(ex);
+            }
+          }
+          else {
             rv.push(map);
           }
-          resolve(rv);
-        });
+        }
+        resolve(rv);
+      };
+
+      if (resourcePath === '.' && res) {
+        res.listChildrenResources(return_list);
       }
       else {
-        resolve([]);
+        resourcePath = Utils.absolute_path(resourcePath, base);
+        rres.resolveResource(resourcePath, function(res) {
+          base = resourcePath;
+          if (res) {
+            res.listChildrenResources(return_list);
+          }
+          else {
+            resolve(null);
+          }
+        });
       }
     });
   }
 
   public readResource(resourcePath: string, writer: ContentWriter, callback: any) {
+    let self = this;
+    let rres = this.getResourceResolver();
+    let base = this.getCurrentResourcePath();
+
     if (resourcePath === '.' && this.currentResource) {
       this.currentResource.read(writer, callback);
+    }
+    else {
+      resourcePath = Utils.absolute_path(resourcePath, base);
+      rres.resolveResource(resourcePath, function(res) {
+        if (res) {
+          res.read(writer, callback);
+        }
+        else {
+          writer.end(callback);
+        }
+      });
     }
   }
 
@@ -193,18 +285,6 @@ class ResourceRequestContext implements ScriptContext {
     p['DATA_PATH'] = this.pathInfo.dataPath;
     p['DATA_NAME'] = this.pathInfo.dataName;
     p['RES_PATH'] = this.pathInfo.resourcePath;
-
-    let pplus = this.pathInfo.path;
-    if (pplus !== '/') pplus = pplus + '/';
-    p['PATH_APPEND'] = pplus;
-
-    let dpplus = this.pathInfo.dirname;
-    if (dpplus !== '/') dpplus = dpplus + '/';
-    p['DIRNAME_APPEND'] = dpplus;
-
-    let dplus = this.pathInfo.dataPath ? this.pathInfo.dataPath : '';
-    if (dplus !== '/') dplus = dplus + '/';
-    p['DATA_PATH_APPEND'] = dplus;
 
     if (this.pathInfo.refererURL) {
       p['REF_URL'] = this.pathInfo.refererURL;

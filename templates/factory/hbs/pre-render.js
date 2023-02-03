@@ -10,26 +10,26 @@
   var path_func = function () {
     var args = arguments;
     var context = args[args.length-1].data.root;
-    var last = args[args.length-2];
     var rv = [];
     var i = 0;
 
     if (context.C['APP_PREFIX']) rv.push(context.C['APP_PREFIX']);
     if (context.C['P']) rv.push(context.C['P']);
 
-    for (;i < (args.length-2); i++) {
+    for (;i < (args.length-1); i++) {
       var p = args[i];
-      if (i == 0 && p == '.') p = context.R['PATH'];
+      if (i == 0) {
+        if (p == '.') p = context.R['PATH'];
+        else p = Utils.absolute_path(p, context.R['PATH']);
+      }
+      else if (args.length > 2 && i == args.length-2) {
+        if (p !== '' && p.indexOf('.') === -1 && context.C['X']) rv.push(context.C['X']);
+      }
       rv.push(p);
     }
 
     if (args.length == 2) {
-      rv.push(last);
       if (context.R['SUFFIX']) rv.push(context.R['SUFFIX']);
-    }
-    else {
-      if (last && last.indexOf('.') === -1 && context.C['X']) rv.push(context.C['X']);
-      rv.push(last);
     }
 
     return rv.join('');
@@ -52,7 +52,9 @@
     var i = 0;
 
     for (;i < (args.length-1); i++) {
-      rv.push(args[i]);
+      var p = args[i];
+      if (i == 0 && p == '.') p = context.R['RES_PATH'];
+      rv.push(p);
     }
 
     return rv.join('');

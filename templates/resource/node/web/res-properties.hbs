@@ -19,32 +19,32 @@
 {{#include "." "parents"}}
     <li>{{name}}</li>
 {{/include}}
-    <li>{{R.NAME}}</li>
+    <li>{{name}}</li>
   </ol>
 
   <h4>properties:</h4>
 
-{{#include "." "properties"}}
+{{#include "." "keyvalues"}}
   <label>{{name}}</label>
   <input name="{{name}}" value="{{value}}" form="save_form" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false">
   
-  <form method="POST" action="{{R.PATH}}">
+  <form method="POST" action="{{res_path "."}}">
     <input type="hidden" name="{{name}}" value="">
     <input type="hidden" name=":forward" value="{{req_path}}">
     <button type="submit" name="{{name}}" value="">del</button>
   </form>
 {{/include}}
 
-  <form method="POST" action="{{R.PATH}}">
+  <form method="POST" action="{{res_path "."}}">
     <input name=":name" value="" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="name">
     <input name="{:name}" value="" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="value">
     <button type="submit" value="add">add</button>
     <input type="hidden" name=":forward" value="{{req_path R.PATH "res-properties"}}">
   </form>
 
-  <a href="{{req_path R.PATH "res-renderer"}}">Renderer Properties...</a>
+  <a href="{{req_path "." "res-renderer"}}">Renderer Properties...</a>
 
-  <form method="POST" id="save_form" action="{{R.PATH}}">
+  <form method="POST" id="save_form" action="{{res_path}}">
     <a href="{{req_path "." "res-list"}}">Cancel</a>
     <input type="hidden" name=":forward" value="{{req_path "." "res-list"}}">
     <input type="submit" value="Save">
