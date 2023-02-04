@@ -42,10 +42,7 @@ var rtmp = new r.MultiResourceResolver([userTemplate, systemTemplates, defaultTe
 var config = {
   'X': '.x-',
   'USER_TEMPLATES':'/user-templates',
-  'BOOTSTRAP_CSS': 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css',
-  'CODEMIRROR_JS': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/codemirror.min.js',
-  'CODEMIRROR_CSS': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/codemirror.min.css',
-  'CODEMIRROR_THEME': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/theme/solarized.min.css'
+  'BOOTSTRAP_CSS': 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css'
 };
 
 //handlers for GET and POST for express
@@ -83,5 +80,5 @@ app.post('/*', function (req, res) {
 
 //start the server and listen
 app.listen(3000, function () {
-  console.log('Example app listening on port 3000!')
+  console.log('http://localhost:3000');
 });

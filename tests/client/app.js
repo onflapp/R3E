@@ -94,11 +94,7 @@ var app_path = window.location.protocol + '//' + window.location.host + window.l
 var config = {
   'X': '.x-',
   'APP_PREFIX':app_path,
-  'USER_TEMPLATES':'/user-templates',
-  'BOOTSTRAP_CSS': 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css',
-  'CODEMIRROR_JS': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/codemirror.min.js',
-  'CODEMIRROR_CSS': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/codemirror.min.css',
-  'CODEMIRROR_THEME': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.43.0/theme/solarized.min.css'
+  'USER_TEMPLATES':'/user-templates'
 };
 
 var handler = new ClientRequestHandler(rres, rtmp);
