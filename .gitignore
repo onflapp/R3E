@@ -4,3 +4,4 @@ tests/client/private
 tags
 node_modules
 build
+.metadata.json
