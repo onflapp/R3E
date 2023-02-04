@@ -27,16 +27,16 @@ You can test and play with R3E right in your browser https://onflapp.github.io/R
 
 Where:
 
-resource <a href="https://onflapp.github.io/R3E/tests/client/app.html#/content/my%20simple%20web%20page.x-res-list" target="_blank">my simple web page</a>
-using template <a href="https://onflapp.github.io/R3E/tests/client/app.html#/user-templates/web/page/default.hbs.x-edit" target="_blank">web/page/default.hbs</a>
-will be rendered as <a href="https://onflapp.github.io/R3E/tests/client/app.html#/content/my%20simple%20web%20page">web page</a>
+resource <a href="https://onflapp.github.io/R3E/launch/client/app.html#/content/my%20simple%20web%20page.x-res-list" target="_blank">my simple web page</a>
+using template <a href="https://onflapp.github.io/R3E/launch/client/app.html#/user-templates/web/page/default.hbs.x-edit" target="_blank">web/page/default.hbs</a>
+will be rendered as <a href="https://onflapp.github.io/R3E/launch/client/app.html#/content/my%20simple%20web%20page">web page</a>
 
 ### server-side
 
 ```
 git clone https://github.com/onflapp/R3E.git
 npm install
-node ./tests/server/app.js
+node ./launch/server/app.js
 ```
 
 # Architecture
