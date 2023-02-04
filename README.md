@@ -23,7 +23,7 @@ Although R3E doesn't rely on traditional "repository" for storage, R3E resources
 
 ### client-side
 
-You can test and play with R3E right in your browser https://onflapp.github.io/R3E/tests/client/app.html
+You can test and play with R3E right in your browser https://onflapp.github.io/R3E/launch/client/app.html
 
 Where:
 
