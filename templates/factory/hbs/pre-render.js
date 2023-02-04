@@ -53,11 +53,11 @@
 
     for (;i < (args.length-1); i++) {
       var p = args[i];
-      if (i == 0 && p == '.') p = context.R['RES_PATH'];
       rv.push(p);
     }
 
-    return rv.join('');
+    var p = rv.join('/');
+    return Utils.absolute_path(p, context.R['RES_PATH']);
   });
 
   Handlebars.registerHelper('or', function () {

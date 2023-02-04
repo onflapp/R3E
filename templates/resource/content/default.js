@@ -1,3 +1,3 @@
-(function (res, writer, context) {
+(function (res, writer, ctx) {
   ctx.readResource('.', writer);
 });

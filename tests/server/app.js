@@ -58,7 +58,7 @@ app.get('/*', function (req, res) {
   handler.setConfigProperties(config);
 
   //registering renderers
-  handler.registerFactory('hbs', new r.HBSRendererFactory());
+  handler.registerFactory('hbs', new r.HBSRendererFactory(), ['web']);
   handler.registerFactory('js', new r.JSRendererFactory()); //javascript code which is going to be eval'd
   handler.registerFactory('func', new r.InterFuncRendererFactory()); //internal functions, usefull for function-based renderers
   handler.handleGetRequest(req);
@@ -74,13 +74,11 @@ app.post('/*', function (req, res) {
 
   //registering renderers
   var hbs = new r.HBSRendererFactory();
-  handler.registerFactory('hbs', hbs); //handlebar templates
+  handler.registerFactory('hbs', hbs, ['web']); //handlebar templates
   handler.registerFactory('js', new r.JSRendererFactory());
   handler.registerFactory('func', new r.InterFuncRendererFactory());
 
-  handler.transformObject(hbs, 'factory/hbs', 'init-helpers', null, function() { 
-    handler.handlePostRequest(req);
-  });
+  handler.handlePostRequest(req);
 });
 
 //start the server and listen

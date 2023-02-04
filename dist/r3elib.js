@@ -1086,7 +1086,7 @@ class ResourceRequestContext {
         let rres = this.getResourceResolver();
         let self = this;
         return new Promise(function (resolve) {
-            this.resourceRequestHandler.storeResource(resourcePath, data, function () {
+            self.resourceRequestHandler.storeResource(resourcePath, data, function () {
                 rres.resolveResource(resourcePath, function (res) {
                     resolve(res);
                 });
@@ -1593,6 +1593,9 @@ class ResourceRequestHandler extends EventDispatcher {
             }
             else if (importto) {
                 self.expandDataAndImport(resourcePath, data, function () {
+                    delete data[':import'];
+                    delete data['_ct'];
+                    delete data['_content'];
                     self.dispatchAllEventsAsync('stored', resourcePath, data);
                     storedata(resourcePath);
                 });
@@ -3081,11 +3084,9 @@ class DOMContentWriter {
             this.htmldata = [];
         }
         else if (ctype) {
-            this.extdata = window.open('about:blank');
-            if (this.extdata) {
-                this.extdata.document.open(ctype);
-                this.extdata.document.write('<pre>\n');
-            }
+            document.open(ctype);
+            document.write('<pre>');
+            this.extdata = document;
         }
         else {
             this.htmldata = [];
@@ -3096,11 +3097,10 @@ class DOMContentWriter {
             this.htmldata.push(content);
         else if (this.extdata) {
             if (typeof content != 'string') {
-                this.extdata.document.write(JSON.stringify(content));
+                this.extdata.write(JSON.stringify(content));
             }
             else {
-                let val = this.escapeHTML(content);
-                this.extdata.document.write(val);
+                this.extdata.write(content);
             }
         }
     }
@@ -3112,8 +3112,7 @@ class DOMContentWriter {
             this.updateDocument(this.htmldata.join(''));
         }
         else if (this.extdata) {
-            this.extdata.document.write('</pre>');
-            this.extdata.document.close();
+            this.extdata.close();
         }
         this.htmldata = null;
         this.extdata = null;

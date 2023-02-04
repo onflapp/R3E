@@ -66,13 +66,13 @@
   };
 
   if (path) {
-    context.resolveResource(path, function(ores) {
+    context.resolveResource(path).then(function(ores) {
       if (ores) {
         out = ores.getWriter();
         export_children();
       }
       else {
-        context.storeAndResolveResource(path, {'_content':''}, function(ores) {
+        context.storeAndResolveResource(path, {'_content':''}).then(function(ores) {
           out = ores.getWriter();
           export_children();
         });

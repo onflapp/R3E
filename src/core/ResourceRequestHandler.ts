@@ -535,6 +535,10 @@ class ResourceRequestHandler extends EventDispatcher {
       }
       else if (importto) {
         self.expandDataAndImport(resourcePath, data, function () {
+          delete data[':import'];
+          delete data['_ct'];
+          delete data['_content'];
+
           self.dispatchAllEventsAsync('stored', resourcePath, data);
           storedata(resourcePath);
         });

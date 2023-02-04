@@ -31,7 +31,7 @@
     <li class="active">{{R.DATA_NAME}}</li>
   </ol>
 
-  <form method="post" action="{{res_path "." "export"}}{{R.DATA_PATH}}/{:name}">
+  <form method="POST" action="{{res_path "."}}{{C.X}}export{{res_path R.DATA_PATH "{:name}"}}">
     <table>
 {{#include R.DATA_PATH "children"}}
   {{#if isContentResource}}
@@ -59,7 +59,7 @@
     </table>
 
     <input type="hidden" name=":forward" value="{{req_path R.DATA_PATH "res-list"}}">
-    <a class="btn btn-default" href="{{req_path "../" "res-list"}}">Cancel</a>
+    <a href="{{req_path "../" "res-list"}}">Cancel</a>
     <input type="submit" value="Export">
   </form>
 

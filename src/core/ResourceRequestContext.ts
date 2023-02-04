@@ -288,7 +288,7 @@ class ResourceRequestContext implements ScriptContext {
     let self = this;
 
     return new Promise(function (resolve) {
-      this.resourceRequestHandler.storeResource(resourcePath, data, function() {
+      self.resourceRequestHandler.storeResource(resourcePath, data, function() {
         rres.resolveResource(resourcePath, function(res) {
           resolve(res);
         });
