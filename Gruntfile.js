@@ -60,7 +60,7 @@ module.exports = function (grunt) {
       }
     },
     exec: {
-      archive_templates: '/bin/echo -n "window.templates=" > ./dist/templates.js ; node ./tests/server/files2json.js templates >> ./dist/templates.js'
+      archive_templates: '/bin/echo -n "window.templates=" > ./dist/templates.js ; node ./launch/server/files2json.js templates >> ./dist/templates.js'
     },
     copy: {
       dist: {
@@ -77,12 +77,12 @@ module.exports = function (grunt) {
     },
     appcache: {
       options: {
-        basePath: 'tests/client'
+        basePath: 'launch/client'
       },
       all: {
-        dest: 'tests/client/app.appcache',
+        dest: 'launch/client/app.appcache',
         cache: {
-          patterns: ['tests/client/app.js', 'dist/**/*.js']
+          patterns: ['launch/client/app.js', 'dist/**/*.js']
         },
         network: '*',
         xfallback: '/ /offline.html'
