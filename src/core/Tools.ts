@@ -1,4 +1,14 @@
 class Tools {
+  public static makeID(resource: Resource) {
+    let v = resource.getProperty('_lastid');
+    let n = Number.parseInt(v);
+    if (!n) n = 1;
+    else n++;
+
+    resource.values['_lastid'] = ''+n;
+    return n;
+  }
+
   public static reoderChildren(children, order) {
     children.sort(function (a, b) {
       let ai = order.indexOf(a.getName());

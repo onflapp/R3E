@@ -104,11 +104,16 @@ var handler = new ClientRequestHandler(rres, rtmp);
 handler.setPathParserPattern('^(\\/.*?)(\\.x-([a-z,\\-_]+))(\\.([a-z0-9,\\-\\.]+))?(\\/.*?)?$');
 handler.setConfigProperties(config);
 
-/*
-handler.registerValueTranformer('newUUID', function() {
-  return '1';
+handler.registerValueTranformer('newUUID', function(data) {
+  var lastid = Tools.makeID(userContent);
+  var n = 'item';
+
+  if (data && data['_rt'] && data['_rt'].length) {
+    n = data['_rt'].replaceAll('/', '_');
+  }
+
+  return n+'_'+lastid;
 });
-*/
 
 //register renderers
 handler.registerFactory('hbs', new HBSRendererFactory(), ['web']);

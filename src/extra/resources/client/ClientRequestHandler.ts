@@ -65,30 +65,36 @@ class DOMContentWriter implements ContentWriter {
   protected attachListeners() {
     let requestHandler = this.requestHandler;
     document.body.addEventListener('submit', function (evt) {
-      let target = evt.target as HTMLFormElement;
-      let action = target.getAttribute('action');
-      let info = requestHandler.parseFormElement(target);
       evt.preventDefault();
 
-      let forward = info.formData[':forward'];
-      if (forward && forward.indexOf('#')) {
-        info.formData[':forward'] = forward.substr(forward.indexOf('#')+1);
-      }
-      
-      if (target.method.toUpperCase() === 'POST') {
-        setTimeout(function () {
-          requestHandler.handleStore(info.formPath, info.formData);
-        });
-      }
-      else {
-        let q = [];
-        for (let k in info.formData) {
-          let v = info.formData[k];
-          q.push(k+'='+escape(v));
+      try {
+        let target = evt.target as HTMLFormElement;
+        let action = target.getAttribute('action');
+        let info = requestHandler.parseFormElement(target);
+
+        let forward = info.formData[':forward'];
+        if (forward && forward.indexOf('#')) {
+          info.formData[':forward'] = forward.substr(forward.indexOf('#')+1);
         }
-        setTimeout(function () {
-          requestHandler.handleRequest(action+'?'+q.join('&'));
-        },10);
+        
+        if (target.method.toUpperCase() === 'POST') {
+          setTimeout(function () {
+            requestHandler.handleStore(info.formPath, info.formData);
+          });
+        }
+        else {
+          let q = [];
+          for (let k in info.formData) {
+            let v = info.formData[k];
+            q.push(k+'='+escape(v));
+          }
+          setTimeout(function () {
+            requestHandler.handleRequest(action+'?'+q.join('&'));
+          },10);
+        }
+      }
+      catch(ex) {
+        console.log(ex);
       }
     });
 
@@ -372,7 +378,6 @@ class ClientRequestHandler extends ResourceRequestHandler {
       else {
         rv[name] = value;
       }
-
     }
 
     rv = this.transformValues(rv);

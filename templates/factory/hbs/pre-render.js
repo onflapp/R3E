@@ -180,5 +180,24 @@
     else return options.inverse(this);
   });
 
+  Handlebars.registerHelper('dump', function (block) {
+    if (!block) return '';
+    var rv = {};
+    var context = block['data']?block.data.root:block;
+
+    for (var key in context) {
+      var val = context[key];
+      if (key === '_') {
+        rv[key] = val;
+      }
+      else if (typeof val !== 'object') {
+        rv[key] = val;
+      }
+    }
+
+    //return new Handlebars.SafeString(JSON.stringify(rv));
+    return JSON.stringify(rv);
+  });
+
   writer.end();
 });

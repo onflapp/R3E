@@ -90,7 +90,7 @@ class ResourceRequestHandler extends EventDispatcher {
           let f = this.valueTransformers[t];
 
           if (f && !val) {
-            val = f();
+            val = f(data);
           }
           else if (!val) {
             val = data[t];

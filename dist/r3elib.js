@@ -951,7 +951,7 @@ class ResourceRequestContext {
                 resourcePath = Utils.absolute_path(resourcePath, base);
                 rres.resolveResource(resourcePath, function (res) {
                     if (res) {
-                        visit_all(self.currentResource);
+                        visit_all(res);
                     }
                     else {
                         resolve(null);
@@ -1230,7 +1230,7 @@ class ResourceRequestHandler extends EventDispatcher {
                     let t = a[i];
                     let f = this.valueTransformers[t];
                     if (f && !val) {
-                        val = f();
+                        val = f(data);
                     }
                     else if (!val) {
                         val = data[t];
@@ -1612,6 +1612,16 @@ class ResourceRequestHandler extends EventDispatcher {
     }
 }
 class Tools {
+    static makeID(resource) {
+        let v = resource.getProperty('_lastid');
+        let n = Number.parseInt(v);
+        if (!n)
+            n = 1;
+        else
+            n++;
+        resource.values['_lastid'] = '' + n;
+        return n;
+    }
     static reoderChildren(children, order) {
         children.sort(function (a, b) {
             let ai = order.indexOf(a.getName());
@@ -2461,20 +2471,6 @@ class HBSRendererFactory extends TemplateRendererFactory {
         };
         this.Handlebars.registerHelper('include', include);
         this.Handlebars.registerHelper('include-safe', include);
-        this.Handlebars.registerHelper('dump', function (block) {
-            var rv = {};
-            var context = block['data'] ? block.data.root : block;
-            for (var key in context) {
-                var val = context[key];
-                if (key === '_') {
-                    rv[key] = val;
-                }
-                else if (typeof val !== 'object') {
-                    rv[key] = val;
-                }
-            }
-            return JSON.stringify(rv);
-        });
     }
     compileTemplate(template) {
         return this.Handlebars.compile(template);
@@ -2991,28 +2987,33 @@ class DOMContentWriter {
     attachListeners() {
         let requestHandler = this.requestHandler;
         document.body.addEventListener('submit', function (evt) {
-            let target = evt.target;
-            let action = target.getAttribute('action');
-            let info = requestHandler.parseFormElement(target);
             evt.preventDefault();
-            let forward = info.formData[':forward'];
-            if (forward && forward.indexOf('#')) {
-                info.formData[':forward'] = forward.substr(forward.indexOf('#') + 1);
-            }
-            if (target.method.toUpperCase() === 'POST') {
-                setTimeout(function () {
-                    requestHandler.handleStore(info.formPath, info.formData);
-                });
-            }
-            else {
-                let q = [];
-                for (let k in info.formData) {
-                    let v = info.formData[k];
-                    q.push(k + '=' + escape(v));
+            try {
+                let target = evt.target;
+                let action = target.getAttribute('action');
+                let info = requestHandler.parseFormElement(target);
+                let forward = info.formData[':forward'];
+                if (forward && forward.indexOf('#')) {
+                    info.formData[':forward'] = forward.substr(forward.indexOf('#') + 1);
                 }
-                setTimeout(function () {
-                    requestHandler.handleRequest(action + '?' + q.join('&'));
-                }, 10);
+                if (target.method.toUpperCase() === 'POST') {
+                    setTimeout(function () {
+                        requestHandler.handleStore(info.formPath, info.formData);
+                    });
+                }
+                else {
+                    let q = [];
+                    for (let k in info.formData) {
+                        let v = info.formData[k];
+                        q.push(k + '=' + escape(v));
+                    }
+                    setTimeout(function () {
+                        requestHandler.handleRequest(action + '?' + q.join('&'));
+                    }, 10);
+                }
+            }
+            catch (ex) {
+                console.log(ex);
             }
         });
     }
