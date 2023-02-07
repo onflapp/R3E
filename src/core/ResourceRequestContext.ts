@@ -105,7 +105,7 @@ class ResourceRequestContext implements ScriptContext {
             });
           }
           else {
-            resolve(null);
+            resolve([]);
           }
         });
       }
@@ -143,7 +143,7 @@ class ResourceRequestContext implements ScriptContext {
             visit_all(res);
           }
           else {
-            resolve(null);
+            resolve([]);
           }
         });
       }
@@ -189,7 +189,7 @@ class ResourceRequestContext implements ScriptContext {
             res.listChildrenResources(return_list);
           }
           else {
-            resolve(null);
+            resolve([]);
           }
         });
       }

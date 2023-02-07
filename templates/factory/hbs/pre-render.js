@@ -60,6 +60,15 @@
     return Utils.absolute_path(p, context.R['RES_PATH']);
   });
 
+  Handlebars.registerHelper('set_Q', function (name, val, block) {
+    if (arguments.length == 3) {
+      var context = block.data.root._context
+      if (!context.pathInfo['query']) context.pathInfo['query'] = {};
+      context.pathInfo['query'][name] = val;
+    }
+    return '';
+  });
+
   Handlebars.registerHelper('or', function () {
     var args = arguments;
 
@@ -187,16 +196,13 @@
 
     for (var key in context) {
       var val = context[key];
-      if (key === '_') {
-        rv[key] = val;
-      }
-      else if (typeof val !== 'object') {
-        rv[key] = val;
-      }
+      if (key === '_context') continue;
+      if (key === '_session') continue;
+      
+      rv[key] = val;
     }
 
-    //return new Handlebars.SafeString(JSON.stringify(rv));
-    return JSON.stringify(rv);
+    return JSON.stringify(rv, null, 2);
   });
 
   writer.end();

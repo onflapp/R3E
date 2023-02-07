@@ -40,7 +40,7 @@
     let path = res['path'];
     context.exportAllResources(path, 0, {
       start: function (ctype) {
-        out.start('application/json');
+        out.start('application/package-json');
         out.write('[\n');
       },
       write: function (data) {

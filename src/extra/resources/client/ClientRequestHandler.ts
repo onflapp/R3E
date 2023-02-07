@@ -2,6 +2,7 @@ class DOMContentWriter implements ContentWriter {
   private requestHandler: ClientRequestHandler;
   private htmldata;
   private extdata;
+  private exttype;
   private externalResources = {};
 
   constructor() {}
@@ -199,49 +200,37 @@ class DOMContentWriter implements ContentWriter {
     if (ctype && ctype.indexOf('text/') == 0) {
       this.htmldata = [];
     }
-    else if (ctype) {
-      document.open(ctype);
-      document.write('<pre>');
-      this.extdata = document;
-    }
-    /*
-    else if (ctype) {
-      this.extdata = window.open('about:blank');
-      if (this.extdata) { //may happen if popup windows are blocked
-        this.extdata.document.open(ctype);
-        this.extdata.document.write('<pre>\n');
-      }
-    }
-   */
-    else {
+    else if (ctype && ctype == 'application/json') {
       this.htmldata = [];
+      this.htmldata.push('<pre>');
+    }
+    else {
+      this.exttype = ctype;
+      this.extdata = [];
     }
   }
 
   public write(content) {
     if (this.htmldata) this.htmldata.push(content);
-    else if (this.extdata) {
-      if (typeof content != 'string') {
-        this.extdata.write(JSON.stringify(content));
-      }
-      else {
-        this.extdata.write(content);
-      }
-    }
-
+    else if (this.extdata) this.extdata.push(content);
   }
+
   public error(error: Error) {
     console.log(error);
   }
+
   public end() {
     if (this.htmldata) {
       this.updateDocument(this.htmldata.join(''));
     }
     else if (this.extdata) {
-      this.extdata.close();
+      let blob = new Blob(this.extdata, {type:this.exttype})
+      let uri = window.URL.createObjectURL(blob)
+      window.location.replace(uri);
     }
     this.htmldata = null;
     this.extdata = null;
+    this.exttype = null;
 
     this.requestHandler.handleEnd();
   }

@@ -187,7 +187,9 @@ class Utils {
         if (ext === 'xml')
             return 'text/xml';
         if (ext === 'js')
-            return 'text/plain';
+            return 'text/javascript';
+        if (ext === 'css')
+            return 'text/css';
         if (ext === 'json')
             return 'text/plain';
         if (ext === 'md')
@@ -918,7 +920,7 @@ class ResourceRequestContext {
                         });
                     }
                     else {
-                        resolve(null);
+                        resolve([]);
                     }
                 });
             }
@@ -954,7 +956,7 @@ class ResourceRequestContext {
                         visit_all(res);
                     }
                     else {
-                        resolve(null);
+                        resolve([]);
                     }
                 });
             }
@@ -997,7 +999,7 @@ class ResourceRequestContext {
                         res.listChildrenResources(return_list);
                     }
                     else {
-                        resolve(null);
+                        resolve([]);
                     }
                 });
             }
@@ -3084,26 +3086,20 @@ class DOMContentWriter {
         if (ctype && ctype.indexOf('text/') == 0) {
             this.htmldata = [];
         }
-        else if (ctype) {
-            document.open(ctype);
-            document.write('<pre>');
-            this.extdata = document;
+        else if (ctype && ctype == 'application/json') {
+            this.htmldata = [];
+            this.htmldata.push('<pre>');
         }
         else {
-            this.htmldata = [];
+            this.exttype = ctype;
+            this.extdata = [];
         }
     }
     write(content) {
         if (this.htmldata)
             this.htmldata.push(content);
-        else if (this.extdata) {
-            if (typeof content != 'string') {
-                this.extdata.write(JSON.stringify(content));
-            }
-            else {
-                this.extdata.write(content);
-            }
-        }
+        else if (this.extdata)
+            this.extdata.push(content);
     }
     error(error) {
         console.log(error);
@@ -3113,10 +3109,13 @@ class DOMContentWriter {
             this.updateDocument(this.htmldata.join(''));
         }
         else if (this.extdata) {
-            this.extdata.close();
+            let blob = new Blob(this.extdata, { type: this.exttype });
+            let uri = window.URL.createObjectURL(blob);
+            window.location.replace(uri);
         }
         this.htmldata = null;
         this.extdata = null;
+        this.exttype = null;
         this.requestHandler.handleEnd();
     }
 }

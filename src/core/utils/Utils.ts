@@ -179,7 +179,8 @@ class Utils {
     if (ext === 'pdf') return 'application/pdf';
     if (ext === 'html' || ext === 'htm') return 'text/html';
     if (ext === 'xml') return 'text/xml';
-    if (ext === 'js') return 'text/plain';
+    if (ext === 'js') return 'text/javascript';
+    if (ext === 'css') return 'text/css';
     if (ext === 'json') return 'text/plain';
     if (ext === 'md') return 'text/x-markdown';
     if (ext === 'hbs') return 'text/plain';
