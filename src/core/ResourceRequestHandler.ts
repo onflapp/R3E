@@ -320,8 +320,8 @@ class ResourceRequestHandler extends EventDispatcher {
     this.configProperties = cfg;
   }
 
-  public registerFactory(typ: string, factory: RendererFactory, channels?: any) {
-    this.resourceRenderer.registerFactory(typ, factory, channels);
+  public registerFactory(typ: string, factory: RendererFactory) {
+    this.resourceRenderer.registerFactory(typ, factory);
   }
 
   public registerMakeRenderTypePatterns(func: MakeRenderTypePatternsFunction) {

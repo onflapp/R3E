@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+  <title>create</title>
+</head>
+
+<body>
+  
+  <ol>
+    <li>HOME</li>
+{{#include "." "parents"}}
+    <li>{{name}}</li>
+{{/include}}
+    <li>{{R.NAME}}</li>
+  </ol>
+
+  <h5>Create Renderer</h5>
+
+  <p>
+    Renderer template is resolved by scanning for a file matching specific naming convention pattern.
+  <p>
+    Pattern is composed of these parts: <br>
+    <span>resource type</span> - usually a directory<br>
+    <span>selector</span> - "default" or what gets appended after "{{C.X}}" like "json" for {{C.X}}json
+  <p>
+    for example:
+  <ul>
+    <li><span>web/mycomponent/</span><b>default.hbs</b></li>
+  </ul>
+
+  <form method="post" action="{{R.PATH}}/{:name}/{:sel}.{:ext}">
+    <select name=":ext">
+      <option value="hbs">handlebars</option>
+      <option value="js">javascript</option>
+    </select>
+
+    <input name=":name" value="{{R.DATA_PATH}}" placeholder="resource path" required="" autocomplete="off">
+    {{C.X}}
+    <input name=":sel" value="default" placeholder="selector" required="" autocomplete="off">
+    <input type="hidden" name="_content" value=""> 
+    <input type="hidden" name="_rt" value="resource/content"> 
+    <input type="hidden" name=":forward" value="{{req_path "." "/{:name}/{:sel}.{:ext}" "edit"}}">
+
+    <button type="submit" value="add">add</button>
+  </form>
+
+  <h5>Create Directory</h5>
+
+  <form method="post" action="{{res_path R.PATH "{:name}"}}">
+    <input name=":name" value="" required="" autocomplete="off">
+    <input type="hidden" name=":forward" value="{{req_path R.PATH "res-list"}}">
+
+    <button type="submit" value="add">add</button>
+  </form>
+
+  <a href="{{req_path "." "res-list"}}">Cancel</a>
+
+</body>
+
+</html>

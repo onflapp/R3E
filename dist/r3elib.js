@@ -678,22 +678,9 @@ class ResourceRenderer {
     constructor(resolver) {
         this.rendererResolver = resolver;
         this.rendererFactories = new Map();
-        this.rendererChannels = new Map();
         this.makeRenderTypePatterns = function (factoryType, renderType, name, sel) {
             let rv = [];
-            let channels = this.rendererChannels.get(factoryType);
-            if (!channels)
-                channels = [''];
-            if (sel === 'default') {
-                channels.forEach(function (val) {
-                    let p = val ? (val + '/') : '';
-                    rv.push(renderType + '/' + p + name + '.' + factoryType);
-                });
-            }
-            channels.forEach(function (val) {
-                let p = val ? (val + '/') : '';
-                rv.push(renderType + '/' + p + sel + '.' + factoryType);
-            });
+            rv.push(renderType + '/' + sel + '.' + factoryType);
             return rv;
         };
     }
@@ -752,11 +739,8 @@ class ResourceRenderer {
             this.makeRenderTypePatterns = func;
         }
     }
-    registerFactory(typ, factory, channels) {
+    registerFactory(typ, factory) {
         this.rendererFactories.set(typ, factory);
-        if (channels) {
-            this.rendererChannels.set(typ, channels);
-        }
     }
     renderError(message, resource, error, writer) {
         writer.start('text/plain');
@@ -1422,8 +1406,8 @@ class ResourceRequestHandler extends EventDispatcher {
     setConfigProperties(cfg) {
         this.configProperties = cfg;
     }
-    registerFactory(typ, factory, channels) {
-        this.resourceRenderer.registerFactory(typ, factory, channels);
+    registerFactory(typ, factory) {
+        this.resourceRenderer.registerFactory(typ, factory);
     }
     registerMakeRenderTypePatterns(func) {
         this.resourceRenderer.registerMakeRenderTypePatterns(func);
@@ -3108,7 +3092,7 @@ class DOMContentWriter {
         if (this.htmldata) {
             this.updateDocument(this.htmldata.join(''));
         }
-        else if (this.extdata) {
+        else if (this.extdata && this.extdata.length) {
             let blob = new Blob(this.extdata, { type: this.exttype });
             let uri = window.URL.createObjectURL(blob);
             window.location.replace(uri);
