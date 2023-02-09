@@ -134,7 +134,7 @@ class ResourceRequestHandler extends EventDispatcher {
     let selectors = [selector];
     let renderTypes = [];
 
-    if (data['renderTypes']) renderTypes = renderTypes.concat(data['renderTypes']);
+    if (data['_rt']) renderTypes = renderTypes.concat(data['_rt']);
     renderTypes.push('any');
 
     rrend.resolveRenderer(renderTypes, selectors, function (rend: ContentRendererFunction, error ? : Error) {

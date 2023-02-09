@@ -1,5 +1,5 @@
 (function (res, writer, ctx) {
-  if (res['isContentResource']) {
+  if (res && res['isContentResource']) {
     ctx.readResource('.', new ContentWriterAdapter('utf8', function (data, ctype) {
       writer.start('text/plain');
       writer.write(data);

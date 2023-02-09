@@ -238,11 +238,19 @@ class ResourceRequestContext implements ScriptContext {
     }
   }
 
-  public resolveTemplateResource(resourcePath: string) : Promise<Resource> {
-    let trres = this.getTemplateResourceResolver();
+  public resolveTemplateResourceContent(resourcePath: string) : Promise<string> {
+    let self = this;
+    let tres = this.getTemplateResourceResolver();
     return new Promise(function (resolve) {
-      trres.resolveResource(resourcePath, function(res) {
-        resolve(res);
+      tres.resolveResource(resourcePath, function(res) {
+        if (res && res.isContentResource()) {
+          res.read(new ContentWriterAdapter('utf8', function (buff) {
+            resolve(buff);
+          }), null);
+        }
+        else {
+          resolve(null);
+        }
       });
     });
   }
@@ -306,6 +314,9 @@ class ResourceRequestContext implements ScriptContext {
     p['DATA_PATH'] = this.pathInfo.dataPath;
     p['DATA_NAME'] = this.pathInfo.dataName;
     p['RES_PATH'] = this.pathInfo.resourcePath;
+
+    p['PARENT_NAME'] = Utils.filename(this.pathInfo.dirname);
+    p['PARENT_DIRNAME'] = Utils.filename_dir(this.pathInfo.dirname);
 
     if (this.pathInfo.refererURL) {
       p['REF_URL'] = this.pathInfo.refererURL;
