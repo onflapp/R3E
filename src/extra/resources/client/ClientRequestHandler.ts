@@ -223,7 +223,7 @@ class DOMContentWriter implements ContentWriter {
     if (this.htmldata) {
       this.updateDocument(this.htmldata.join(''));
     }
-    else if (this.extdata) {
+    else if (this.extdata && this.extdata.length) {
       let blob = new Blob(this.extdata, {type:this.exttype})
       let uri = window.URL.createObjectURL(blob)
       window.location.replace(uri);
@@ -247,9 +247,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
 
     window.addEventListener('hashchange', function (evt) {
       let path = window.location.hash.substr(1);
-      if (path !== self.currentPath) {
-        self.handleRequest(path);
-      }
+      self.handleRequest(path);
     });
   }
 
@@ -276,9 +274,9 @@ class ClientRequestHandler extends ResourceRequestHandler {
   public handleRequest(rpath: string) {
     var path = rpath;
     var x = rpath.indexOf('?');
+    var p = {};
     if (x > 0) {
       var q = rpath.substr(x+1);
-      var p = {};
       path = rpath.substr(0, x);
 
       var a = q.split('&');
@@ -291,9 +289,8 @@ class ClientRequestHandler extends ResourceRequestHandler {
           p[unescape(n)] = unescape(v);
         }
       }
-
-      this.queryProperties = p;
     }
+    this.queryProperties = p;
     this.renderRequest(path);
   }
 

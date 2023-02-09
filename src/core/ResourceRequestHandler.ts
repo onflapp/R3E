@@ -134,7 +134,7 @@ class ResourceRequestHandler extends EventDispatcher {
     let selectors = [selector];
     let renderTypes = [];
 
-    if (data['renderTypes']) renderTypes = renderTypes.concat(data['renderTypes']);
+    if (data['_rt']) renderTypes = renderTypes.concat(data['_rt']);
     renderTypes.push('any');
 
     rrend.resolveRenderer(renderTypes, selectors, function (rend: ContentRendererFunction, error ? : Error) {
@@ -320,8 +320,8 @@ class ResourceRequestHandler extends EventDispatcher {
     this.configProperties = cfg;
   }
 
-  public registerFactory(typ: string, factory: RendererFactory, channels?: any) {
-    this.resourceRenderer.registerFactory(typ, factory, channels);
+  public registerFactory(typ: string, factory: RendererFactory) {
+    this.resourceRenderer.registerFactory(typ, factory);
   }
 
   public registerMakeRenderTypePatterns(func: MakeRenderTypePatternsFunction) {

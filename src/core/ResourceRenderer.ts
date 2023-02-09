@@ -21,29 +21,18 @@ interface MakeRenderTypePatternsFunction {
 class ResourceRenderer {
   protected rendererResolver: ResourceResolver;
   protected rendererFactories: Map<string,RendererFactory>;
-  protected rendererChannels: Map<string, any>;
   protected makeRenderTypePatterns: MakeRenderTypePatternsFunction;
 
   constructor(resolver: ResourceResolver) {
     this.rendererResolver = resolver;
     this.rendererFactories = new Map();
-    this.rendererChannels = new Map();
 
     this.makeRenderTypePatterns = function(factoryType: string, renderType: string, name: string, sel: string): Array <string> {
       let rv = [];
-      let channels = this.rendererChannels.get(factoryType);
-      if (!channels) channels = [''];
 
-      if (sel === 'default') {
-        channels.forEach(function(val) {
-          let p = val?(val+'/'):'';
-          rv.push(renderType + '/' + p + name + '.' + factoryType);
-        });
-      }
-      channels.forEach(function(val) {
-        let p = val?(val+'/'):'';
-        rv.push(renderType + '/' + p + sel + '.' + factoryType);
-      });
+      // web/page/edit.hbs
+      // web/page/default.hbs
+      rv.push(renderType + '/' + sel + '.' + factoryType);
 
       return rv;
     };
@@ -111,11 +100,8 @@ class ResourceRenderer {
     }
   }
 
-  public registerFactory(typ: string, factory: RendererFactory, channels?: any) {
+  public registerFactory(typ: string, factory: RendererFactory) {
     this.rendererFactories.set(typ, factory);
-    if (channels) {
-      this.rendererChannels.set(typ, channels);
-    }
   }
 
   protected renderError(message: string, resource: Resource, error: Error, writer: ContentWriter) {

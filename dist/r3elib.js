@@ -678,22 +678,9 @@ class ResourceRenderer {
     constructor(resolver) {
         this.rendererResolver = resolver;
         this.rendererFactories = new Map();
-        this.rendererChannels = new Map();
         this.makeRenderTypePatterns = function (factoryType, renderType, name, sel) {
             let rv = [];
-            let channels = this.rendererChannels.get(factoryType);
-            if (!channels)
-                channels = [''];
-            if (sel === 'default') {
-                channels.forEach(function (val) {
-                    let p = val ? (val + '/') : '';
-                    rv.push(renderType + '/' + p + name + '.' + factoryType);
-                });
-            }
-            channels.forEach(function (val) {
-                let p = val ? (val + '/') : '';
-                rv.push(renderType + '/' + p + sel + '.' + factoryType);
-            });
+            rv.push(renderType + '/' + sel + '.' + factoryType);
             return rv;
         };
     }
@@ -752,11 +739,8 @@ class ResourceRenderer {
             this.makeRenderTypePatterns = func;
         }
     }
-    registerFactory(typ, factory, channels) {
+    registerFactory(typ, factory) {
         this.rendererFactories.set(typ, factory);
-        if (channels) {
-            this.rendererChannels.set(typ, channels);
-        }
     }
     renderError(message, resource, error, writer) {
         writer.start('text/plain');
@@ -1043,11 +1027,19 @@ class ResourceRequestContext {
             });
         }
     }
-    resolveTemplateResource(resourcePath) {
-        let trres = this.getTemplateResourceResolver();
+    resolveTemplateResourceContent(resourcePath) {
+        let self = this;
+        let tres = this.getTemplateResourceResolver();
         return new Promise(function (resolve) {
-            trres.resolveResource(resourcePath, function (res) {
-                resolve(res);
+            tres.resolveResource(resourcePath, function (res) {
+                if (res && res.isContentResource()) {
+                    res.read(new ContentWriterAdapter('utf8', function (buff) {
+                        resolve(buff);
+                    }), null);
+                }
+                else {
+                    resolve(null);
+                }
             });
         });
     }
@@ -1105,6 +1097,8 @@ class ResourceRequestContext {
         p['DATA_PATH'] = this.pathInfo.dataPath;
         p['DATA_NAME'] = this.pathInfo.dataName;
         p['RES_PATH'] = this.pathInfo.resourcePath;
+        p['PARENT_NAME'] = Utils.filename(this.pathInfo.dirname);
+        p['PARENT_DIRNAME'] = Utils.filename_dir(this.pathInfo.dirname);
         if (this.pathInfo.refererURL) {
             p['REF_URL'] = this.pathInfo.refererURL;
             p['REF_PATH'] = this.pathInfo.referer.path;
@@ -1270,8 +1264,8 @@ class ResourceRequestHandler extends EventDispatcher {
         let rrend = this.resourceRenderer;
         let selectors = [selector];
         let renderTypes = [];
-        if (data['renderTypes'])
-            renderTypes = renderTypes.concat(data['renderTypes']);
+        if (data['_rt'])
+            renderTypes = renderTypes.concat(data['_rt']);
         renderTypes.push('any');
         rrend.resolveRenderer(renderTypes, selectors, function (rend, error) {
             if (rend) {
@@ -1422,8 +1416,8 @@ class ResourceRequestHandler extends EventDispatcher {
     setConfigProperties(cfg) {
         this.configProperties = cfg;
     }
-    registerFactory(typ, factory, channels) {
-        this.resourceRenderer.registerFactory(typ, factory, channels);
+    registerFactory(typ, factory) {
+        this.resourceRenderer.registerFactory(typ, factory);
     }
     registerMakeRenderTypePatterns(func) {
         this.resourceRenderer.registerMakeRenderTypePatterns(func);
@@ -2420,7 +2414,7 @@ class HBSRendererFactory extends TemplateRendererFactory {
                 selector = arguments[2];
                 block = arguments[3];
             }
-            let safe = (block.name === 'include-safe') ? true : false;
+            let safe = (block.name === 'include_safe') ? true : false;
             let session = block.data.root._session;
             let context = block.data.root._context;
             let res = block.data.root._resource;
@@ -2472,7 +2466,7 @@ class HBSRendererFactory extends TemplateRendererFactory {
             return p.placeholder;
         };
         this.Handlebars.registerHelper('include', include);
-        this.Handlebars.registerHelper('include-safe', include);
+        this.Handlebars.registerHelper('include_safe', include);
     }
     compileTemplate(template) {
         return this.Handlebars.compile(template);
@@ -3108,7 +3102,7 @@ class DOMContentWriter {
         if (this.htmldata) {
             this.updateDocument(this.htmldata.join(''));
         }
-        else if (this.extdata) {
+        else if (this.extdata && this.extdata.length) {
             let blob = new Blob(this.extdata, { type: this.exttype });
             let uri = window.URL.createObjectURL(blob);
             window.location.replace(uri);
@@ -3127,9 +3121,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
         let self = this;
         window.addEventListener('hashchange', function (evt) {
             let path = window.location.hash.substr(1);
-            if (path !== self.currentPath) {
-                self.handleRequest(path);
-            }
+            self.handleRequest(path);
         });
     }
     sendStatus(code) {
@@ -3153,9 +3145,9 @@ class ClientRequestHandler extends ResourceRequestHandler {
     handleRequest(rpath) {
         var path = rpath;
         var x = rpath.indexOf('?');
+        var p = {};
         if (x > 0) {
             var q = rpath.substr(x + 1);
-            var p = {};
             path = rpath.substr(0, x);
             var a = q.split('&');
             for (var i = 0; i < a.length; i++) {
@@ -3166,8 +3158,8 @@ class ClientRequestHandler extends ResourceRequestHandler {
                     p[unescape(n)] = unescape(v);
                 }
             }
-            this.queryProperties = p;
         }
+        this.queryProperties = p;
         this.renderRequest(path);
     }
     renderRequest(rpath) {

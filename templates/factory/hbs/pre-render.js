@@ -189,6 +189,40 @@
     else return options.inverse(this);
   });
 
+  Handlebars.registerHelper('include_css', function (path, block) {
+    if (!block) return '';
+
+    var context = block.data.root._context;
+    var session = block.data.root._session;
+    var p = session.makeOutputPlaceholder();
+
+    context.resolveTemplateResourceContent(path).then(function(buff) {
+      if (buff) {
+        p.write('<style>'+buff+'</style>');
+      }
+      p.end();
+    });
+
+    return p.placeholder;
+  });
+
+  Handlebars.registerHelper('include_js', function (path, block) {
+    if (!block) return '';
+
+    var context = block.data.root._context;
+    var session = block.data.root._session;
+    var p = session.makeOutputPlaceholder();
+
+    context.resolveTemplateResourceContent(path).then(function(buff) {
+      if (buff) {
+        p.write('<script>'+buff+'</script>');
+      }
+      p.end();
+    });
+
+    return p.placeholder;
+  });
+
   Handlebars.registerHelper('dump', function (block) {
     if (!block) return '';
     var rv = {};

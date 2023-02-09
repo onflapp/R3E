@@ -32,7 +32,7 @@ class HBSRendererFactory extends TemplateRendererFactory {
         block = arguments[3];
       }
 
-      let safe = (block.name === 'include-safe') ? true : false;
+      let safe = (block.name === 'include_safe') ? true : false;
       let session: TemplateRendererSession = block.data.root._session;
       let context: ResourceRequestContext = block.data.root._context;
       let res: Resource = block.data.root._resource;
@@ -89,7 +89,7 @@ class HBSRendererFactory extends TemplateRendererFactory {
     //include "/path" "render/type" "sel"
 
     this.Handlebars.registerHelper('include', include);
-    this.Handlebars.registerHelper('include-safe', include);
+    this.Handlebars.registerHelper('include_safe', include);
   }
 
   protected compileTemplate(template: string): any {

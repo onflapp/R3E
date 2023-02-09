@@ -5,28 +5,39 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
   <title>mount</title>
 </head>
 
 <body>
   
   <ol>
-    <li>HOME</a></li>
+    <li>HOME</li>
 {{#include "." "parents"}}
     <li>{{name}}</li>
 {{/include}}
-    <li>{{R.NAME}}</li>
+    <li>{{name}}</li>
   </ol>
 
-  <h6>Create ObjectResource as:</h6>
+  <h5>Create ObjectResource as:</h5>
 
-  <form method="post" action="{{R.PATH}}{:name}">
+  <form method="post" action="{{res_path R.PATH "{:name}"}}">
     <input name=":name|newUUID" value="" autocomplete="off" placeholder="name">
     <input type="hidden" name=":forward" value="{{req_path R.PATH "res-list"}}">
     <button type="submit">add</button>
   </form>
+
+  <h5>Import File</h5>
   
-  <a class="btn btn-default" href="{{req_path R.PATH_APPEND "../" "res-list"}}">Cancel</a>
+  <form method="post" enctype="multipart/form-data" action="{{R.PATH}}">
+    <input type="file" name=":import" value="">
+    <input type="hidden" name=":forward" value="{{req_path "." "res-list"}}">
+
+    <button type="submit">add</button>
+  </form>
+
+  <a href="{{req_path "." "res-list"}}">Cancel</a>
 
 </body>
 </html>

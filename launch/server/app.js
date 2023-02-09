@@ -54,7 +54,7 @@ app.get('/*', function (req, res) {
   handler.setConfigProperties(config);
 
   //registering renderers
-  handler.registerFactory('hbs', new r.HBSRendererFactory(), ['web']);
+  handler.registerFactory('hbs', new r.HBSRendererFactory());
   handler.registerFactory('js', new r.JSRendererFactory()); //javascript code which is going to be eval'd
   handler.registerFactory('func', new r.InterFuncRendererFactory()); //internal functions, usefull for function-based renderers
   handler.handleGetRequest(req);
