@@ -67,9 +67,15 @@ class ResourceRequestHandler extends EventDispatcher {
     for (let key in rv1) {
       let val = rv1[key];
 
-      if (key.indexOf('{:') === 0) {
-        let nkey = rv1[key.substr(1, key.length - 2)];
-        if (nkey) rv2[nkey] = val;
+      if (key.indexOf('{:') !== -1) {
+        for (let xkey in rv1) {
+          if (xkey.charAt(0) === ':' && key.indexOf(xkey) > 0) {
+            key = key.split('{'+xkey+'}').join(rv1[xkey]);
+            if (key) {
+              rv2[key] = val;
+            }
+          }
+        }
       }
       else {
         rv2[key] = val;

@@ -224,6 +224,11 @@ class DOMContentWriter implements ContentWriter {
       this.updateDocument(this.htmldata.join(''));
     }
     else if (this.extdata && this.extdata.length) {
+      if ('object/javascript' == this.exttype) {
+        let d = JSON. stringify(this.extdata[0]);
+        this.extdata = [d];
+        this.exttype = 'application/json';
+      }
       let blob = new Blob(this.extdata, {type:this.exttype})
       let uri = window.URL.createObjectURL(blob)
       window.location.replace(uri);
