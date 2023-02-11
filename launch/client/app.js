@@ -92,16 +92,16 @@ var app_path = window.location.protocol + '//' + window.location.host + window.l
 
 //configuration which is passed through context to the renderer, accessible as C.something
 var config = {
-  'X': '@',
+  'X': '.@',
   'APP_PREFIX':app_path,
   'USER_TEMPLATES':'/user-templates'
 };
 
 var handler = new ClientRequestHandler(rres, rtmp);
 
-// [path]@[selector].[selectorArgs][dataPath]
-// /cards/item1@json.-1.223/a/d
-handler.setPathParserPattern('^(\\/.*?)(@([a-z,\\-_]+))(\\.([a-z0-9,\\-\\.]+))?(\\/.*?)?$');
+// [path].@[selector][dataPath]
+// /cards/item1.@json/a/d
+handler.setPathParserPattern('^(?<path>\\/.*?)(\\.@(?<selector>[a-z\\-_]+)(?<dataPath>\\/.*?)?)?$');
 handler.setConfigProperties(config);
 
 handler.registerValueTranformer('newUUID', function(data) {
@@ -138,5 +138,5 @@ window.addEventListener('storage', function() {
 
 //start by listing content of the root resource
 var path = location.hash.substr(1);
-if (!path) path = '/@res-list';
+if (!path) path = '/.@res-list';
 handler.handleRequest(path);

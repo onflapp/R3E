@@ -40,7 +40,7 @@ var rtmp = new r.MultiResourceResolver([userTemplate, systemTemplates, defaultTe
 
 //configuration which is passed through context to the renderers
 var config = {
-  'X': '.x-',
+  'X': '.@',
   'USER_TEMPLATES':'/user-templates',
 };
 
@@ -48,9 +48,9 @@ var config = {
 app.get('/*', function (req, res) {
   var handler = new r.ServerRequestHandler(rres, rtmp, res);
 
-  // [path].x-[selector].[selectorArgs][dataPath]
-  // /cards/item1.x-json.-1.223/a/d
-  handler.setPathParserPattern('^(\\/.*?)(\\.x-([a-z,\\-_]+))(\\.([a-z0-9,\\-\\.]+))?(\\/.*?)?$');
+  // [path].@[selector][dataPath]
+  // /cards/item1.@json/a/d
+  handler.setPathParserPattern('^(?<path>\\/.*?)(\\.@(?<selector>[a-z\\-_]+)(?<dataPath>\\/.*?)?)?$');
   handler.setConfigProperties(config);
 
   //registering renderers
@@ -63,9 +63,9 @@ app.get('/*', function (req, res) {
 app.post('/*', function (req, res) {
   var handler = new r.ServerRequestHandler(rres, rtmp, res);
 
-  // [path].x-[selector].[selectorArgs][dataPath]
-  // /cards/item1.x-json.-1.223/a/d
-  handler.setPathParserPattern('^(\\/.*?)(\\.x-([a-z,\\-_]+))(\\.([a-z0-9,\\-\\.]+))?(\\/.*?)?$');
+  // [path].@[selector][dataPath]
+  // /cards/item1.@json/a/d
+  handler.setPathParserPattern('^(?<path>\\/.*?)(\\.@(?<selector>[a-z]+)(?<dataPath>\\/.*?)?)?$');
   handler.setConfigProperties(config);
 
   //registering renderers
