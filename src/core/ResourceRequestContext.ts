@@ -13,10 +13,6 @@ class ResourceRequestContext implements ScriptContext {
     this.pathInfo.resourcePath = resourcePath;
   }
 
-  public __overrideCurrentSelector(selector :string) {
-    this.pathInfo.selector = selector;
-  }
-
   public __overrideCurrentRenderResourceType(rstype :string) {
     this.renderResourceType = rstype;
   }

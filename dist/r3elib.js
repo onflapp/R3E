@@ -825,9 +825,6 @@ class ResourceRequestContext {
     __overrideCurrentResourcePath(resourcePath) {
         this.pathInfo.resourcePath = resourcePath;
     }
-    __overrideCurrentSelector(selector) {
-        this.pathInfo.selector = selector;
-    }
     __overrideCurrentRenderResourceType(rstype) {
         this.renderResourceType = rstype;
     }
@@ -1173,7 +1170,7 @@ class ResourceRequestHandler extends EventDispatcher {
         this.valueTransformers['newUUID'] = function () {
             return Utils.makeUUID();
         };
-        this.pathParserRegexp = new RegExp('^(?<path>\\/.*?)(\\.@(?<selector>[a-z]+)(?<dataPath>\\/.*?)?)?$');
+        this.pathParserRegexp = new RegExp('^(?<path>\\/.*?)(\\.@(?<selector>[a-z\\-_]+)(?<dataPath>\\/.*?)?)?$');
         this.configProperties = {
             'X': '.@'
         };
@@ -1464,7 +1461,6 @@ class ResourceRequestHandler extends EventDispatcher {
         let sel = selector ? selector : 'default';
         ncontext.__overrideCurrentResourcePath(resourcePath);
         ncontext.__overrideCurrentRenderResourceType(rstype);
-        ncontext.__overrideCurrentSelector(selector);
         try {
             if (resourcePath) {
                 rres.resolveResource(resourcePath, function (res) {
@@ -1505,7 +1501,7 @@ class ResourceRequestHandler extends EventDispatcher {
                 if (!storeto)
                     storeto = info.resourcePath;
                 if (info.selector && values[':forward']) {
-                    let forward = Utils.absolute_path(values[':forward']);
+                    let forward = values[':forward'];
                     self.renderResource(info.resourcePath, null, info.selector, context, function (ctype, content) {
                         self.forwardRequest(forward);
                         self.handleEnd();
@@ -1514,7 +1510,7 @@ class ResourceRequestHandler extends EventDispatcher {
                 else {
                     self.storeResource(storeto, values, function (error) {
                         if (!error) {
-                            let forward = Utils.absolute_path(values[':forward']);
+                            let forward = values[':forward'];
                             if (forward)
                                 self.forwardRequest(forward);
                             else

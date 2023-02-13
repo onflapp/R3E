@@ -382,7 +382,6 @@ class ResourceRequestHandler extends EventDispatcher {
 
     ncontext.__overrideCurrentResourcePath(resourcePath);
     ncontext.__overrideCurrentRenderResourceType(rstype);
-    ncontext.__overrideCurrentSelector(selector);
 
     try {
 
@@ -449,7 +448,7 @@ class ResourceRequestHandler extends EventDispatcher {
         if (!storeto) storeto = info.resourcePath;
 
         if (info.selector && values[':forward']) {
-          let forward = Utils.absolute_path(values[':forward']);
+          let forward = values[':forward'];
           self.renderResource(info.resourcePath, null, info.selector, context, function(ctype, content) {
             self.forwardRequest(forward);
             self.handleEnd();
@@ -458,7 +457,7 @@ class ResourceRequestHandler extends EventDispatcher {
         else {
           self.storeResource(storeto, values, function (error) {
             if (!error) {
-              let forward = Utils.absolute_path(values[':forward']);
+              let forward = values[':forward'];
 
               if (forward) self.forwardRequest(forward);
               else self.renderRequest(rpath);
