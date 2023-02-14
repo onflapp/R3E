@@ -62,7 +62,8 @@ class TemplateRendererSession {
       });
       for (let i = 0; i < ls.length; i++) {
         let it = ls[i];
-        text = text.replace(it.placeholder, it.toString());
+        let tt = it.toString();
+        text = text.split(it.placeholder).join(tt);
       }
 
       callback(text);
