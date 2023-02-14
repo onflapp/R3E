@@ -16,7 +16,6 @@ class ResourceRequestHandler extends EventDispatcher {
   protected queryProperties: any;
   protected configProperties: any;
   protected pathParserRegexp: RegExp;
-  protected pathContext: string;
 
   constructor(resourceResolver: ResourceResolver, templateResolver: ResourceResolver, contentWriter: ContentWriter) {
     super();
@@ -33,9 +32,9 @@ class ResourceRequestHandler extends EventDispatcher {
     };
 
     //set defaults for path parsing
-    this.pathParserRegexp = new RegExp(/^(\/.*?)(\.x-([a-z,\-_]+))(\.([a-z0-9,\-\.]+))?(\/.*?)?$/);
+    this.pathParserRegexp = new RegExp('^(?<path>\\/.*?)(\\.@(?<selector>[a-z\\-_]+)(?<dataPath>\\/.*?)?)?$');
     this.configProperties = {
-      'X': '.x-'
+      'X': '.@'
     };
   }
 
@@ -254,17 +253,13 @@ class ResourceRequestHandler extends EventDispatcher {
   }
 
   /**********************************************************
-   * default: (/^(\/.*?)(\.x-([a-z,\-_]+))(\.([a-z0-9,\-\.]+))?(\/.*?)?$/)
-   * /cards/item1.x-json.-1.223/a/d
-   * [path].x-[selector].[selectorArgs][dataPath]
+   * default: ^\\d*(?<path>\\/.*?)(@(?<selector>[a-z]+)(?<dataPath>\\/.*?)?)?$
+   * /cards/item1.@json/a/d
+   * [path].@[selector][dataPath]
    */
 
   public setPathParserPattern(pattern: string) {
     this.pathParserRegexp = new RegExp(pattern);
-  }
-
-  public setPathContext(pref) {
-    this.pathContext = pref;
   }
 
   public parsePath(rpath: string): PathInfo {
@@ -273,17 +268,12 @@ class ResourceRequestHandler extends EventDispatcher {
     let info = new PathInfo();
     let path = rpath.replace(/\/+/g, '/');
 
-    if (this.pathContext) path = path.substr(this.pathContext.length);
-
     let m = path.match(this.pathParserRegexp);
 
     if (m) {
-      info.dataPath = Utils.unescape(m[6] ? m[6] : null);
-      info.selectorArgs = m[5] ? m[5] : null;
-      info.path = Utils.unescape(Utils.absolute_path(m[1]));
-      info.selector = m[3];
-      info.suffix = m[2];
-
+      info.dataPath = Utils.unescape(m.groups.dataPath);
+      info.path = Utils.unescape(Utils.absolute_path(m.groups.path));
+      info.selector = m.groups.selector;
 
       info.dirname = Utils.filename_dir(info.path);
       info.name = Utils.filename(info.path);
@@ -292,16 +282,6 @@ class ResourceRequestHandler extends EventDispatcher {
       if (info.dataPath) info.dataPath = Utils.absolute_path(info.dataPath);
 
       info.dataName = Utils.filename(info.dataPath);
-
-      return info;
-    }
-    else if (path.charAt(0) === '/') {
-      info.path = Utils.unescape(Utils.absolute_path(path));
-      info.selector = null;
-
-      info.dirname = Utils.filename_dir(info.path);
-      info.name = Utils.filename(info.path);
-      info.resourcePath = info.path;
 
       return info;
     }
@@ -402,7 +382,6 @@ class ResourceRequestHandler extends EventDispatcher {
 
     ncontext.__overrideCurrentResourcePath(resourcePath);
     ncontext.__overrideCurrentRenderResourceType(rstype);
-    ncontext.__overrideCurrentSelector(selector);
 
     try {
 
@@ -469,7 +448,7 @@ class ResourceRequestHandler extends EventDispatcher {
         if (!storeto) storeto = info.resourcePath;
 
         if (info.selector && values[':forward']) {
-          let forward = Utils.absolute_path(values[':forward']);
+          let forward = values[':forward'];
           self.renderResource(info.resourcePath, null, info.selector, context, function(ctype, content) {
             self.forwardRequest(forward);
             self.handleEnd();
@@ -478,7 +457,7 @@ class ResourceRequestHandler extends EventDispatcher {
         else {
           self.storeResource(storeto, values, function (error) {
             if (!error) {
-              let forward = Utils.absolute_path(values[':forward']);
+              let forward = values[':forward'];
 
               if (forward) self.forwardRequest(forward);
               else self.renderRequest(rpath);

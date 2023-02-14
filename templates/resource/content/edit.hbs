@@ -28,10 +28,11 @@
 
 {{#match isTextContentResource}}
 
-  <form method="post" action="{{C.P}}{{R.PATH}}{{R.SUFFIX}}">
-    <a href="{{req_path R.DIRNAME_APPEND "res-list"}}">List</a>
+  <form method="post" action="{{res_path R.PATH}}">
+    <a href="{{req_path ".." "res-list"}}">List</a>
     
     <button type="submit">Save</button>
+    <input type="hidden" name=":forward" value="{{req_path "."}}">
 
     <textarea autocorrect="off" autocapitalize="none" autocomplete="off" autofocus="on" spellcheck="false" name="_content">{{include_safe "." "text"}}</textarea>
 

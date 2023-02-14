@@ -29,7 +29,10 @@
     }
 
     if (args.length == 2) {
-      if (context.R['SUFFIX']) rv.push(context.R['SUFFIX']);
+      if (context.R['SELECTOR']) {
+        rv.push(context.C['X']);
+        rv.push(context.R['SELECTOR']);
+      }
     }
 
     return rv.join('');

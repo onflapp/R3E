@@ -825,9 +825,6 @@ class ResourceRequestContext {
     __overrideCurrentResourcePath(resourcePath) {
         this.pathInfo.resourcePath = resourcePath;
     }
-    __overrideCurrentSelector(selector) {
-        this.pathInfo.selector = selector;
-    }
     __overrideCurrentRenderResourceType(rstype) {
         this.renderResourceType = rstype;
     }
@@ -1089,11 +1086,10 @@ class ResourceRequestContext {
     }
     getRequestProperties() {
         let p = {};
-        p['PREFIX'] = this.pathInfo.prefix;
-        p['SUFFIX'] = this.pathInfo.suffix;
         p['PATH'] = this.pathInfo.path;
         p['NAME'] = this.pathInfo.name;
         p['DIRNAME'] = this.pathInfo.dirname;
+        p['SELECTOR'] = this.pathInfo.selector;
         p['DATA_PATH'] = this.pathInfo.dataPath;
         p['DATA_NAME'] = this.pathInfo.dataName;
         p['RES_PATH'] = this.pathInfo.resourcePath;
@@ -1102,8 +1098,6 @@ class ResourceRequestContext {
         if (this.pathInfo.refererURL) {
             p['REF_URL'] = this.pathInfo.refererURL;
             p['REF_PATH'] = this.pathInfo.referer.path;
-            if (this.pathInfo.referer.suffix)
-                p['REF_SUFFIX'] = this.pathInfo.referer.suffix;
         }
         return p;
     }
@@ -1154,9 +1148,6 @@ class PathInfo {
         pi.dirname = this.dirname;
         pi.dirnames = this.dirnames;
         pi.selector = this.selector;
-        pi.selectorArgs = this.selectorArgs;
-        pi.prefix = this.prefix;
-        pi.suffix = this.suffix;
         pi.dataPath = this.dataPath;
         pi.dataName = this.dataName;
         pi.resourcePath = this.resourcePath;
@@ -1179,9 +1170,9 @@ class ResourceRequestHandler extends EventDispatcher {
         this.valueTransformers['newUUID'] = function () {
             return Utils.makeUUID();
         };
-        this.pathParserRegexp = new RegExp(/^(\/.*?)(\.x-([a-z,\-_]+))(\.([a-z0-9,\-\.]+))?(\/.*?)?$/);
+        this.pathParserRegexp = new RegExp('^(?<path>\\/.*?)(\\.@(?<selector>[a-z\\-_]+)(?<dataPath>\\/.*?)?)?$');
         this.configProperties = {
-            'X': '.x-'
+            'X': '.@'
         };
     }
     expandValue(val, data) {
@@ -1372,37 +1363,22 @@ class ResourceRequestHandler extends EventDispatcher {
     setPathParserPattern(pattern) {
         this.pathParserRegexp = new RegExp(pattern);
     }
-    setPathContext(pref) {
-        this.pathContext = pref;
-    }
     parsePath(rpath) {
         if (!rpath)
             return null;
         let info = new PathInfo();
         let path = rpath.replace(/\/+/g, '/');
-        if (this.pathContext)
-            path = path.substr(this.pathContext.length);
         let m = path.match(this.pathParserRegexp);
         if (m) {
-            info.dataPath = Utils.unescape(m[6] ? m[6] : null);
-            info.selectorArgs = m[5] ? m[5] : null;
-            info.path = Utils.unescape(Utils.absolute_path(m[1]));
-            info.selector = m[3];
-            info.suffix = m[2];
+            info.dataPath = Utils.unescape(m.groups.dataPath);
+            info.path = Utils.unescape(Utils.absolute_path(m.groups.path));
+            info.selector = m.groups.selector;
             info.dirname = Utils.filename_dir(info.path);
             info.name = Utils.filename(info.path);
             info.resourcePath = info.path;
             if (info.dataPath)
                 info.dataPath = Utils.absolute_path(info.dataPath);
             info.dataName = Utils.filename(info.dataPath);
-            return info;
-        }
-        else if (path.charAt(0) === '/') {
-            info.path = Utils.unescape(Utils.absolute_path(path));
-            info.selector = null;
-            info.dirname = Utils.filename_dir(info.path);
-            info.name = Utils.filename(info.path);
-            info.resourcePath = info.path;
             return info;
         }
         else {
@@ -1485,7 +1461,6 @@ class ResourceRequestHandler extends EventDispatcher {
         let sel = selector ? selector : 'default';
         ncontext.__overrideCurrentResourcePath(resourcePath);
         ncontext.__overrideCurrentRenderResourceType(rstype);
-        ncontext.__overrideCurrentSelector(selector);
         try {
             if (resourcePath) {
                 rres.resolveResource(resourcePath, function (res) {
@@ -1526,7 +1501,7 @@ class ResourceRequestHandler extends EventDispatcher {
                 if (!storeto)
                     storeto = info.resourcePath;
                 if (info.selector && values[':forward']) {
-                    let forward = Utils.absolute_path(values[':forward']);
+                    let forward = values[':forward'];
                     self.renderResource(info.resourcePath, null, info.selector, context, function (ctype, content) {
                         self.forwardRequest(forward);
                         self.handleEnd();
@@ -1535,7 +1510,7 @@ class ResourceRequestHandler extends EventDispatcher {
                 else {
                     self.storeResource(storeto, values, function (error) {
                         if (!error) {
-                            let forward = Utils.absolute_path(values[':forward']);
+                            let forward = values[':forward'];
                             if (forward)
                                 self.forwardRequest(forward);
                             else
@@ -2079,7 +2054,7 @@ class TemplateOutputPlaceholder {
         this.closed = false;
         let self = this;
         this.id = id;
-        this.placeholder = '[[' + id + ']]';
+        this.placeholder = '_D3EASW_' + id + '_G4FDH9_';
         this.session = session;
         setTimeout(function () {
             if (!self.closed) {

@@ -13,10 +13,6 @@ class ResourceRequestContext implements ScriptContext {
     this.pathInfo.resourcePath = resourcePath;
   }
 
-  public __overrideCurrentSelector(selector :string) {
-    this.pathInfo.selector = selector;
-  }
-
   public __overrideCurrentRenderResourceType(rstype :string) {
     this.renderResourceType = rstype;
   }
@@ -306,11 +302,10 @@ class ResourceRequestContext implements ScriptContext {
 
   public getRequestProperties(): any {
     let p = {};
-    p['PREFIX'] = this.pathInfo.prefix;
-    p['SUFFIX'] = this.pathInfo.suffix;
     p['PATH'] = this.pathInfo.path;
     p['NAME'] = this.pathInfo.name;
     p['DIRNAME'] = this.pathInfo.dirname;
+    p['SELECTOR'] = this.pathInfo.selector;
     p['DATA_PATH'] = this.pathInfo.dataPath;
     p['DATA_NAME'] = this.pathInfo.dataName;
     p['RES_PATH'] = this.pathInfo.resourcePath;
@@ -321,7 +316,6 @@ class ResourceRequestContext implements ScriptContext {
     if (this.pathInfo.refererURL) {
       p['REF_URL'] = this.pathInfo.refererURL;
       p['REF_PATH'] = this.pathInfo.referer.path;
-      if (this.pathInfo.referer.suffix) p['REF_SUFFIX'] = this.pathInfo.referer.suffix;
     }
 
     return p;
@@ -379,9 +373,6 @@ class PathInfo {
   public dirname: string;
   public dirnames: Array < string > ;
   public selector: string;
-  public selectorArgs: string;
-  public prefix: string;
-  public suffix: string;
   public dataPath: string;
   public dataName: string;
   public resourcePath: string;
@@ -397,9 +388,6 @@ class PathInfo {
     pi.dirname = this.dirname;
     pi.dirnames = this.dirnames;
     pi.selector = this.selector;
-    pi.selectorArgs = this.selectorArgs;
-    pi.prefix = this.prefix;
-    pi.suffix = this.suffix;
     pi.dataPath = this.dataPath;
     pi.dataName = this.dataName;
     pi.resourcePath = this.resourcePath;

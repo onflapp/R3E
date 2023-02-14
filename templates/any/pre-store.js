@@ -1,5 +1,5 @@
 (function (res, writer, ctx) {
-  res['modified_date'] = '' + new Date();
+  res['_md'] = '' + (new Date().getTime());
 
   writer.write(res);
   writer.end();
