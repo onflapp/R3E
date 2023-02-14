@@ -2,6 +2,7 @@ class ResourceRequestContext implements ScriptContext {
   private pathInfo: PathInfo;
   private resourceRequestHandler: ResourceRequestHandler;
   private renderResourceType: string;
+  private renderSelector: string;
   private currentResource: Resource;
 
   constructor(pathInfo: PathInfo, handler: ResourceRequestHandler) {
@@ -13,8 +14,20 @@ class ResourceRequestContext implements ScriptContext {
     this.pathInfo.resourcePath = resourcePath;
   }
 
-  public __overrideCurrentRenderResourceType(rstype :string) {
+  public setRenderResourceType(rstype :string) {
     this.renderResourceType = rstype;
+  }
+
+  public getRenderResourceType(): string {
+    return this.renderResourceType;
+  }
+
+  public setRenderSelector(sel :string) {
+    this.renderSelector = sel;
+  }
+
+  public getRenderSelector(): string {
+    return this.renderSelector;
   }
 
   public getCurrentSelector(): string {
@@ -31,10 +44,6 @@ class ResourceRequestContext implements ScriptContext {
 
   public getCurrentDataPath(): string {
     return this.pathInfo.dataPath;
-  }
-
-  public getCurrentRenderResourceType(): string {
-    return this.renderResourceType;
   }
 
   public getResourceResolver(): ResourceResolver {
@@ -362,6 +371,7 @@ class ResourceRequestContext implements ScriptContext {
 
   public clone(): ResourceRequestContext {
     let ctx = new ResourceRequestContext(this.pathInfo.clone(), this.resourceRequestHandler);
+    ctx.renderSelector = this.renderSelector;
     return ctx;
   }
 }

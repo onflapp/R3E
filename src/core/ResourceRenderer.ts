@@ -117,8 +117,8 @@ class ResourceRenderer {
     let selectors = [sel];
     let renderTypes = res.getRenderTypes();
 
-    if (context.getCurrentRenderResourceType()) { //override the render type from the context, if any
-      renderTypes = [context.getCurrentRenderResourceType()];
+    if (context.getRenderResourceType()) { //override the render type from the context, if any
+      renderTypes = [context.getRenderResourceType()];
     }
     else {
       renderTypes.push('any');

@@ -381,7 +381,8 @@ class ResourceRequestHandler extends EventDispatcher {
     let sel = selector ? selector : 'default';
 
     ncontext.__overrideCurrentResourcePath(resourcePath);
-    ncontext.__overrideCurrentRenderResourceType(rstype);
+    ncontext.setRenderResourceType(rstype);
+    ncontext.setRenderSelector(sel);
 
     try {
 

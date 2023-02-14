@@ -35,9 +35,8 @@ class HBSRendererFactory extends TemplateRendererFactory {
       let safe = (block.name === 'include_safe') ? true : false;
       let session: TemplateRendererSession = block.data.root._session;
       let context: ResourceRequestContext = block.data.root._context;
-      let res: Resource = block.data.root._resource;
 
-      if (!selector) selector = context.getCurrentSelector();
+      if (!selector) selector = context.getRenderSelector();
       if (!selector) selector = 'default';
 
       let render = function (contentType, content) {

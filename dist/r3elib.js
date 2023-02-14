@@ -754,8 +754,8 @@ class ResourceRenderer {
         let self = this;
         let selectors = [sel];
         let renderTypes = res.getRenderTypes();
-        if (context.getCurrentRenderResourceType()) {
-            renderTypes = [context.getCurrentRenderResourceType()];
+        if (context.getRenderResourceType()) {
+            renderTypes = [context.getRenderResourceType()];
         }
         else {
             renderTypes.push('any');
@@ -825,8 +825,17 @@ class ResourceRequestContext {
     __overrideCurrentResourcePath(resourcePath) {
         this.pathInfo.resourcePath = resourcePath;
     }
-    __overrideCurrentRenderResourceType(rstype) {
+    setRenderResourceType(rstype) {
         this.renderResourceType = rstype;
+    }
+    getRenderResourceType() {
+        return this.renderResourceType;
+    }
+    setRenderSelector(sel) {
+        this.renderSelector = sel;
+    }
+    getRenderSelector() {
+        return this.renderSelector;
     }
     getCurrentSelector() {
         return this.pathInfo.selector;
@@ -839,9 +848,6 @@ class ResourceRequestContext {
     }
     getCurrentDataPath() {
         return this.pathInfo.dataPath;
-    }
-    getCurrentRenderResourceType() {
-        return this.renderResourceType;
     }
     getResourceResolver() {
         return this.resourceRequestHandler.getResourceResolver();
@@ -1136,6 +1142,7 @@ class ResourceRequestContext {
     }
     clone() {
         let ctx = new ResourceRequestContext(this.pathInfo.clone(), this.resourceRequestHandler);
+        ctx.renderSelector = this.renderSelector;
         return ctx;
     }
 }
@@ -1460,7 +1467,8 @@ class ResourceRequestHandler extends EventDispatcher {
         let ncontext = context.clone();
         let sel = selector ? selector : 'default';
         ncontext.__overrideCurrentResourcePath(resourcePath);
-        ncontext.__overrideCurrentRenderResourceType(rstype);
+        ncontext.setRenderResourceType(rstype);
+        ncontext.setRenderSelector(sel);
         try {
             if (resourcePath) {
                 rres.resolveResource(resourcePath, function (res) {
@@ -2100,7 +2108,8 @@ class TemplateRendererSession {
             });
             for (let i = 0; i < ls.length; i++) {
                 let it = ls[i];
-                text = text.replace(it.placeholder, it.toString());
+                let tt = it.toString();
+                text = text.split(it.placeholder).join(tt);
             }
             callback(text);
             self.close();
@@ -2397,9 +2406,8 @@ class HBSRendererFactory extends TemplateRendererFactory {
             let safe = (block.name === 'include_safe') ? true : false;
             let session = block.data.root._session;
             let context = block.data.root._context;
-            let res = block.data.root._resource;
             if (!selector)
-                selector = context.getCurrentSelector();
+                selector = context.getRenderSelector();
             if (!selector)
                 selector = 'default';
             let render = function (contentType, content) {
