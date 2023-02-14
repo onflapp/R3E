@@ -2054,7 +2054,7 @@ class TemplateOutputPlaceholder {
         this.closed = false;
         let self = this;
         this.id = id;
-        this.placeholder = '[[' + id + ']]';
+        this.placeholder = '_D3EASW_' + id + '_G4FDH9_';
         this.session = session;
         setTimeout(function () {
             if (!self.closed) {

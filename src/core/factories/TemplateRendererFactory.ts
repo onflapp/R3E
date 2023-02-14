@@ -9,7 +9,7 @@ class TemplateOutputPlaceholder {
   constructor(id: number, session: TemplateRendererSession) {
     let self = this;
     this.id = id;
-    this.placeholder = '[[' + id + ']]';
+    this.placeholder = '_D3EASW_' + id + '_G4FDH9_';
     this.session = session;
 
     setTimeout(function () {
