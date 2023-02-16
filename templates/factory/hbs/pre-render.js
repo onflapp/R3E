@@ -38,6 +38,30 @@
     return rv.join('');
   };
 
+  var include_paths = function (tag, paths, block) {
+    var context = block.data.root._context;
+    var session = block.data.root._session;
+    var p = session.makeOutputPlaceholder();
+
+    var render_content = function(path) {
+      context.resolveTemplateResourceContent(path).then(function(buff) {
+        p.write(buff);
+
+        var pp = paths.shift();
+        if (pp) render_content(pp);
+        else {
+          p.write('</'+tag+'>');
+          p.end();
+        }
+      });
+    };
+
+    p.write('<'+tag+'>');
+    render_content(paths.shift());
+
+    return p.placeholder;
+  };
+
   Handlebars.registerHelper('ref_path', function () {
     var context = arguments[arguments.length-1].data.root;
     var refurl = context.R['REF_URL'];
@@ -192,38 +216,28 @@
     else return options.inverse(this);
   });
 
-  Handlebars.registerHelper('include_css', function (path, block) {
-    if (!block) return '';
+  Handlebars.registerHelper('include_css', function () {
+    if (arguments.length < 2) return ''
 
-    var context = block.data.root._context;
-    var session = block.data.root._session;
-    var p = session.makeOutputPlaceholder();
+    var block = arguments[arguments.length-1];
+    var args = [];
+    for (var i = 0; i < arguments.length-1; i++) {
+      args.push(arguments[i]);
+    }
 
-    context.resolveTemplateResourceContent(path).then(function(buff) {
-      if (buff) {
-        p.write('<style>'+buff+'</style>');
-      }
-      p.end();
-    });
-
-    return p.placeholder;
+    return include_paths.apply(this, ['style', args, block]);
   });
 
-  Handlebars.registerHelper('include_js', function (path, block) {
-    if (!block) return '';
+  Handlebars.registerHelper('include_js', function () {
+    if (arguments.length < 2) return ''
 
-    var context = block.data.root._context;
-    var session = block.data.root._session;
-    var p = session.makeOutputPlaceholder();
+    var block = arguments[arguments.length-1];
+    var args = [];
+    for (var i = 0; i < arguments.length-1; i++) {
+      args.push(arguments[i]);
+    }
 
-    context.resolveTemplateResourceContent(path).then(function(buff) {
-      if (buff) {
-        p.write('<script>'+buff+'</script>');
-      }
-      p.end();
-    });
-
-    return p.placeholder;
+    return include_paths.apply(this, ['script', args, block]);
   });
 
   Handlebars.registerHelper('dump', function (block) {

@@ -98,23 +98,6 @@ class DOMContentWriter implements ContentWriter {
         console.log(ex);
       }
     });
-
-    /*
-    document.body.addEventListener('click', function (evt) {
-      let target = evt.target as HTMLElement;
-      let href = target.getAttribute('href');
-      let tar = target.getAttribute('target');
-
-      if (!href) href = target.parentElement.getAttribute('href');
-      if (href && href.charAt(0) === '/' && evt.button === 0 && !evt.ctrlKey && !evt.altKey && !evt.shiftKey) {
-        evt.preventDefault();
-
-        setTimeout(function () {
-          requestHandler.handleRequest(href);
-        },10);
-      }
-    });
-   */
   }
 
   protected evaluateScripts() {
@@ -125,7 +108,7 @@ class DOMContentWriter implements ContentWriter {
 
       if (code && !script.src) {
         try {
-          eval(code);
+          window.eval(code);
         }
         catch (ex) {
           console.log(ex);
@@ -251,8 +234,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
     let self = this;
 
     window.addEventListener('hashchange', function (evt) {
-      let path = window.location.hash.substr(1);
-      self.handleRequest(path);
+      window.location.reload();
     });
   }
 
@@ -264,11 +246,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
     if (this.pendingForward) {
       let p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + this.pendingForward;
       if (p == window.location.toString()) {
-        let self = this;
-        let p = this.pendingForward;
-        setTimeout(function() {
-          self.handleRequest(p);
-        },10);
+        window.location.reload();
       }
       else {
         window.location.replace(p);
@@ -300,11 +278,10 @@ class ClientRequestHandler extends ResourceRequestHandler {
   }
 
   public renderRequest(rpath: string) {
-    if (rpath != this.currentPath) {
-      this.refererPath = this.currentPath;
-    }
+    this.refererPath = sessionStorage['__LAST_REQUEST_PATH'];
     this.currentPath = rpath;
     super.renderRequest(rpath);
+    sessionStorage['__LAST_REQUEST_PATH'] = rpath;
   }
 
   public parseFormData(action:string, data:any): ClientFormInfo {

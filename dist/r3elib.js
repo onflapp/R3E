@@ -3008,7 +3008,7 @@ class DOMContentWriter {
             let code = script.innerText;
             if (code && !script.src) {
                 try {
-                    eval(code);
+                    window.eval(code);
                 }
                 catch (ex) {
                     console.log(ex);
@@ -3113,8 +3113,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
         writer.setRequestHandler(this);
         let self = this;
         window.addEventListener('hashchange', function (evt) {
-            let path = window.location.hash.substr(1);
-            self.handleRequest(path);
+            window.location.reload();
         });
     }
     sendStatus(code) {
@@ -3124,11 +3123,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
         if (this.pendingForward) {
             let p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + this.pendingForward;
             if (p == window.location.toString()) {
-                let self = this;
-                let p = this.pendingForward;
-                setTimeout(function () {
-                    self.handleRequest(p);
-                }, 10);
+                window.location.reload();
             }
             else {
                 window.location.replace(p);
@@ -3156,11 +3151,10 @@ class ClientRequestHandler extends ResourceRequestHandler {
         this.renderRequest(path);
     }
     renderRequest(rpath) {
-        if (rpath != this.currentPath) {
-            this.refererPath = this.currentPath;
-        }
+        this.refererPath = sessionStorage['__LAST_REQUEST_PATH'];
         this.currentPath = rpath;
         super.renderRequest(rpath);
+        sessionStorage['__LAST_REQUEST_PATH'] = rpath;
     }
     parseFormData(action, data) {
         let rv = {};
