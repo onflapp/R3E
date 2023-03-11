@@ -41,6 +41,7 @@ module.exports = function (grunt) {
           "src/core/resources/IndexResource.ts",
           "src/extra/factories/HBSRendererFactory.ts",
           "src/extra/resources/StoredResource.ts",
+          "src/extra/resources/StoredObjectResource.ts",
           "src/extra/resources/client/RemoteResource.ts",
           "src/extra/resources/client/CachedRemoteTemplateResource.ts",
           "src/extra/resources/client/DOMTemplateResource.ts",

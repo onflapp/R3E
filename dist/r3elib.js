@@ -1876,12 +1876,12 @@ class ObjectResource extends Resource {
         let rv = this.values[name];
         if (typeof rv === 'object') {
             if (rv['_content'] || rv['_content64'] || rv['_pt'] === 'resource/content')
-                callback(new ObjectContentResource(rv, name));
+                callback(this.makeNewObjectContentResource(rv, name));
             else
-                callback(new ObjectResource(rv, name));
+                callback(this.makeNewObjectResource(rv, name));
         }
         else if (typeof rv === 'function') {
-            callback(new ObjectContentResource(rv, name));
+            callback(this.makeNewObjectContentResource(rv, name));
         }
         else {
             callback(null);
@@ -1910,6 +1910,12 @@ class ObjectResource extends Resource {
         delete this.values[name];
         if (callback)
             callback();
+    }
+    makeNewObjectContentResource(rv, name) {
+        return new ObjectContentResource(rv, name);
+    }
+    makeNewObjectResource(rv, name) {
+        return new ObjectResource(rv, name);
     }
 }
 class ObjectContentResourceWriter {
@@ -2648,6 +2654,11 @@ class StoredResource extends Resource {
         this.storeChildrenNames(function () {
             callback();
         });
+    }
+}
+class StoredObjectResource extends ObjectResource {
+    constructor(obj, name) {
+        super(obj, name);
     }
 }
 class RemoteResourceContentWriter {

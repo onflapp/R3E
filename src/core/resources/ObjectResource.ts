@@ -26,11 +26,11 @@ class ObjectResource extends Resource {
     let rv = this.values[name];
 
     if (typeof rv === 'object') {
-      if (rv['_content'] || rv['_content64'] || rv['_pt'] === 'resource/content') callback(new ObjectContentResource(rv, name));
-      else callback(new ObjectResource(rv, name));
+      if (rv['_content'] || rv['_content64'] || rv['_pt'] === 'resource/content') callback(this.makeNewObjectContentResource(rv, name));
+      else callback(this.makeNewObjectResource(rv, name));
     }
     else if (typeof rv === 'function') {
-      callback(new ObjectContentResource(rv, name));
+      callback(this.makeNewObjectContentResource(rv, name));
     }
     else {
       callback(null);
@@ -62,6 +62,14 @@ class ObjectResource extends Resource {
   public removeChildResource(name: string, callback) {
     delete this.values[name];
     if (callback) callback();
+  }
+
+  protected makeNewObjectContentResource(rv: any, name: string) {
+    return new ObjectContentResource(rv, name);
+  }
+
+  protected makeNewObjectResource(rv: any, name: string) {
+    return new ObjectResource(rv, name);
   }
 }
 
