@@ -121,6 +121,23 @@ class RemoteResource extends StoredResource {
         callback(true);
       }
       else {
+        self.tryLoadContent(callback);
+      }
+    });
+  }
+
+  protected tryLoadContent(callback) {
+    let url = this.getStoragePath();
+    let self = this;
+
+    this.remoteGET(url, false, function(data) {
+      if (data) {
+        self.values._pt = 'resource/content';
+        self.values._contentdata = data;
+        self.isDirectory = false;
+        callback(true);
+      }
+      else {
         callback(false);
       }
     });
@@ -138,6 +155,14 @@ class RemoteResource extends StoredResource {
 
   public read(writer: ContentWriter, callback: any) {
     if (this.isDirectory) {
+      writer.end(callback);
+    }
+    else if (this.values._contentdata) {
+      let ct = this.getContentType();
+      let data = this.values._contentdata;
+
+      writer.start(ct);
+      writer.write(data);
       writer.end(callback);
     }
     else {

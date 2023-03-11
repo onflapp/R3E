@@ -1890,7 +1890,7 @@ class ObjectResource extends Resource {
     allocateChildResource(name, callback) {
         let rv = {};
         this.values[name] = rv;
-        callback(new ObjectResource(rv, name));
+        callback(this.makeNewObjectResource(rv, name));
     }
     listChildrenNames(callback) {
         var rv = [];
@@ -1903,7 +1903,7 @@ class ObjectResource extends Resource {
         callback(rv);
     }
     importContent(func, callback) {
-        let res = new ObjectContentResource(this.values, this.resourceName);
+        let res = this.makeNewObjectContentResource(this.values, this.resourceName);
         func(res.getWriter(), callback);
     }
     removeChildResource(name, callback) {
@@ -2657,8 +2657,120 @@ class StoredResource extends Resource {
     }
 }
 class StoredObjectResource extends ObjectResource {
-    constructor(obj, name) {
-        super(obj, name);
+    constructor(obj, name, base, root) {
+        super({}, '');
+        this.loaded = false;
+        if (!root) {
+            this.storageResource = obj;
+            this.storagePath = name;
+            this.rootResource = null;
+            this.basePath = '';
+        }
+        else {
+            this.values = obj;
+            this.resourceName = name;
+            this.rootResource = root;
+            this.basePath = base;
+        }
+    }
+    resolveItself(callback) {
+        if (!this.rootResource && !this.loaded && this.storageResource) {
+            let self = this;
+            this.loadObjectResource(function () {
+                if (callback)
+                    callback(self);
+            });
+        }
+        else {
+            if (callback)
+                callback(this);
+        }
+    }
+    removeChildResource(name, callback) {
+        let self = this;
+        super.removeChildResource(name, function () {
+            self.storeObjectResource(function () {
+                if (callback)
+                    callback();
+            });
+        });
+    }
+    importContent(func, callback) {
+        let self = this;
+        let root = this.rootResource ? this.rootResource.storageResource : this.storageResource;
+        let path = Utils.filename_path_append(this.basePath, this.resourceName);
+        let rres = new ResourceResolver(root);
+        let data = new Data({
+            '_content': func
+        });
+        rres.storeResource(path, data, function () {
+            self.importProperties({
+                '_content': path
+            }, callback);
+        });
+    }
+    importProperties(data, callback) {
+        let self = this;
+        super.importProperties(data, function () {
+            self.storeObjectResource(function () {
+                callback();
+            });
+        });
+    }
+    loadObjectResource(callback) {
+        let self = this;
+        let path = this.storagePath;
+        let rres = new ResourceResolver(this.storageResource);
+        rres.resolveResource(path, function (res) {
+            if (res) {
+                res.read(new ContentWriterAdapter('utf8', function (data, ctype) {
+                    let rv = JSON.parse(data);
+                    if (rv) {
+                        self.values = rv;
+                    }
+                    callback();
+                }), null);
+            }
+            else {
+                callback();
+            }
+        });
+    }
+    storeObjectResource(callback) {
+        let vals = this.rootResource ? this.rootResource.values : this.values;
+        let path = this.rootResource ? this.rootResource.storagePath : this.storagePath;
+        let root = this.rootResource ? this.rootResource.storageResource : this.storageResource;
+        let json = JSON.stringify(vals);
+        let rres = new ResourceResolver(root);
+        let data = {
+            '_content': json
+        };
+        rres.storeResource(path, new Data(data), function () {
+            callback();
+        });
+    }
+    resolveChildResource(name, callback, walking) {
+        let rv = this.values[name];
+        let root = this.rootResource ? this.rootResource.storageResource : this.storageResource;
+        let rres = new ResourceResolver(root);
+        if (typeof rv === 'object') {
+            if (rv['_content'] && !walking) {
+                let path = rv['_content'];
+                rres.resolveResource(path, function (res) {
+                    callback(res);
+                });
+            }
+            else
+                callback(this.makeNewObjectResource(rv, name));
+        }
+        else {
+            callback(null);
+        }
+    }
+    makeNewObjectResource(rv, name) {
+        let root = this.rootResource ? this.rootResource : this;
+        let path = Utils.filename_path_append(this.basePath, this.resourceName);
+        return new StoredObjectResource(rv, name, path, root);
     }
 }
 class RemoteResourceContentWriter {
@@ -2759,6 +2871,21 @@ class RemoteResource extends StoredResource {
                 callback(true);
             }
             else {
+                self.tryLoadContent(callback);
+            }
+        });
+    }
+    tryLoadContent(callback) {
+        let url = this.getStoragePath();
+        let self = this;
+        this.remoteGET(url, false, function (data) {
+            if (data) {
+                self.values._pt = 'resource/content';
+                self.values._contentdata = data;
+                self.isDirectory = false;
+                callback(true);
+            }
+            else {
                 callback(false);
             }
         });
@@ -2773,6 +2900,13 @@ class RemoteResource extends StoredResource {
     }
     read(writer, callback) {
         if (this.isDirectory) {
+            writer.end(callback);
+        }
+        else if (this.values._contentdata) {
+            let ct = this.getContentType();
+            let data = this.values._contentdata;
+            writer.start(ct);
+            writer.write(data);
             writer.end(callback);
         }
         else {

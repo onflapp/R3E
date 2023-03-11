@@ -40,7 +40,7 @@ class ObjectResource extends Resource {
   public allocateChildResource(name: string, callback: ResourceCallback): void {
     let rv = {};
     this.values[name] = rv;
-    callback(new ObjectResource(rv, name));
+    callback(this.makeNewObjectResource(rv, name));
   }
 
   public listChildrenNames(callback: ChildrenNamesCallback) {
@@ -55,7 +55,7 @@ class ObjectResource extends Resource {
   }
 
   public importContent(func, callback) {
-    let res = new ObjectContentResource(this.values, this.resourceName);
+    let res = this.makeNewObjectContentResource(this.values, this.resourceName);
     func(res.getWriter(), callback);
   }
 
