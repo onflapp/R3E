@@ -5,7 +5,6 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-exec');
-  grunt.loadNpmTasks('grunt-appcache');
   grunt.loadNpmTasks("grunt-ts");
 
   grunt.initConfig({
@@ -75,19 +74,6 @@ module.exports = function (grunt) {
     },
     clean: {
       build: ['build/']
-    },
-    appcache: {
-      options: {
-        basePath: 'launch/client'
-      },
-      all: {
-        dest: 'launch/client/app.appcache',
-        cache: {
-          patterns: ['launch/client/app.js', 'dist/**/*.js']
-        },
-        network: '*',
-        xfallback: '/ /offline.html'
-      }
     }
   });
 
@@ -95,8 +81,7 @@ module.exports = function (grunt) {
   grunt.task.registerTask('default', [
     'ts:compile_lib',
     'copy:dist',
-    'exec:archive_templates',
-    'appcache:all'
+    'exec:archive_templates'
   ]);
 
 };
