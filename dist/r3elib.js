@@ -3216,6 +3216,32 @@ class ClientRequestHandler extends ResourceRequestHandler {
         return info;
     }
 }
+class SPARequestHandler extends ClientRequestHandler {
+    constructor(resourceResolver, templateResolver, contentWriter) {
+        super(resourceResolver, templateResolver, contentWriter);
+    }
+    handleEnd() {
+        if (this.pendingForward) {
+            let p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + this.pendingForward;
+            if (p == window.location.toString()) {
+                let self = this;
+                let p = this.pendingForward;
+                setTimeout(function () {
+                    self.handleRequest(p);
+                }, 10);
+            }
+            else {
+                window.location.replace(p);
+            }
+        }
+    }
+    renderRequest(rpath) {
+        this.refererPath = sessionStorage['__LAST_REQUEST_PATH'];
+        this.currentPath = rpath;
+        super.renderRequest(rpath);
+        sessionStorage['__LAST_REQUEST_PATH'] = rpath;
+    }
+}
 class ResponseContentWriter {
     constructor(res) {
         this.respose = res;
