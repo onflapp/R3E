@@ -2686,6 +2686,18 @@ class StoredObjectResource extends ObjectResource {
                 callback(this);
         }
     }
+    resolveChildResource(name, callback, walking) {
+        let rfunc = super.resolveChildResource;
+        let self = this;
+        if (!this.rootResource && !this.loaded && this.storageResource) {
+            this.loadObjectResource(function () {
+                rfunc.call(self, name, callback, walking);
+            });
+        }
+        else {
+            super.resolveChildResource(name, callback, walking);
+        }
+    }
     removeChildResource(name, callback) {
         let self = this;
         super.removeChildResource(name, function () {
@@ -2718,9 +2730,14 @@ class StoredObjectResource extends ObjectResource {
         });
     }
     loadObjectResource(callback) {
+        if (this.loaded) {
+            callback();
+            return;
+        }
         let self = this;
         let path = this.storagePath;
         let rres = new ResourceResolver(this.storageResource);
+        this.loaded = true;
         rres.resolveResource(path, function (res) {
             if (res) {
                 res.read(new ContentWriterAdapter('utf8', function (data, ctype) {
@@ -2740,7 +2757,7 @@ class StoredObjectResource extends ObjectResource {
         let vals = this.rootResource ? this.rootResource.values : this.values;
         let path = this.rootResource ? this.rootResource.storagePath : this.storagePath;
         let root = this.rootResource ? this.rootResource.storageResource : this.storageResource;
-        let json = JSON.stringify(vals);
+        let json = JSON.stringify(vals, null, 2);
         let rres = new ResourceResolver(root);
         let data = {
             '_content': json
@@ -2749,28 +2766,46 @@ class StoredObjectResource extends ObjectResource {
             callback();
         });
     }
-    resolveChildResource(name, callback, walking) {
-        let rv = this.values[name];
-        let root = this.rootResource ? this.rootResource.storageResource : this.storageResource;
-        let rres = new ResourceResolver(root);
-        if (typeof rv === 'object') {
-            if (rv['_content'] && !walking) {
-                let path = rv['_content'];
-                rres.resolveResource(path, function (res) {
-                    callback(res);
-                });
-            }
-            else
-                callback(this.makeNewObjectResource(rv, name));
-        }
-        else {
-            callback(null);
-        }
+    makeNewObjectContentResource(rv, name) {
+        let root = this.rootResource ? this.rootResource : this;
+        return new StoredObjectContentResource(rv, name, root.storageResource);
     }
     makeNewObjectResource(rv, name) {
         let root = this.rootResource ? this.rootResource : this;
         let path = Utils.filename_path_append(this.basePath, this.resourceName);
         return new StoredObjectResource(rv, name, path, root);
+    }
+}
+class StoredObjectContentResource extends ObjectContentResource {
+    constructor(obj, name, storage) {
+        super(obj, name);
+        this.storageResource = storage;
+    }
+    read(writer, callback) {
+        let rres = new ResourceResolver(this.storageResource);
+        let path = this.values['_content'];
+        rres.resolveResource(path, function (res) {
+            if (res) {
+                res.read(writer, callback);
+            }
+            else {
+                callback();
+            }
+        });
+    }
+    importContent(func, callback) {
+        let self = this;
+        let root = this.storageResource;
+        let path = this.values['_content'];
+        let rres = new ResourceResolver(root);
+        rres.resolveResource(path, function (res) {
+            if (res) {
+                res.importContent(func, callback);
+            }
+            else {
+                callback();
+            }
+        });
     }
 }
 class RemoteResourceContentWriter {
@@ -2861,19 +2896,43 @@ class RemoteResource extends StoredResource {
     loadProperties(callback) {
         let url = this.getMetadataPath();
         let self = this;
-        this.remoteGET(url, true, function (values) {
-            if (values) {
-                if (values._pt === 'resource/content')
-                    self.isDirectory = false;
-                if (typeof values._contentsz !== 'undefined')
-                    self.contentSize = values._contentsz;
-                self.values = values;
-                callback(true);
-            }
-            else {
-                self.tryLoadContent(callback);
-            }
-        });
+        if (this.resourceName.indexOf('.') > 0) {
+            self.tryLoadContent(function (rv) {
+                if (rv) {
+                    callback(true);
+                }
+                else {
+                    self.remoteGET(url, true, function (values) {
+                        if (values) {
+                            if (values._pt === 'resource/content')
+                                self.isDirectory = false;
+                            if (typeof values._contentsz !== 'undefined')
+                                self.contentSize = values._contentsz;
+                            self.values = values;
+                            callback(true);
+                        }
+                        else {
+                            callback(false);
+                        }
+                    });
+                }
+            });
+        }
+        else {
+            this.remoteGET(url, true, function (values) {
+                if (values) {
+                    if (values._pt === 'resource/content')
+                        self.isDirectory = false;
+                    if (typeof values._contentsz !== 'undefined')
+                        self.contentSize = values._contentsz;
+                    self.values = values;
+                    callback(true);
+                }
+                else {
+                    self.tryLoadContent(callback);
+                }
+            });
+        }
     }
     tryLoadContent(callback) {
         let url = this.getStoragePath();

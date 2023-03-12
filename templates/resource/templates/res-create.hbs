@@ -59,6 +59,15 @@
     <button type="submit" value="add">add</button>
   </form>
 
+  <h5>Import File</h5>
+  
+  <form method="post" enctype="multipart/form-data" action="{{res_path R.PATH}}">
+    <input type="file" name=":import" value="">
+    <input type="hidden" name=":forward" value="{{req_path R.PATH "res-list"}}">
+
+    <button type="submit">add</button>
+  </form>
+
   <a href="{{req_path "." "res-list"}}">Cancel</a>
 
 </body>

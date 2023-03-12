@@ -112,18 +112,41 @@ class RemoteResource extends StoredResource {
     let url = this.getMetadataPath();
     let self = this;
 
-    this.remoteGET(url, true, function(values) {
-      if (values) {
-        if (values._pt === 'resource/content') self.isDirectory = false;
-        if (typeof values._contentsz !== 'undefined') self.contentSize = values._contentsz;
+    if (this.resourceName.indexOf('.') > 0) { //assume this is a file name, try content first
+      self.tryLoadContent(function(rv) {
+        if (rv) {
+          callback(true);
+        }
+        else {
+          self.remoteGET(url, true, function(values) {
+            if (values) {
+              if (values._pt === 'resource/content') self.isDirectory = false;
+              if (typeof values._contentsz !== 'undefined') self.contentSize = values._contentsz;
 
-        self.values = values;
-        callback(true);
-      }
-      else {
-        self.tryLoadContent(callback);
-      }
-    });
+              self.values = values;
+              callback(true);
+            }
+            else {
+              callback(false);
+            }
+          });
+        }
+      });
+    }
+    else { //try metadata first
+      this.remoteGET(url, true, function(values) {
+        if (values) {
+          if (values._pt === 'resource/content') self.isDirectory = false;
+          if (typeof values._contentsz !== 'undefined') self.contentSize = values._contentsz;
+
+          self.values = values;
+          callback(true);
+        }
+        else {
+          self.tryLoadContent(callback);
+        }
+      });
+    }
   }
 
   protected tryLoadContent(callback) {

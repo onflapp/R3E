@@ -3,18 +3,6 @@ document.body.innerHTML = '';
 
 Utils.ENABLE_TRACE_LOG = 1;
 
-//sample content as javascript object
-
-var userTemplateVal = {
-  'web': {
-    'page': {
-      'default.hbs': {
-        _content: '<h1>{{_.title}}</h1><p>this is very simple, non-HTML-compliant page</p>'
-      }
-    }
-  }
-};
-
 //user content
 var userContent = new StoredObjectResource(new RemoteResource(), 'content.json');
 
@@ -24,7 +12,7 @@ var systemTemplates = new ObjectResource(window.templates).wrap({
 });
 
 //tempates for our own renderTypes
-var userTemplate = new ObjectResource(userTemplateVal).wrap({
+var userTemplate = new StoredObjectResource(new RemoteResource(), 'templates.json').wrap({
   getType: function() { return 'resource/templates'; }
 });
 
