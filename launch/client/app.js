@@ -25,25 +25,8 @@ var userTemplateVal = {
   }
 };
 
-function restoreLocalData() {
-  try {
-    //try restore data from the localStorage
-    var data = localStorage.getItem('userContent');
-    if (data) userContentVal = JSON.parse(data);
-
-    data = localStorage.getItem('userTemplate');
-    if (data) userTemplateVal = JSON.parse(data);
-  }
-  catch (ex) {
-    console.log('unable to persist data in localStorage');
-    console.log(ex);
-  }
-}
-
-restoreLocalData();
-
 //user content
-var userContent = new ObjectResource(userContentVal);
+var userContent = new LocalStorageResource(userContentVal, 'userContent');
 
 //system templates loaded by <script> and exposed as window.templates
 var systemTemplates = new ObjectResource(window.templates).wrap({
@@ -51,7 +34,7 @@ var systemTemplates = new ObjectResource(window.templates).wrap({
 });
 
 //tempates for our own renderTypes
-var userTemplate = new ObjectResource(userTemplateVal).wrap({
+var userTemplate = new LocalStorageResource(userTemplateVal, 'userTemplate').wrap({
   getType: function() { return 'resource/templates'; }
 });
 
@@ -119,18 +102,6 @@ handler.registerValueTranformer('newUUID', function(data) {
 handler.registerFactory('hbs', new HBSRendererFactory());
 handler.registerFactory('js', new JSRendererFactory());
 handler.registerFactory('func', new InterFuncRendererFactory()); //internal functions, usefull for function-based renderers
-
-//persist data in localStorage
-handler.addEventListener('stored', function(path, data) {
-  try {
-    localStorage.setItem('userTemplate', JSON.stringify(userTemplate.values));
-    localStorage.setItem('userContent', JSON.stringify(userContent.values));
-  }
-  catch (ex) {
-    console.log('unable to persist data in localStorage');
-    console.log(ex);
-  }
-});
 
 window.addEventListener('storage', function() {
   window.location.reload();

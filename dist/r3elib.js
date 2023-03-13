@@ -2700,6 +2700,7 @@ class StoredObjectResource extends ObjectResource {
     constructor(obj, name, base, root) {
         super({}, '');
         this.loaded = false;
+        this.externalizeContent = false;
         if (!root) {
             this.storageResource = obj;
             this.storagePath = name;
@@ -2712,6 +2713,9 @@ class StoredObjectResource extends ObjectResource {
             this.rootResource = root;
             this.basePath = base;
         }
+    }
+    setExternalizeContent(externalize) {
+        this.externalizeContent = externalize;
     }
     resolveItself(callback) {
         if (!this.rootResource && !this.loaded && this.storageResource) {
@@ -2750,16 +2754,27 @@ class StoredObjectResource extends ObjectResource {
     importContent(func, callback) {
         let self = this;
         let root = this.rootResource ? this.rootResource.storageResource : this.storageResource;
-        let path = Utils.filename_path_append(this.basePath, this.resourceName);
-        let rres = new ResourceResolver(root);
-        let data = new Data({
-            '_content': func
-        });
-        rres.storeResource(path, data, function () {
-            self.importProperties({
-                '_content': path
-            }, callback);
-        });
+        let externalize = this.rootResource ? this.rootResource.externalizeContent : this.externalizeContent;
+        if (externalize) {
+            let path = Utils.filename_path_append(this.basePath, this.resourceName);
+            let rres = new ResourceResolver(root);
+            let data = new Data({
+                '_content': func
+            });
+            rres.storeResource(path, data, function () {
+                self.importProperties({
+                    '_pt': 'resource/content',
+                    '_content': path
+                }, callback);
+            });
+        }
+        else {
+            super.importContent(func, function () {
+                self.storeObjectResource(function () {
+                    callback();
+                });
+            });
+        }
     }
     importProperties(data, callback) {
         let self = this;
@@ -2808,7 +2823,12 @@ class StoredObjectResource extends ObjectResource {
     }
     makeNewObjectContentResource(rv, name) {
         let root = this.rootResource ? this.rootResource : this;
-        return new StoredObjectContentResource(rv, name, root.storageResource);
+        if (root.externalizeContent) {
+            return new StoredObjectContentResource(rv, name, root, root.storageResource);
+        }
+        else {
+            return new StoredObjectContentResource(rv, name, root, null);
+        }
     }
     makeNewObjectResource(rv, name) {
         let root = this.rootResource ? this.rootResource : this;
@@ -2817,35 +2837,50 @@ class StoredObjectResource extends ObjectResource {
     }
 }
 class StoredObjectContentResource extends ObjectContentResource {
-    constructor(obj, name, storage) {
+    constructor(obj, name, root, storage) {
         super(obj, name);
         this.storageResource = storage;
+        this.rootResource = root;
     }
     read(writer, callback) {
-        let rres = new ResourceResolver(this.storageResource);
-        let path = this.values['_content'];
-        rres.resolveResource(path, function (res) {
-            if (res) {
-                res.read(writer, callback);
-            }
-            else {
-                callback();
-            }
-        });
+        if (this.storageResource) {
+            let rres = new ResourceResolver(this.storageResource);
+            let path = this.values['_content'];
+            rres.resolveResource(path, function (res) {
+                if (res) {
+                    res.read(writer, callback);
+                }
+                else {
+                    callback();
+                }
+            });
+        }
+        else {
+            super.read(writer, callback);
+        }
     }
     importContent(func, callback) {
         let self = this;
-        let root = this.storageResource;
-        let path = this.values['_content'];
-        let rres = new ResourceResolver(root);
-        rres.resolveResource(path, function (res) {
-            if (res) {
-                res.importContent(func, callback);
-            }
-            else {
-                callback();
-            }
-        });
+        let storage = this.storageResource;
+        if (storage) {
+            let path = this.values['_content'];
+            let rres = new ResourceResolver(storage);
+            rres.resolveResource(path, function (res) {
+                if (res) {
+                    res.importContent(func, callback);
+                }
+                else {
+                    callback();
+                }
+            });
+        }
+        else {
+            super.importContent(func, function () {
+                self.rootResource.storeObjectResource(function () {
+                    callback();
+                });
+            });
+        }
     }
 }
 class RemoteResourceContentWriter {
@@ -3071,93 +3106,77 @@ class RemoteResource extends StoredResource {
         xhr.send();
     }
 }
-class CachedRemoteTemplateResource extends ObjectResource {
-    constructor(obj, base, path, name) {
+class LocalStorageResource extends ObjectResource {
+    constructor(obj, name, root) {
         super(obj, name);
-        this.baseURL = base;
-        this.path = path ? path : '';
-    }
-    getPath() {
-        return this.path;
-    }
-    makeNewResource(obj, base, path, name) {
-        return new CachedRemoteTemplateResource(obj, base, path, name);
-    }
-    resolveChildResource(name, callback, walking) {
-        let rv = this.values[name];
-        if (typeof rv === 'object') {
-            if (rv['_content'] || rv['_content64'] || rv['_pt'] === 'resource/content')
-                callback(new ObjectContentResource(rv, name));
-            else {
-                let path = Utils.filename_path_append(this.getPath(), name);
-                callback(this.makeNewResource(rv, this.baseURL, path, name));
-            }
+        if (!name && typeof obj === 'string') {
+            this.storageName = obj;
+            this.loadLocalStorage();
         }
-        else if (typeof rv === 'function') {
-            callback(new ObjectContentResource(rv, name));
-        }
-        else if (walking) {
-            let path = Utils.filename_path_append(this.getPath(), name);
-            rv = {};
-            this.values[name] = rv;
-            callback(this.makeNewResource(rv, this.baseURL, path, name));
-        }
-        else if (rv && rv === 'NA') {
-            callback(null);
+        else if (root) {
+            this.rootResource = root;
         }
         else {
-            let self = this;
-            let path = this.baseURL + '/' + this.getPath() + '/' + name;
-            path = path.replace(/\/+/g, '/');
-            this.requestData(path, function (ctype, text) {
-                if (text) {
-                    rv = {
-                        _ct: ctype,
-                        _content: text,
-                    };
-                    self.values[name] = rv;
-                    callback(new ObjectContentResource(rv, name));
-                }
-                else {
-                    self.values[name] = 'NA';
-                    callback(null);
-                }
-            });
+            this.storageName = name;
+            this.loadLocalStorage();
         }
     }
-    requestData(path, callback) {
-        let xhr = new XMLHttpRequest();
-        xhr.open('GET', path, true);
-        xhr.onreadystatechange = function () {
-            var DONE = 4;
-            var OK = 200;
-            if (xhr.readyState === DONE) {
-                if (xhr.status === OK) {
-                    let ct = xhr.getResponseHeader('content-type');
-                    callback(ct, xhr.responseText);
-                }
-                else {
-                    callback(null);
-                }
-            }
-        };
-        xhr.send(null);
+    storeLocalStorage() {
+        let data = JSON.stringify(this.values, null, 2);
+        localStorage.setItem(this.storageName, data);
+    }
+    loadLocalStorage() {
+        let data = localStorage.getItem(this.storageName);
+        if (data) {
+            this.values = JSON.parse(data);
+        }
+    }
+    importProperties(data, callback) {
+        let self = this;
+        let root = this.rootResource ? this.rootResource : this;
+        super.importProperties(data, function () {
+            root.storeLocalStorage();
+            callback();
+        });
+    }
+    importContent(func, callback) {
+        let self = this;
+        let root = this.rootResource ? this.rootResource : this;
+        let res = this.makeNewObjectContentResource(this.values, this.resourceName);
+        func(res.getWriter(), function () {
+            root.storeLocalStorage();
+            callback();
+        });
+    }
+    removeChildResource(name, callback) {
+        let self = this;
+        let root = this.rootResource ? this.rootResource : this;
+        super.removeChildResource(name, function () {
+            root.storeLocalStorage();
+            if (callback)
+                callback();
+        });
+    }
+    makeNewObjectContentResource(rv, name) {
+        let root = this.rootResource ? this.rootResource : this;
+        return new LocalStorageContentResource(rv, name, root);
+    }
+    makeNewObjectResource(rv, name) {
+        let root = this.rootResource ? this.rootResource : this;
+        return new LocalStorageResource(rv, name, root);
     }
 }
-class DOMTemplateResource extends CachedRemoteTemplateResource {
-    constructor(obj, base, path, name) {
-        super(obj, base, path, name);
+class LocalStorageContentResource extends ObjectContentResource {
+    constructor(obj, name, root) {
+        super(obj, name);
+        this.rootResource = root;
     }
-    requestData(path, callback) {
-        var did = path.replace(/\//g, '_');
-        var el = document.getElementById(did);
-        if (el)
-            callback(el['type'], el.innerHTML);
-        else
-            callback(null);
-    }
-    makeNewResource(obj, base, path, name) {
-        return new DOMTemplateResource(obj, base, path, name);
+    importContent(func, callback) {
+        let self = this;
+        super.importContent(func, function () {
+            self.rootResource.storeLocalStorage();
+            callback();
+        });
     }
 }
 class DOMContentWriter {

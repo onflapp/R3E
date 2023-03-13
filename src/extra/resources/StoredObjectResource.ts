@@ -4,6 +4,7 @@ class StoredObjectResource extends ObjectResource {
   protected basePath: string;
   protected rootResource: StoredObjectResource;
   protected loaded = false;
+  protected externalizeContent = false;
 
   constructor(obj: any, name: string, base: string, root: any) {
     super({}, '');
@@ -19,6 +20,10 @@ class StoredObjectResource extends ObjectResource {
       this.rootResource = root;
       this.basePath = base;
     }
+  }
+
+  public setExternalizeContent(externalize: boolean) {
+    this.externalizeContent = externalize;
   }
 
   public resolveItself(callback) {
@@ -59,17 +64,29 @@ class StoredObjectResource extends ObjectResource {
   public importContent(func, callback) {
     let self = this;
     let root = this.rootResource ? this.rootResource.storageResource : this.storageResource;
-    let path = Utils.filename_path_append(this.basePath, this.resourceName);
-    let rres = new ResourceResolver(root);
-    let data = new Data({
-      '_content':func
-    });
+    let externalize = this.rootResource ? this.rootResource.externalizeContent : this.externalizeContent;
+    
+    if (externalize) {
+      let path = Utils.filename_path_append(this.basePath, this.resourceName);
+      let rres = new ResourceResolver(root);
+      let data = new Data({
+        '_content':func
+      });
 
-    rres.storeResource(path, data, function() {
-      self.importProperties({
-        '_content':path
-      }, callback);
-    });
+      rres.storeResource(path, data, function() {
+        self.importProperties({
+          '_pt': 'resource/content',
+          '_content':path
+        }, callback);
+      });
+    }
+    else {
+      super.importContent(func, function() {
+        self.storeObjectResource(function() {
+          callback();
+        });
+      });
+    }
   }
 
   public importProperties(data: any, callback) {
@@ -108,7 +125,7 @@ class StoredObjectResource extends ObjectResource {
     });
   }
 
-  protected storeObjectResource(callback) {
+  public storeObjectResource(callback) {
     let vals = this.rootResource ? this.rootResource.values : this.values;
     let path = this.rootResource ? this.rootResource.storagePath : this.storagePath;
     let root = this.rootResource ? this.rootResource.storageResource : this.storageResource;
@@ -124,7 +141,12 @@ class StoredObjectResource extends ObjectResource {
 
   protected makeNewObjectContentResource(rv: any, name: string) {
     let root = this.rootResource ? this.rootResource : this;
-    return new StoredObjectContentResource(rv, name, root.storageResource);
+    if (root.externalizeContent) {
+      return new StoredObjectContentResource(rv, name, root, root.storageResource);
+    }
+    else {
+      return new StoredObjectContentResource(rv, name, root, null);
+    }
   }
   
   protected makeNewObjectResource(rv: any, name: string) {
@@ -136,38 +158,54 @@ class StoredObjectResource extends ObjectResource {
 
 class StoredObjectContentResource extends ObjectContentResource {
   protected storageResource: Resource;
+  protected rootResource: StoredObjectResource;
 
-  constructor(obj: any, name: string, storage: any) {
+  constructor(obj: any, name: string, root: StoredObjectResource, storage: Resource) {
     super(obj, name);
     this.storageResource = storage;
+    this.rootResource = root;
   }
 
   public read(writer: ContentWriter, callback: any): void {
-    let rres = new ResourceResolver(this.storageResource);
-    let path = this.values['_content'];
-    rres.resolveResource(path, function(res) {
-      if (res) {
-        res.read(writer, callback);
-      }
-      else {
-        callback();
-      }
-    });
+    if (this.storageResource) {
+      let rres = new ResourceResolver(this.storageResource);
+      let path = this.values['_content'];
+      rres.resolveResource(path, function(res) {
+        if (res) {
+          res.read(writer, callback);
+        }
+        else {
+          callback();
+        }
+      });
+    }
+    else {
+      super.read(writer, callback);
+    }
   }
 
   public importContent(func, callback) {
     let self = this;
-    let root = this.storageResource;
-    let path = this.values['_content'];
-    let rres = new ResourceResolver(root);
+    let storage = this.storageResource;
+    if (storage) {
+      let path = this.values['_content'];
+      let rres = new ResourceResolver(storage);
 
-    rres.resolveResource(path, function(res) {
-      if (res) {
-        res.importContent(func, callback);
-      }
-      else {
-        callback();
-      }
-    });
+      rres.resolveResource(path, function(res) {
+        if (res) {
+          res.importContent(func, callback);
+        }
+        else {
+          callback();
+        }
+      });
+    }
+    else {
+      super.importContent(func, function() {
+        self.rootResource.storeObjectResource(function() {
+          callback();
+        });
+      });
+    }
   }
 }

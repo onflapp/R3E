@@ -5,6 +5,7 @@ Utils.ENABLE_TRACE_LOG = 1;
 
 //user content
 var userContent = new StoredObjectResource(new RemoteResource(), 'content.json');
+userContent.setExternalizeContent(true);
 
 //system templates loaded by <script> and exposed as window.templates
 var systemTemplates = new ObjectResource(window.templates).wrap({
