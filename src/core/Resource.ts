@@ -28,6 +28,18 @@ class Data {
     callback();
   }
 
+  public getValues() {
+    var rv = {};
+    for (var k in this.values) {
+      var v = this.values[k];
+      if (typeof v === 'object' || typeof v === 'function') {}
+      else {
+        rv[k] = this.values[k];
+      }
+    }
+    return rv;
+  }
+
   public getProperties() {
     let map = {};
     let names = this.getPropertyNames();

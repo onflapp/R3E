@@ -309,6 +309,10 @@ class ClientRequestHandler extends ResourceRequestHandler {
     let action = formElement.getAttribute('action');
     let rv = {};
 
+    if (action.indexOf('#')) {
+      action = action.substr(action.indexOf('#')+1);
+    }
+
     for (let i = 0; i < formElement.elements.length; i++) {
       let p = formElement.elements[i];
       let type = p.type.toLowerCase();

@@ -47,11 +47,11 @@
 
         if (data.values['_content']) {
           processing++;
-          export_content(data.values);
+          export_content(data.getValues());
         }
         else {
           if (count > 0) out.write('\n,\n');
-          out.write(JSON.stringify(data.values, null, 2));
+          out.write(JSON.stringify(data.getValues(), null, 2));
         }
         count++;
       },

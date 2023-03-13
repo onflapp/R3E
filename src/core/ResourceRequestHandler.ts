@@ -409,7 +409,7 @@ class ResourceRequestHandler extends EventDispatcher {
 
   /************************************************************************
 
-  <form method="post" enctype="multipart/form-data" action="{{currentPath.PREFIX}}{{currentPath.path}}/{:name}">
+  <form method="post" enctype="multipart/form-data" action="{{req_path "{:name}" "sel"}}>
   	<input type="file" name=":name" value="">
   	<input type="hidden" name=":name@fileName" value="val1"> <<---- override the name
   	<input type="hidden" name="prop" value="val1">
@@ -491,6 +491,7 @@ class ResourceRequestHandler extends EventDispatcher {
     try {
       let remove   = Utils.absolute_path(data[':delete']);
       let copyto   = Utils.absolute_path(data[':copyto']);
+      let cloneto  = Utils.absolute_path(data[':cloneto']);
       let copyfrom = Utils.absolute_path(data[':copyfrom']);
       let moveto   = Utils.absolute_path(data[':moveto']);
       let importto = Utils.absolute_path(data[':import']);
@@ -499,6 +500,12 @@ class ResourceRequestHandler extends EventDispatcher {
         rres.copyResource(resourcePath, copyto, function () {
           self.dispatchAllEventsAsync('stored', copyto, data);
           storedata(copyto);
+        });
+      }
+      else if (cloneto) {
+        rres.cloneResource(resourcePath, cloneto, function () {
+          self.dispatchAllEventsAsync('stored', cloneto, data);
+          storedata(cloneto);
         });
       }
       else if (copyfrom) {

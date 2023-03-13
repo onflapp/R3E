@@ -318,6 +318,17 @@ class Data {
         }
         callback();
     }
+    getValues() {
+        var rv = {};
+        for (var k in this.values) {
+            var v = this.values[k];
+            if (typeof v === 'object' || typeof v === 'function') { }
+            else {
+                rv[k] = this.values[k];
+            }
+        }
+        return rv;
+    }
     getProperties() {
         let map = {};
         let names = this.getPropertyNames();
@@ -639,6 +650,28 @@ class ResourceResolver {
             self.removeResource(fromPath, function () {
                 callback();
             });
+        });
+    }
+    cloneResource(fromPath, toPath, callback) {
+        if (fromPath === '/' || fromPath === '') {
+            callback();
+            return;
+        }
+        if (fromPath === toPath) {
+            callback();
+            return;
+        }
+        let self = this;
+        self.resolveResource(fromPath, function (res) {
+            if (res) {
+                let data = new Data(res.getValues());
+                self.storeResource(toPath, data, function () {
+                    callback(arguments);
+                });
+            }
+            else {
+                callback(arguments);
+            }
         });
     }
     copyResource(fromPath, toPath, callback) {
@@ -1548,6 +1581,7 @@ class ResourceRequestHandler extends EventDispatcher {
         try {
             let remove = Utils.absolute_path(data[':delete']);
             let copyto = Utils.absolute_path(data[':copyto']);
+            let cloneto = Utils.absolute_path(data[':cloneto']);
             let copyfrom = Utils.absolute_path(data[':copyfrom']);
             let moveto = Utils.absolute_path(data[':moveto']);
             let importto = Utils.absolute_path(data[':import']);
@@ -1555,6 +1589,12 @@ class ResourceRequestHandler extends EventDispatcher {
                 rres.copyResource(resourcePath, copyto, function () {
                     self.dispatchAllEventsAsync('stored', copyto, data);
                     storedata(copyto);
+                });
+            }
+            else if (cloneto) {
+                rres.cloneResource(resourcePath, cloneto, function () {
+                    self.dispatchAllEventsAsync('stored', cloneto, data);
+                    storedata(cloneto);
                 });
             }
             else if (copyfrom) {
@@ -3378,6 +3418,9 @@ class ClientRequestHandler extends ResourceRequestHandler {
     parseFormElement(formElement) {
         let action = formElement.getAttribute('action');
         let rv = {};
+        if (action.indexOf('#')) {
+            action = action.substr(action.indexOf('#') + 1);
+        }
         for (let i = 0; i < formElement.elements.length; i++) {
             let p = formElement.elements[i];
             let type = p.type.toLowerCase();

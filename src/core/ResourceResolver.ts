@@ -112,6 +112,30 @@ class ResourceResolver {
     });
   }
 
+  public cloneResource(fromPath: string, toPath: string, callback) {
+    if (fromPath === '/' || fromPath === '') {
+      callback();
+      return;
+    }
+    if (fromPath === toPath) {
+      callback();
+      return;
+    }
+
+    let self = this;
+    self.resolveResource(fromPath, function (res: Resource) {
+      if (res) {
+        let data = new Data(res.getValues());
+        self.storeResource(toPath, data, function () {
+          callback(arguments);
+        });
+      }
+      else {
+        callback(arguments);
+      }
+    });
+  }
+
   public copyResource(fromPath: string, toPath: string, callback) {
     if (fromPath === '/' || fromPath === '') {
       callback();
