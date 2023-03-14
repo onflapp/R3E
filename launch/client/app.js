@@ -1,7 +1,7 @@
 //clear the body to reduce flashing
 document.body.innerHTML = '';
 
-Utils.ENABLE_TRACE_LOG = 1;
+Utils.ENABLE_TRACE_LOG = 0;
 
 //sample content as javascript object
 var userContentVal = {

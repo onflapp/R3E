@@ -30,7 +30,7 @@
   
   <form method="POST" action="{{res_path "."}}">
     <input type="hidden" name="{{name}}" value="">
-    <input type="hidden" name=":forward" value="{{req_path}}">
+    <input type="hidden" name=":forward" value="{{req_path "."}}">
     <button type="submit" name="{{name}}" value="">del</button>
   </form>
 {{/include}}
