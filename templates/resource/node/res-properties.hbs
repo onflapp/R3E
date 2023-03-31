@@ -44,9 +44,9 @@
 
   <a href="{{req_path "." "res-renderer"}}">Renderer Properties...</a>
 
-  <form method="POST" id="save_form" action="{{res_path}}">
+  <form method="POST" id="save_form" action="{{res_path "."}}">
     <a href="{{req_path "." "res-list"}}">Cancel</a>
-    <input type="hidden" name=":forward" value="{{req_path "." "res-list"}}">
+    <input type="hidden" name=":forward" value="{{req_path "."}}">
     <input type="submit" value="Save">
   </form>
 

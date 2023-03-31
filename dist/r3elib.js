@@ -262,6 +262,9 @@ class Utils {
             console.log(typ + 'resolve:' + path);
         }
     }
+    static flushResourceCache() {
+        EventDispatcher.global().dispatchAllEvents('cache-flush');
+    }
 }
 Utils.ENABLE_TRACE_LOG = false;
 class EventDispatcher {
@@ -298,7 +301,14 @@ class EventDispatcher {
             self.dispatchAllEvents(evt, ...args);
         }, 0);
     }
+    static global() {
+        if (!EventDispatcher._global) {
+            EventDispatcher._global = new EventDispatcher();
+        }
+        return EventDispatcher._global;
+    }
 }
+EventDispatcher._global = null;
 class Data {
     constructor(obj) {
         this.values = obj ? obj : {};
@@ -797,6 +807,7 @@ class ResourceRenderer {
         this.resolveRenderer(renderTypes, selectors, function (rend, error) {
             if (rend) {
                 context.makeCurrentResource(res);
+                context.renderSession();
                 try {
                     let map = context.makePropertiesForResource(res);
                     let rv = rend(map, writer, context);
@@ -854,6 +865,7 @@ class ResourceRequestContext {
     constructor(pathInfo, handler) {
         this.pathInfo = pathInfo;
         this.resourceRequestHandler = handler;
+        this.currentSession = 0;
     }
     __overrideCurrentResourcePath(resourcePath) {
         this.pathInfo.resourcePath = resourcePath;
@@ -1134,11 +1146,15 @@ class ResourceRequestContext {
         p['RES_PATH'] = this.pathInfo.resourcePath;
         p['PARENT_NAME'] = Utils.filename(this.pathInfo.dirname);
         p['PARENT_DIRNAME'] = Utils.filename_dir(this.pathInfo.dirname);
+        p['RENDER_SESSION'] = this.currentSession;
         if (this.pathInfo.refererURL) {
             p['REF_URL'] = this.pathInfo.refererURL;
             p['REF_PATH'] = this.pathInfo.referer.path;
         }
         return p;
+    }
+    renderSession() {
+        this.currentSession++;
     }
     makeCurrentResource(res) {
         if (res && res instanceof Resource) {
@@ -1176,6 +1192,7 @@ class ResourceRequestContext {
     clone() {
         let ctx = new ResourceRequestContext(this.pathInfo.clone(), this.resourceRequestHandler);
         ctx.renderSelector = this.renderSelector;
+        ctx.currentSession = this.currentSession;
         return ctx;
     }
 }
@@ -1579,12 +1596,12 @@ class ResourceRequestHandler extends EventDispatcher {
             });
         };
         try {
-            let remove = Utils.absolute_path(data[':delete']);
-            let copyto = Utils.absolute_path(data[':copyto']);
-            let cloneto = Utils.absolute_path(data[':cloneto']);
-            let copyfrom = Utils.absolute_path(data[':copyfrom']);
-            let moveto = Utils.absolute_path(data[':moveto']);
-            let importto = Utils.absolute_path(data[':import']);
+            let remove = Utils.absolute_path(data[':delete'], resourcePath);
+            let copyto = Utils.absolute_path(data[':copyto'], resourcePath);
+            let cloneto = Utils.absolute_path(data[':cloneto'], resourcePath);
+            let copyfrom = Utils.absolute_path(data[':copyfrom'], resourcePath);
+            let moveto = Utils.absolute_path(data[':moveto'], resourcePath);
+            let importto = Utils.absolute_path(data[':import'], resourcePath);
             if (copyto) {
                 rres.copyResource(resourcePath, copyto, function () {
                     self.dispatchAllEventsAsync('stored', copyto, data);
@@ -2513,6 +2530,7 @@ class StoredResource extends Resource {
         this.contentSize = -1;
         this.resourceCache = {};
         this.loaded = false;
+        let self = this;
         if (typeof base !== 'undefined') {
             this.baseName = name;
             this.basePath = base;
@@ -2522,6 +2540,9 @@ class StoredResource extends Resource {
             this.baseName = '';
             this.basePath = name;
             this.basePrefix = name;
+            EventDispatcher.global().addEventListener('cache-flush', function () {
+                self.flushResourceCache();
+            });
         }
     }
     getCachedResource(name) {
@@ -2701,11 +2722,15 @@ class StoredObjectResource extends ObjectResource {
         super({}, '');
         this.loaded = false;
         this.externalizeContent = false;
+        let self = this;
         if (!root) {
             this.storageResource = obj;
             this.storagePath = name;
             this.rootResource = null;
             this.basePath = '';
+            EventDispatcher.global().addEventListener('cache-flush', function () {
+                self.flushResourceCache();
+            });
         }
         else {
             this.values = obj;
@@ -2713,6 +2738,9 @@ class StoredObjectResource extends ObjectResource {
             this.rootResource = root;
             this.basePath = base;
         }
+    }
+    flushResourceCache() {
+        this.loaded = false;
     }
     setExternalizeContent(externalize) {
         this.externalizeContent = externalize;
@@ -3109,9 +3137,12 @@ class RemoteResource extends StoredResource {
 class LocalStorageResource extends ObjectResource {
     constructor(obj, name, root) {
         super(obj, name);
+        let self = this;
+        let initialized = false;
         if (!name && typeof obj === 'string') {
             this.storageName = obj;
             this.loadLocalStorage();
+            initialized = true;
         }
         else if (root) {
             this.rootResource = root;
@@ -3119,6 +3150,12 @@ class LocalStorageResource extends ObjectResource {
         else {
             this.storageName = name;
             this.loadLocalStorage();
+            initialized = true;
+        }
+        if (initialized) {
+            EventDispatcher.global().addEventListener('cache-flush', function () {
+                self.loadLocalStorage();
+            });
         }
     }
     storeLocalStorage() {
@@ -3274,6 +3311,7 @@ class DOMContentWriter {
                     window.eval(code);
                 }
                 catch (ex) {
+                    console.log(code);
                     console.log(ex);
                 }
             }
@@ -3443,10 +3481,10 @@ class ClientRequestHandler extends ResourceRequestHandler {
         for (let i = 0; i < formElement.elements.length; i++) {
             let p = formElement.elements[i];
             let type = p.type.toLowerCase();
-            if (type === 'submit' || type == 'button')
-                continue;
             let name = p.name;
             let value = p.value;
+            if (!name)
+                continue;
             if (type === 'file') {
                 value = p.files[0];
                 if (!value)

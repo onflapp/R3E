@@ -10,15 +10,21 @@ abstract class StoredResource extends Resource {
 
   constructor(name: string, base ? : string, prefix ? : string) {
     super(name);
-    if (typeof base !== 'undefined') {
+    let self = this;
+
+    if (typeof base !== 'undefined') { //child
       this.baseName = name;
       this.basePath = base;
       this.basePrefix = prefix;
     }
-    else {
+    else { //root
       this.baseName = '';
       this.basePath = name;
       this.basePrefix = name;
+
+      EventDispatcher.global().addEventListener('cache-flush', function() {
+        self.flushResourceCache();
+      });
     }
   }
 

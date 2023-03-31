@@ -1,5 +1,6 @@
 class EventDispatcher {
   private _eventHandlers = {};
+  private static _global = null;
 
   public addEventListener(evt: string, handler: any) {
     this._eventHandlers[evt] = this._eventHandlers[evt] || [];
@@ -33,5 +34,12 @@ class EventDispatcher {
     setTimeout(function () {
       self.dispatchAllEvents(evt, ...args);
     }, 0);
+  }
+
+  static global() : EventDispatcher {
+    if (!EventDispatcher._global) {
+      EventDispatcher._global = new EventDispatcher();
+    }
+    return EventDispatcher._global;
   }
 }

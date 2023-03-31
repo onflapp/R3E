@@ -47,7 +47,7 @@
 
         if (data.values['_content']) {
           processing++;
-          export_content(data.getValues());
+          export_content(data.values); //might contain func!
         }
         else {
           if (count > 0) out.write('\n,\n');

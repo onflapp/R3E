@@ -290,4 +290,8 @@ class Utils {
       console.log(typ+'resolve:'+path);
     }
   }
+
+  static flushResourceCache() {
+    EventDispatcher.global().dispatchAllEvents('cache-flush');
+  }
 }

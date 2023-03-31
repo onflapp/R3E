@@ -111,6 +111,7 @@ class DOMContentWriter implements ContentWriter {
           window.eval(code);
         }
         catch (ex) {
+          console.log(code);
           console.log(ex);
         }
       }
@@ -316,11 +317,10 @@ class ClientRequestHandler extends ResourceRequestHandler {
     for (let i = 0; i < formElement.elements.length; i++) {
       let p = formElement.elements[i];
       let type = p.type.toLowerCase();
-
-      if (type === 'submit' || type == 'button') continue;
-
       let name = p.name;
       let value = p.value;
+
+      if (!name) continue;
 
       if (type === 'file') {
         value = p.files[0];

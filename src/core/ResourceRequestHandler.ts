@@ -489,12 +489,12 @@ class ResourceRequestHandler extends EventDispatcher {
     };
 
     try {
-      let remove   = Utils.absolute_path(data[':delete']);
-      let copyto   = Utils.absolute_path(data[':copyto']);
-      let cloneto  = Utils.absolute_path(data[':cloneto']);
-      let copyfrom = Utils.absolute_path(data[':copyfrom']);
-      let moveto   = Utils.absolute_path(data[':moveto']);
-      let importto = Utils.absolute_path(data[':import']);
+      let remove   = Utils.absolute_path(data[':delete'], resourcePath);
+      let copyto   = Utils.absolute_path(data[':copyto'], resourcePath);
+      let cloneto  = Utils.absolute_path(data[':cloneto'], resourcePath);
+      let copyfrom = Utils.absolute_path(data[':copyfrom'], resourcePath);
+      let moveto   = Utils.absolute_path(data[':moveto'], resourcePath);
+      let importto = Utils.absolute_path(data[':import'], resourcePath);
 
       if (copyto) {
         rres.copyResource(resourcePath, copyto, function () {

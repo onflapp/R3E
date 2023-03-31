@@ -4,10 +4,12 @@ class ResourceRequestContext implements ScriptContext {
   private renderResourceType: string;
   private renderSelector: string;
   private currentResource: Resource;
+  private currentSession: number;
 
   constructor(pathInfo: PathInfo, handler: ResourceRequestHandler) {
     this.pathInfo = pathInfo;
     this.resourceRequestHandler = handler;
+    this.currentSession = 0;
   }
 
   public __overrideCurrentResourcePath(resourcePath :string) {
@@ -322,12 +324,18 @@ class ResourceRequestContext implements ScriptContext {
     p['PARENT_NAME'] = Utils.filename(this.pathInfo.dirname);
     p['PARENT_DIRNAME'] = Utils.filename_dir(this.pathInfo.dirname);
 
+    p['RENDER_SESSION'] = this.currentSession;
+
     if (this.pathInfo.refererURL) {
       p['REF_URL'] = this.pathInfo.refererURL;
       p['REF_PATH'] = this.pathInfo.referer.path;
     }
 
     return p;
+  }
+
+  public renderSession() {
+    this.currentSession++;
   }
 
   public makeCurrentResource(res: Data) {
@@ -372,6 +380,7 @@ class ResourceRequestContext implements ScriptContext {
   public clone(): ResourceRequestContext {
     let ctx = new ResourceRequestContext(this.pathInfo.clone(), this.resourceRequestHandler);
     ctx.renderSelector = this.renderSelector;
+    ctx.currentSession = this.currentSession;
     return ctx;
   }
 }

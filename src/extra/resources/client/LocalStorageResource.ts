@@ -3,10 +3,13 @@ class LocalStorageResource extends ObjectResource {
   protected rootResource: LocalStorageResource;
   constructor(obj: any, name: string, root: LocalStorageResource) {
     super(obj, name);
+    let self = this;
+    let initialized = false;
 
     if (!name && typeof obj === 'string') {
       this.storageName = obj;
       this.loadLocalStorage();
+      initialized = true;
     }
     else if (root) {
       this.rootResource = root;
@@ -14,6 +17,13 @@ class LocalStorageResource extends ObjectResource {
     else {
       this.storageName = name;
       this.loadLocalStorage();
+      initialized = true;
+    }
+
+    if (initialized) {
+      EventDispatcher.global().addEventListener('cache-flush', function() {
+        self.loadLocalStorage();
+      });
     }
   }
 

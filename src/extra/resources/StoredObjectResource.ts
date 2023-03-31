@@ -8,18 +8,28 @@ class StoredObjectResource extends ObjectResource {
 
   constructor(obj: any, name: string, base: string, root: any) {
     super({}, '');
-    if (!root) {
+    let self = this;
+
+    if (!root) { //root
       this.storageResource = obj;
       this.storagePath = name;
       this.rootResource = null;
       this.basePath = '';
+
+      EventDispatcher.global().addEventListener('cache-flush', function() {
+        self.flushResourceCache();
+      });
     }
-    else {
+    else { //child
       this.values = obj;
       this.resourceName = name;
       this.rootResource = root;
       this.basePath = base;
     }
+  }
+
+  public flushResourceCache() {
+    this.loaded = false;
   }
 
   public setExternalizeContent(externalize: boolean) {

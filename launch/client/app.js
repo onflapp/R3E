@@ -4,6 +4,10 @@ document.body.innerHTML = '';
 Utils.ENABLE_TRACE_LOG = 0;
 
 //sample content as javascript object
+var userConfigVal = {
+  'git_login': 'xxx'
+};
+
 var userContentVal = {
   'my simple web page': {
     _rt:'web/page',
@@ -27,6 +31,9 @@ var userTemplateVal = {
 
 //user content
 var userContent = new LocalStorageResource(userContentVal, 'userContent');
+
+//user config
+var userConfig = new LocalStorageResource(userConfigVal, 'userconfig');
 
 //system templates loaded by <script> and exposed as window.templates
 var systemTemplates = new ObjectResource(window.templates).wrap({
@@ -64,6 +71,7 @@ var defaultTemplates = new ObjectResource({
 var root = new RootResource({
   'index': lunrIndex,
   'content': userContent,
+  'config': userConfig,
   'system-templates': systemTemplates,
   'user-templates': userTemplate
 });
@@ -103,8 +111,10 @@ handler.registerFactory('hbs', new HBSRendererFactory());
 handler.registerFactory('js', new JSRendererFactory());
 handler.registerFactory('func', new InterFuncRendererFactory()); //internal functions, usefull for function-based renderers
 
-window.addEventListener('storage', function() {
-  window.location.reload();
+window.addEventListener('storage', function(evt) {
+  if (evt.key.charAt(0) != '_' && !document.hasFocus()) {
+    window.location.reload();
+  }
 });
 
 //start by listing content of the root resource
