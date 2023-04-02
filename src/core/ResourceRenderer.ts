@@ -128,6 +128,7 @@ class ResourceRenderer {
     this.resolveRenderer(renderTypes, selectors, function (rend: ContentRendererFunction, error ? : Error) {
       if (rend) {
         context.makeCurrentResource(res);
+        context.startRenderSession();
         try {
           let map = context.makePropertiesForResource(res);
 

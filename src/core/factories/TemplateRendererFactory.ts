@@ -136,6 +136,7 @@ class TemplateRendererFactory implements RendererFactory {
           map['R'] = context.getRequestProperties();
           map['Q'] = context.getQueryProperties();
           map['C'] = context.getConfigProperties();
+          map['S'] = context.getSessionProperties();
 
           map['_session'] = session;
           map['_context'] = context;

@@ -1,15 +1,15 @@
 class ResourceRequestContext implements ScriptContext {
   private pathInfo: PathInfo;
   private resourceRequestHandler: ResourceRequestHandler;
+  private sessionData: SessionData;
   private renderResourceType: string;
   private renderSelector: string;
   private currentResource: Resource;
-  private currentSession: number;
 
-  constructor(pathInfo: PathInfo, handler: ResourceRequestHandler) {
+  constructor(pathInfo: PathInfo, handler: ResourceRequestHandler, sessionData: SessionData) {
     this.pathInfo = pathInfo;
     this.resourceRequestHandler = handler;
-    this.currentSession = 0;
+    this.sessionData = sessionData;
   }
 
   public __overrideCurrentResourcePath(resourcePath :string) {
@@ -311,6 +311,13 @@ class ResourceRequestContext implements ScriptContext {
     });
   }
 
+  public getSessionProperties(): any {
+    let p = this.sessionData.getValues();
+    p['RENDER_COUNT'] = this.sessionData.renderSessionCount;
+
+    return p;
+  }
+
   public getRequestProperties(): any {
     let p = {};
     p['PATH'] = this.pathInfo.path;
@@ -324,8 +331,6 @@ class ResourceRequestContext implements ScriptContext {
     p['PARENT_NAME'] = Utils.filename(this.pathInfo.dirname);
     p['PARENT_DIRNAME'] = Utils.filename_dir(this.pathInfo.dirname);
 
-    p['RENDER_SESSION'] = this.currentSession;
-
     if (this.pathInfo.refererURL) {
       p['REF_URL'] = this.pathInfo.refererURL;
       p['REF_PATH'] = this.pathInfo.referer.path;
@@ -334,8 +339,8 @@ class ResourceRequestContext implements ScriptContext {
     return p;
   }
 
-  public renderSession() {
-    this.currentSession++;
+  public startRenderSession() {
+    this.sessionData.renderSessionCount++;
   }
 
   public makeCurrentResource(res: Data) {
@@ -378,11 +383,14 @@ class ResourceRequestContext implements ScriptContext {
   }
 
   public clone(): ResourceRequestContext {
-    let ctx = new ResourceRequestContext(this.pathInfo.clone(), this.resourceRequestHandler);
+    let ctx = new ResourceRequestContext(this.pathInfo.clone(), this.resourceRequestHandler, this.sessionData);
     ctx.renderSelector = this.renderSelector;
-    ctx.currentSession = this.currentSession;
     return ctx;
   }
+}
+
+class SessionData extends Data {
+  public renderSessionCount: number = 0;
 }
 
 class PathInfo {

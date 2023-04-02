@@ -158,14 +158,14 @@ class ResourceRequestHandler extends EventDispatcher {
       pathInfo.referer = this.parsePath(this.refererPath);
       pathInfo.query = this.queryProperties;
 
-      let context = new ResourceRequestContext(pathInfo, this);
+      let context = new ResourceRequestContext(pathInfo, this, new SessionData());
       return context;
     }
     else {
       let pi = new PathInfo();
       pi.path = '/';
       pi.resourcePath = '/';
-      let context = new ResourceRequestContext(pi, this);
+      let context = new ResourceRequestContext(pi, this, new SessionData());
       return context;
     }
   }

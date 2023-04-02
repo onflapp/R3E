@@ -96,12 +96,31 @@
     return '';
   });
 
+/*
+ * return first not emoty argument
+ */
+
   Handlebars.registerHelper('or', function () {
     var args = arguments;
 
-    for (var i in args) {
+    for (var i = 0; i < args.length-1; i++) {
       if (args[i] !== null && args[i] !== undefined) return args[i];
     }
+    return '';
+  });
+
+/*
+ * if all arguments are non-empty, return return last argument
+ */
+
+  Handlebars.registerHelper('and', function () {
+    var args = arguments;
+
+    for (var i = 0; i < args.length-1; i++) {
+      if (!args[i]) return '';
+    }
+
+    return args[args.length-2];
   });
 
   Handlebars.registerHelper('val', function () {
@@ -109,16 +128,6 @@
 
     if (!args[0]) return null;
     else return args[1].replace('%s', args[0]);
-  });
-
-  Handlebars.registerHelper('and', function () {
-    var args = arguments;
-
-    for (var i in args) {
-      if (args[i]) return args[i+1];
-    }
-
-    return null;
   });
 
 

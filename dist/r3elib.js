@@ -807,7 +807,7 @@ class ResourceRenderer {
         this.resolveRenderer(renderTypes, selectors, function (rend, error) {
             if (rend) {
                 context.makeCurrentResource(res);
-                context.renderSession();
+                context.startRenderSession();
                 try {
                     let map = context.makePropertiesForResource(res);
                     let rv = rend(map, writer, context);
@@ -862,10 +862,10 @@ class ResourceRenderer {
     }
 }
 class ResourceRequestContext {
-    constructor(pathInfo, handler) {
+    constructor(pathInfo, handler, sessionData) {
         this.pathInfo = pathInfo;
         this.resourceRequestHandler = handler;
-        this.currentSession = 0;
+        this.sessionData = sessionData;
     }
     __overrideCurrentResourcePath(resourcePath) {
         this.pathInfo.resourcePath = resourcePath;
@@ -1135,6 +1135,11 @@ class ResourceRequestContext {
             });
         });
     }
+    getSessionProperties() {
+        let p = this.sessionData.getValues();
+        p['RENDER_COUNT'] = this.sessionData.renderSessionCount;
+        return p;
+    }
     getRequestProperties() {
         let p = {};
         p['PATH'] = this.pathInfo.path;
@@ -1146,15 +1151,14 @@ class ResourceRequestContext {
         p['RES_PATH'] = this.pathInfo.resourcePath;
         p['PARENT_NAME'] = Utils.filename(this.pathInfo.dirname);
         p['PARENT_DIRNAME'] = Utils.filename_dir(this.pathInfo.dirname);
-        p['RENDER_SESSION'] = this.currentSession;
         if (this.pathInfo.refererURL) {
             p['REF_URL'] = this.pathInfo.refererURL;
             p['REF_PATH'] = this.pathInfo.referer.path;
         }
         return p;
     }
-    renderSession() {
-        this.currentSession++;
+    startRenderSession() {
+        this.sessionData.renderSessionCount++;
     }
     makeCurrentResource(res) {
         if (res && res instanceof Resource) {
@@ -1190,10 +1194,15 @@ class ResourceRequestContext {
         return map;
     }
     clone() {
-        let ctx = new ResourceRequestContext(this.pathInfo.clone(), this.resourceRequestHandler);
+        let ctx = new ResourceRequestContext(this.pathInfo.clone(), this.resourceRequestHandler, this.sessionData);
         ctx.renderSelector = this.renderSelector;
-        ctx.currentSession = this.currentSession;
         return ctx;
+    }
+}
+class SessionData extends Data {
+    constructor() {
+        super(...arguments);
+        this.renderSessionCount = 0;
     }
 }
 class PathInfo {
@@ -1334,14 +1343,14 @@ class ResourceRequestHandler extends EventDispatcher {
             pathInfo.refererURL = this.refererPath;
             pathInfo.referer = this.parsePath(this.refererPath);
             pathInfo.query = this.queryProperties;
-            let context = new ResourceRequestContext(pathInfo, this);
+            let context = new ResourceRequestContext(pathInfo, this, new SessionData());
             return context;
         }
         else {
             let pi = new PathInfo();
             pi.path = '/';
             pi.resourcePath = '/';
-            let context = new ResourceRequestContext(pi, this);
+            let context = new ResourceRequestContext(pi, this, new SessionData());
             return context;
         }
     }
@@ -1830,12 +1839,16 @@ class OrderedContentWriter {
         return w;
     }
     write(content) {
-        this.contentQueue.push(content);
+        let p = this.parentWriter ? this.parentWriter : this;
+        p.contentQueue.push(content);
     }
     start(contentType) {
         let p = this.parentWriter ? this.parentWriter : this;
-        if (contentType && !p.contentType)
-            p.contentType = contentType;
+        if (p.contentType) {
+            console.log(`reset ${p.contentType} with ${contentType}`);
+        }
+        p.contentType = contentType;
+        p.contentQueue = new Array();
     }
     error(err) {
         console.log(err);
@@ -2235,6 +2248,7 @@ class TemplateRendererFactory {
                     map['R'] = context.getRequestProperties();
                     map['Q'] = context.getQueryProperties();
                     map['C'] = context.getConfigProperties();
+                    map['S'] = context.getSessionProperties();
                     map['_session'] = session;
                     map['_context'] = context;
                     let render_ouput = function (txt) {
@@ -3391,12 +3405,11 @@ class DOMContentWriter {
         if (this.htmldata) {
             this.updateDocument(this.htmldata.join(''));
         }
+        else if ('object/javascript' == this.exttype) {
+            let d = JSON.stringify(this.extdata[0]);
+            this.updateDocument('<pre>' + d + '</pre>');
+        }
         else if (this.extdata && this.extdata.length) {
-            if ('object/javascript' == this.exttype) {
-                let d = JSON.stringify(this.extdata[0]);
-                this.extdata = [d];
-                this.exttype = 'application/json';
-            }
             let blob = new Blob(this.extdata, { type: this.exttype });
             let uri = window.URL.createObjectURL(blob);
             window.location.replace(uri);
@@ -3507,6 +3520,12 @@ class ClientRequestHandler extends ResourceRequestHandler {
                     writer.start(value.type);
                     reader.readAsArrayBuffer(value);
                 };
+            }
+            else if (type === 'checkbox') {
+                if (p.checked)
+                    rv[name] = value;
+                else
+                    rv[name] = '';
             }
             else {
                 rv[name] = value;

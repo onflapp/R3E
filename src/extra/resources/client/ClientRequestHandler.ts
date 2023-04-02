@@ -207,12 +207,11 @@ class DOMContentWriter implements ContentWriter {
     if (this.htmldata) {
       this.updateDocument(this.htmldata.join(''));
     }
+    else if ('object/javascript' == this.exttype) {
+      let d = JSON. stringify(this.extdata[0]);
+      this.updateDocument('<pre>'+d+'</pre>');
+    }
     else if (this.extdata && this.extdata.length) {
-      if ('object/javascript' == this.exttype) {
-        let d = JSON. stringify(this.extdata[0]);
-        this.extdata = [d];
-        this.exttype = 'application/json';
-      }
       let blob = new Blob(this.extdata, {type:this.exttype})
       let uri = window.URL.createObjectURL(blob)
       window.location.replace(uri);
@@ -346,6 +345,10 @@ class ClientRequestHandler extends ResourceRequestHandler {
           writer.start(value.type);
           reader.readAsArrayBuffer(value);
         };
+      }
+      else if (type === 'checkbox') {
+        if (p.checked) rv[name] = value;
+        else rv[name] = '';
       }
       else {
         rv[name] = value;

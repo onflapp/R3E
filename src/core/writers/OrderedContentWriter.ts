@@ -21,12 +21,17 @@ class OrderedContentWriter implements ContentWriter {
   }
 
   public write(content) {
-    this.contentQueue.push(content);
+    let p = this.parentWriter ? this.parentWriter : this;
+    p.contentQueue.push(content);
   }
 
   public start(contentType) {
     let p = this.parentWriter ? this.parentWriter : this;
-    if (contentType && !p.contentType) p.contentType = contentType;
+    if (p.contentType) {
+      console.log(`reset ${p.contentType} with ${contentType}`);
+    }
+    p.contentType = contentType;
+    p.contentQueue = new Array();
   }
 
   public error(err) {
