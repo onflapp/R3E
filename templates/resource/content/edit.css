@@ -1,0 +1,31 @@
+html,body {
+  height: 100%;
+  margin: 0px;
+}
+body {
+  box-sizing: border-box;
+  display: flex;
+  flex-flow: column;
+}
+.head {
+  margin: 8px;
+  margin-top: 0px;
+  flex: 0 1 auto;
+}
+form {
+  flex: 1 1 auto;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+textarea {
+  resize: none;
+  box-sizing: border-box;
+  padding-left: 8px;
+  display: block;
+  width: 100%;
+  height: 100%;
+  font-family: monospace;
+  font-size: 11px;
+}

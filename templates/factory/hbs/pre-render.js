@@ -42,7 +42,7 @@
     var context = block.data.root._context;
     var session = block.data.root._session;
     var p = session.makeOutputPlaceholder();
-
+debugger;
     var render_content = function(path) {
       context.resolveTemplateResourceContent(path).then(function(buff) {
         p.write(buff);
