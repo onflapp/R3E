@@ -3367,10 +3367,12 @@ class DOMContentWriter {
         let self = this;
         this.patchWindowObjects();
         document.documentElement.innerHTML = content;
+        self.requestHandler.dispatchAllEvents('start', this);
         let done_loading = function () {
             self.evaluateScripts();
             self.loadExternal();
             self.attachListeners();
+            self.requestHandler.dispatchAllEvents('end', this);
         };
         window.requestAnimationFrame(function () {
             done_loading();
@@ -3412,6 +3414,7 @@ class DOMContentWriter {
         else if (this.extdata && this.extdata.length) {
             let blob = new Blob(this.extdata, { type: this.exttype });
             let uri = window.URL.createObjectURL(blob);
+            this.requestHandler.dispatchAllEvents('end', this);
             window.location.replace(uri);
         }
         this.htmldata = null;

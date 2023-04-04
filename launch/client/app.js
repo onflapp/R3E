@@ -117,7 +117,17 @@ window.addEventListener('storage', function(evt) {
   }
 });
 
+handler.addEventListener('start', function() {
+  document.body.style.transition = 'opacity 0.3s ease-in';
+  document.body.style.opacity = '0';
+});
+
+handler.addEventListener('end', function() {
+  document.body.style.opacity = '1';
+});
+
 //start by listing content of the root resource
 var path = location.hash.substr(1);
 if (!path) path = '/.@res-list';
+
 handler.handleRequest(path);
