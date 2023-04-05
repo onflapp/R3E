@@ -6,25 +6,29 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 
-  {{include_css "resource/content/edit.css"}}
+  {{include_css "resource/content/edit.css" "resource/res-ui.css"}}
+  {{include_js "resource/content/scrollfix.js"}}
 
   <title>edit:{{R.PATH}}</title>
 </head>
 
 <body>
   <div class="head">
-    <ol>
+    <ol class="breadcrumbs">
       <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
-  {{#include "." "parents"}}
+{{#include "." "parents"}}
       <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
-  {{/include}}
+{{/include}}
       <li class="active">{{name}}</li>
     </ol>
 
-    <a href="{{req_path ".." "res-list"}}">l</a>
-    <button type="submit" form="text_form">s</button>
+{{#match isTextContentResource}}
+    <div class="toolbar">
+      <a href="{{req_path ".." "res-list"}}">list</a>
+      <button type="submit" form="text_form">save</button>
+    </div>
+
   </div>
-  {{#match isTextContentResource}}
 
   <form method="post" action="{{res_path R.PATH}}" id="text_form">
     <input type="hidden" name=":forward" value="{{req_path "."}}">
@@ -37,11 +41,14 @@
 
 {{/match}}
 {{#match contentType "startsWith" "image/"}}
+    <div class="toolbar">
+      <a href="{{req_path ".." "res-list"}}">list</a>
+      <a target="_blank" href="{{include "." "externalize"}}">view</a>
+    </div>
 
-    <a href="{{req_path R.DIRNAME_APPEND "res-list"}}">List</a>
-    <a target="_blank" href="{{include "." "externalize"}}">View</a>
+  </div>
 
-    <img class="image" src="{{include "." "externalize"}}"></img>
+  <img class="image" src="{{include "." "externalize"}}"></img>
 
 {{/match}}
 {{#match contentType "startsWith" "application/pdf"}}

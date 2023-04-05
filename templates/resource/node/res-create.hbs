@@ -7,6 +7,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
+  {{include_css "resource/res-ui.css"}}
+
   <title>create</title>
 </head>
 
@@ -14,7 +16,7 @@
 
   <h4>Create New Resource</h4>
 
-  <ol>
+  <ol class="breadcrumbs">
     <li>HOME</li>
 {{#include "." "parents"}}
     <li>{{name}}</li>

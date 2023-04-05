@@ -1,0 +1,53 @@
+body {
+  font-family: system-ui;
+  font-size: small;
+}
+
+.breadcrumbs li {
+  display: inline-block;
+}
+
+.breadcrumbs li a {
+  border-right: 1px solid black;
+  padding-right: 4px;
+  text-decoration: none;
+}
+
+.breadcrumbs {
+  padding-inline-start: 0;
+}
+
+.toolbar {
+  margin-bottom: 1rem;
+}
+
+.toolbar > * {
+  font-weight: bold;
+  display: inline-flex;
+  border: 1px solid black;
+  padding: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+  text-decoration: none;
+  color: black;
+  background-color: white;
+  font-size: small;
+  box-sizing: border-box;
+  font-family: system-ui;
+  text-align: center;
+}
+
+@media only screen and (hover: none) {
+
+body {
+  font-family: system-ui;
+  font-size: large;
+}
+
+.toolbar > * {
+  font-size: large;
+  min-width: 32px;
+}
+
+}
+

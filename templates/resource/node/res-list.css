@@ -1,3 +1,10 @@
-body {
-  background-color: red;
+table {
+  width: 100%;
+  border-spacing: 0;
+  margin-bottom: 1rem;
+}
+
+table td {
+  border-left: 1px solid black;
+  padding-left: 4px;
 }

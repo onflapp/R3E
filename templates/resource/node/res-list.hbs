@@ -7,21 +7,13 @@
   <meta name="viewport" content="user-scalable=no,width=device-width, initial-scale=1.0">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   
-  <style>
-  table {
-    width: 100%;
-  }
-
-  table td {
-    border: 1px solid gray;
-  }
-  </style>
+  {{include_css "resource/res-ui.css" "resource/node/res-list.css"}}
 
   <title>list:{{R.PATH}}</title>
 </head>
 
 <body>
-  <ol>
+  <ol class="breadcrumbs">
     <li><a href="{{req_path "/"}}">HOME</a></li>
 {{#include "." "parents"}}
     <li><a href="{{req_path path}}">{{name}}</a></li>
@@ -29,7 +21,7 @@
     <li class="active">{{name}}</li>
   </ol>
 
-  <div>
+  <div class="toolbar">
     <a href="{{req_path "." "res-create"}}">n</a>
     <a href="{{req_path "." "res-renderer"}}">r</a>
     <a href="{{req_path "." "res-properties"}}">p</a>

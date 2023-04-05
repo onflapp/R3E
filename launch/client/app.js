@@ -1,5 +1,4 @@
-//clear the body to reduce flashing
-document.body.innerHTML = '';
+document.body.innerHTML = '.';
 
 Utils.ENABLE_TRACE_LOG = 0;
 
@@ -112,7 +111,7 @@ handler.registerFactory('js', new JSRendererFactory());
 handler.registerFactory('func', new InterFuncRendererFactory()); //internal functions, usefull for function-based renderers
 
 window.addEventListener('storage', function(evt) {
-  if (evt.key.charAt(0) != '_' && !document.hasFocus()) {
+  if (evt.key.charAt(0) != '_') {
     window.location.reload();
   }
 });
