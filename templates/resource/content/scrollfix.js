@@ -4,7 +4,6 @@ function scroll_fix() {
 
   window.ontouchend = function(evt) {
     if (window.pageYOffset < 5) return;
-    console.log('T');
 
     window.scrollTo(0, -1);
     setTimeout(function() {
@@ -24,6 +23,13 @@ function scroll_unfix() {
 }
 
 window.visualViewport.addEventListener('resize', function(evt) {
+  if (window.visualViewport.height < 200) {
+    document.body.classList.add('small');
+  }
+  else {
+    document.body.classList.remove('small');
+  }
+
   if (window.visualViewport.height < window.document.body.clientHeight) {
     window.scrollTo(0, -1);
     setTimeout(function() {
@@ -33,4 +39,5 @@ window.visualViewport.addEventListener('resize', function(evt) {
   else {
     scroll_unfix();
   }
+
 });

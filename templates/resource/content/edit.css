@@ -8,9 +8,7 @@ body {
   flex-flow: column;
 }
 .head {
-  margin: 8px;
-  margin-top: 0px;
-  margin-bottom: 0px;
+  margin: 4px;
   flex: 0 1 auto;
 }
 form {
@@ -46,9 +44,15 @@ textarea {
   height: 100%;
 }
 
-.toolbar {
+.head .buttons {
+  display: inline-block;
+  float: right;
+}
+.head .paths {
+  margin: 0;
   display: inline-block;
 }
-.breadcrumbs {
-  display: inline-block;
+
+body.small .head {
+  display: none;
 }

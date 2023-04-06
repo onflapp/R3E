@@ -13,9 +13,11 @@
 </head>
 
 <body>
-  <h4>Delete</h4>
+  <h3>Delete
+    <a class="button" href="{{req_path "../" "res-list"}}">cancel</a>
+  </h3>
 
-  <ol class="breadcrumbs">
+  <ol class="paths">
     <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
 {{#include "." "parents"}}
     <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
@@ -26,13 +28,10 @@
   <h4>Are you sure you want to delete "{{name}}"?</h4>
 
   <form method="post" action="{{res_path "."}}">
-    <div class="toolbar">
-      <a href="{{req_path "../" "res-list"}}">cancel</a>
-      <input type="hidden" name="_rt" value="{{renderType}}">
-      <input type="hidden" name=":delete" value="{{res_path "."}}">
-      <input type="hidden" name=":forward" value="{{ref_path "/../" "res-list"}}">
-      <button type="submit">delete</button>
-    </div>
+    <input type="hidden" name="_rt" value="{{renderType}}">
+    <input type="hidden" name=":delete" value="{{res_path "."}}">
+    <input type="hidden" name=":forward" value="{{ref_path "/../" "res-list"}}">
+    <button type="submit">delete</button>
   </form>
 
 </body>

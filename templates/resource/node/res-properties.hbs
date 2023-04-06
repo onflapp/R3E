@@ -14,20 +14,20 @@
 
 <body>
 
-  <ol class="breadcrumbs">
-    <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
+  <ol class="paths">
+    <li><a href="{{req_path "/" "res-properties"}}">HOME</a></li>
 {{#include "." "parents"}}
-    <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
+    <li><a href="{{req_path path "res-properties"}}">{{name}}</a></li>
 {{/include}}
     <li>{{name}}</li>
   </ol>
 
-  <div class="toolbar">
+  <div class="buttons">
     <a href="{{req_path "." "res-renderer"}}">r</a>
-    <a href="{{req_path "." "res-list"}}">cancel</a>
+    <a href="{{req_path "." "res-list"}}">list</a>
   </div>
 
-  <h4>properties:</h4>
+  <h4>Resource Properties</h4>
 
   <table>
 {{#include "." "keyvalues"}}
@@ -63,5 +63,4 @@
   </form>
 
 </body>
-
 </html>

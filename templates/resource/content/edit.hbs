@@ -15,7 +15,7 @@
 
 <body>
   <div class="head">
-    <ol class="breadcrumbs">
+    <ol class="paths">
       <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
 {{#include "." "parents"}}
       <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
@@ -24,7 +24,7 @@
     </ol>
 
 {{#match isTextContentResource}}
-    <div class="toolbar">
+    <div class="buttons">
       <a href="{{req_path ".." "res-list"}}">cancel</a>
       <button type="submit" form="text_form">save</button>
     </div>

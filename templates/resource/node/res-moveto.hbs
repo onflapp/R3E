@@ -13,9 +13,11 @@
 </head>
 
 <body>
-  <h4>Move "{{name}}"</h4>
+  <h3>Move "{{name}}"
+    <a class="button" href="{{req_path "../" "res-list"}}">cancel</a>
+  </h3>
 
-  <ol class="breadcrumbs">
+  <ol class="paths">
     <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
 {{#include "." "parents"}}
     <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
@@ -25,7 +27,7 @@
 
   <h4>to</h4>
 
-  <ol class="breadcrumbs">
+  <ol class="paths">
     <li><a href="{{req_path "." "res-moveto"}}/">HOME</a></li>
 {{#include R.DATA_PATH "parents"}}
     <li><a href="{{req_path "." "res-moveto"}}{{path}}">{{name}}</a></li>
@@ -54,10 +56,7 @@
     <input type="hidden" name=":moveto" value="{{res_path R.DATA_PATH "{:name}"}}">
     <input type="hidden" name=":forward" value="{{req_path R.DATA_PATH "res-list"}}">
 
-    <div class="toolbar" style="margin-top:1rem">
-      <a href="{{req_path "../" "res-list"}}">cancel</a>
-      <button type="submit">move</button>
-    </div>
+    <button type="submit">move</button>
   </form>
 
 </body>

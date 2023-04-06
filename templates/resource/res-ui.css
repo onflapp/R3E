@@ -3,17 +3,17 @@ body {
   font-size: small;
 }
 
-.breadcrumbs li {
+.paths li {
   display: inline-block;
 }
 
-.breadcrumbs li a {
+.paths li a {
   border-right: 1px solid black;
   padding-right: 4px;
   text-decoration: none;
 }
 
-.breadcrumbs {
+.paths {
   padding-inline-start: 0;
 }
 
@@ -21,35 +21,56 @@ body {
   margin-bottom: 1rem;
 }
 
-.toolbar > * {
+h3 a {
+  font-weight: bold;
+  float: right;
+  text-decoration: none;
+  padding: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+button, .button, .buttons > * {
   font-weight: bold;
   display: inline-flex;
   border: 1px solid black;
   padding: 0;
   padding-left: 4px;
   padding-right: 4px;
-  text-decoration: none;
   color: black;
   background-color: white;
+  text-decoration: none;
   font-size: small;
   box-sizing: border-box;
   font-family: system-ui;
   text-align: center;
 }
 
-table button {
-  font-weight: bold;
-  display: inline-flex;
-  border: 1px solid black;
+select {
+  border: 0;
+  border-radius: 0;
+  padding-left: 2px !important;
+  border-left: 1px solid black;
+  border-bottom: 1px solid black;
+  width: 150px;
   padding: 0;
-  padding-left: 4px;
-  padding-right: 4px;
-  color: black;
-  background-color: white;
-  font-size: small;
-  box-sizing: border-box;
-  font-family: system-ui;
-  text-align: center;
+  outline: 0;
+  -webkit-appearance: none;
+}
+
+input[type=file] {
+  font-size: x-small;
+  border-left: 1px solid black;
+  border-bottom: 1px solid black;
+  padding: 1px;
+  width: 150px;
+}
+
+input[type=file]::file-selector-button {
+  width: 1px !important;
+  opacity: 0;
+  border: 0;
+  -webkit-appearance: none;
 }
 
 td form {
@@ -64,19 +85,17 @@ input {
   box-sizing: border-box;
   border: 0;
   border-bottom: 1px dotted black;
+  border-radius: 0;
 }
 
 @media only screen and (hover: none) {
+  body {
+    font-family: system-ui;
+  }
 
-body {
-  font-family: system-ui;
-  font-size: large;
-}
-
-.toolbar > * {
-  font-size: large;
-  min-width: 32px;
-}
-
+  button, .button, .buttons > * {
+    min-width: 32px;
+    font-size: large;
+  }
 }
 

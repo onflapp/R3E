@@ -4,23 +4,21 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
-  <title>mount</title>
+  {{include_css "resource/res-ui.css"}}
+
+  <title>create</title>
 </head>
 
 <body>
-  
-  <ol>
-    <li>HOME</li>
-{{#include "." "parents"}}
-    <li>{{name}}</li>
-{{/include}}
-    <li>{{name}}</li>
-  </ol>
 
-  <h5>Create ObjectResource as:</h5>
+  <h3>Create New Root Resource
+    <a class="button" href="{{req_path "." "res-list"}}">cancel</a>
+  </h3>
+
+  <h4>Temporary ObjectResource</h4>
 
   <form method="post" action="{{res_path R.PATH "{:name}"}}">
     <input name=":name|newUUID" value="" autocomplete="off" placeholder="name">
@@ -28,16 +26,14 @@
     <button type="submit">add</button>
   </form>
 
-  <h5>Import File</h5>
+  <h4>Import File</h4>
   
   <form method="post" enctype="multipart/form-data" action="{{R.PATH}}">
     <input type="file" name=":import" value="">
     <input type="hidden" name=":forward" value="{{req_path "." "res-list"}}">
 
-    <button type="submit">add</button>
+    <button type="submit">import</button>
   </form>
-
-  <a href="{{req_path "." "res-list"}}">Cancel</a>
 
 </body>
 </html>

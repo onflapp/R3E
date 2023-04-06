@@ -13,9 +13,11 @@
 </head>
 
 <body>
-  <h4>Copy "{{name}}"</h4>
+  <h3>Copy "{{name}}"
+    <a class="button" href="{{req_path "../" "res-list"}}">cancel</a>
+  </h3>
 
-  <ol class="breadcrumbs">
+  <ol class="paths">
     <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
 {{#include "." "parents"}}
     <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
@@ -25,12 +27,12 @@
 
   <h4>to</h4>
 
-  <ol class="breadcrumbs">
+  <ol class="paths">
     <li><a href="{{req_path "." "res-copyto"}}/">HOME</a></li>
 {{#include R.DATA_PATH "parents"}}
     <li><a href="{{req_path "." "res-copyto"}}{{path}}">{{name}}</a></li>
 {{/include}}
-    <li class="active">{{R.DATA_NAME}}</li>
+    <li>{{R.DATA_NAME}}</li>
   </ol>
 
   <ol>
@@ -47,24 +49,23 @@
 {{/include}}
   </ol>
 
+  <h4>name</h4>
   <form method="post" action="{{R.PATH}}">
-    <h4>name</h4>
 
     <input name=":name|newUUID" value="Copy of {{R.NAME}}" autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false">
     <input type="hidden" name=":copyto" value="{{res_path R.DATA_PATH "{:name}"}}">
     <input type="hidden" name=":forward" value="{{req_path R.DATA_PATH "res-list"}}">
 
-    <div class="toolbar" style="margin-top:1rem">
-      <a target="_blank" href="{{req_path "." "export"}}">export</a>
-      <a href="{{req_path "." "res-exportto"}}{{R.DATA_PATH}}">export to...</a>
-  {{#if isContentResource}}
-      <a href="{{req_path "." "res-importto"}}{{R.DATA_PATH}}">import to...</a>
-  {{/if}}
-
-      <a href="{{req_path "../" "res-list"}}">cancel</a>
-      <button type="submit">copy</button>
-    </div>
+    <button type="submit">copy</button>
   </form>
+
+  <h3>Export</h3>
+
+  <a class="button" target="_blank" href="{{req_path "." "export"}}">as JSON</a>
+  <a class="button" href="{{req_path "." "res-exportto"}}{{R.DATA_PATH}}">to resource...</a>
+{{#if isContentResource}}
+  <a class="button" href="{{req_path "." "res-importto"}}{{R.DATA_PATH}}">import into...</a>
+{{/if}}
 
 </body>
 </html>
