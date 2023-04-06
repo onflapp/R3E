@@ -7,47 +7,59 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
-  <title>properties</title>
+  {{include_css "resource/res-ui.css" "resource/node/res-list.css"}}
+
+  <title>properties:{{R.PATH}}</title>
 </head>
 
 <body>
 
-  <h4 class="modal-title">Resource Properties</h4>
-
-  <ol>
-    <li>HOME</li>
+  <ol class="breadcrumbs">
+    <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
 {{#include "." "parents"}}
-    <li>{{name}}</li>
+    <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
 {{/include}}
     <li>{{name}}</li>
   </ol>
 
+  <div class="toolbar">
+    <a href="{{req_path "." "res-renderer"}}">r</a>
+    <a href="{{req_path "." "res-list"}}">cancel</a>
+  </div>
+
   <h4>properties:</h4>
 
+  <table>
 {{#include "." "keyvalues"}}
-  <label>{{name}}</label>
-  <input name="{{name}}" value="{{value}}" form="save_form" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false">
-  
-  <form method="POST" action="{{res_path "."}}">
-    <input type="hidden" name="{{name}}" value="">
-    <input type="hidden" name=":forward" value="{{req_path "."}}">
-    <button type="submit" name="{{name}}" value="">del</button>
-  </form>
+    <tr>
+      <td>{{name}}</td>
+      <td>
+        <input name="{{name}}" value="{{value}}" form="save_form" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false">
+      </td>
+      <td>
+        <button type="submit" form="save_form" style="display:none">+</button>
+        <form method="post" action="{{res_path "."}}">
+          <input type="hidden" name=":forward" value="{{req_path "."}}">
+          <button type="submit" name="{{name}}">-</button>
+        </form>
+      </td>
+    </tr>
 {{/include}}
+    <tr>
+      <td>
+        <input name=":name" value="" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="name" form="save_form">
+      </td>
+      <td>
+        <input name="{:name}" value="" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="value" form="save_form">
+      </td>
+      <td>
+        <button type="submit" form="save_form">+</button>
+      </td>
+    </tr>
+  </table>
 
-  <form method="POST" action="{{res_path "."}}">
-    <input name=":name" value="" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="name">
-    <input name="{:name}" value="" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="value">
-    <button type="submit" value="add">add</button>
-    <input type="hidden" name=":forward" value="{{req_path R.PATH "res-properties"}}">
-  </form>
-
-  <a href="{{req_path "." "res-renderer"}}">Renderer Properties...</a>
-
-  <form method="POST" id="save_form" action="{{res_path "."}}">
-    <a href="{{req_path "." "res-list"}}">Cancel</a>
+  <form method="post" action="{{res_path "."}}" id="save_form">
     <input type="hidden" name=":forward" value="{{req_path "."}}">
-    <input type="submit" value="Save">
   </form>
 
 </body>

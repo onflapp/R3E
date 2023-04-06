@@ -5,6 +5,7 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
   {{include_css "resource/content/edit.css" "resource/res-ui.css"}}
   {{include_js "resource/content/scrollfix.js"}}
@@ -19,12 +20,12 @@
 {{#include "." "parents"}}
       <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
 {{/include}}
-      <li class="active">{{name}}</li>
+      <li>{{name}}</li>
     </ol>
 
 {{#match isTextContentResource}}
     <div class="toolbar">
-      <a href="{{req_path ".." "res-list"}}">list</a>
+      <a href="{{req_path ".." "res-list"}}">cancel</a>
       <button type="submit" form="text_form">save</button>
     </div>
 
@@ -42,21 +43,25 @@
 {{/match}}
 {{#match contentType "startsWith" "image/"}}
     <div class="toolbar">
-      <a href="{{req_path ".." "res-list"}}">list</a>
+      <a href="{{req_path ".." "res-list"}}">cancel</a>
       <a target="_blank" href="{{include "." "externalize"}}">view</a>
     </div>
 
   </div>
 
-  <img class="image" src="{{include "." "externalize"}}"></img>
+  <img src="{{include "." "externalize"}}" id="image_view"></img>
 
 {{/match}}
 {{#match contentType "startsWith" "application/pdf"}}
 
-    <a href="{{req_path R.DIRNAME_APPEND "res-list"}}">List</a>
-    <a target="_blank" href="{{include "." "externalize"}}">View</a>
+    <div class="toolbar">
+      <a href="{{req_path ".." "res-list"}}">cancel</a>
+      <a target="_blank" href="{{include "." "externalize"}}">open</a>
+    </div>
+  
+  </div>
 
-    <iframe class="pdf" src="{{include "." "externalize"}}"></iframe>
+  <iframe src="{{include "." "externalize"}}" id="pdf_view"></iframe>
 
 {{/match}}
 {{#default}}

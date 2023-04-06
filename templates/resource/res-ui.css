@@ -37,6 +37,35 @@ body {
   text-align: center;
 }
 
+table button {
+  font-weight: bold;
+  display: inline-flex;
+  border: 1px solid black;
+  padding: 0;
+  padding-left: 4px;
+  padding-right: 4px;
+  color: black;
+  background-color: white;
+  font-size: small;
+  box-sizing: border-box;
+  font-family: system-ui;
+  text-align: center;
+}
+
+td form {
+  display: inline-block;
+}
+
+td input {
+  width: 100%;
+}
+
+input {
+  box-sizing: border-box;
+  border: 0;
+  border-bottom: 1px dotted black;
+}
+
 @media only screen and (hover: none) {
 
 body {

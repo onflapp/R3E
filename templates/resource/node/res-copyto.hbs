@@ -4,26 +4,28 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+  {{include_css "resource/res-ui.css"}}
 
   <title>copy to</title>
 </head>
 
 <body>
-  <h1>Copy from</h1>
+  <h4>Copy "{{name}}"</h4>
 
-  <ol>
-    <li>HOME</li>
+  <ol class="breadcrumbs">
+    <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
 {{#include "." "parents"}}
-    <li>{{name}}</li>
+    <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
 {{/include}}
     <li>{{name}}</li>
   </ol>
 
-  <h1>to</h1>
+  <h4>to</h4>
 
-  <ol>
+  <ol class="breadcrumbs">
     <li><a href="{{req_path "." "res-copyto"}}/">HOME</a></li>
 {{#include R.DATA_PATH "parents"}}
     <li><a href="{{req_path "." "res-copyto"}}{{path}}">{{name}}</a></li>
@@ -31,41 +33,37 @@
     <li class="active">{{R.DATA_NAME}}</li>
   </ol>
 
-  <form method="POST" action="{{R.PATH}}">
-    <table>
+  <ol>
 {{#include R.DATA_PATH "children"}}
   {{#if isContentResource}}
-      <tr>
-        <td>{{name}}</td>
-      </tr>
+    <li>{{name}}</li>
   {{else}}
-      <tr>
-    {{#match path "!startsWith" R.PATH}}
-        <td>
-          <a href="{{req_path "." "res-copyto"}}{{path}}">{{name}}</a>
-        </td>
+    {{#match path "!startsWith" ../R.PATH}}
+    <li>
+      <a href="{{req_path "." "res-copyto"}}{{path}}">{{name}}</a>
+    </li>
     {{/match}}
-      </tr>
   {{/if}}
 {{/include}}
-      <tr>
-        <td>
-          <input name=":name|newUUID" value="Copy of {{R.NAME}}" autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false">
-        </td>
-      </tr>
-    </table>
+  </ol>
 
+  <form method="post" action="{{R.PATH}}">
+    <h4>name</h4>
+
+    <input name=":name|newUUID" value="Copy of {{R.NAME}}" autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false">
     <input type="hidden" name=":copyto" value="{{res_path R.DATA_PATH "{:name}"}}">
     <input type="hidden" name=":forward" value="{{req_path R.DATA_PATH "res-list"}}">
 
-    <a target="_blank" href="{{req_path "." "export"}}">Export</a>
-    <a href="{{req_path "." "res-exportto"}}{{R.DATA_PATH}}">Export to...</a>
-{{#if isContentResource}}
-    <a href="{{req_path "." "res-importto"}}{{R.DATA_PATH}}">Import to...</a>
-{{/if}}
+    <div class="toolbar" style="margin-top:1rem">
+      <a target="_blank" href="{{req_path "." "export"}}">export</a>
+      <a href="{{req_path "." "res-exportto"}}{{R.DATA_PATH}}">export to...</a>
+  {{#if isContentResource}}
+      <a href="{{req_path "." "res-importto"}}{{R.DATA_PATH}}">import to...</a>
+  {{/if}}
 
-    <a href="{{req_path "../" "res-list"}}">Cancel</a>
-    <input type="submit" value="Copy">
+      <a href="{{req_path "../" "res-list"}}">cancel</a>
+      <button type="submit">copy</button>
+    </div>
   </form>
 
 </body>
