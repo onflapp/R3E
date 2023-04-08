@@ -39,6 +39,17 @@ class DOMContentWriter implements ContentWriter {
       };
     }
 
+    if (!window['_customElements_orig_define']) {
+      if (window['customElements']) {
+        window['_customElements_orig_define'] = CustomElementRegistry.prototype.define;
+        window.customElements.define = function(a, b, c) {
+          if (!window.customElements.get(a)) {
+            window['_customElements_orig_define'].call(this, a, b, c);
+          }
+        };
+      }
+    }
+
     if (!window['XMLHttpRequest']['_prototype_orig_open']) {
       window['XMLHttpRequest']['_prototype_orig_open'] = window['XMLHttpRequest'].prototype.open;
       window['XMLHttpRequest'].prototype.open = function(method, path) {
