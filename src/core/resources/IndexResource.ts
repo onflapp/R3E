@@ -33,7 +33,8 @@ abstract class IndexResource extends ObjectResource {
 
   public abstract initIndexEngine(callback);
   public abstract indexTextData(text, callback);  
-  public abstract searchChildrenResources(qry: string, callback);
+  public abstract searchResources(qry: string, callback);
+  public abstract removeResourcesFromIndex(name: string, callback);
 
   public resolveItself(callback) {
     let self = this;
@@ -91,5 +92,18 @@ abstract class IndexResource extends ObjectResource {
       self.indexTextData(text.join('\n'), callback);
     }
     else if (callback) callback();
+  }
+
+  public removeChildResource(name: string, callback) {
+    if (name == '_THE_INDEX_' && !this.parentIndexResource) {
+      let self = this;
+      this.initIndexEngine(function(indx) {
+        self.indx = indx;
+        if (callback) callback();
+      });
+    }
+    else {
+      this.removeResourcesFromIndex(name, callback);
+    }
   }
 }

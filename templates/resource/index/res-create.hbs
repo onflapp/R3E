@@ -4,69 +4,53 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
-  <title>index content</title>
+  {{include_css "resource/res-ui.css"}}
 
-  <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
+  <title>index content</title>
 </head>
 
 <body>
 
-  <div role="dialog">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <a class="close" href="{{req_path R.PATH "res-list"}}"><span aria-hidden="true">&times;</span></a>
-          <h4 class="modal-title">Index Resource Content</h4>
-        </div>
-        <div class="modal-body">
+  <h3>Index Resource Content
+    <a class="button" href="{{req_path "." "res-list"}}">cancel</a>
+  </h3>
 
+  <ol class="paths">
+    <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
+{{#include "." "parents"}}
+    <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
+{{/include}}
+    <li>{{name}}</li>
+  </ol>
 
-          <ol class="breadcrumb">
-            <li class="active">HOME</li>
-            {{#include "." "parents"}}
-              <li class="active">{{name}}</li>
-            {{/include}}
-            <li>{{R.NAME}}</li>
-          </ol>
+  <h4>Index Text</h4>
 
-          <h5>Upload File</h5>
+  <form method="post" enctype="multipart/form-data" action="{{res_path R.PATH "{:name}"}}">
+    <textarea autocorrect="off" autocapitalize="none" autocomplete="off" autofocus="on" spellcheck="false" name="_content"></textarea>
+    <input name=":name|newUUID" value="" autocomplete="off" placeholder="reference path">
+    <input type="hidden" name=":forward" value="{{req_path R.PATH "res-list"}}">
+    <button type="submit">index</button>
+  </form>
 
-          <form class="form-inline" method="post" enctype="multipart/form-data" action="{{C.P}}{{R.PATH_APPEND}}{:name}">
-            <div class="form-group">
-              <input class="form-control" type="file" name=":filename" value="">
-              <input class="form-control" name=":name|:filename|newUUID" value="" autocomplete="off" placeholder="file name">
-              <input type="hidden" name=":forward" value="{{req_path R.PATH "res-list"}}">
-              <button class="form-control btn btn-success" type="submit">
-                <span class="glyphicon glyphicon-plus"></span>
-              </button>
+  <h4>Index File</h4>
 
-            </div>
-          </form>
+  <form method="post" enctype="multipart/form-data" action="{{res_path R.PATH "{:name}"}}">
+    <input type="file" name=":filename" value="">
+    <input name=":name|:filename|newUUID" value="" autocomplete="off" placeholder="reference path">
+    <input type="hidden" name=":forward" value="{{req_path R.PATH "res-list"}}">
+    <button type="submit">upload</button>
+  </form>
 
-          <h5>Import File</h5>
-          <form class="form-inline" method="post" enctype="multipart/form-data" action="{{R.PATH}}">
-            <div class="form-group">
-              <input class="form-control" type="file" name=":import" value="">
-              <input type="hidden" name=":forward" value="{{req_path R.PATH "res-list"}}">
-
-              <button class="form-control btn btn-success" type="submit">
-                <span class="glyphicon glyphicon-plus"></span>
-              </button>
-            </div>
-          </form>
-
-        </div>
-        <div class="modal-footer">
-          <a class="btn btn-default" href="{{C.P}}{{R.PATH}}{{C.X}}res-list">Cancel</a>
-        </div>
-      </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-  </div><!-- /.modal -->
-
+  <h4>Import File</h4>
+          
+  <form method="post" enctype="multipart/form-data" action="{{res_path R.PATH}}">
+    <input class="form-control" type="file" name=":import" value="">
+    <input type="hidden" name=":forward" value="{{req_path R.PATH "res-list"}}">
+    <button type="submit">import</button>
+  </form>
 
 </body>
-
 </html>

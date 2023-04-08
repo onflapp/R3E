@@ -1,3 +1,5 @@
 (function (res, writer, context) {
-  context.forwardRequest(context.getCurrentResourcePath() + '.x-edit');
+  let x = context.getConfigProperty('X');
+  context.forwardRequest(context.getCurrentResourcePath()+x+'edit');
+  writer.end();
 });

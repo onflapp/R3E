@@ -4,38 +4,41 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+  {{include_css "resource/res-ui.css"}}
 
   <title>Index Search</title>
 </head>
 
 <body>
-
-  <ol>
+  <ol class="paths">
     <li><a href="{{req_path "/"}}">HOME</a></li>
 {{#include "." "parents"}}
     <li><a href="{{req_path path}}">{{name}}</a></li>
 {{/include}}
-    <li class="active">{{name}}</li>
+    <li>{{name}}</li>
   </ol>
 
-  <a href="{{req_path "." "res-create"}}">create</a>
-
-  <form method="get" action="/index{{C.X}}res-list">
+  <form method="get" action="{{req_path "." "res-list"}}">
+    <a class="button" href="{{req_path "." "res-create"}}">create</a>
+    <a class="button" href="{{req_path "." "/_THE_INDEX_" "res-delete"}}">clear</a>
     <input name="q" type="text" placeholder="search" value="{{Q.q}}">
+    <button type="submit">search</button>
   </form>
 
   <table>
 {{#include "." "children"}}
     <tr>
       <td>
-        <a href="{{C.P}}{{_.reference}}{{R.SUFFIX}}">{{name}}</a>
+        <a href="{{req_path ref "res-list"}}">{{name}}</a>
       </td>
       <td>
-        {{_.score}}
+        {{score}}
       </td>
       <td>
-        <a class="btn btn-default glyphicon glyphicon-trash" href="{{C.P}}{{path}}{{C.X}}res-delete"></a>
+        <a href="{{req_path "." ref "res-delete"}}">d</a>
       </td>
     </tr>
 {{/include}}

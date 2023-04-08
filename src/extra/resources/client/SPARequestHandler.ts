@@ -1,15 +1,15 @@
 class SPARequestHandler extends ClientRequestHandler {
-  protected currentPath: string;
 
   constructor(resourceResolver: ResourceResolver, templateResolver: ResourceResolver, contentWriter: DOMContentWriter) {
     super(resourceResolver, templateResolver, contentWriter);
+  }
 
-/* XXX
-        window.addEventListener('hashchange', function (evt) {
+  protected initHandlers() {
+    let self = this;
+    window.addEventListener('hashchange', function (evt) {
       let path = window.location.hash.substr(1);
       self.handleRequest(path);
     });
-*/
   }
 
   public handleEnd() {

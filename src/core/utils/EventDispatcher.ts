@@ -24,7 +24,7 @@ class EventDispatcher {
     let handlers = this._eventHandlers[evt];
     if (handlers) {
       for (let i = 0; i < handlers.length; i += 1) {
-        handlers[i](args);
+        handlers[i](evt, ...args);
       }
     }
   }

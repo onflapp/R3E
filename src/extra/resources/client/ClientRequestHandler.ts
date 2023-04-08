@@ -89,9 +89,14 @@ class DOMContentWriter implements ContentWriter {
             let v = info.formData[k];
             q.push(k+'='+escape(v));
           }
+
+          if (action.indexOf('#')) action = action.substr(action.indexOf('#')+1);
+          if (q.length) action += '?'+q.join('&');
+
           setTimeout(function () {
-            requestHandler.handleRequest(action+'?'+q.join('&'));
-          },10);
+            requestHandler.forwardRequest(action);
+            requestHandler.handleEnd();
+          });
         }
       }
       catch(ex) {
@@ -236,8 +241,11 @@ class ClientRequestHandler extends ResourceRequestHandler {
     let writer = contentWriter ? contentWriter : new DOMContentWriter();
     super(resourceResolver, templateResolver, writer);
     writer.setRequestHandler(this);
-    let self = this;
 
+    this.initHandlers();
+  }
+
+  protected initHandlers() {
     window.addEventListener('hashchange', function (evt) {
       window.location.reload();
     });

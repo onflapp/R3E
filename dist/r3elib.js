@@ -291,7 +291,7 @@ class EventDispatcher {
         let handlers = this._eventHandlers[evt];
         if (handlers) {
             for (let i = 0; i < handlers.length; i += 1) {
-                handlers[i](args);
+                handlers[i](evt, ...args);
             }
         }
     }
@@ -1600,7 +1600,7 @@ class ResourceRequestHandler extends EventDispatcher {
         let rres = this.resourceResolver;
         let storedata = function (path) {
             self.expandDataAndStore(path, data, function () {
-                self.dispatchAllEventsAsync('stored', path, data);
+                self.dispatchAllEvents('stored', path, data);
                 callback();
             });
         };
@@ -1613,31 +1613,31 @@ class ResourceRequestHandler extends EventDispatcher {
             let importto = Utils.absolute_path(data[':import'], resourcePath);
             if (copyto) {
                 rres.copyResource(resourcePath, copyto, function () {
-                    self.dispatchAllEventsAsync('stored', copyto, data);
+                    self.dispatchAllEvents('pre-copyto', copyto, data);
                     storedata(copyto);
                 });
             }
             else if (cloneto) {
                 rres.cloneResource(resourcePath, cloneto, function () {
-                    self.dispatchAllEventsAsync('stored', cloneto, data);
+                    self.dispatchAllEvents('pre-cloneto', cloneto, data);
                     storedata(cloneto);
                 });
             }
             else if (copyfrom) {
                 rres.copyResource(copyfrom, resourcePath, function () {
-                    self.dispatchAllEventsAsync('stored', resourcePath, data);
+                    self.dispatchAllEvents('pre-copyfrom', resourcePath, data);
                     storedata(resourcePath);
                 });
             }
             else if (moveto) {
                 rres.moveResource(resourcePath, moveto, function () {
-                    self.dispatchAllEventsAsync('stored', moveto, data);
+                    self.dispatchAllEvents('pre-moveto', moveto, data);
                     storedata(moveto);
                 });
             }
             else if (remove) {
                 rres.removeResource(resourcePath, function () {
-                    self.dispatchAllEventsAsync('stored', remove, data);
+                    self.dispatchAllEvents('pre-remove', remove, data);
                     callback();
                 });
             }
@@ -1646,11 +1646,12 @@ class ResourceRequestHandler extends EventDispatcher {
                     delete data[':import'];
                     delete data['_ct'];
                     delete data['_content'];
-                    self.dispatchAllEventsAsync('stored', resourcePath, data);
+                    self.dispatchAllEvents('pre-importto', resourcePath, data);
                     storedata(resourcePath);
                 });
             }
             else {
+                self.dispatchAllEvents('pre-store', resourcePath, data);
                 storedata(resourcePath);
             }
         }
@@ -2452,6 +2453,19 @@ class IndexResource extends ObjectResource {
         }
         else if (callback)
             callback();
+    }
+    removeChildResource(name, callback) {
+        if (name == '_THE_INDEX_' && !this.parentIndexResource) {
+            let self = this;
+            this.initIndexEngine(function (indx) {
+                self.indx = indx;
+                if (callback)
+                    callback();
+            });
+        }
+        else {
+            this.removeResourcesFromIndex(name, callback);
+        }
     }
 }
 class HBSRendererFactory extends TemplateRendererFactory {
@@ -3305,9 +3319,14 @@ class DOMContentWriter {
                         let v = info.formData[k];
                         q.push(k + '=' + escape(v));
                     }
+                    if (action.indexOf('#'))
+                        action = action.substr(action.indexOf('#') + 1);
+                    if (q.length)
+                        action += '?' + q.join('&');
                     setTimeout(function () {
-                        requestHandler.handleRequest(action + '?' + q.join('&'));
-                    }, 10);
+                        requestHandler.forwardRequest(action);
+                        requestHandler.handleEnd();
+                    });
                 }
             }
             catch (ex) {
@@ -3428,7 +3447,9 @@ class ClientRequestHandler extends ResourceRequestHandler {
         let writer = contentWriter ? contentWriter : new DOMContentWriter();
         super(resourceResolver, templateResolver, writer);
         writer.setRequestHandler(this);
-        let self = this;
+        this.initHandlers();
+    }
+    initHandlers() {
         window.addEventListener('hashchange', function (evt) {
             window.location.reload();
         });
@@ -3545,6 +3566,13 @@ class ClientRequestHandler extends ResourceRequestHandler {
 class SPARequestHandler extends ClientRequestHandler {
     constructor(resourceResolver, templateResolver, contentWriter) {
         super(resourceResolver, templateResolver, contentWriter);
+    }
+    initHandlers() {
+        let self = this;
+        window.addEventListener('hashchange', function (evt) {
+            let path = window.location.hash.substr(1);
+            self.handleRequest(path);
+        });
     }
     handleEnd() {
         if (this.pendingForward) {
@@ -4743,10 +4771,45 @@ class LunrIndexResource extends IndexResource {
     constructor(name, base, index) {
         super(name, base, index);
     }
-    searchChildrenResources(qry, callback) {
+    restoreIndex(elasticlunr, callback) {
+        callback();
+    }
+    makeIndex(elasticlunr, callback) {
+        elasticlunr.tokenizer.setSeperator(/[\W]+/);
+        let index = elasticlunr(function () {
+            this.setRef('id');
+            this.addField('body');
+            this.addField('path');
+            this.addField('name');
+            this.saveDocument(false);
+        });
+        callback(index);
+    }
+    initIndexEngine(callback) {
+        let self = this;
+        let elasticlunr = window['elasticlunr'];
+        if (this.getIndexEngine()) {
+            self.makeIndex(elasticlunr, callback);
+        }
+        else {
+            self.restoreIndex(elasticlunr, function (index) {
+                if (index) {
+                    callback(index);
+                }
+                else {
+                    self.makeIndex(elasticlunr, callback);
+                }
+            });
+        }
+    }
+    searchResources(qry, callback) {
         let indx = this.getIndexEngine();
         let list = [];
-        let rv = indx.search(qry);
+        let opts = {
+            expand: true,
+            bool: "AND"
+        };
+        let rv = indx.search(qry, opts);
         for (let i = 0; i < rv.length; i++) {
             let doc = rv[i];
             let ref = doc['ref'];
@@ -4758,36 +4821,31 @@ class LunrIndexResource extends IndexResource {
         }
         callback(list);
     }
-    initIndexEngine(callback) {
-        let Lunr = window['lunr'];
-        Lunr.tokenizer.seperator = /[\W]+/;
-        let index = Lunr(function () {
-            this.ref('id');
-            this.field('body');
-            this.field('path');
-            this.field('name');
-        });
-        callback(index);
-    }
     indexTextData(text, callback) {
         let name = this.baseName;
         let path = this.getStoragePath();
         let id = '/' + path;
         let indx = this.getIndexEngine();
-        indx.update({
+        let doc = {
             id: id,
             name: name,
             path: path,
             body: text
-        });
+        };
+        indx.removeDoc(doc);
+        indx.addDoc(doc);
         callback();
     }
-    removeChildResource(name, callback) {
+    removeResourcesFromIndex(name, callback) {
         let path = this.getStoragePath(name);
         let id = '/' + path;
         let indx = this.getIndexEngine();
-        indx.remove({ id: id });
+        indx.removeDoc({ id: id });
         callback();
+    }
+    saveIndexAsJSON() {
+        let indx = this.getIndexEngine();
+        return indx.toJSON();
     }
 }
 class HTMLParser {
