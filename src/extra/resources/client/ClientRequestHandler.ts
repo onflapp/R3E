@@ -268,7 +268,14 @@ class ClientRequestHandler extends ResourceRequestHandler {
 
   public handleEnd() {
     if (this.pendingForward) {
-      let p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + this.pendingForward;
+      let p = this.pendingForward;
+      if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) {
+        //use the full URL
+      }
+      else {
+        p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + this.pendingForward;
+      }
+
       if (p == window.location.toString()) {
         window.location.reload();
       }

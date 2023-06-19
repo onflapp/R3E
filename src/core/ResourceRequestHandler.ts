@@ -495,34 +495,35 @@ class ResourceRequestHandler extends EventDispatcher {
       let copyfrom = Utils.absolute_path(data[':copyfrom'], resourcePath);
       let moveto   = Utils.absolute_path(data[':moveto'], resourcePath);
       let importto = Utils.absolute_path(data[':import'], resourcePath);
+      let reset    = Utils.absolute_path(data[':reset'], resourcePath);
 
       if (copyto) {
         rres.copyResource(resourcePath, copyto, function () {
-          self.dispatchAllEvents('pre-copyto', copyto, data);
+          self.dispatchAllEvents('post-copyto', copyto, data);
           storedata(copyto);
         });
       }
       else if (cloneto) {
         rres.cloneResource(resourcePath, cloneto, function () {
-          self.dispatchAllEvents('pre-cloneto', cloneto, data);
+          self.dispatchAllEvents('post-cloneto', cloneto, data);
           storedata(cloneto);
         });
       }
       else if (copyfrom) {
         rres.copyResource(copyfrom, resourcePath, function () {
-          self.dispatchAllEvents('pre-copyfrom', resourcePath, data);
+          self.dispatchAllEvents('post-copyfrom', resourcePath, data);
           storedata(resourcePath);
         });
       }
       else if (moveto) {
         rres.moveResource(resourcePath, moveto, function () {
-          self.dispatchAllEvents('pre-moveto', moveto, data);
+          self.dispatchAllEvents('post-moveto', moveto, data);
           storedata(moveto);
         });
       }
       else if (remove) {
         rres.removeResource(resourcePath, function () {
-          self.dispatchAllEvents('pre-remove', remove, data);
+          self.dispatchAllEvents('post-remove', remove, data);
           callback();
         });
       }
@@ -533,6 +534,12 @@ class ResourceRequestHandler extends EventDispatcher {
           delete data['_content'];
 
           self.dispatchAllEvents('pre-importto', resourcePath, data);
+          storedata(resourcePath);
+        });
+      }
+      else if (reset) {
+        rres.removeResource(reset, function () {
+          self.dispatchAllEvents('pre-store', resourcePath, data);
           storedata(resourcePath);
         });
       }
