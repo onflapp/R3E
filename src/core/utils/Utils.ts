@@ -278,6 +278,7 @@ class Utils {
   }
 
   static ENABLE_TRACE_LOG: boolean = false;
+  static EXPORT_RENDER_CONTEXT: boolean = false;
 
   static log_trace(typ, msg) {
     if (Utils.ENABLE_TRACE_LOG) {
@@ -293,5 +294,12 @@ class Utils {
 
   static flushResourceCache() {
     EventDispatcher.global().dispatchAllEvents('cache-flush');
+  }
+
+  static RegExpFilter(rx): any {
+    return function(p) {
+      if (p.match(rx)) return true;
+      else return false;
+    };
   }
 }

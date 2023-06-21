@@ -265,8 +265,17 @@ class Utils {
     static flushResourceCache() {
         EventDispatcher.global().dispatchAllEvents('cache-flush');
     }
+    static RegExpFilter(rx) {
+        return function (p) {
+            if (p.match(rx))
+                return true;
+            else
+                return false;
+        };
+    }
 }
 Utils.ENABLE_TRACE_LOG = false;
+Utils.EXPORT_RENDER_CONTEXT = false;
 class EventDispatcher {
     constructor() {
         this._eventHandlers = {};
@@ -810,6 +819,12 @@ class ResourceRenderer {
                 context.startRenderSession();
                 try {
                     let map = context.makePropertiesForResource(res);
+                    if (context['sessionData'].renderSessionCount == 1) {
+                        if (Utils.EXPORT_RENDER_CONTEXT) {
+                            window['CTX'] = context;
+                            window['MAP'] = map;
+                        }
+                    }
                     let rv = rend(map, writer, context);
                     if (rv && rv.constructor.name === 'Promise') {
                         rv.then(function () {
@@ -958,7 +973,7 @@ class ResourceRequestContext {
             }
         });
     }
-    listAllResourceNames(resourcePath, callback) {
+    listAllResourceNames(resourcePath, filter) {
         let self = this;
         let rres = this.getResourceResolver();
         let base = this.getCurrentResourcePath();
@@ -967,10 +982,23 @@ class ResourceRequestContext {
             let visit_all = function (res) {
                 Tools.visitAllChidren(res, false, function (rpath) {
                     if (rpath) {
-                        let rv = callback(rpath);
-                        if (rv)
+                        if (filter) {
+                            let rv = filter(rpath);
+                            if (rv == 1 || rv == true) {
+                                ls.push(rpath);
+                                return false;
+                            }
+                            else if (rv < 0) {
+                                return true;
+                            }
+                            else {
+                                return false;
+                            }
+                        }
+                        else {
                             ls.push(rpath);
-                        return rv;
+                            return false;
+                        }
                     }
                     else {
                         resolve(ls);

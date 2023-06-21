@@ -9,8 +9,10 @@ body {
 }
 .head {
   margin: 4px;
+  margin-left: 8px;
   flex: 0 1 auto;
 }
+
 form {
   flex: 1 1 auto;
   box-sizing: border-box;
@@ -20,6 +22,10 @@ form {
 }
 textarea:focus {
   outline: none !important;
+}
+
+#text_form textarea {
+  margin: 0;
 }
 
 textarea {

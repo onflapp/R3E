@@ -1,6 +1,7 @@
 document.body.innerHTML = '.';
 
 Utils.ENABLE_TRACE_LOG = 0;
+Utils.EXPORT_RENDER_CONTEXT = 1;
 
 //sample content as javascript object
 var userConfigVal = {

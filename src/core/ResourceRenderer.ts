@@ -132,6 +132,13 @@ class ResourceRenderer {
         try {
           let map = context.makePropertiesForResource(res);
 
+          if (context['sessionData'].renderSessionCount == 1) {
+            if (Utils.EXPORT_RENDER_CONTEXT) {
+              window['CTX'] = context;
+              window['MAP'] = map;
+            }
+          }
+
           let rv = rend(map, writer, context);
           if (rv && rv.constructor.name === 'Promise') {
             rv.then(function () {

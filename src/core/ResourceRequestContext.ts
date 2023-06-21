@@ -119,7 +119,7 @@ class ResourceRequestContext implements ScriptContext {
     });
   }
 
-  public listAllResourceNames(resourcePath: string, callback:any) : Promise<any> {
+  public listAllResourceNames(resourcePath: string, filter?:any) : Promise<any> {
     let self = this;
     let rres = this.getResourceResolver();
     let base = this.getCurrentResourcePath();
@@ -129,9 +129,23 @@ class ResourceRequestContext implements ScriptContext {
       let visit_all = function(res) {
         Tools.visitAllChidren(res, false, function(rpath) {
           if (rpath) {
-            let rv = callback(rpath);
-            if (rv) ls.push(rpath);
-            return rv;
+            if (filter) {
+              let rv = filter(rpath);
+              if (rv == 1 || rv == true) {
+                ls.push(rpath);
+                return false;
+              }
+              else if (rv < 0) {
+                return true;
+              }
+              else {
+                return false;
+              }
+            }
+            else {
+              ls.push(rpath);
+              return false;
+            }
           }
           else {
             resolve(ls);
