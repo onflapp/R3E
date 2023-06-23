@@ -797,7 +797,7 @@ class ResourceRenderer {
     renderError(message, resource, error, writer) {
         writer.start('text/plain');
         writer.write(message + '\n');
-        writer.write('resource:[' + resource.getName() + '] with type:[' + resource.getType() + ']\n');
+        writer.write('resource:[' + resource.getName() + '] with type:' + resource.getRenderTypes() + '\n');
         if (error)
             writer.write(error.message + '\n' + error.stack);
         writer.end(null);
@@ -948,7 +948,7 @@ class ResourceRequestContext {
             }
         });
     }
-    listResourceNames(resourcePath) {
+    listResourceNames(resourcePath, filter) {
         let self = this;
         let rres = this.getResourceResolver();
         let base = this.getCurrentResourcePath();
@@ -1022,7 +1022,7 @@ class ResourceRequestContext {
             }
         });
     }
-    listResources(resourcePath, cond) {
+    listResources(resourcePath, filter) {
         let self = this;
         let rres = this.getResourceResolver();
         let base = this.getCurrentResourcePath();
@@ -1033,9 +1033,9 @@ class ResourceRequestContext {
                 for (let i = 0; i < ls.length; i++) {
                     let map = self.makePropertiesForResource(ls[i]);
                     map['path'] = Utils.filename_path_append(base, ls[i].getName());
-                    if (cond) {
+                    if (filter) {
                         try {
-                            if (cond(map))
+                            if (filter(map))
                                 rv.push(map);
                         }
                         catch (ex) {

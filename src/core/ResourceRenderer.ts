@@ -107,7 +107,7 @@ class ResourceRenderer {
   protected renderError(message: string, resource: Resource, error: Error, writer: ContentWriter) {
     writer.start('text/plain');
     writer.write(message + '\n');
-    writer.write('resource:[' + resource.getName() + '] with type:[' + resource.getType() + ']\n');
+    writer.write('resource:[' + resource.getName() + '] with type:' + resource.getRenderTypes() + '\n');
     if (error) writer.write(error.message + '\n' + error.stack);
     writer.end(null);
   }

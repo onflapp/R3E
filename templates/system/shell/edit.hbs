@@ -5,9 +5,11 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Console</title>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
-  <link href="{{C.BOOTSTRAP_CSS}}" rel="stylesheet">
+  {{include_css "resource/res-ui.css"}}
+
+  <title>shell:{{R.PATH}}</title>
 </head>
   <style>
     #commandline {
@@ -24,21 +26,19 @@
   </script>
 
 <body>
-  <div class="container">
-
-    <ol class="breadcrumb">
-      <li><a href="{{C.P}}/{{C.X}}res-list">HOME</a></li>
-      {{#include "." "parents"}}
-        <li><a href="{{C.P}}{{path}}{{C.X}}res-list">{{name}}</a></li>
-      {{/include}}
-      <li class="active">{{R.NAME}}</li>
+  <div class="head">
+    <ol class="paths">
+      <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
+{{#include "." "parents"}}
+      <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
+{{/include}}
+      <li>{{name}}</li>
     </ol>
 
     <pre>
-{{include_safe "." "text"}}
     </pre>
 
-    <form method="post">
+    <form method="post" action="{{res_path R.PATH}}">
       <input type="hidden" name="_rt" value="system/shell">
       <input id="commandline" type="text" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" name=":command">
     </form>

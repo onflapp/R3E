@@ -92,7 +92,7 @@ class ResourceRequestContext implements ScriptContext {
     });
   }
 
-  public listResourceNames(resourcePath: string) : Promise<any> {
+  public listResourceNames(resourcePath: string, filter?: any) : Promise<any> {
     let self = this;
     let rres = this.getResourceResolver();
     let base = this.getCurrentResourcePath();
@@ -171,7 +171,7 @@ class ResourceRequestContext implements ScriptContext {
     });
   }
 
-  public listResources(resourcePath: string, cond?:any) : Promise<any> {
+  public listResources(resourcePath: string, filter?:any) : Promise<any> {
     let self = this;
     let rres = this.getResourceResolver();
     let base = this.getCurrentResourcePath();
@@ -184,9 +184,9 @@ class ResourceRequestContext implements ScriptContext {
           let map = self.makePropertiesForResource(ls[i]);
           map['path'] = Utils.filename_path_append(base, ls[i].getName());
 
-          if (cond) {
+          if (filter) {
             try {
-              if (cond(map)) rv.push(map);
+              if (filter(map)) rv.push(map);
             }
             catch(ex) {
               console.log(ex);
