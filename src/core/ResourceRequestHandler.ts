@@ -238,18 +238,30 @@ class ResourceRequestHandler extends EventDispatcher {
       }
     }
 
+    let tostore = [];
     for (let key in datas) {
       let v = datas[key];
       let p = Utils.absolute_path(key);
-
-      rres.storeResource(p, new Data(v), function () {
-        count--;
-
-        if (count === 0) {
-          callback();
-        }
+      tostore.push({
+        data:new Data(v),
+        path:p
       });
     }
+
+    let storedata = function() {
+      let it = tostore.shift();
+      if (!it) {
+        callback();
+        return;
+      }
+
+      console.log("store:" + it.path);
+      rres.storeResource(it.path, it.data, function () {
+        storedata();
+      });
+    }
+
+    storedata();
   }
 
   /**********************************************************

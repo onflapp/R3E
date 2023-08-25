@@ -26,6 +26,7 @@ class ResourceResolver {
           }
           else if (paths.length == 0) {
             Utils.log_trace_resolve('=>', path);
+            Utils.set_trace_path(rv, path);
             callback(rv);
           }
           else {

@@ -262,6 +262,19 @@ class Utils {
             console.log(typ + 'resolve:' + path);
         }
     }
+    static set_trace_path(obj, path) {
+        obj['__trace_context_path'] = path;
+    }
+    static copy_trace_path(src, dest) {
+        if (src && dest) {
+            let v = src['__trace_context_path'];
+            if (v)
+                dest['__trace_context_path'] = v;
+        }
+    }
+    static get_trace_path(obj) {
+        return obj['__trace_context_path'];
+    }
     static flushResourceCache() {
         EventDispatcher.global().dispatchAllEvents('cache-flush');
     }
@@ -321,6 +334,7 @@ EventDispatcher._global = null;
 class Data {
     constructor(obj) {
         this.values = obj ? obj : {};
+        this.context = {};
     }
     importProperties(data, callback) {
         for (let k in data) {
@@ -370,6 +384,15 @@ class Data {
     }
     getProperty(name) {
         return this.values[name];
+    }
+    getContextValue(name) {
+        return this.context[name];
+    }
+    setContextValue(name, value) {
+        if (value)
+            this.context[name] = value;
+        else
+            delete this.context[name];
     }
     getRenderTypes() {
         let rv = [];
@@ -595,6 +618,7 @@ class ResourceResolver {
                     }
                     else if (paths.length == 0) {
                         Utils.log_trace_resolve('=>', path);
+                        Utils.set_trace_path(rv, path);
                         callback(rv);
                     }
                     else {
@@ -768,6 +792,7 @@ class ResourceRenderer {
                     if (rend) {
                         try {
                             rend(fact, new ContentWriterAdapter('object', function () {
+                                Utils.copy_trace_path(resource, render);
                                 callback(render, error);
                             }), null);
                         }
@@ -831,6 +856,7 @@ class ResourceRenderer {
                             writer.end(null);
                         })
                             .catch(function (err) {
+                            console.log('path:' + Utils.get_trace_path(rend));
                             console.log(rend);
                             console.log(err);
                             self.renderError('unable to render selector:[' + sel + "]", res, err, writer);
@@ -1443,16 +1469,27 @@ class ResourceRequestHandler extends EventDispatcher {
                 datas[resourcePath][key] = v;
             }
         }
+        let tostore = [];
         for (let key in datas) {
             let v = datas[key];
             let p = Utils.absolute_path(key);
-            rres.storeResource(p, new Data(v), function () {
-                count--;
-                if (count === 0) {
-                    callback();
-                }
+            tostore.push({
+                data: new Data(v),
+                path: p
             });
         }
+        let storedata = function () {
+            let it = tostore.shift();
+            if (!it) {
+                callback();
+                return;
+            }
+            console.log("store:" + it.path);
+            rres.storeResource(it.path, it.data, function () {
+                storedata();
+            });
+        };
+        storedata();
     }
     setPathParserPattern(pattern) {
         this.pathParserRegexp = new RegExp(pattern);
@@ -2332,11 +2369,13 @@ class JSRendererFactory {
                     var func = eval(data);
                 }
                 catch (ex) {
+                    console.log('path:' + Utils.get_trace_path(data));
                     console.log(data);
                     console.log(ex);
                     callback(null, ex);
                 }
                 if (typeof func === 'function') {
+                    Utils.copy_trace_path(resource, func);
                     callback(func);
                 }
                 else {

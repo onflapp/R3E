@@ -292,6 +292,21 @@ class Utils {
     }
   }
 
+  static set_trace_path(obj, path) {
+    obj['__trace_context_path'] = path;
+  }
+
+  static copy_trace_path(src, dest) {
+    if (src && dest) {
+      let v = src['__trace_context_path'];
+      if (v) dest['__trace_context_path'] = v;
+    }
+  }
+
+  static get_trace_path(obj) {
+    return obj['__trace_context_path'];
+  }
+
   static flushResourceCache() {
     EventDispatcher.global().dispatchAllEvents('cache-flush');
   }

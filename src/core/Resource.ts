@@ -8,9 +8,11 @@ interface ChildrenNamesCallback {
 
 class Data {
   public values: any;
+  public context: any;
 
   constructor(obj ? : any) {
     this.values = obj ? obj : {};
+    this.context = {};
   }
 
   public importProperties(data: any, callback) {
@@ -65,6 +67,15 @@ class Data {
 
   public getProperty(name: string): any {
     return this.values[name];
+  }
+
+  public getContextValue(name: string): any {
+    return this.context[name];
+  }
+
+  public setContextValue(name: string, value: string) {
+    if (value) this.context[name] = value;
+    else delete this.context[name];
   }
 
   public getRenderTypes(): Array < string > {

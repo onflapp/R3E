@@ -75,6 +75,7 @@ class ResourceRenderer {
           if (rend) {
             try {
               rend(fact, new ContentWriterAdapter('object', function() { 
+                Utils.copy_trace_path(resource, render);
                 callback(render, error); 
               }), null);
             }
@@ -145,6 +146,7 @@ class ResourceRenderer {
               writer.end(null);
             })
             .catch(function(err) {
+              console.log('path:' + Utils.get_trace_path(rend));
               console.log(rend);
               console.log(err);
               self.renderError('unable to render selector:[' + sel + "]", res, err, writer);

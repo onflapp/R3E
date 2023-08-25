@@ -8,11 +8,13 @@ class JSRendererFactory implements RendererFactory {
           var func = eval(data);
         }
         catch (ex) {
+          console.log('path:' + Utils.get_trace_path(data));
           console.log(data);
           console.log(ex);
           callback(null, ex);
         }
         if (typeof func === 'function') {
+          Utils.copy_trace_path(resource, func);
           callback(func);
         }
         else {
