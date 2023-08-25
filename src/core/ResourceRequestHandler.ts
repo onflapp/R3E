@@ -255,7 +255,6 @@ class ResourceRequestHandler extends EventDispatcher {
         return;
       }
 
-      console.log("store:" + it.path);
       rres.storeResource(it.path, it.data, function () {
         storedata();
       });
