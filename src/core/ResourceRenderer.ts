@@ -140,6 +140,7 @@ class ResourceRenderer {
             }
           }
 
+          Utils.copy_trace_path(rend, context['traceRenderInfo']);
           let rv = rend(map, writer, context);
           if (rv && rv.constructor.name === 'Promise') {
             rv.then(function () {

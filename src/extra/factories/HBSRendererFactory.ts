@@ -46,14 +46,36 @@ class HBSRendererFactory extends TemplateRendererFactory {
             for (var i = 0; i < content.length; i++) {
               let it = content[i];
 
-              if (typeof block.fn === 'function') out += block.fn(it);
+              if (typeof block.fn === 'function') {
+                let map = it;
+                if (typeof it === 'string') {
+                  map = { toString:function() { return it }};
+                }
+                map['R'] = context.getRequestProperties();
+                map['Q'] = context.getQueryProperties();
+                map['C'] = context.getConfigProperties();
+                map['S'] = context.getSessionProperties();
+
+                out += block.fn(map);
+              }
               else out += JSON.stringify(it);
             }
           }
           else {
             let it = content;
 
-            if (typeof block.fn === 'function') out += block.fn(it);
+            if (typeof block.fn === 'function') {
+              let map = it;
+              if (typeof it === 'string') {
+                map = { toString:function() { return it }};
+              }
+              map['R'] = context.getRequestProperties();
+              map['Q'] = context.getQueryProperties();
+              map['C'] = context.getConfigProperties();
+              map['S'] = context.getSessionProperties();
+
+              out += block.fn(map);
+            }
             else out += JSON.stringify(it);
           }
           if (safe) out = self.Handlebars.Utils.escapeExpression(out);

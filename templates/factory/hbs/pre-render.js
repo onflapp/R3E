@@ -32,6 +32,17 @@
       if (context.R['SELECTOR']) {
         rv.push(context.C['X']);
         rv.push(context.R['SELECTOR']);
+        if (context['Q']) {
+          i = 0;
+          for (var k in context['Q']) {
+            if (i == 0) rv.push('?');
+            else rv.push('&');
+            var v = context['Q'][k];
+            rv.push(escape(k));
+            rv.push('=');
+            rv.push(escape(v));
+          }
+        }
       }
     }
 
@@ -223,6 +234,43 @@
 
     if (!result) return options.fn(this);
     else return options.inverse(this);
+  });
+
+  Handlebars.registerHelper('trace', function () {
+    var block = arguments[arguments.length-1];
+    var args = [];
+    var renpath = null;
+    var respath = null;
+    for (var i = 0; i < arguments.length-1; i++) {
+      var it = arguments[i];
+      if (typeof it === 'string') {
+        args.push(it);
+      }
+      else {
+        var rv = {};
+        for (var key in it) {
+          var val = it[key];
+          if (key === '_context') continue;
+          if (key === '_session') continue;
+      
+          rv[key] = val;
+        }
+
+        args.push(JSON.stringify(rv, null, 2));
+      }
+    }
+
+    if (block && block['data'] && block['data']['root']) {
+      var ctx = block['data']['root']['_context'];
+      renpath = Utils.get_trace_path(ctx['traceRenderInfo']);
+      respath = Utils.get_trace_path(ctx['currentResource']);
+
+      if (renpath) args.push('ren:'+renpath);
+      if (respath) args.push('res:'+respath);
+    }
+
+    var txt = '<!-- '+args.join(' ')+' -->';
+    return new Handlebars.SafeString(txt);
   });
 
   Handlebars.registerHelper('include_css', function () {

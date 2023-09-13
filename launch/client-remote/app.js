@@ -66,6 +66,17 @@ var handler = new ClientRequestHandler(rres, rtmp);
 handler.setPathParserPattern('^(?<path>\\/.*?)(\\.@(?<selector>[a-z\\-_]+)(?<dataPath>\\/.*?)?)?$');
 handler.setConfigProperties(config);
 
+handler.registerValueTranformer('newUUID', function(data) {
+  var lastid = Tools.makeID(userContent);
+  var n = 'item';
+
+  if (data && data['_rt'] && data['_rt'].length) {
+    n = data['_rt'].replaceAll('/', '_');
+  }
+
+  return n+'_'+lastid;
+});
+
 //register renderers
 handler.registerFactory('hbs', new HBSRendererFactory());
 handler.registerFactory('js', new JSRendererFactory());

@@ -5,11 +5,13 @@ class ResourceRequestContext implements ScriptContext {
   private renderResourceType: string;
   private renderSelector: string;
   private currentResource: Resource;
+  private traceRenderInfo: any;
 
   constructor(pathInfo: PathInfo, handler: ResourceRequestHandler, sessionData: SessionData) {
     this.pathInfo = pathInfo;
     this.resourceRequestHandler = handler;
     this.sessionData = sessionData;
+    this.traceRenderInfo = {};
   }
 
   public __overrideCurrentResourcePath(resourcePath :string) {
@@ -345,7 +347,7 @@ class ResourceRequestContext implements ScriptContext {
     p['PARENT_NAME'] = Utils.filename(this.pathInfo.dirname);
     p['PARENT_DIRNAME'] = Utils.filename_dir(this.pathInfo.dirname);
 
-    if (this.pathInfo.refererURL) {
+    if (this.pathInfo.refererURL && this.pathInfo.referer) {
       p['REF_URL'] = this.pathInfo.refererURL;
       p['REF_PATH'] = this.pathInfo.referer.path;
     }
@@ -398,6 +400,7 @@ class ResourceRequestContext implements ScriptContext {
 
   public clone(): ResourceRequestContext {
     let ctx = new ResourceRequestContext(this.pathInfo.clone(), this.resourceRequestHandler, this.sessionData);
+    ctx.traceRenderInfo = {};
     ctx.renderSelector = this.renderSelector;
     return ctx;
   }

@@ -850,6 +850,7 @@ class ResourceRenderer {
                             window['MAP'] = map;
                         }
                     }
+                    Utils.copy_trace_path(rend, context['traceRenderInfo']);
                     let rv = rend(map, writer, context);
                     if (rv && rv.constructor.name === 'Promise') {
                         rv.then(function () {
@@ -907,6 +908,7 @@ class ResourceRequestContext {
         this.pathInfo = pathInfo;
         this.resourceRequestHandler = handler;
         this.sessionData = sessionData;
+        this.traceRenderInfo = {};
     }
     __overrideCurrentResourcePath(resourcePath) {
         this.pathInfo.resourcePath = resourcePath;
@@ -1205,7 +1207,7 @@ class ResourceRequestContext {
         p['RES_PATH'] = this.pathInfo.resourcePath;
         p['PARENT_NAME'] = Utils.filename(this.pathInfo.dirname);
         p['PARENT_DIRNAME'] = Utils.filename_dir(this.pathInfo.dirname);
-        if (this.pathInfo.refererURL) {
+        if (this.pathInfo.refererURL && this.pathInfo.referer) {
             p['REF_URL'] = this.pathInfo.refererURL;
             p['REF_PATH'] = this.pathInfo.referer.path;
         }
@@ -1249,6 +1251,7 @@ class ResourceRequestContext {
     }
     clone() {
         let ctx = new ResourceRequestContext(this.pathInfo.clone(), this.resourceRequestHandler, this.sessionData);
+        ctx.traceRenderInfo = {};
         ctx.renderSelector = this.renderSelector;
         return ctx;
     }
@@ -2580,16 +2583,34 @@ class HBSRendererFactory extends TemplateRendererFactory {
                     if (Array.isArray(content)) {
                         for (var i = 0; i < content.length; i++) {
                             let it = content[i];
-                            if (typeof block.fn === 'function')
-                                out += block.fn(it);
+                            if (typeof block.fn === 'function') {
+                                let map = it;
+                                if (typeof it === 'string') {
+                                    map = { toString: function () { return it; } };
+                                }
+                                map['R'] = context.getRequestProperties();
+                                map['Q'] = context.getQueryProperties();
+                                map['C'] = context.getConfigProperties();
+                                map['S'] = context.getSessionProperties();
+                                out += block.fn(map);
+                            }
                             else
                                 out += JSON.stringify(it);
                         }
                     }
                     else {
                         let it = content;
-                        if (typeof block.fn === 'function')
-                            out += block.fn(it);
+                        if (typeof block.fn === 'function') {
+                            let map = it;
+                            if (typeof it === 'string') {
+                                map = { toString: function () { return it; } };
+                            }
+                            map['R'] = context.getRequestProperties();
+                            map['Q'] = context.getQueryProperties();
+                            map['C'] = context.getConfigProperties();
+                            map['S'] = context.getSessionProperties();
+                            out += block.fn(map);
+                        }
                         else
                             out += JSON.stringify(it);
                     }
@@ -3386,7 +3407,7 @@ class DOMContentWriter {
             try {
                 let target = evt.target;
                 let action = target.getAttribute('action');
-                let info = requestHandler.parseFormElement(target);
+                let info = requestHandler.parseFormElement(target, evt.submitter);
                 let forward = info.formData[':forward'];
                 if (forward && forward.indexOf('#')) {
                     info.formData[':forward'] = forward.substr(forward.indexOf('#') + 1);
@@ -3580,7 +3601,9 @@ class ClientRequestHandler extends ResourceRequestHandler {
         this.refererPath = sessionStorage['__LAST_REQUEST_PATH'];
         this.currentPath = rpath;
         super.renderRequest(rpath);
-        sessionStorage['__LAST_REQUEST_PATH'] = rpath;
+        if (window.parent == window) {
+            sessionStorage['__LAST_REQUEST_PATH'] = rpath;
+        }
     }
     parseFormData(action, data) {
         let rv = {};
@@ -3590,6 +3613,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
             rv[result.value[0]] = result.value[1];
             result = it.next();
         }
+        rv = this.expandValues(rv, rv);
         rv = this.transformValues(rv);
         let path = this.expandValue(action, rv);
         let info = new ClientFormInfo();
@@ -3597,7 +3621,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
         info.formPath = path;
         return info;
     }
-    parseFormElement(formElement) {
+    parseFormElement(formElement, submitter) {
         let action = formElement.getAttribute('action');
         let rv = {};
         if (action.indexOf('#')) {
@@ -3633,6 +3657,11 @@ class ClientRequestHandler extends ResourceRequestHandler {
                     reader.readAsArrayBuffer(value);
                 };
             }
+            else if (type === 'submit') {
+                if (p == submitter && name) {
+                    rv[name] = value;
+                }
+            }
             else if (type === 'checkbox') {
                 if (p.checked)
                     rv[name] = value;
@@ -3643,6 +3672,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
                 rv[name] = value;
             }
         }
+        rv = this.expandValues(rv, rv);
         rv = this.transformValues(rv);
         let path = this.expandValue(action, rv);
         let info = new ClientFormInfo();

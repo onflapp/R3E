@@ -82,7 +82,7 @@ class DOMContentWriter implements ContentWriter {
       try {
         let target = evt.target as HTMLFormElement;
         let action = target.getAttribute('action');
-        let info = requestHandler.parseFormElement(target);
+        let info = requestHandler.parseFormElement(target, evt.submitter);
 
         let forward = info.formData[':forward'];
         if (forward && forward.indexOf('#')) {
@@ -312,7 +312,9 @@ class ClientRequestHandler extends ResourceRequestHandler {
     this.refererPath = sessionStorage['__LAST_REQUEST_PATH'];
     this.currentPath = rpath;
     super.renderRequest(rpath);
-    sessionStorage['__LAST_REQUEST_PATH'] = rpath;
+    if (window.parent == window) {
+      sessionStorage['__LAST_REQUEST_PATH'] = rpath;
+    }
   }
 
   public parseFormData(action:string, data:any): ClientFormInfo {
@@ -326,6 +328,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
       result = it.next();
     }
 
+    rv = this.expandValues(rv, rv);
     rv = this.transformValues(rv);
     let path = this.expandValue(action, rv);
     let info = new ClientFormInfo();
@@ -336,7 +339,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
     return info;
   }
 
-  public parseFormElement(formElement): ClientFormInfo {
+  public parseFormElement(formElement, submitter): ClientFormInfo {
     let action = formElement.getAttribute('action');
     let rv = {};
 
@@ -377,6 +380,11 @@ class ClientRequestHandler extends ResourceRequestHandler {
           reader.readAsArrayBuffer(value);
         };
       }
+      else if (type === 'submit') {
+        if (p == submitter && name) {
+          rv[name] = value;
+        }
+      }
       else if (type === 'checkbox') {
         if (p.checked) rv[name] = value;
         else rv[name] = '';
@@ -386,6 +394,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
       }
     }
 
+    rv = this.expandValues(rv, rv);
     rv = this.transformValues(rv);
 
     let path = this.expandValue(action, rv);
