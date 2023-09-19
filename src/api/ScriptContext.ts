@@ -1,9 +1,9 @@
 interface ScriptContext {
   /* resolve */
   resolveResource(resourcePath: string) : Promise<any>;
-  listResources(resourcePath: string) : Promise<any>;
-  listResourceNames(resourcePath: string) : Promise<any>;
-  listAllResourceNames(resourcePath: string, callback:any) : Promise<any>;
+  listResources(resourcePath: string, filter?:any) : Promise<any>;
+  listResourceNames(resourcePath: string, filter?:any) : Promise<any>;
+  listAllResourceNames(resourcePath: string, filter?:any) : Promise<any>;
   renderResource(resourcePath: string, rstype: string, selector: string) : Promise<any>;
   readResource(resourcePath: string, writer: ContentWriter, callback: any);
 

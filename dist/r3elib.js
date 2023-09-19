@@ -275,12 +275,27 @@ class Utils {
     static get_trace_path(obj) {
         return obj['__trace_context_path'];
     }
+    static glob_match(path, glob) {
+        return false;
+    }
     static flushResourceCache() {
         EventDispatcher.global().dispatchAllEvents('cache-flush');
     }
     static RegExpFilter(rx) {
         return function (p) {
-            if (p.match(rx))
+            if (!p || !rx)
+                return false;
+            else if (p.match(rx))
+                return true;
+            else
+                return false;
+        };
+    }
+    static GlobFilter(rx) {
+        return function (p) {
+            if (!p || !rx)
+                return false;
+            else if (Utils.glob_match(p, rx))
                 return true;
             else
                 return false;
@@ -983,7 +998,12 @@ class ResourceRequestContext {
         return new Promise(function (resolve) {
             if (resourcePath === '.' && self.currentResource) {
                 self.currentResource.listChildrenNames(function (ls) {
-                    resolve(ls);
+                    if (filter && ls)
+                        resolve(ls.filter(function (p) {
+                            return filter(p);
+                        }));
+                    else
+                        resolve(ls);
                 });
             }
             else {
@@ -991,7 +1011,12 @@ class ResourceRequestContext {
                 rres.resolveResource(resourcePath, function (res) {
                     if (res) {
                         res.listChildrenNames(function (ls) {
-                            resolve(ls);
+                            if (filter && ls)
+                                resolve(ls.filter(function (p) {
+                                    return filter(p);
+                                }));
+                            else
+                                resolve(ls);
                         });
                     }
                     else {
@@ -1063,7 +1088,7 @@ class ResourceRequestContext {
                     map['path'] = Utils.filename_path_append(base, ls[i].getName());
                     if (filter) {
                         try {
-                            if (filter(map))
+                            if (filter(map['name']))
                                 rv.push(map);
                         }
                         catch (ex) {

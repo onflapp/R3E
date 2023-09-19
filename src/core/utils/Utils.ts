@@ -307,14 +307,28 @@ class Utils {
     return obj['__trace_context_path'];
   }
 
+  static glob_match(path, glob) {
+    return false;
+  }
+
   static flushResourceCache() {
     EventDispatcher.global().dispatchAllEvents('cache-flush');
   }
 
   static RegExpFilter(rx): any {
     return function(p) {
-      if (p.match(rx)) return true;
+      if (!p || !rx) return false;
+      else if (p.match(rx)) return true;
       else return false;
     };
   }
+
+  static GlobFilter(rx): any {
+    return function(p) {
+      if (!p || !rx) return false;
+      else if (Utils.glob_match(p, rx)) return true;
+      else return false;
+    };
+  }
+
 }

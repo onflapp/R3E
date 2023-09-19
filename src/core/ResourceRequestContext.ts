@@ -102,7 +102,10 @@ class ResourceRequestContext implements ScriptContext {
     return new Promise(function (resolve) {
       if (resourcePath === '.' && self.currentResource) {
         self.currentResource.listChildrenNames(function(ls) {
-          resolve(ls);
+          if (filter && ls) resolve(ls.filter(function (p) {
+            return filter(p);
+          }));
+          else resolve(ls);
         });
       }
       else {
@@ -110,7 +113,10 @@ class ResourceRequestContext implements ScriptContext {
         rres.resolveResource(resourcePath, function(res) {
           if (res) {
             res.listChildrenNames(function(ls) {
-              resolve(ls);
+              if (filter && ls) resolve(ls.filter(function (p) {
+                return filter(p);
+              }));
+              else resolve(ls);
             });
           }
           else {
@@ -188,7 +194,7 @@ class ResourceRequestContext implements ScriptContext {
 
           if (filter) {
             try {
-              if (filter(map)) rv.push(map);
+              if (filter(map['name'])) rv.push(map);
             }
             catch(ex) {
               console.log(ex);
