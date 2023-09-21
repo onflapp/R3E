@@ -114,6 +114,13 @@ class DOMContentWriter implements ContentWriter {
         console.log(ex);
       }
     });
+
+    document.body.addEventListener('change', function (evt) {
+      let el = evt.target;
+      if (el['type'] == 'color') {
+        el['checked'] = true;
+      }
+    });
   }
 
   protected evaluateScripts() {
@@ -388,6 +395,9 @@ class ClientRequestHandler extends ResourceRequestHandler {
       else if (type === 'checkbox') {
         if (p.checked) rv[name] = value;
         else rv[name] = '';
+      }
+      else if (type === 'color') {
+        if (p['checked']) rv[name] = p.value;
       }
       else {
         rv[name] = value;

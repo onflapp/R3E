@@ -123,7 +123,21 @@ class StoredObjectResource extends ObjectResource {
       if (res) {
         res.read(new ContentWriterAdapter('utf8', function (data, ctype) {
           let rv = JSON.parse(data);
-          if (rv) {
+          if (Array.isArray(rv)) {
+            self.values = {};
+            let v = {};
+            let ores = new ResourceResolver(new ObjectResource(v, ''));
+            for (let i = 0; i < rv.length; i++) {
+              let item = rv[i];
+              let path = Utils.filename_path_append(self.resourceName, item[':path']);
+              ores.storeResource(path, new Data(item), function () {
+              });
+            }
+            for (let k in v) {
+              self.values = v[k];
+            }
+          }
+          else if (rv) {
             self.values = rv;
           }
           callback();
