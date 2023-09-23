@@ -16,28 +16,33 @@ class DOMContentWriter implements ContentWriter {
 
   protected patchWindowObjects() {
     let self = this;
+    let dopatch = function(obj) {
+      if (obj['__myevents']) {
+        for (let i = 0; i < obj['__myevents'].length; i++) {
+          let v = obj['__myevents'][i];
+          obj.removeEventListener(v.event, v.func, v.cap);
+        }
+      }
 
-    if (window['__myevents']) {
-      for (let i = 0; i < window['__myevents'].length; i++) {
-        let v = window['__myevents'][i];
-				window.removeEventListener(v.event, v.func, v.cap);
-			}
-    }
+      obj['__myevents'] = [];
+     
+      if (!obj['orig_addEventListener']) {
+        obj['orig_addEventListener'] = obj.addEventListener;
+        obj.addEventListener = function(a, b, c) {
+          obj['__myevents'].push({
+            event:a,
+            func:b,
+            cap:c
+          });
 
-    window['__myevents'] = [];
-   
-    if (!window['orig_addEventListener']) {
-      window['orig_addEventListener'] = window.addEventListener;
-      window.addEventListener = function(a, b, c) {
-        window['__myevents'].push({
-          event:a,
-          func:b,
-          cap:c
-        });
+          obj['orig_addEventListener'](a, b, c);
+        };
+      }
+    };
 
-        window['orig_addEventListener'](a, b, c);
-      };
-    }
+    dopatch(window);
+    dopatch(window.document);
+    dopatch(window.document.body);
 
     if (!window['_customElements_orig_define']) {
       if (window['customElements']) {
