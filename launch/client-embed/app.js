@@ -1,9 +1,9 @@
-var base = window.location.toString();
+var base = 'https://onflapp.github.io/R3E/dist';
 document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.1.0/handlebars.min.js" type="text/javascript"></script>');
 document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/8.4.2/markdown-it.min.js" type="text/javascript"></script>');
 document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/elasticlunr/0.9.6/elasticlunr.min.js" type="text/javascript"></script>');
-document.write('<script src="'+base+'/../../../dist/r3elib.js" type="text/javascript"></script>');
-document.write('<script src="'+base+'/../../../dist/templates.js" type="text/javascript"></script>');
+document.write('<script src="'+base+'/r3elib.js" type="text/javascript"></script>');
+document.write('<script src="'+base+'/templates.js" type="text/javascript"></script>');
 
 function init_R3E() {
   Utils.ENABLE_TRACE_LOG = 1;
