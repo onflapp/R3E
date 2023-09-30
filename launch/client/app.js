@@ -35,6 +35,9 @@ var userContent = new LocalStorageResource(userContentVal, 'userContent');
 //user config
 var userConfig = new LocalStorageResource(userConfigVal, 'userconfig');
 
+//user session
+var userSession = new SessionStorageResource({}, 'usersession');
+
 //system templates loaded by <script> and exposed as window.templates
 var systemTemplates = new ObjectResource(window.templates).wrap({
   getType: function() { return 'resource/templates'; }
@@ -72,6 +75,7 @@ var root = new RootResource({
   'index': lunrIndex,
   'content': userContent,
   'config': userConfig,
+  'session': userSession,
   'system-templates': systemTemplates,
   'user-templates': userTemplate
 });

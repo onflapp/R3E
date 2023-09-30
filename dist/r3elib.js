@@ -3377,6 +3377,21 @@ class LocalStorageContentResource extends ObjectContentResource {
         });
     }
 }
+class SessionStorageResource extends LocalStorageResource {
+    constructor(obj, name, root) {
+        super(obj, name, root);
+    }
+    storeLocalStorage() {
+        let data = JSON.stringify(this.values, null, 2);
+        sessionStorage.setItem(this.storageName, data);
+    }
+    loadLocalStorage() {
+        let data = sessionStorage.getItem(this.storageName);
+        if (data) {
+            this.values = JSON.parse(data);
+        }
+    }
+}
 class DOMContentWriter {
     constructor() {
         this.externalResources = {};
