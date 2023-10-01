@@ -70,7 +70,9 @@ class DOMContentWriter implements ContentWriter {
       window['XMLHttpRequest'].prototype.send = function(data) {
         if (this.__localpath) {
           let info = self.requestHandler.parseFormData(this.__localpath, data);
-          self.requestHandler.handleStore(info.formPath, info.formData);
+          self.requestHandler.handleStore(info.formPath, info.formData, function(rv) {
+            console.log('done');
+          });
         }
         else {
           window['XMLHttpRequest']['_prototype_orig_send'].call(this, data);

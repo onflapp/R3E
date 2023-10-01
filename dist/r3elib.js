@@ -1408,8 +1408,13 @@ class ResourceRequestHandler extends EventDispatcher {
         let rrend = this.resourceRenderer;
         let selectors = [selector];
         let renderTypes = [];
-        if (data['_rt'])
+        if (data.getRenderTypes) {
+            let rt = data.getRenderTypes();
+            renderTypes = renderTypes.concat(rt);
+        }
+        else if (data['_rt']) {
             renderTypes = renderTypes.concat(data['_rt']);
+        }
         renderTypes.push('any');
         rrend.resolveRenderer(renderTypes, selectors, function (rend, error) {
             if (rend) {
@@ -1641,7 +1646,7 @@ class ResourceRequestHandler extends EventDispatcher {
             rrend.renderResource(new ErrorResource(ex), 'default', out, ncontext);
         }
     }
-    handleStore(rpath, data) {
+    handleStore(rpath, data, callback) {
         let self = this;
         let rres = this.resourceResolver;
         let rrend = this.resourceRenderer;
@@ -1662,19 +1667,30 @@ class ResourceRequestHandler extends EventDispatcher {
                 if (info.selector && values[':forward']) {
                     let forward = values[':forward'];
                     self.renderResource(info.resourcePath, null, info.selector, context, function (ctype, content) {
-                        self.forwardRequest(forward);
-                        self.handleEnd();
+                        if (callback) {
+                            callback();
+                        }
+                        else {
+                            self.forwardRequest(forward);
+                            self.handleEnd();
+                        }
                     });
                 }
                 else {
                     self.storeResource(storeto, values, function (error) {
                         if (!error) {
                             let forward = values[':forward'];
-                            if (forward)
+                            if (callback) {
+                                callback();
+                            }
+                            else if (forward) {
                                 self.forwardRequest(forward);
-                            else
+                                self.handleEnd();
+                            }
+                            else {
                                 self.renderRequest(rpath);
-                            self.handleEnd();
+                                self.handleEnd();
+                            }
                         }
                         else {
                             render_error(error);
@@ -3451,7 +3467,9 @@ class DOMContentWriter {
             window['XMLHttpRequest'].prototype.send = function (data) {
                 if (this.__localpath) {
                     let info = self.requestHandler.parseFormData(this.__localpath, data);
-                    self.requestHandler.handleStore(info.formPath, info.formData);
+                    self.requestHandler.handleStore(info.formPath, info.formData, function (rv) {
+                        console.log('done');
+                    });
                 }
                 else {
                     window['XMLHttpRequest']['_prototype_orig_send'].call(this, data);
