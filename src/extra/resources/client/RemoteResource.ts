@@ -66,6 +66,12 @@ class RemoteResource extends StoredResource {
     callback();
   }
 
+  public getStoragePath(name ? : string): string {
+    let path = this.basePath + this.baseName;
+    if (name) path = path + '/' + name;
+    return path;
+  }
+
   public removeChildResource(name: string, callback) {
     let url = this.getStoragePath(name);
     let rpath = url;

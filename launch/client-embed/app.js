@@ -1,9 +1,10 @@
-var base = 'https://onflapp.github.io/R3E/dist';
-document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.1.0/handlebars.min.js" type="text/javascript"></script>');
-document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/8.4.2/markdown-it.min.js" type="text/javascript"></script>');
-document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/elasticlunr/0.9.6/elasticlunr.min.js" type="text/javascript"></script>');
-document.write('<script src="'+base+'/r3elib.js" type="text/javascript"></script>');
-document.write('<script src="'+base+'/templates.js" type="text/javascript"></script>');
+function append_script(src) {
+  var el = document.createElement('script');
+  el.src = src;
+  el.type = 'text/javascript';
+  
+  document.head.appendChild(el);
+}
 
 function init_R3E() {
   Utils.ENABLE_TRACE_LOG = 1;
@@ -76,7 +77,9 @@ function init_R3E() {
     var n = 'item';
 
     if (data && data['_rt'] && data['_rt'].length) {
-      n = data['_rt'].replaceAll('/', '_');
+      n = data['_rt'];
+      n = Utils.expandValue(n, data);
+      n = n.replaceAll('/', '_');
     }
 
     return n+'_'+lastid;
@@ -92,6 +95,14 @@ function init_R3E() {
   if (!path) path = '/.@res-list';
   handler.handleRequest(path);
 }
+
+var base = 'https://onflapp.github.io/R3E/dist';
+
+append_script("https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.1.0/handlebars.min.js");
+append_script("https://cdnjs.cloudflare.com/ajax/libs/markdown-it/8.4.2/markdown-it.min.js");
+append_script("https://cdnjs.cloudflare.com/ajax/libs/elasticlunr/0.9.6/elasticlunr.min.js");
+append_script(base+"/r3elib.js");
+append_script(base+"/templates.js");
 
 setTimeout(function() {
   init_R3E();
