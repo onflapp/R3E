@@ -98,11 +98,24 @@
     return Utils.absolute_path(p, context.R['RES_PATH']);
   });
 
-  Handlebars.registerHelper('set_Q', function (name, val, block) {
-    if (arguments.length == 3) {
-      var context = block.data.root._context
-      if (!context.pathInfo['query']) context.pathInfo['query'] = {};
-      context.pathInfo['query'][name] = val;
+  Handlebars.registerHelper('reset', function (type, name, val) {
+    if (arguments.length > 3) {
+      var root = arguments[arguments.length-1].data.root;
+      var context = root._context;
+
+      if (type == 'Q') {
+        if (!context.pathInfo['query']) context.pathInfo['query'] = {};
+        context.pathInfo['query'][name] = val;
+      }
+      else if (type == 'R') {
+        if (name == 'SELECTOR') {
+          context.pathInfo['selector'] = val;
+          root['R']['SELECTOR'] = val;
+        }
+      }
+      else if (type == 'S') {
+        root['S'][name] = val;
+      }
     }
     return '';
   });

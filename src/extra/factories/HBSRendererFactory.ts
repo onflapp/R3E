@@ -56,7 +56,12 @@ class HBSRendererFactory extends TemplateRendererFactory {
                 map['C'] = context.getConfigProperties();
                 map['S'] = context.getSessionProperties();
 
-                out += block.fn(map);
+                try {
+                  out += block.fn(map);
+                }
+                catch(ex) {
+                  out += ex;
+                }
               }
               else out += JSON.stringify(it);
             }
@@ -74,7 +79,12 @@ class HBSRendererFactory extends TemplateRendererFactory {
               map['C'] = context.getConfigProperties();
               map['S'] = context.getSessionProperties();
 
-              out += block.fn(map);
+              try {
+                out += block.fn(map);
+              }
+              catch(ex) {
+                out += ex;
+              }
             }
             else out += JSON.stringify(it);
           }

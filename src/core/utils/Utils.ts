@@ -1,4 +1,50 @@
 class Utils {
+  public static expandValue(val, data) {
+    if (typeof val !== 'string') return val;
+
+    var rv = val;
+    for (var key in data) {
+      var v = data[key];
+      if (typeof v !== 'string') continue;
+
+      var p = '{' + key + '}';
+
+      rv = rv.split(p).join(v);
+    }
+
+    return rv;
+  }
+
+  public static expandValues(values, data) {
+    let rv1 = {};
+
+    for (let key in values) {
+      let v = values[key];
+      rv1[key] = Utils.expandValue(v, data);
+    }
+
+    let rv2 = {};
+    for (let key in rv1) {
+      let val = rv1[key];
+
+      if (key.indexOf('{:') !== -1) {
+        for (let xkey in rv1) {
+          if (xkey.charAt(0) === ':' && key.indexOf(xkey) > 0) {
+            key = key.split('{'+xkey+'}').join(rv1[xkey]);
+            if (key) {
+              rv2[key] = val;
+            }
+          }
+        }
+      }
+      else {
+        rv2[key] = val;
+      }
+    }
+
+    return rv2;
+  }
+
   public static makeUUID(): string {
     let d = new Date().getTime();
     let uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {

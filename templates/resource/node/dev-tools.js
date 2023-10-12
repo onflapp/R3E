@@ -8,21 +8,21 @@ el.style.backgroundColor = 'gray';
 let rbut = document.createElement('div');
 rbut.innerHTML = 'R';
 rbut.addEventListener('click', function() {
-  let u = window.location.toString();
+  let u = window.location.toString().replace(/.@.*$/, '');
   window.open(u+'.@res-list');
 });
 
 let tbut = document.createElement('div');
 tbut.innerHTML = 'T';
 tbut.addEventListener('click', function() {
-  let u = window.location.toString();
+  let u = window.location.toString().replace(/.@.*$/, '');
   window.open(u+'.@res-renderer');
 });
 
 let dbut = document.createElement('div');
 dbut.innerHTML = 'D';
 dbut.addEventListener('click', function() {
-  let u = window.location.toString();
+  let u = window.location.toString().replace(/.@.*$/, '');
   window.open(u+'.@dump');
 });
 

@@ -170,7 +170,7 @@ class ServerRequestHandler extends ResourceRequestHandler {
         }
 
         data = self.transformValues(data);
-        rpath = self.expandValue(rpath, data);
+        rpath = Utils.expandValue(rpath, data);
 
         self.handleStore(rpath, data);
       });
@@ -193,7 +193,7 @@ class ServerRequestHandler extends ResourceRequestHandler {
         }
 
         data = self.transformValues(data);
-        rpath = self.expandValue(rpath, data);
+        rpath = Utils.expandValue(rpath, data);
 
         self.handleStore(rpath, data);
       });

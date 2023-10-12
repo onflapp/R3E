@@ -1,4 +1,42 @@
 class Utils {
+    static expandValue(val, data) {
+        if (typeof val !== 'string')
+            return val;
+        var rv = val;
+        for (var key in data) {
+            var v = data[key];
+            if (typeof v !== 'string')
+                continue;
+            var p = '{' + key + '}';
+            rv = rv.split(p).join(v);
+        }
+        return rv;
+    }
+    static expandValues(values, data) {
+        let rv1 = {};
+        for (let key in values) {
+            let v = values[key];
+            rv1[key] = Utils.expandValue(v, data);
+        }
+        let rv2 = {};
+        for (let key in rv1) {
+            let val = rv1[key];
+            if (key.indexOf('{:') !== -1) {
+                for (let xkey in rv1) {
+                    if (xkey.charAt(0) === ':' && key.indexOf(xkey) > 0) {
+                        key = key.split('{' + xkey + '}').join(rv1[xkey]);
+                        if (key) {
+                            rv2[key] = val;
+                        }
+                    }
+                }
+            }
+            else {
+                rv2[key] = val;
+            }
+        }
+        return rv2;
+    }
     static makeUUID() {
         let d = new Date().getTime();
         let uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -1323,44 +1361,6 @@ class ResourceRequestHandler extends EventDispatcher {
             'X': '.@'
         };
     }
-    expandValue(val, data) {
-        if (typeof val !== 'string')
-            return val;
-        var rv = val;
-        for (var key in data) {
-            var v = data[key];
-            if (typeof v !== 'string')
-                continue;
-            var p = '{' + key + '}';
-            rv = rv.split(p).join(v);
-        }
-        return rv;
-    }
-    expandValues(values, data) {
-        let rv1 = {};
-        for (let key in values) {
-            let v = values[key];
-            rv1[key] = this.expandValue(v, data);
-        }
-        let rv2 = {};
-        for (let key in rv1) {
-            let val = rv1[key];
-            if (key.indexOf('{:') !== -1) {
-                for (let xkey in rv1) {
-                    if (xkey.charAt(0) === ':' && key.indexOf(xkey) > 0) {
-                        key = key.split('{' + xkey + '}').join(rv1[xkey]);
-                        if (key) {
-                            rv2[key] = val;
-                        }
-                    }
-                }
-            }
-            else {
-                rv2[key] = val;
-            }
-        }
-        return rv2;
-    }
     transformValues(data) {
         for (let key in data) {
             let val = data[key];
@@ -1659,7 +1659,7 @@ class ResourceRequestHandler extends EventDispatcher {
             out.end(null);
         };
         if (context && info && info.resourcePath) {
-            data = this.expandValues(data, data);
+            data = Utils.expandValues(data, data);
             self.transformResource(data, 'pre-store', context, function (values) {
                 let storeto = Utils.absolute_path(values[':storeto']);
                 if (!storeto)
@@ -2633,7 +2633,12 @@ class HBSRendererFactory extends TemplateRendererFactory {
                                 map['Q'] = context.getQueryProperties();
                                 map['C'] = context.getConfigProperties();
                                 map['S'] = context.getSessionProperties();
-                                out += block.fn(map);
+                                try {
+                                    out += block.fn(map);
+                                }
+                                catch (ex) {
+                                    out += ex;
+                                }
                             }
                             else
                                 out += JSON.stringify(it);
@@ -2650,7 +2655,12 @@ class HBSRendererFactory extends TemplateRendererFactory {
                             map['Q'] = context.getQueryProperties();
                             map['C'] = context.getConfigProperties();
                             map['S'] = context.getSessionProperties();
-                            out += block.fn(map);
+                            try {
+                                out += block.fn(map);
+                            }
+                            catch (ex) {
+                                out += ex;
+                            }
                         }
                         else
                             out += JSON.stringify(it);
@@ -3696,9 +3706,9 @@ class ClientRequestHandler extends ResourceRequestHandler {
             rv[result.value[0]] = result.value[1];
             result = it.next();
         }
-        rv = this.expandValues(rv, rv);
         rv = this.transformValues(rv);
-        let path = this.expandValue(action, rv);
+        rv = Utils.expandValues(rv, rv);
+        let path = Utils.expandValue(action, rv);
         let info = new ClientFormInfo();
         info.formData = rv;
         info.formPath = path;
@@ -3759,9 +3769,9 @@ class ClientRequestHandler extends ResourceRequestHandler {
                 rv[name] = value;
             }
         }
-        rv = this.expandValues(rv, rv);
         rv = this.transformValues(rv);
-        let path = this.expandValue(action, rv);
+        rv = Utils.expandValues(rv, rv);
+        let path = Utils.expandValue(action, rv);
         let info = new ClientFormInfo();
         info.formData = rv;
         info.formPath = path;
@@ -3942,7 +3952,7 @@ class ServerRequestHandler extends ResourceRequestHandler {
                     data[k] = v;
                 }
                 data = self.transformValues(data);
-                rpath = self.expandValue(rpath, data);
+                rpath = Utils.expandValue(rpath, data);
                 self.handleStore(rpath, data);
             });
         }
@@ -3964,7 +3974,7 @@ class ServerRequestHandler extends ResourceRequestHandler {
                         data[k] = v;
                 }
                 data = self.transformValues(data);
-                rpath = self.expandValue(rpath, data);
+                rpath = Utils.expandValue(rpath, data);
                 self.handleStore(rpath, data);
             });
         }

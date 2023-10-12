@@ -342,9 +342,9 @@ class ClientRequestHandler extends ResourceRequestHandler {
       result = it.next();
     }
 
-    rv = this.expandValues(rv, rv);
     rv = this.transformValues(rv);
-    let path = this.expandValue(action, rv);
+    rv = Utils.expandValues(rv, rv);
+    let path = Utils.expandValue(action, rv);
     let info = new ClientFormInfo();
 
     info.formData = rv;
@@ -411,10 +411,10 @@ class ClientRequestHandler extends ResourceRequestHandler {
       }
     }
 
-    rv = this.expandValues(rv, rv);
     rv = this.transformValues(rv);
+    rv = Utils.expandValues(rv, rv);
 
-    let path = this.expandValue(action, rv);
+    let path = Utils.expandValue(action, rv);
     let info = new ClientFormInfo();
 
     info.formData = rv;

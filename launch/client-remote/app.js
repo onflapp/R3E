@@ -71,7 +71,9 @@ handler.registerValueTranformer('newUUID', function(data) {
   var n = 'item';
 
   if (data && data['_rt'] && data['_rt'].length) {
-    n = data['_rt'].replaceAll('/', '_');
+    n = data['_rt'];
+    n = Utils.expandValue(n, data);
+    n = n.replaceAll('/', '_');
   }
 
   return n+'_'+lastid;
