@@ -1444,28 +1444,21 @@ class ResourceRequestHandler extends EventDispatcher {
     expandDataAndImport(resourcePath, data, callback) {
         let rres = this.resourceResolver;
         let imp = data[Resource.STORE_CONTENT_PROPERTY];
-        let processing = 0;
-        let done = function () {
-            if (processing === 0) {
+        let import_list = function (list) {
+            if (!list || list.length == 0) {
                 callback(arguments);
+            }
+            else {
+                let item = list.shift();
+                let path = Utils.filename_path_append(resourcePath, item[':path']);
+                rres.storeResource(path, new Data(item), function () {
+                    import_list(list);
+                });
             }
         };
         let import_text = function (text) {
             let list = JSON.parse(text);
-            if (list) {
-                processing++;
-                for (var i = 0; i < list.length; i++) {
-                    let item = list[i];
-                    let path = Utils.filename_path_append(resourcePath, item[':path']);
-                    processing++;
-                    rres.storeResource(path, new Data(item), function () {
-                        processing--;
-                        done();
-                    });
-                }
-                processing--;
-            }
-            done();
+            import_list(list);
         };
         if (typeof imp === 'function') {
             imp(new ContentWriterAdapter('utf8', import_text));
@@ -3024,6 +3017,7 @@ class StoredObjectResource extends ObjectResource {
         });
     }
     storeObjectResource(callback) {
+        let self = this;
         let vals = this.rootResource ? this.rootResource.values : this.values;
         let path = this.rootResource ? this.rootResource.storagePath : this.storagePath;
         let root = this.rootResource ? this.rootResource.storageResource : this.storageResource;
@@ -3033,6 +3027,7 @@ class StoredObjectResource extends ObjectResource {
             '_content': json
         };
         rres.storeResource(path, new Data(data), function () {
+            self.loaded = true;
             callback();
         });
     }
@@ -3150,7 +3145,10 @@ class RemoteResource extends StoredResource {
         callback();
     }
     getStoragePath(name) {
-        let path = this.basePath + this.baseName;
+        let base = this.basePath;
+        if (!base)
+            base = '';
+        let path = base + this.baseName;
         if (name)
             path = path + '/' + name;
         return path;
@@ -3238,6 +3236,7 @@ class RemoteResource extends StoredResource {
                 self.values._pt = 'resource/content';
                 self.values._contentdata = data;
                 self.isDirectory = false;
+                self.loaded = true;
                 callback(true);
             }
             else {
@@ -3250,7 +3249,6 @@ class RemoteResource extends StoredResource {
         if (this.isDirectory) {
             this.isDirectory = false;
         }
-        this.loaded = false;
         return new RemoteResourceContentWriter(path);
     }
     read(writer, callback) {

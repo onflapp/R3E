@@ -150,6 +150,7 @@ class StoredObjectResource extends ObjectResource {
   }
 
   public storeObjectResource(callback) {
+    let self = this;
     let vals = this.rootResource ? this.rootResource.values : this.values;
     let path = this.rootResource ? this.rootResource.storagePath : this.storagePath;
     let root = this.rootResource ? this.rootResource.storageResource : this.storageResource;
@@ -159,6 +160,7 @@ class StoredObjectResource extends ObjectResource {
       '_content':json
     };
     rres.storeResource(path, new Data(data), function() {
+      self.loaded = true;
       callback();
     });
   }

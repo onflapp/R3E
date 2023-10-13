@@ -133,31 +133,23 @@ class ResourceRequestHandler extends EventDispatcher {
   protected expandDataAndImport(resourcePath: string, data: any, callback) {
     let rres = this.resourceResolver;
     let imp = data[Resource.STORE_CONTENT_PROPERTY];
-    let processing = 0;
 
-    let done = function () {
-      if (processing === 0) {
+    let import_list = function (list) {
+      if (!list || list.length == 0) {
         callback(arguments);
+      }
+      else {
+        let item = list.shift();
+        let path = Utils.filename_path_append(resourcePath, item[':path']);
+        rres.storeResource(path, new Data(item), function () {
+          import_list(list);
+        });
       }
     };
 
     let import_text = function (text) {
       let list = JSON.parse(text);
-      if (list) {
-        processing++;
-        for (var i = 0; i < list.length; i++) {
-          let item = list[i];
-          let path = Utils.filename_path_append(resourcePath, item[':path']);
-          processing++;
-          rres.storeResource(path, new Data(item), function () {
-            processing--;
-            done();
-          });
-        }
-        processing--;
-      }
-
-      done();
+      import_list(list);
     };
 
     if (typeof imp === 'function') {

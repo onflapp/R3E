@@ -50,7 +50,7 @@ class RemoteResource extends StoredResource {
   constructor(name: string, base ?: string, prefix ?:string) {
     super(name, base, prefix);
   }
-  
+
   protected makeNewResource(name: string) {
     let path = this.getStoragePath();
     let res = new RemoteResource(name, path, this.basePrefix);
@@ -67,7 +67,9 @@ class RemoteResource extends StoredResource {
   }
 
   public getStoragePath(name ? : string): string {
-    let path = this.basePath + this.baseName;
+    let base = this.basePath;
+    if (!base) base = '';
+    let path = base + this.baseName;
     if (name) path = path + '/' + name;
     return path;
   }
@@ -164,6 +166,7 @@ class RemoteResource extends StoredResource {
         self.values._pt = 'resource/content';
         self.values._contentdata = data;
         self.isDirectory = false;
+        self.loaded = true;
         callback(true);
       }
       else {
@@ -178,7 +181,7 @@ class RemoteResource extends StoredResource {
       this.isDirectory = false;
     }
 
-    this.loaded = false;
+    //this.loaded = false;
     return new RemoteResourceContentWriter(path);
   }
 
