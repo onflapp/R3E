@@ -31,8 +31,11 @@ var userTemplate = new StoredObjectResource(new RemoteResource(), 'templates.jso
 
 var searchIndex = new JSONIndexResource().wrap({
   buildIndex: function(cb) {
-    this.addObject('/content', userContent.values);
-    cb();
+    var self = this;
+    userContent.resolveItself(function() {
+      self.addObject('/content', userContent.values);
+      cb();
+    });
   }
 });
 

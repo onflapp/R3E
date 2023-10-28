@@ -1,6 +1,6 @@
-(function (res, writer, context) {
+(function (res, writer, ctx) {
   writer.start('object/javascript');
-  var qp = context.getQueryProperties();
+  var qp = ctx.getQueryProperties();
   var qry = '';
 
   if (qp && qp['q']) qry = qp['q'];
@@ -10,21 +10,12 @@
     return;
   }
 
-  context.currentResource.searchResources(qry, function (children) {
+  ctx.searchResources('.', qry).then(function(ls) {
     var rv = [];
-
-    for (var i = 0; i < children.length; i++) {
-      var res = children[i];
-      var map = {};
-
-      map['name'] = res.getName();
-      map['score'] = res.getProperty('score');
-      map['ref'] = res.getProperty('reference');
-      map['path'] = Utils.filename_path_append(context.getCurrentResourcePath(), name);
-
-      rv.push(map);
-    }
-
+    for (var i = 0; i < ls.length; i++) {
+      var it = ls[i];
+      rv.push(it);
+    } 
     writer.write(rv);
     writer.end();
   });

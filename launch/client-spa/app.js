@@ -45,10 +45,9 @@ var userTemplate = new LocalStorageResource(userTemplateVal, 'userTemplate').wra
 });
 
 var lunrIndex = new LunrIndexResource().wrap({
-  restoreIndex: function(lunr, cb) {
+  buildIndex: function(cb) {
     var val = JSON.parse(localStorage.getItem('_lunr_index'));
-    if (val) cb (lunr.Index.load(val));
-    else cb();
+    cb();
   }
 });
 
