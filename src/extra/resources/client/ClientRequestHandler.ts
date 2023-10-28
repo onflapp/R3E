@@ -201,7 +201,7 @@ class DOMContentWriter implements ContentWriter {
       self.loadExternal();
       self.attachListeners();
 
-      self.requestHandler.dispatchAllEvents('end', this);
+      self.requestHandler.dispatchAllEvents('loaded', this);
     };
 
     window.requestAnimationFrame(function() {
@@ -248,7 +248,7 @@ class DOMContentWriter implements ContentWriter {
       let blob = new Blob(this.extdata, {type:this.exttype})
       let uri = window.URL.createObjectURL(blob)
       
-      this.requestHandler.dispatchAllEvents('end', this);
+      this.requestHandler.dispatchAllEvents('ended', this);
       window.location.replace(uri);
     }
     this.htmldata = null;
@@ -271,6 +271,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
   }
 
   protected initHandlers() {
+    let self = this;
     window.addEventListener('hashchange', function (evt) {
       window.location.reload();
     });
@@ -280,22 +281,20 @@ class ClientRequestHandler extends ResourceRequestHandler {
     console.log('status:'+code);
   }
 
-  public handleEnd() {
-    if (this.pendingForward) {
-      let p = this.pendingForward;
-      if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) {
-        //use the full URL
-      }
-      else {
-        p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + this.pendingForward;
-      }
+  public forwardRequest(rpath: string) {
+    let p = rpath;
+    if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) {
+      //use the full URL
+    }
+    else {
+      p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + rpath;
+    }
 
-      if (p == window.location.toString()) {
-        window.location.reload();
-      }
-      else {
-        window.location.replace(p);
-      }
+    if (p == window.location.toString()) {
+      window.location.reload();
+    }
+    else {
+      window.location.replace(p);
     }
   }
 

@@ -2,10 +2,22 @@
 document.body.innerHTML = '';
 
 Utils.ENABLE_TRACE_LOG = 1;
+Utils.EXPORT_RENDER_CONTEXT = 1;
+
+//sample content as javascript object
+var userConfigVal = {
+  'git_login': 'xxx'
+};
 
 //user content
 var userContent = new StoredObjectResource(new RemoteResource(), 'content.json');
 userContent.setExternalizeContent(true);
+
+//user config
+var userConfig = new LocalStorageResource(userConfigVal, 'userconfig');
+
+//user session
+var userSession = new SessionStorageResource({}, 'usersession');
 
 //system templates loaded by <script> and exposed as window.templates
 var systemTemplates = new ObjectResource(window.templates).wrap({
@@ -17,7 +29,13 @@ var userTemplate = new StoredObjectResource(new RemoteResource(), 'templates.jso
   getType: function() { return 'resource/templates'; }
 });
 
-var lunrIndex = new LunrIndexResource();
+var lunrIndex = new LunrIndexResource().wrap({
+  buildIndex: function(cb) {
+    handler.storeResource('/content', {':copyto':'/index/content'}, function() {
+      cb();
+    });
+  }
+});
 
 //default templates
 var defaultTemplates = new ObjectResource({
@@ -43,6 +61,8 @@ var defaultTemplates = new ObjectResource({
 var root = new RootResource({
   'index': lunrIndex,
   'content': userContent,
+  'config': userConfig,
+  'session': userSession,
   'system-templates': systemTemplates,
   'user-templates': userTemplate
 });

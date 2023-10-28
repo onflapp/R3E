@@ -17,4 +17,8 @@ interface ScriptContext {
   /* flow */
   forwardRequest(rpath: string);
   sendStatus(code: number);
+
+  /* search */
+  searchResources(resolveResource: string, query: string) : Promise<any>;
+  searchResourceNames(resolveResource: string, query: string) : Promise<any>;
 }

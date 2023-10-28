@@ -3,11 +3,9 @@ class LunrIndexResource extends IndexResource {
     super(name, base, index);
   }
 
-  protected restoreIndex(elasticlunr: any, callback) {
-    callback();
-  }
+  protected makeIndex(callback) {
+    let elasticlunr = window['elasticlunr'];
 
-  protected makeIndex(elasticlunr: any, callback) {
     elasticlunr.tokenizer.setSeperator(/[\W]+/);
     let index = elasticlunr(function () {
       this.setRef('id');
@@ -15,31 +13,17 @@ class LunrIndexResource extends IndexResource {
       this.addField('path');
       this.addField('name');
       this.saveDocument(false);
-
     });
     callback(index);
   } 
 
-  public initIndexEngine(callback) {
-    let self = this;
-    let elasticlunr = window['elasticlunr'];
-
-    if (this.getIndexEngine()) {
-      self.makeIndex(elasticlunr, callback);
-    }
-    else {
-      self.restoreIndex(elasticlunr, function(index) {
-        if (index) {
-          callback(index);
-        }
-        else {
-          self.makeIndex(elasticlunr, callback);
-        }
-      });
-    }
+  protected initIndexEngine(callback) {
+    this.makeIndex(function(index) {
+      callback(index);
+    });
   }
 
-  public searchResources(qry: string, callback) {
+  public searchResourceNames(qry: string, callback) {
     let indx = this.getIndexEngine();
     let list = [];
     let opts = {
@@ -54,19 +38,18 @@ class LunrIndexResource extends IndexResource {
       let ref = doc['ref'];
       let score = doc['score'];
       if (score > 0) {
-        let res = new ObjectResource({'reference':ref, 'score':doc['score']}, ref);
-        list.push(res);
+        list.push(ref);
       }
     }
 
     callback(list);
   }
 
-  public indexTextData(text, callback) {
+  protected indexTextData(text, callback) {
     let name = this.baseName;
     let path = this.getStoragePath();
 
-    let id = '/'+path;
+    let id = path;
     let indx = this.getIndexEngine();
     let doc = {
       id:id,
@@ -83,16 +66,17 @@ class LunrIndexResource extends IndexResource {
 
   public removeResourcesFromIndex(name: string, callback) {
     let path = this.getStoragePath(name);
-    let id = '/'+path;
+    let id = path;
     let indx = this.getIndexEngine();
 
-    indx.removeDoc({id:id});
+    indx.removeDoc({'id':id});
 
     callback();
   }
 
   public saveIndexAsJSON() : string {
     let indx = this.getIndexEngine();
-    return indx.toJSON();
+    if (indx) return JSON.stringify(indx.toJSON());
+    else return null;
   }
 }

@@ -11,7 +11,6 @@ class ResourceRequestHandler extends EventDispatcher {
   private resourceRenderer: ResourceRenderer;
   private valueTransformers: Map<string, any>;
 
-  protected pendingForward: string; 
   protected refererPath: string;
   protected queryProperties: any;
   protected configProperties: any;
@@ -286,15 +285,12 @@ class ResourceRequestHandler extends EventDispatcher {
   }
 
   public forwardRequest(rpath: string) {
-    this.pendingForward = rpath;
   }
 
   public sendStatus(code: number) {
   }
 
   protected renderRequest(rpath: string) {
-    this.pendingForward = null;
-
     let rres = this.resourceResolver;
     let rrend = this.resourceRenderer;
     let self = this;
@@ -418,8 +414,8 @@ class ResourceRequestHandler extends EventDispatcher {
               callback();
             }
             else {
-              self.forwardRequest(forward);
               self.handleEnd();
+              self.forwardRequest(forward);
             }
           });
         }
@@ -432,12 +428,12 @@ class ResourceRequestHandler extends EventDispatcher {
                 callback();
               }
               else if (forward) {
-                self.forwardRequest(forward);
                 self.handleEnd();
+                self.forwardRequest(forward);
               }
               else {
-                self.renderRequest(rpath);
                 self.handleEnd();
+                self.renderRequest(rpath);
               }
             }
             else {
@@ -529,5 +525,6 @@ class ResourceRequestHandler extends EventDispatcher {
   }
 
   public handleEnd() {
+    this.dispatchAllEvents('ended');
   }
 }

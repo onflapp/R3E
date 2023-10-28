@@ -12,7 +12,7 @@ abstract class IndexResource extends ObjectResource {
     }
     else {
       this.baseName = '';
-      this.basePath = name;
+      this.basePath = name ? name : '';
     }
 
     this.parentIndexResource = index;
@@ -31,17 +31,23 @@ abstract class IndexResource extends ObjectResource {
     this.allocateChildResource(name, callback);
   }
 
-  public abstract initIndexEngine(callback);
-  public abstract indexTextData(text, callback);  
-  public abstract searchResources(qry: string, callback);
-  public abstract removeResourcesFromIndex(name: string, callback);
+  public buildIndex(callback) {
+    callback();
+  }
+
+  protected abstract initIndexEngine(callback);
+  protected abstract indexTextData(text, callback);  
+  protected abstract searchResourceNames(qry: string, callback);
+  protected abstract removeResourcesFromIndex(name: string, callback);
 
   public resolveItself(callback) {
     let self = this;
     if (!this.parentIndexResource && !this.indx) {
       this.initIndexEngine(function(indx) {
         self.indx = indx;
-        if (callback) callback(self);
+        self.buildIndex(function() {
+          if (callback) callback(self);
+        });
       });
     }
     else {

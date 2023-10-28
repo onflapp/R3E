@@ -225,6 +225,67 @@ class ResourceRequestContext implements ScriptContext {
     });
   }
 
+  public searchResources(resourcePath: string, query: string) : Promise<any> {
+    let self = this;
+    let rres = this.getResourceResolver();
+
+    return new Promise(function (resolve) {
+      let rv = [];
+      let done = 0;
+
+      self.searchResourceNames(resourcePath, query).then(function(ls) {
+        if (ls.length == 0) {
+          resolve([]);
+        }
+        else {
+          for (let i = 0; i < ls.length; i++) {
+            let it = ls[i];
+            self.resolveResource(it).then(function(res) {
+              rv.push(res);
+              done++;
+
+              if (done == ls.length) resolve(rv);
+            });
+          }
+        }
+      });
+    });
+  }
+
+  public searchResourceNames(resourcePath: string, query: string) : Promise<any> {
+    let self = this;
+    let rres = this.getResourceResolver();
+    let base = this.getCurrentResourcePath();
+    let res = self.currentResource;
+
+    return new Promise(function (resolve) {
+      let return_list = function(ls) {
+        resolve(ls);
+      };
+
+      if (resourcePath === '.' && res) {
+        if (res['searchResourceNames']) {
+          res['searchResourceNames'](query, return_list);
+        }
+        else {
+          resolve([]);
+        }
+      }
+      else {
+        resourcePath = Utils.absolute_path(resourcePath, base);
+        rres.resolveResource(resourcePath, function(res) {
+          if (res && res['searchResourceNames']) {
+            base = resourcePath;
+            res['searchResourceNames'](query, return_list);
+          }
+          else {
+            resolve([]);
+          }
+        });
+      }
+    });
+  }
+
   public readResource(resourcePath: string, writer: ContentWriter, callback: any) {
     let self = this;
     let rres = this.getResourceResolver();

@@ -12,19 +12,17 @@ class SPARequestHandler extends ClientRequestHandler {
     });
   }
 
-  public handleEnd() {
-    if (this.pendingForward) {
-      let p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + this.pendingForward;
-      if (p == window.location.toString()) {
-        let self = this;
-        let p = this.pendingForward;
-        setTimeout(function() {
-          self.handleRequest(p);
-        },10);
-      }
-      else {
-        window.location.replace(p);
-      }
+  public forwardRequest(rpath: string) {
+    let p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + rpath;
+    if (p == window.location.toString()) {
+      let self = this;
+      let p = rpath;
+      setTimeout(function() {
+        self.handleRequest(p);
+      },10);
+    }
+    else {
+      window.location.replace(p);
     }
   }
 

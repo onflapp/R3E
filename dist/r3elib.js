@@ -1156,6 +1156,61 @@ class ResourceRequestContext {
             }
         });
     }
+    searchResources(resourcePath, query) {
+        let self = this;
+        let rres = this.getResourceResolver();
+        return new Promise(function (resolve) {
+            let rv = [];
+            let done = 0;
+            self.searchResourceNames(resourcePath, query).then(function (ls) {
+                if (ls.length == 0) {
+                    resolve([]);
+                }
+                else {
+                    for (let i = 0; i < ls.length; i++) {
+                        let it = ls[i];
+                        self.resolveResource(it).then(function (res) {
+                            rv.push(res);
+                            done++;
+                            if (done == ls.length)
+                                resolve(rv);
+                        });
+                    }
+                }
+            });
+        });
+    }
+    searchResourceNames(resourcePath, query) {
+        let self = this;
+        let rres = this.getResourceResolver();
+        let base = this.getCurrentResourcePath();
+        let res = self.currentResource;
+        return new Promise(function (resolve) {
+            let return_list = function (ls) {
+                resolve(ls);
+            };
+            if (resourcePath === '.' && res) {
+                if (res['searchResourceNames']) {
+                    res['searchResourceNames'](query, return_list);
+                }
+                else {
+                    resolve([]);
+                }
+            }
+            else {
+                resourcePath = Utils.absolute_path(resourcePath, base);
+                rres.resolveResource(resourcePath, function (res) {
+                    if (res && res['searchResourceNames']) {
+                        base = resourcePath;
+                        res['searchResourceNames'](query, return_list);
+                    }
+                    else {
+                        resolve([]);
+                    }
+                });
+            }
+        });
+    }
     readResource(resourcePath, writer, callback) {
         let self = this;
         let rres = this.getResourceResolver();
@@ -1566,12 +1621,10 @@ class ResourceRequestHandler extends EventDispatcher {
         this.renderRequest(rpath);
     }
     forwardRequest(rpath) {
-        this.pendingForward = rpath;
     }
     sendStatus(code) {
     }
     renderRequest(rpath) {
-        this.pendingForward = null;
         let rres = this.resourceResolver;
         let rrend = this.resourceRenderer;
         let self = this;
@@ -1664,8 +1717,8 @@ class ResourceRequestHandler extends EventDispatcher {
                             callback();
                         }
                         else {
-                            self.forwardRequest(forward);
                             self.handleEnd();
+                            self.forwardRequest(forward);
                         }
                     });
                 }
@@ -1677,12 +1730,12 @@ class ResourceRequestHandler extends EventDispatcher {
                                 callback();
                             }
                             else if (forward) {
-                                self.forwardRequest(forward);
                                 self.handleEnd();
+                                self.forwardRequest(forward);
                             }
                             else {
-                                self.renderRequest(rpath);
                                 self.handleEnd();
+                                self.renderRequest(rpath);
                             }
                         }
                         else {
@@ -1768,6 +1821,7 @@ class ResourceRequestHandler extends EventDispatcher {
         }
     }
     handleEnd() {
+        this.dispatchAllEvents('ended');
     }
 }
 class Tools {
@@ -2497,7 +2551,7 @@ class IndexResource extends ObjectResource {
         }
         else {
             this.baseName = '';
-            this.basePath = name;
+            this.basePath = name ? name : '';
         }
         this.parentIndexResource = index;
     }
@@ -2511,13 +2565,18 @@ class IndexResource extends ObjectResource {
     resolveChildResource(name, callback, walking) {
         this.allocateChildResource(name, callback);
     }
+    buildIndex(callback) {
+        callback();
+    }
     resolveItself(callback) {
         let self = this;
         if (!this.parentIndexResource && !this.indx) {
             this.initIndexEngine(function (indx) {
                 self.indx = indx;
-                if (callback)
-                    callback(self);
+                self.buildIndex(function () {
+                    if (callback)
+                        callback(self);
+                });
             });
         }
         else {
@@ -3592,7 +3651,7 @@ class DOMContentWriter {
             self.evaluateScripts();
             self.loadExternal();
             self.attachListeners();
-            self.requestHandler.dispatchAllEvents('end', this);
+            self.requestHandler.dispatchAllEvents('loaded', this);
         };
         window.requestAnimationFrame(function () {
             done_loading();
@@ -3634,7 +3693,7 @@ class DOMContentWriter {
         else if (this.extdata && this.extdata.length) {
             let blob = new Blob(this.extdata, { type: this.exttype });
             let uri = window.URL.createObjectURL(blob);
-            this.requestHandler.dispatchAllEvents('end', this);
+            this.requestHandler.dispatchAllEvents('ended', this);
             window.location.replace(uri);
         }
         this.htmldata = null;
@@ -3651,6 +3710,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
         this.initHandlers();
     }
     initHandlers() {
+        let self = this;
         window.addEventListener('hashchange', function (evt) {
             window.location.reload();
         });
@@ -3658,20 +3718,18 @@ class ClientRequestHandler extends ResourceRequestHandler {
     sendStatus(code) {
         console.log('status:' + code);
     }
-    handleEnd() {
-        if (this.pendingForward) {
-            let p = this.pendingForward;
-            if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) {
-            }
-            else {
-                p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + this.pendingForward;
-            }
-            if (p == window.location.toString()) {
-                window.location.reload();
-            }
-            else {
-                window.location.replace(p);
-            }
+    forwardRequest(rpath) {
+        let p = rpath;
+        if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) {
+        }
+        else {
+            p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + rpath;
+        }
+        if (p == window.location.toString()) {
+            window.location.reload();
+        }
+        else {
+            window.location.replace(p);
         }
     }
     handleRequest(rpath) {
@@ -3793,19 +3851,17 @@ class SPARequestHandler extends ClientRequestHandler {
             self.handleRequest(path);
         });
     }
-    handleEnd() {
-        if (this.pendingForward) {
-            let p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + this.pendingForward;
-            if (p == window.location.toString()) {
-                let self = this;
-                let p = this.pendingForward;
-                setTimeout(function () {
-                    self.handleRequest(p);
-                }, 10);
-            }
-            else {
-                window.location.replace(p);
-            }
+    forwardRequest(rpath) {
+        let p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + rpath;
+        if (p == window.location.toString()) {
+            let self = this;
+            let p = rpath;
+            setTimeout(function () {
+                self.handleRequest(p);
+            }, 10);
+        }
+        else {
+            window.location.replace(p);
         }
     }
     renderRequest(rpath) {
@@ -4990,10 +5046,8 @@ class LunrIndexResource extends IndexResource {
     constructor(name, base, index) {
         super(name, base, index);
     }
-    restoreIndex(elasticlunr, callback) {
-        callback();
-    }
-    makeIndex(elasticlunr, callback) {
+    makeIndex(callback) {
+        let elasticlunr = window['elasticlunr'];
         elasticlunr.tokenizer.setSeperator(/[\W]+/);
         let index = elasticlunr(function () {
             this.setRef('id');
@@ -5005,23 +5059,11 @@ class LunrIndexResource extends IndexResource {
         callback(index);
     }
     initIndexEngine(callback) {
-        let self = this;
-        let elasticlunr = window['elasticlunr'];
-        if (this.getIndexEngine()) {
-            self.makeIndex(elasticlunr, callback);
-        }
-        else {
-            self.restoreIndex(elasticlunr, function (index) {
-                if (index) {
-                    callback(index);
-                }
-                else {
-                    self.makeIndex(elasticlunr, callback);
-                }
-            });
-        }
+        this.makeIndex(function (index) {
+            callback(index);
+        });
     }
-    searchResources(qry, callback) {
+    searchResourceNames(qry, callback) {
         let indx = this.getIndexEngine();
         let list = [];
         let opts = {
@@ -5034,8 +5076,7 @@ class LunrIndexResource extends IndexResource {
             let ref = doc['ref'];
             let score = doc['score'];
             if (score > 0) {
-                let res = new ObjectResource({ 'reference': ref, 'score': doc['score'] }, ref);
-                list.push(res);
+                list.push(ref);
             }
         }
         callback(list);
@@ -5043,7 +5084,7 @@ class LunrIndexResource extends IndexResource {
     indexTextData(text, callback) {
         let name = this.baseName;
         let path = this.getStoragePath();
-        let id = '/' + path;
+        let id = path;
         let indx = this.getIndexEngine();
         let doc = {
             id: id,
@@ -5057,14 +5098,17 @@ class LunrIndexResource extends IndexResource {
     }
     removeResourcesFromIndex(name, callback) {
         let path = this.getStoragePath(name);
-        let id = '/' + path;
+        let id = path;
         let indx = this.getIndexEngine();
-        indx.removeDoc({ id: id });
+        indx.removeDoc({ 'id': id });
         callback();
     }
     saveIndexAsJSON() {
         let indx = this.getIndexEngine();
-        return indx.toJSON();
+        if (indx)
+            return JSON.stringify(indx.toJSON());
+        else
+            return null;
     }
 }
 class HTMLParser {
