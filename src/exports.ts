@@ -12,6 +12,7 @@ if (typeof module !== 'undefined') {
     GitHubResource: GitHubResource,
     PouchDBResource: PouchDBResource,
     LunrIndexResource: LunrIndexResource,
+    JSONIndexResource: JSONIndexResource,
     FileResource: FileResource,
     RootResource: RootResource,
     Utils: Utils

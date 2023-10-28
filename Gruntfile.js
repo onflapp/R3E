@@ -53,6 +53,7 @@ module.exports = function (grunt) {
           "src/extra/resources/DropBoxResource.ts",
           "src/extra/resources/GitHubResource.ts",
           "src/extra/resources/LunrIndexResource.ts",
+          "src/extra/resources/JSONIndexResource.ts",
           "src/extra/utils/HTMLParser.ts",
           "src/exports.ts"
 

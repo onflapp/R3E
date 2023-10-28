@@ -29,11 +29,10 @@ var userTemplate = new StoredObjectResource(new RemoteResource(), 'templates.jso
   getType: function() { return 'resource/templates'; }
 });
 
-var lunrIndex = new LunrIndexResource().wrap({
+var searchIndex = new JSONIndexResource().wrap({
   buildIndex: function(cb) {
-    handler.storeResource('/content', {':copyto':'/index/content'}, function() {
-      cb();
-    });
+    this.addObject('/content', userContent.values);
+    cb();
   }
 });
 
@@ -59,7 +58,7 @@ var defaultTemplates = new ObjectResource({
 //root resource can combine different resource together
 //we are exposing systemTemplates and userTemplate so that templates become accessible
 var root = new RootResource({
-  'index': lunrIndex,
+  'index': searchIndex,
   'content': userContent,
   'config': userConfig,
   'session': userSession,

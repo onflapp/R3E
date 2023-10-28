@@ -5111,6 +5111,58 @@ class LunrIndexResource extends IndexResource {
             return null;
     }
 }
+class JSONIndexResource extends IndexResource {
+    constructor(name, base, index) {
+        super(name, base, index);
+    }
+    initIndexEngine(callback) {
+        callback([]);
+    }
+    searchResourceNames(qry, callback) {
+        let list = [];
+        let indx = this.getIndexEngine();
+        let matches = function (str, qry) {
+            if (str.indexOf(qry) >= 0)
+                return true;
+            else
+                return false;
+        };
+        let search_ob = function (path, ob) {
+            for (let k in ob) {
+                let v = ob[k];
+                if (typeof v === 'string') {
+                    if (matches(v, qry)) {
+                        list.push(path.join('/'));
+                        return;
+                    }
+                }
+                else if (typeof v === 'object') {
+                    path.push(k);
+                    search_ob(path, v);
+                    path.pop();
+                }
+            }
+        };
+        for (let i = 0; i < indx.length; i++) {
+            let ix = indx[i];
+            search_ob([ix.name], ix.value);
+        }
+        callback(list);
+    }
+    indexTextData(text, callback) {
+        callback();
+    }
+    addObject(name, value) {
+        let indx = this.getIndexEngine();
+        indx.push({
+            name: name,
+            value: value
+        });
+    }
+    removeResourcesFromIndex(name, callback) {
+        callback();
+    }
+}
 class HTMLParser {
     static parse(code) {
         if (typeof window !== 'undefined' && typeof window['jQuery'] !== 'undefined') {
@@ -5145,6 +5197,7 @@ if (typeof module !== 'undefined') {
         GitHubResource: GitHubResource,
         PouchDBResource: PouchDBResource,
         LunrIndexResource: LunrIndexResource,
+        JSONIndexResource: JSONIndexResource,
         FileResource: FileResource,
         RootResource: RootResource,
         Utils: Utils
