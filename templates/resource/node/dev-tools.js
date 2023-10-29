@@ -39,6 +39,14 @@ el.appendChild(xbut);
 
 document.body.appendChild(el);
 
+window.addEventListener("storage", function(evt) {
+  if (evt.key == '_res_ui_content_change_') {
+    setTimeout(function() {
+      window.location.reload();
+    }, 500);
+  }
+});
+
 function showTraceMarkers(ls) {
   for (let i = 0; i < ls.length; i++) {
     let node = ls[i];
