@@ -15,6 +15,7 @@ interface ScriptContext {
   exportAllResources(resourcePath: string, level, writer: ContentWriter, incSource ? : boolean): void;
 
   /* flow */
+  storeRequest(resourcePath: string, data: any);
   forwardRequest(rpath: string);
   sendStatus(code: number);
 

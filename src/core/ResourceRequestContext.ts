@@ -372,6 +372,14 @@ class ResourceRequestContext implements ScriptContext {
     this.resourceRequestHandler.sendStatus(code);
   }
 
+  public storeRequest(resourcePath: string, data: any) {
+    let self = this;
+    data = self.resourceRequestHandler.transformValues(data);
+    data = Utils.expandValues(data, data);
+    resourcePath = Utils.expandValue(resourcePath, data);
+    self.resourceRequestHandler.handleStore(resourcePath, data, null);
+  }
+
   public storeResource(resourcePath: string, data: any) : Promise<void> {
     let self = this;
     return new Promise(function (resolve) {

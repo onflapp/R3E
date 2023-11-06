@@ -1290,6 +1290,13 @@ class ResourceRequestContext {
     sendStatus(code) {
         this.resourceRequestHandler.sendStatus(code);
     }
+    storeRequest(resourcePath, data) {
+        let self = this;
+        data = self.resourceRequestHandler.transformValues(data);
+        data = Utils.expandValues(data, data);
+        resourcePath = Utils.expandValue(resourcePath, data);
+        self.resourceRequestHandler.handleStore(resourcePath, data, null);
+    }
     storeResource(resourcePath, data) {
         let self = this;
         return new Promise(function (resolve) {

@@ -37,7 +37,7 @@ class ResourceRequestHandler extends EventDispatcher {
     };
   }
 
-  protected transformValues(data) {
+  public transformValues(data) {
     for (let key in data) {
       let val = data[key];
 
