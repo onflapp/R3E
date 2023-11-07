@@ -105,6 +105,7 @@ abstract class Resource extends Data implements ContentReader {
   public static STORE_RENDERTYPE_PROPERTY = '_rt';
   public static STORE_RENDERSUPERTYPE_PROPERTY = '_st';
   public static STORE_RESOURCETYPE_PROPERTY = '_pt';
+  public static STORE_MODIFICATIONDATE_PROPERTY = '_md';
 
   protected resourceName: string;
 
@@ -134,6 +135,10 @@ abstract class Resource extends Data implements ContentReader {
   }
 
   public getRenderSuperType(): string {
+    return null;
+  }
+
+  public getModificationDate(): Date {
     return null;
   }
 
@@ -176,6 +181,7 @@ abstract class Resource extends Data implements ContentReader {
     let self = this;
     let names = this.getPropertyNames();
     let ct = this.getContentType();
+    let md = this.getModificationDate();
     let rv = {};
 
     for (var i = 0; i < names.length; i++) {
@@ -205,6 +211,9 @@ abstract class Resource extends Data implements ContentReader {
 
     if (ct) {
       rv['_ct'] = ct;
+    }
+    if (md) {
+      rv[Resource.STORE_MODIFICATIONDATE_PROPERTY] = ''+md.getTime();
     }
 
     callback(new Data(rv));

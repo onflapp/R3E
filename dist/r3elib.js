@@ -488,6 +488,9 @@ class Resource extends Data {
     getRenderSuperType() {
         return null;
     }
+    getModificationDate() {
+        return null;
+    }
     getRenderTypes() {
         let rv = [];
         let rt = this.getRenderType();
@@ -521,6 +524,7 @@ class Resource extends Data {
         let self = this;
         let names = this.getPropertyNames();
         let ct = this.getContentType();
+        let md = this.getModificationDate();
         let rv = {};
         for (var i = 0; i < names.length; i++) {
             let name = names[i];
@@ -544,6 +548,9 @@ class Resource extends Data {
         }
         if (ct) {
             rv['_ct'] = ct;
+        }
+        if (md) {
+            rv[Resource.STORE_MODIFICATIONDATE_PROPERTY] = '' + md.getTime();
         }
         callback(new Data(rv));
     }
@@ -647,6 +654,7 @@ Resource.STORE_CONTENT_PROPERTY = '_content';
 Resource.STORE_RENDERTYPE_PROPERTY = '_rt';
 Resource.STORE_RENDERSUPERTYPE_PROPERTY = '_st';
 Resource.STORE_RESOURCETYPE_PROPERTY = '_pt';
+Resource.STORE_MODIFICATIONDATE_PROPERTY = '_md';
 class ResourceResolver {
     constructor(resource) {
         this.resource = resource;
@@ -1368,6 +1376,13 @@ class ResourceRequestContext {
                 map['isTextContentResource'] = Utils.is_texttype(ctype);
                 map['contentType'] = ctype;
                 map['contentSize'] = res.getContentSize();
+            }
+            let md = res.getModificationDate();
+            if (md) {
+                map['modificationDate'] = md.getTime();
+            }
+            else {
+                map['modificationDate'] = 0;
             }
             map['_'] = res.getProperties();
             map['path'] = this.getCurrentResourcePath();
@@ -2111,6 +2126,15 @@ class ObjectResource extends Resource {
     getType() {
         let st = this.values['_pt'];
         return st ? st : 'resource/node';
+    }
+    getModificationDate() {
+        let md = this.values['_md'];
+        if (typeof md === "string") {
+            return new Date(parseInt(md));
+        }
+        else {
+            return null;
+        }
     }
     resolveChildResource(name, callback, walking) {
         let rv = this.values[name];
@@ -5128,19 +5152,53 @@ class JSONIndexResource extends IndexResource {
     searchResourceNames(qry, callback) {
         let list = [];
         let indx = this.getIndexEngine();
-        let matches = function (str, qry) {
-            if (str.indexOf(qry) >= 0)
+        let a = qry.split(' ');
+        let words = [];
+        let paths = [];
+        for (let i = 0; i < a.length; i++) {
+            let it = a[i];
+            if (it.indexOf('path:') == 0) {
+                paths.push(it.substr(5));
+            }
+            else {
+                words.push(new RegExp('\\b' + it, 'i'));
+            }
+        }
+        let matches = function (str, path) {
+            let c = 0;
+            if (paths.length) {
+                let p = path.join('/');
+                for (let i = 0; i < paths.length; i++) {
+                    let it = paths[i];
+                    if (p.indexOf(it) === 0)
+                        c++;
+                }
+                if (c == 0)
+                    return false;
+            }
+            if (words.length) {
+                for (let i = 0; i < words.length; i++) {
+                    let it = words[i];
+                    if (!it.test(str))
+                        return false;
+                }
                 return true;
-            else
+            }
+            else if (c > 0) {
+                return true;
+            }
+            else {
                 return false;
+            }
         };
         let search_ob = function (path, ob) {
+            let m = 0;
             for (let k in ob) {
                 let v = ob[k];
-                if (typeof v === 'string') {
-                    if (matches(v, qry)) {
+                if (m == 0 && typeof v === 'string') {
+                    if (matches(v, path)) {
                         list.push(path.join('/'));
-                        return;
+                        m++;
                     }
                 }
                 else if (typeof v === 'object') {

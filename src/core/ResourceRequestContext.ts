@@ -466,6 +466,15 @@ class ResourceRequestContext implements ScriptContext {
         map['contentType'] = ctype;
         map['contentSize'] = res.getContentSize();
       }
+
+      let md = res.getModificationDate();
+      if (md) {
+        map['modificationDate'] = md.getTime();
+      }
+      else {
+        map['modificationDate'] = 0;
+      }
+
       map['_'] = res.getProperties();
       map['path'] = this.getCurrentResourcePath();
     }

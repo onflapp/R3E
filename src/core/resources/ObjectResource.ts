@@ -22,6 +22,16 @@ class ObjectResource extends Resource {
     return st ? st : 'resource/node';
   }
 
+  public getModificationDate(): Date {
+    let md = this.values['_md'];
+    if (typeof md === "string") {
+      return new Date(parseInt(md));
+    }
+    else {
+      return null;
+    }
+  }
+
   public resolveChildResource(name: string, callback: ResourceCallback, walking ? : boolean): void {
     let rv = this.values[name];
 

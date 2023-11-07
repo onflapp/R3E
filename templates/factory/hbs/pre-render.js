@@ -160,6 +160,23 @@
     else return null;
   });
 
+  Handlebars.registerHelper('date', function () {
+    var val = arguments[0];
+    if (val == '' || val == null) return '';
+    if (arguments.length > 2) {
+      var format = arguments[1];
+      var opts = {
+      };
+      var d = new Date(parseInt(val));
+      return d.toLocaleDateString(null, opts);
+    }
+    else {
+      var d = new Date(parseInt(val));
+      return d.toLocaleDateString();
+    }
+  });
+
+
   /************************************************************************
 
   {{#match Database.Tables.Count ">" 5}}

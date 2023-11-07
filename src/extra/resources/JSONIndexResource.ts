@@ -10,20 +10,54 @@ class JSONIndexResource extends IndexResource {
   public searchResourceNames(qry: string, callback) {
     let list = [];
     let indx = this.getIndexEngine();
+    let a = qry.split(' ');
+    let words = [];
+    let paths = [];
+    
+    for (let i = 0; i < a.length; i++) {
+      let it = a[i];
+      if (it.indexOf('path:') == 0) {
+        paths.push(it.substr(5));
+      }
+      else {
+        words.push(new RegExp('\\b'+it ,'i'));
+      }
+    }
 
-    let matches = function(str, qry) {
-      if (str.indexOf(qry) >= 0) return true;
-      else return false;
+    let matches = function(str, path) {
+      let c = 0;
+      if (paths.length) {
+        let p = path.join('/');
+        for (let i = 0; i < paths.length; i++) {
+          let it = paths[i];
+          if (p.indexOf(it) === 0) c++;
+        }
+        if (c == 0) return false;
+      }
+      if (words.length) {
+        for (let i = 0; i < words.length; i++) {
+          let it = words[i];
+          if (!it.test(str)) return false;
+        }
+        return true;
+      }
+      else if (c > 0) {
+        return true;
+      }
+      else {
+        return false;
+      }
     };
 
     let search_ob = function(path, ob) {
+      let m = 0;
       for (let k in ob) {
         let v = ob[k];
 
-        if (typeof v === 'string') {
-          if (matches(v, qry)) {
+        if (m == 0 && typeof v === 'string') {
+          if (matches(v, path)) {
             list.push(path.join('/'));
-            return;
+            m++;
           }
         }
         else if (typeof v === 'object') {
