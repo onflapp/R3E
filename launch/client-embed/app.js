@@ -73,7 +73,7 @@ function init_R3E() {
   handler.setConfigProperties(config);
 
   handler.registerValueTranformer('newUUID', function(data) {
-    var lastid = Tools.makeID(userContent);
+    var lastid = Tools.makeID(userContent, 'LAST_ITEM_ID');
     var n = 'item';
 
     if (data && data['_rt'] && data['_rt'].length) {

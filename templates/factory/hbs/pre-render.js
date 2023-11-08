@@ -13,20 +13,24 @@
     var rv = [];
     var i = 0;
 
-    if (context.C['APP_PREFIX']) rv.push(context.C['APP_PREFIX']);
-    if (context.C['P']) rv.push(context.C['P']);
-
     for (;i < (args.length-1); i++) {
       var p = args[i];
       if (i == 0) {
         if (p == '.') p = context.R['PATH'];
-        else p = Utils.absolute_path(p, context.R['PATH']);
       }
       else if (args.length > 2 && i == args.length-2) {
         if (p !== '' && p.indexOf('.') === -1 && context.C['X']) rv.push(context.C['X']);
       }
       rv.push(p);
     }
+
+    var p = Utils.absolute_path(rv.join(''), context.R['PATH']);
+    rv = []
+
+    if (context.C['APP_PREFIX']) rv.push(context.C['APP_PREFIX']);
+    if (context.C['P']) rv.push(context.C['P']);
+
+    rv.push(p);
 
     if (args.length == 2) {
       if (context.R['SELECTOR']) {

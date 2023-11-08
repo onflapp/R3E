@@ -1,11 +1,11 @@
 class Tools {
-  public static makeID(resource: Resource) {
-    let v = resource.getProperty('_lastid');
+  public static makeID(resource: Resource, name: string) {
+    let v = resource.getProperty(name);
     let n = Number.parseInt(v);
     if (!n) n = 1;
     else n++;
 
-    resource.values['_lastid'] = ''+n;
+    resource.values[name] = ''+n;
     return n;
   }
 

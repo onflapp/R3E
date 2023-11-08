@@ -1439,9 +1439,10 @@ class ResourceRequestHandler extends EventDispatcher {
         };
     }
     transformValues(data) {
+        let toremove = [];
         for (let key in data) {
             let val = data[key];
-            if (key.indexOf(':') !== -1 && key.indexOf('|') !== -1) {
+            if (key.indexOf('|') !== -1) {
                 let a = key.split('|');
                 for (var i = 1; i < a.length; i++) {
                     let t = a[i];
@@ -1454,7 +1455,11 @@ class ResourceRequestHandler extends EventDispatcher {
                     }
                     data[a[0]] = val;
                 }
+                toremove.push(key);
             }
+        }
+        for (let i = 0; i < toremove.length; i++) {
+            delete data[toremove[i]];
         }
         for (let key in data) {
             let val = data[key];
@@ -1847,14 +1852,14 @@ class ResourceRequestHandler extends EventDispatcher {
     }
 }
 class Tools {
-    static makeID(resource) {
-        let v = resource.getProperty('_lastid');
+    static makeID(resource, name) {
+        let v = resource.getProperty(name);
         let n = Number.parseInt(v);
         if (!n)
             n = 1;
         else
             n++;
-        resource.values['_lastid'] = '' + n;
+        resource.values[name] = '' + n;
         return n;
     }
     static reoderChildren(children, order) {
@@ -3076,7 +3081,6 @@ class StoredObjectResource extends ObjectResource {
         let self = this;
         let path = this.storagePath;
         let rres = new ResourceResolver(this.storageResource);
-        this.loaded = true;
         rres.resolveResource(path, function (res) {
             if (res) {
                 res.read(new ContentWriterAdapter('utf8', function (data, ctype) {
@@ -3098,15 +3102,21 @@ class StoredObjectResource extends ObjectResource {
                     else if (rv) {
                         self.values = rv;
                     }
+                    self.loaded = true;
                     callback();
                 }), null);
             }
             else {
+                self.loaded = true;
                 callback();
             }
         });
     }
     storeObjectResource(callback) {
+        if (!this.loaded) {
+            callback();
+            return;
+        }
         let self = this;
         let vals = this.rootResource ? this.rootResource.values : this.values;
         let path = this.rootResource ? this.rootResource.storagePath : this.storagePath;

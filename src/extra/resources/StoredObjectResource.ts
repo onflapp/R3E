@@ -118,7 +118,6 @@ class StoredObjectResource extends ObjectResource {
     let path = this.storagePath;
     let rres = new ResourceResolver(this.storageResource);
 
-    this.loaded = true;
     rres.resolveResource(path, function(res) {
       if (res) {
         res.read(new ContentWriterAdapter('utf8', function (data, ctype) {
@@ -140,16 +139,22 @@ class StoredObjectResource extends ObjectResource {
           else if (rv) {
             self.values = rv;
           }
+          self.loaded = true;
           callback();
         }), null);
       }
       else {
+        self.loaded = true;
         callback();
       }
     });
   }
 
   public storeObjectResource(callback) {
+    if (!this.loaded) {
+      callback();
+      return;
+    }
     let self = this;
     let vals = this.rootResource ? this.rootResource.values : this.values;
     let path = this.rootResource ? this.rootResource.storagePath : this.storagePath;

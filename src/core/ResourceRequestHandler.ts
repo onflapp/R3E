@@ -38,10 +38,11 @@ class ResourceRequestHandler extends EventDispatcher {
   }
 
   public transformValues(data) {
+    let toremove = [];
     for (let key in data) {
       let val = data[key];
 
-      if (key.indexOf(':') !== -1 && key.indexOf('|') !== -1) {
+      if (key.indexOf('|') !== -1) {
         let a = key.split('|');
         for (var i = 1; i < a.length; i++) {
           let t = a[i];
@@ -55,8 +56,14 @@ class ResourceRequestHandler extends EventDispatcher {
           }
           data[a[0]] = val;
         }
+        toremove.push(key);
       }
     }
+
+    for (let i = 0; i < toremove.length;i++) {
+      delete data[toremove[i]];
+    }
+
     for (let key in data) {
       let val = data[key];
       if (key.indexOf('@') !== -1) {
