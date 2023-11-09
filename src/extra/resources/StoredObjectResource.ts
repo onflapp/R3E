@@ -151,14 +151,19 @@ class StoredObjectResource extends ObjectResource {
   }
 
   public storeObjectResource(callback) {
-    if (!this.loaded) {
-      callback();
-      return;
-    }
     let self = this;
     let vals = this.rootResource ? this.rootResource.values : this.values;
     let path = this.rootResource ? this.rootResource.storagePath : this.storagePath;
     let root = this.rootResource ? this.rootResource.storageResource : this.storageResource;
+    if (this.rootResource && !this.rootResource['loaded']) {
+      callback();
+      return;
+    }
+    if (this.storageResource && !this.storageResource['loaded']) {
+      callback();
+      return;
+    }
+
     let json = JSON.stringify(vals, null, 2);
     let rres = new ResourceResolver(root);
     let data = {

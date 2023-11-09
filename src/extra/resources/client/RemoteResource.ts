@@ -68,9 +68,13 @@ class RemoteResource extends StoredResource {
 
   public getStoragePath(name ? : string): string {
     let base = this.basePath;
+    let path = '';
     if (!base) base = '';
-    let path = base + this.baseName;
-    if (name) path = path + '/' + name;
+
+    if (base === this.basePrefix) path = base + this.baseName;
+    else path = Utils.filename_path_append(base, this.baseName);
+
+    if (name) path = Utils.filename_path_append(path, name);
     return path;
   }
 

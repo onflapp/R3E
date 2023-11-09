@@ -26,7 +26,9 @@ var handler = new r.ResourceRequestHandler(rres, tres, {
     console.error(err);
   },
   end: function () {
-    console.log(JSON.stringify(output.values));
+    var rv = JSON.stringify(output.values, null, 2);
+    rv = rv.replace(/\</g, '\\x3C');
+    console.log(rv);
     console.error('done');
   }
 });

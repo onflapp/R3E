@@ -3113,14 +3113,18 @@ class StoredObjectResource extends ObjectResource {
         });
     }
     storeObjectResource(callback) {
-        if (!this.loaded) {
-            callback();
-            return;
-        }
         let self = this;
         let vals = this.rootResource ? this.rootResource.values : this.values;
         let path = this.rootResource ? this.rootResource.storagePath : this.storagePath;
         let root = this.rootResource ? this.rootResource.storageResource : this.storageResource;
+        if (this.rootResource && !this.rootResource['loaded']) {
+            callback();
+            return;
+        }
+        if (this.storageResource && !this.storageResource['loaded']) {
+            callback();
+            return;
+        }
         let json = JSON.stringify(vals, null, 2);
         let rres = new ResourceResolver(root);
         let data = {
@@ -3246,11 +3250,15 @@ class RemoteResource extends StoredResource {
     }
     getStoragePath(name) {
         let base = this.basePath;
+        let path = '';
         if (!base)
             base = '';
-        let path = base + this.baseName;
+        if (base === this.basePrefix)
+            path = base + this.baseName;
+        else
+            path = Utils.filename_path_append(base, this.baseName);
         if (name)
-            path = path + '/' + name;
+            path = Utils.filename_path_append(path, name);
         return path;
     }
     removeChildResource(name, callback) {
