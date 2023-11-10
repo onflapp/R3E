@@ -159,7 +159,7 @@ class StoredObjectResource extends ObjectResource {
       callback();
       return;
     }
-    if (this.storageResource && !this.storageResource['loaded']) {
+    if (this.storageResource && !this['loaded']) {
       callback();
       return;
     }
