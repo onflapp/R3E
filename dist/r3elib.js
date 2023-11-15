@@ -3255,6 +3255,8 @@ class RemoteResource extends StoredResource {
             base = '';
         if (base === this.basePrefix)
             path = base + this.baseName;
+        else if (base === '')
+            path = this.baseName;
         else
             path = Utils.filename_path_append(base, this.baseName);
         if (name)
@@ -3431,6 +3433,51 @@ class RemoteResource extends StoredResource {
             }
         };
         xhr.send();
+    }
+}
+class CachedRemoteResourceContentWriter extends RemoteResourceContentWriter {
+    constructor(filePath) {
+        super(filePath);
+    }
+    end(callback) {
+        let data = this.buffer[0];
+        localStorage.setItem(this.filePath, data);
+        callback();
+    }
+}
+class CachedRemoteResource extends RemoteResource {
+    constructor(name, base, prefix) {
+        super(name, base, prefix);
+    }
+    makeNewResource(name) {
+        let path = this.getStoragePath();
+        let res = new CachedRemoteResource(name, path, this.basePrefix);
+        return res;
+    }
+    getWriter() {
+        let path = this.getStoragePath();
+        if (this.isDirectory) {
+            this.isDirectory = false;
+        }
+        return new CachedRemoteResourceContentWriter(path);
+    }
+    remotePOST(url, values, callback) {
+        let data = JSON.stringify(values);
+        localStorage.setItem(url, data);
+        callback('ok');
+    }
+    remoteGET(url, json, callback) {
+        let data = localStorage.getItem(url);
+        if (!data) {
+            super.remoteGET(url, json, callback);
+        }
+        else if (json) {
+            let val = JSON.parse(data);
+            callback(val);
+        }
+        else {
+            callback(data);
+        }
     }
 }
 class LocalStorageResource extends ObjectResource {

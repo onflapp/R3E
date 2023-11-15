@@ -43,6 +43,7 @@ module.exports = function (grunt) {
           "src/extra/resources/StoredResource.ts",
           "src/extra/resources/StoredObjectResource.ts",
           "src/extra/resources/client/RemoteResource.ts",
+          "src/extra/resources/client/CachedRemoteResource.ts",
           "src/extra/resources/client/LocalStorageResource.ts",
           "src/extra/resources/client/SessionStorageResource.ts",
           "src/extra/resources/client/ClientRequestHandler.ts",

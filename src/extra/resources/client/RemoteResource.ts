@@ -72,6 +72,7 @@ class RemoteResource extends StoredResource {
     if (!base) base = '';
 
     if (base === this.basePrefix) path = base + this.baseName;
+    else if (base === '') path = this.baseName;
     else path = Utils.filename_path_append(base, this.baseName);
 
     if (name) path = Utils.filename_path_append(path, name);
