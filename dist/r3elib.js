@@ -224,6 +224,8 @@ class Utils {
             return 'text/html';
         if (ext === 'xml')
             return 'text/xml';
+        if (ext === 'svg')
+            return 'image/svg+xml';
         if (ext === 'js')
             return 'text/javascript';
         if (ext === 'css')
@@ -3918,6 +3920,14 @@ class ClientRequestHandler extends ResourceRequestHandler {
                 let mime = Utils.filename_mime(value.name);
                 if (mime === 'application/octet-stream' && ct)
                     mime = ct;
+                if (name.lastIndexOf('/') > 0)
+                    pref = name.substr(0, name.lastIndexOf('/') + 1);
+                else if (name.indexOf(':') == 0) {
+                    pref = '{' + name + '}/';
+                }
+                else {
+                    pref = name + '/';
+                }
                 rv[name] = value.name;
                 rv[pref + '_ct'] = mime;
                 rv[pref + Resource.STORE_CONTENT_PROPERTY] = function (writer, callback) {
