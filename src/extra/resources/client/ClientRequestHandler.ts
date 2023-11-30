@@ -322,12 +322,32 @@ class ClientRequestHandler extends ResourceRequestHandler {
   }
 
   public renderRequest(rpath: string) {
-    this.refererPath = sessionStorage['__LAST_REQUEST_PATH'];
+    var rr = this.parsePath(rpath);
+    var rp = rpath;
+    var i = rpath.indexOf(rr.path);
+    if (i > 0) rp = rp.substr(i);
+
+    var rp0 = sessionStorage['__LAST_REQUEST_PATH0'];
+    var rp1 = sessionStorage['__LAST_REQUEST_PATH1'];
+    this.refererPath = rp1?rp1:rp0;
     this.currentPath = rpath;
-    super.renderRequest(rpath);
     if (window.parent == window) {
-      sessionStorage['__LAST_REQUEST_PATH'] = rpath;
+      if (!rp0) {
+        sessionStorage['__LAST_REQUEST_PATH0'] = rp;
+        sessionStorage['__LAST_REQUEST_PATH1'] = '';
+      }
+      else if (rp0 != rp) {
+        if (rp0 != rp1) {
+          sessionStorage['__LAST_REQUEST_PATH0'] = rp;
+          sessionStorage['__LAST_REQUEST_PATH1'] = rp0;
+          this.refererPath = rp0;
+        }
+        else {
+          sessionStorage['__LAST_REQUEST_PATH0'] = rp;
+        }
+      }
     }
+    super.renderRequest(rpath);
   }
 
   public parseFormData(action:string, data:any): ClientFormInfo {
@@ -375,7 +395,8 @@ class ClientRequestHandler extends ResourceRequestHandler {
         let pref = '';
         let ct = value.type;
 
-        if (name.lastIndexOf('/') > 0) pref = name.substr(0, name.lastIndexOf('/') + 1);
+        if (name.indexOf('./') == 0) pref = name.substr(0, name.lastIndexOf('/') + 1);
+        else if (name.lastIndexOf('/') > 0) pref = name.substr(0, name.lastIndexOf('/') + 1);
 
         let mime = Utils.filename_mime(value.name); //try to guess one of our types first
         if (mime === 'application/octet-stream' && ct) mime = ct;

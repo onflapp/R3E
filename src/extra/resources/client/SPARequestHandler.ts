@@ -25,11 +25,4 @@ class SPARequestHandler extends ClientRequestHandler {
       window.location.replace(p);
     }
   }
-
-  public renderRequest(rpath: string) {
-    this.refererPath = sessionStorage['__LAST_REQUEST_PATH'];
-    this.currentPath = rpath;
-    super.renderRequest(rpath);
-    sessionStorage['__LAST_REQUEST_PATH'] = rpath;
-  }
 }
