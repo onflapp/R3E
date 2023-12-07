@@ -81,8 +81,15 @@
     var context = arguments[arguments.length-1].data.root;
     var refurl = context.R['REF_URL'];
 
-    if (refurl) return refurl;
-    else return path_func.apply(this, arguments);
+    if (refurl) {
+      var rv = '';
+      if (context.C['APP_PREFIX']) rv += context.C['APP_PREFIX'];
+      rv += refurl;
+      return rv;
+    }
+    else {
+      return '';
+    }
   });
 
   Handlebars.registerHelper('req_path', path_func);
