@@ -108,7 +108,10 @@
     var p = rv.join('/');
     return Utils.absolute_path(p, context.R['RES_PATH']);
   });
-
+/*
+ * reset "R" "SELECTOR"
+ * reset "R" "REF_SELECTOR"
+ */
   Handlebars.registerHelper('reset', function (type, name, val) {
     if (arguments.length > 3) {
       var root = arguments[arguments.length-1].data.root;
@@ -122,6 +125,10 @@
         if (name == 'SELECTOR') {
           context.pathInfo['selector'] = val;
           root['R']['SELECTOR'] = val;
+        }
+        else if (name == 'REF_SELECTOR' && context.pathInfo.referer) {
+          context.pathInfo.referer['selector'] = val;
+          root['R']['REF_SELECTOR'] = val;
         }
       }
       else if (type == 'S') {

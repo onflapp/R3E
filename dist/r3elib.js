@@ -1345,6 +1345,7 @@ class ResourceRequestContext {
         if (this.pathInfo.refererURL && this.pathInfo.referer) {
             p['REF_URL'] = this.pathInfo.refererURL;
             p['REF_PATH'] = this.pathInfo.referer.path;
+            p['REF_SELECTOR'] = this.pathInfo.referer.selector;
         }
         return p;
     }
