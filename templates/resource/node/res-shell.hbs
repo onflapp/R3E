@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+  {{include_css "resource/res-ui.css"}}
+
+  <title>shell:{{R.PATH}}</title>
+</head>
+  <style>
+    #commandline {
+      width: 100%;
+    }
+  </style>
+  <!--script>
+      window.addEventListener('DOMContentLoaded', function() {
+        var cmd = document.querySelector('#commandline');
+        if (cmd) {
+          cmd.focus();
+        }
+      });
+  </script-->
+
+<body>
+  <div class="head">
+    <ol class="paths">
+      <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
+{{#include "." "parents"}}
+      <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
+{{/include}}
+      <li>{{name}}</li>
+    </ol>
+
+    <pre>
+    </pre>
+
+    <form method="post" action="{{res_path R.PATH}}">
+      <input type="hidden" name="_rt" value="system/shell">
+      <input id="commandline" type="text" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" name=":command">
+    </form>
+    XXX
+  </div>
+</body>
+
+</html>

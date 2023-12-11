@@ -1,19 +1,22 @@
 (async function (res, writer, ctx) {
-  debugger;
   let command = res[':command'];
   let path = ctx.getCurrentResourcePath();
-  let tx = '\n';
-  let rstype = 'system/shell';
-  let sel = 'edit';
+  let rstype = 'resource/node';
+  let sel = 'res-shell';
+  let out = "";
 
   try {
     let x = eval(command);
+    out += x;
   }
   catch(ex) {
+    out += ex;
   }
 
   let rv = await ctx.renderResource(path, rstype, sel);
-
-  writer.write(rv);
+  if (rv) {
+    rv.content = rv.content.replace('XXX', ':' + out);
+    writer.write(rv);
+  }
   writer.end();
 });

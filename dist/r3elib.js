@@ -1737,41 +1737,49 @@ class ResourceRequestHandler extends EventDispatcher {
         if (context && info && info.resourcePath) {
             data = Utils.expandValues(data, data);
             self.transformResource(data, 'pre-store', context, function (values) {
-                let storeto = Utils.absolute_path(values[':storeto']);
-                if (!storeto)
-                    storeto = info.resourcePath;
-                if (info.selector && values[':forward']) {
-                    let forward = values[':forward'];
-                    self.renderResource(info.resourcePath, null, info.selector, context, function (ctype, content) {
-                        if (callback) {
-                            callback();
-                        }
-                        else {
-                            self.handleEnd();
-                            self.forwardRequest(forward);
-                        }
-                    });
+                if (values['content']) {
+                    self.contentWriter.start(values['contentType']);
+                    self.contentWriter.write(values['content']);
+                    self.contentWriter.end();
+                    self.handleEnd();
                 }
                 else {
-                    self.storeResource(storeto, values, function (error) {
-                        if (!error) {
-                            let forward = values[':forward'];
+                    let storeto = Utils.absolute_path(values[':storeto']);
+                    if (!storeto)
+                        storeto = info.resourcePath;
+                    if (info.selector && values[':forward']) {
+                        let forward = values[':forward'];
+                        self.renderResource(info.resourcePath, null, info.selector, context, function (ctype, content) {
                             if (callback) {
                                 callback();
                             }
-                            else if (forward) {
+                            else {
                                 self.handleEnd();
                                 self.forwardRequest(forward);
                             }
-                            else {
-                                self.handleEnd();
-                                self.renderRequest(rpath);
+                        });
+                    }
+                    else {
+                        self.storeResource(storeto, values, function (error) {
+                            if (!error) {
+                                let forward = values[':forward'];
+                                if (callback) {
+                                    callback();
+                                }
+                                else if (forward) {
+                                    self.handleEnd();
+                                    self.forwardRequest(forward);
+                                }
+                                else {
+                                    self.handleEnd();
+                                    self.renderRequest(rpath);
+                                }
                             }
-                        }
-                        else {
-                            render_error(error);
-                        }
-                    });
+                            else {
+                                render_error(error);
+                            }
+                        });
+                    }
                 }
             });
         }
