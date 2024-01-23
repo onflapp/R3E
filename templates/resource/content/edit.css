@@ -42,7 +42,7 @@ textarea {
   font-size: 11px;
   caret-color: red;
   background-color: black;
-  color: gray;
+  color: lightgreen;
 }
 
 #pdf_view, #image_view {
