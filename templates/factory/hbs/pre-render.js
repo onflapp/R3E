@@ -132,7 +132,10 @@
         }
       }
       else if (type == 'S') {
-        root['S'][name] = val;
+        //root['S'][name] = val;
+        var vv = {};
+        vv[name] = val;
+        context.sessionData.importProperties(vv, function(){});
       }
     }
     return '';
