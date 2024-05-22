@@ -30,7 +30,11 @@ h3 a {
   padding-right: 4px;
 }
 
-button, .button, .buttons > * {
+.buttons > form {
+  display: inline-block;
+}
+
+button, .button, .buttons > a {
   font-weight: bold;
   display: inline-flex;
   border: 1px solid black;

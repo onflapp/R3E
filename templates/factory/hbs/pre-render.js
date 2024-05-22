@@ -253,6 +253,14 @@
       '>=': function (l, r) {
         return l >= r;
       },
+      'contains': function (l, r) {
+        if (l && l.indexOf(r) >= 0) return true;
+        else return false;
+      },
+      '!contains': function (l, r) {
+        if (l && l.indexOf(r) === -1) return true;
+        else return false;
+      },
       'startsWith': function (l, r) {
         if (l && l.indexOf(r) === 0) return true;
         else return false;

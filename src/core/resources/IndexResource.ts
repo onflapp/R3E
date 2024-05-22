@@ -37,8 +37,9 @@ abstract class IndexResource extends ObjectResource {
 
   protected abstract initIndexEngine(callback);
   protected abstract indexTextData(text, callback);  
-  protected abstract searchResourceNames(qry: string, callback);
   protected abstract removeResourcesFromIndex(name: string, callback);
+
+  public abstract searchResourceNames(qry: string, callback);
 
   public resolveItself(callback) {
     let self = this;

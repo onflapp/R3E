@@ -181,7 +181,9 @@ class ResourceRequestHandler extends EventDispatcher {
       let v = data[key];
       let x = key.lastIndexOf('/');
       if (x != -1) {
-        let p = resourcePath + '/' + key.substr(0, x);
+        let p = key.substr(0, x);
+        if (p.charAt(0) != '/') p = resourcePath + '/' + key.substr(0, x);
+
         let n = key.substr(x + 1);
         let d = datas[p];
         if (!d) {

@@ -227,6 +227,7 @@ class ResourceRequestContext implements ScriptContext {
 
   public searchResources(resourcePath: string, query: string) : Promise<any> {
     let self = this;
+    let base = this.getCurrentResourcePath();
     let rres = this.getResourceResolver();
 
     return new Promise(function (resolve) {
@@ -240,6 +241,10 @@ class ResourceRequestContext implements ScriptContext {
         else {
           for (let i = 0; i < ls.length; i++) {
             let it = ls[i];
+            if (it.charAt(0) != '/') {
+              resourcePath = Utils.absolute_path(resourcePath, base);
+              it = Utils.filename_path_append(resourcePath, it);
+            }
             self.resolveResource(it).then(function(res) {
               rv.push(res);
               done++;

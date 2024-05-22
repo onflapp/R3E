@@ -70,8 +70,9 @@ class DOMContentWriter implements ContentWriter {
       window['XMLHttpRequest'].prototype.send = function(data) {
         if (this.__localpath) {
           let info = self.requestHandler.parseFormData(this.__localpath, data);
+          let cb = this.onreadystatechange;
           self.requestHandler.handleStore(info.formPath, info.formData, function(rv) {
-            console.log('done');
+            if (cb) cb();
           });
         }
         else {
@@ -352,13 +353,16 @@ class ClientRequestHandler extends ResourceRequestHandler {
 
   public parseFormData(action:string, data:any): ClientFormInfo {
     let rv = {};
-
-    let it = data.entries();
-    let result = it.next();
-    
-    while (!result.done) {
-      rv[result.value[0]] = result.value[1];
-      result = it.next();
+    if (data['entries']) {
+      let it = data.entries();
+      let result = it.next();
+      while (!result.done) {
+        rv[result.value[0]] = result.value[1];
+        result = it.next();
+      }
+    }
+    else {
+      rv = data;
     }
 
     rv = this.transformValues(rv);

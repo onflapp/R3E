@@ -32,7 +32,7 @@
 {{#include "." "parents"}}
       <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
 {{/include}}
-      <li>{{name}}</li>
+      <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
     </ol>
 
     <pre>
@@ -41,8 +41,9 @@
     <form method="post" action="{{res_path R.PATH}}">
       <input type="hidden" name="_rt" value="system/shell">
       <input id="commandline" type="text" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" name=":command">
+      <input type="submit">
     </form>
-    XXX
+    <pre>XXX</pre>
   </div>
 </body>
 

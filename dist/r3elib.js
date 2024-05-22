@@ -1168,6 +1168,7 @@ class ResourceRequestContext {
     }
     searchResources(resourcePath, query) {
         let self = this;
+        let base = this.getCurrentResourcePath();
         let rres = this.getResourceResolver();
         return new Promise(function (resolve) {
             let rv = [];
@@ -1179,6 +1180,10 @@ class ResourceRequestContext {
                 else {
                     for (let i = 0; i < ls.length; i++) {
                         let it = ls[i];
+                        if (it.charAt(0) != '/') {
+                            resourcePath = Utils.absolute_path(resourcePath, base);
+                            it = Utils.filename_path_append(resourcePath, it);
+                        }
                         self.resolveResource(it).then(function (res) {
                             rv.push(res);
                             done++;
@@ -1566,7 +1571,9 @@ class ResourceRequestHandler extends EventDispatcher {
             let v = data[key];
             let x = key.lastIndexOf('/');
             if (x != -1) {
-                let p = resourcePath + '/' + key.substr(0, x);
+                let p = key.substr(0, x);
+                if (p.charAt(0) != '/')
+                    p = resourcePath + '/' + key.substr(0, x);
                 let n = key.substr(x + 1);
                 let d = datas[p];
                 if (!d) {
@@ -2181,6 +2188,35 @@ class ObjectResource extends Resource {
             }
         }
         callback(rv);
+    }
+    searchResourceNames(qry, callback) {
+        var list = [];
+        var match_func = function (prop) {
+            if (!prop)
+                return false;
+            else if (prop.indexOf(qry) !== -1)
+                return true;
+            else
+                return false;
+        };
+        var search_func = function (base, vals) {
+            for (var k in vals) {
+                var v = vals[k];
+                if (typeof v === 'object' && Object.getPrototypeOf(v) == Object.prototype) {
+                    var p = k;
+                    if (base.length > 0)
+                        p = base + '/' + p;
+                    if (match_func(k))
+                        list.push(p);
+                    search_func(p, v);
+                }
+                else if (typeof v === 'string' && match_func(v)) {
+                    list.push(base);
+                }
+            }
+        };
+        search_func('', this.values);
+        callback(list);
     }
     importContent(func, callback) {
         let res = this.makeNewObjectContentResource(this.values, this.resourceName);
@@ -3647,8 +3683,10 @@ class DOMContentWriter {
             window['XMLHttpRequest'].prototype.send = function (data) {
                 if (this.__localpath) {
                     let info = self.requestHandler.parseFormData(this.__localpath, data);
+                    let cb = this.onreadystatechange;
                     self.requestHandler.handleStore(info.formPath, info.formData, function (rv) {
-                        console.log('done');
+                        if (cb)
+                            cb();
                     });
                 }
                 else {
@@ -3889,11 +3927,16 @@ class ClientRequestHandler extends ResourceRequestHandler {
     }
     parseFormData(action, data) {
         let rv = {};
-        let it = data.entries();
-        let result = it.next();
-        while (!result.done) {
-            rv[result.value[0]] = result.value[1];
-            result = it.next();
+        if (data['entries']) {
+            let it = data.entries();
+            let result = it.next();
+            while (!result.done) {
+                rv[result.value[0]] = result.value[1];
+                result = it.next();
+            }
+        }
+        else {
+            rv = data;
         }
         rv = this.transformValues(rv);
         rv = Utils.expandValues(rv, rv);

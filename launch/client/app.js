@@ -128,7 +128,7 @@ handler.addEventListener('start', function() {
   document.body.style.opacity = '0';
 });
 
-handler.addEventListener('end', function() {
+handler.addEventListener('loaded', function() {
   document.body.style.opacity = '1';
 });
 

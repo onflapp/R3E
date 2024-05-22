@@ -64,6 +64,32 @@ class ObjectResource extends Resource {
     callback(rv);
   }
 
+  public searchResourceNames(qry: string, callback) {
+    var list = [];
+    var match_func = function(prop) {
+      if (!prop) return false;
+      else if (prop.indexOf(qry) !== -1) return true;
+      else return false;
+    }; 
+    var search_func = function(base, vals) {
+      for (var k in vals) {
+        var v = vals[k];
+        if (typeof v === 'object' && Object.getPrototypeOf(v) == Object.prototype) {
+          var p = k;
+          if (base.length > 0) p = base + '/' + p;
+          if (match_func(k)) list.push(p);
+          search_func(p, v);
+        }
+        else if (typeof v === 'string' && match_func(v)) {
+          list.push(base);
+        }
+      }
+    };
+
+    search_func('', this.values);
+    callback(list);
+  }
+
   public importContent(func, callback) {
     let res = this.makeNewObjectContentResource(this.values, this.resourceName);
     func(res.getWriter(), callback);

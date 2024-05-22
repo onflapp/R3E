@@ -30,6 +30,12 @@
 {{/if}}
     <a target="_blank" href="{{req_path "." "dump"}}">x</a>
     <a href="{{req_path "." "res-properties"}}">props</a>
+
+
+    <form method="get" action="{{req_path "." "res-search"}}">
+      <input name="q" type="text" placeholder="search" value="{{Q.q}}">
+      <button type="submit">search</button>
+    </form>
   </div>
 
   <table>
