@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="user-scalable=no,width=device-width, initial-scale=1.0">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  
+  {{include_css "resource/res-ui.css" "resource/node/res-list.css"}}
+
+  <title>search:{{R.PATH}}</title>
+</head>
+
+<body>
+  <ol class="paths">
+    <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
+{{#include "." "parents"}}
+    <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
+{{/include}}
+    <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
+  </ol>
+
+  <form method="get" action="{{req_path "." "res-search"}}">
+    <input name="q" type="text" placeholder="search" value="{{Q.q}}">
+    <button type="submit">search</button>
+  </form>
+  <br>
+
+  <table>
+{{#include "." "resource/index" "children"}}
+  {{#if isContentResource}}
+    <tr>
+      <td>
+        <a href="{{req_path path "edit"}}">{{name}}</a>
+      </td>
+      <td>
+        {{contentType}} ({{contentSize}})
+      </td>
+      <td>
+        {{include path "res-list-actions"}}
+      </td>
+    </tr>
+  {{else}}
+    <tr>
+      <td>
+        <a href="{{req_path path "res-list"}}">{{name}}</a>
+      </td>
+      <td>
+    {{#if renderType}}
+        <a href="{{req_path C.USER_TEMPLATES "/" renderType "res-list"}}">{{renderType}}</a>
+    {{else}}
+        {{type}}
+    {{/if}}
+        <a href="{{req_path path "res-renderer"}}">renderer</a>
+      </td>
+      <td>
+        {{include path "res-list-actions"}}
+      </td>
+    </tr>
+  {{/if}}
+{{/include}}
+  </table>
+</body>
+
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta charset="UTF-8">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  <link rel="manifest" href="app.webmanifest">
+
+</head>
+
+<body>
+  <h4>You should not be seeing this text. If you do, client-side rendering doesn't work correctly</h4>
+  <p>
+    Check out your console log
+  </p>
+  <p>
+    If you load the app.html from a http, make sure the root of your web server correspondents to the root of the project.
+    The url should look something like <i>http://myserver/launch/client/app.html</i>
+  </p>
+</body>
+<script>
+async function cacheOnly(request) {
+  const cachedResponse = await caches.match(request);
+  if (cachedResponse) {
+    console.log("Found response in cache:", cachedResponse);
+    return cachedResponse;
+  }
+  return Response.error();
+}
+
+self.addEventListener("fetch", (event) => {
+  if (
+    event.request.destination === "script" ||
+    event.request.destination === "style"
+  ) {
+    event.respondWith(cacheOnly(event.request));
+  }
+});
+</script>
+</html>

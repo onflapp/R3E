@@ -52,7 +52,7 @@ var defaultTemplates = new ObjectResource({
     'root': {
       'default.func': function (res, writer, context) {
         //default is to take the existing resource path and render it as html
-        context.forwardRequest(context.getCurrentResourcePath() + '@.res-list');
+        context.forwardRequest(context.getCurrentResourcePath() + '.@res-list');
       }
     }
   }
