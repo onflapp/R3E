@@ -194,7 +194,7 @@ class ResourceRequestContext implements ScriptContext {
 
           if (filter) {
             try {
-              if (filter(map['name'])) rv.push(map);
+              if (filter(map)) rv.push(map);
             }
             catch(ex) {
               console.log(ex);

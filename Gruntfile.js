@@ -12,6 +12,7 @@ module.exports = function (grunt) {
       compile_lib: {
         tsconfig: false,
         options: {
+          moduleResolution: 'node',
           module: 'amd',
           sourceMap: false,
           strict: false,

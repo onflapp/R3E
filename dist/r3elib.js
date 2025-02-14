@@ -1136,7 +1136,7 @@ class ResourceRequestContext {
                     map['path'] = Utils.filename_path_append(base, ls[i].getName());
                     if (filter) {
                         try {
-                            if (filter(map['name']))
+                            if (filter(map))
                                 rv.push(map);
                         }
                         catch (ex) {
