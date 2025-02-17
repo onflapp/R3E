@@ -1,6 +1,7 @@
 interface ScriptContext {
   /* resolve */
   resolveResource(resourcePath: string) : Promise<any>;
+  resolveResources(resourcePaths: string[]) : Promise<any>;
   listResources(resourcePath: string, filter?:any) : Promise<any>;
   listResourceNames(resourcePath: string, filter?:any) : Promise<any>;
   listAllResourceNames(resourcePath: string, filter?:any) : Promise<any>;

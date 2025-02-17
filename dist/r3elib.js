@@ -1039,6 +1039,41 @@ class ResourceRequestContext {
             }
         });
     }
+    resolveResources(resourcePaths) {
+        let rres = this.getResourceResolver();
+        let self = this;
+        let base = this.getCurrentResourcePath();
+        let rv = [];
+        let done = 0;
+        return new Promise(function (resolve) {
+            if (!resourcePaths || resourcePaths.length == 0)
+                resolve(rv);
+            for (let i = 0; i < resourcePaths.length; i++) {
+                let resourcePath = resourcePaths[i];
+                if (resourcePath === '.' && self.currentResource) {
+                    let map = self.makePropertiesForResource(self.currentResource);
+                    map['path'] = self.getCurrentResourcePath();
+                    rv.push(map);
+                    done++;
+                    if (resourcePaths.length == done)
+                        resolve(rv);
+                }
+                else {
+                    resourcePath = Utils.absolute_path(resourcePath, base);
+                    rres.resolveResource(resourcePath, function (res) {
+                        done++;
+                        if (res) {
+                            let map = self.makePropertiesForResource(res);
+                            map['path'] = resourcePath;
+                            rv.push(map);
+                        }
+                        if (resourcePaths.length == done)
+                            resolve(rv);
+                    });
+                }
+            }
+        });
+    }
     listResourceNames(resourcePath, filter) {
         let self = this;
         let rres = this.getResourceResolver();
@@ -3763,8 +3798,10 @@ class DOMContentWriter {
             if (processing !== 0)
                 return;
             setTimeout(function () {
-                let evt = document.createEvent('MutationEvents');
-                evt.initMutationEvent('DOMContentLoaded', true, true, document, '', '', '', 0);
+                let evt = new Event("DOMContentLoaded", {
+                    bubbles: true,
+                    cancelable: true
+                });
                 document.dispatchEvent(evt);
                 let evt1 = document.createEvent('Event');
                 evt1.initEvent('load', false, false);

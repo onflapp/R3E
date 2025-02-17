@@ -94,6 +94,41 @@ class ResourceRequestContext implements ScriptContext {
     });
   }
 
+  public resolveResources(resourcePaths: string[]) : Promise<any> {
+    let rres = this.getResourceResolver();
+    let self = this;
+    let base = this.getCurrentResourcePath();
+    let rv = [];
+    let done = 0;
+
+    return new Promise(function (resolve) {
+      if (!resourcePaths || resourcePaths.length == 0) resolve(rv);
+
+      for (let i = 0; i < resourcePaths.length; i++) {
+        let resourcePath = resourcePaths[i];
+        if (resourcePath === '.' && self.currentResource) {
+          let map = self.makePropertiesForResource(self.currentResource);
+          map['path'] = self.getCurrentResourcePath();
+          rv.push(map);
+          done++;
+          if (resourcePaths.length == done) resolve(rv);
+        }
+        else {
+          resourcePath = Utils.absolute_path(resourcePath, base);
+          rres.resolveResource(resourcePath, function(res) {
+            done++;
+            if (res) {
+              let map = self.makePropertiesForResource(res);
+              map['path'] = resourcePath;
+              rv.push(map);
+            }
+            if (resourcePaths.length == done) resolve(rv);
+          });
+        }
+      }
+    });
+  }
+
   public listResourceNames(resourcePath: string, filter?: any) : Promise<any> {
     let self = this;
     let rres = this.getResourceResolver();

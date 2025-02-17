@@ -158,8 +158,12 @@ class DOMContentWriter implements ContentWriter {
       if (processing !== 0) return;
 
       setTimeout(function() {
-        let evt = document.createEvent('MutationEvents'); 
-        evt.initMutationEvent('DOMContentLoaded', true, true, document, '', '', '', 0); 
+        //let evt = document.createEvent('MutationEvents'); 
+        //evt.initMutationEvent('DOMContentLoaded', true, true, document, '', '', '', 0); 
+        let evt = new Event("DOMContentLoaded", {
+          bubbles: true,
+          cancelable: true
+        });
         document.dispatchEvent(evt);
 
         let evt1 = document.createEvent('Event');  
