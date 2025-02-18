@@ -89,12 +89,12 @@ class DOMContentWriter implements ContentWriter {
 
       try {
         let target = evt.target as HTMLFormElement;
-        let action = target.getAttribute('action');
+        let action = unescape(target.getAttribute('action'));
         let info = requestHandler.parseFormElement(target, evt.submitter);
 
         let forward = info.formData[':forward'];
         if (forward && forward.indexOf('#')) {
-          info.formData[':forward'] = forward.substr(forward.indexOf('#')+1);
+          info.formData[':forward'] = unescape(forward.substr(forward.indexOf('#')+1));
         }
         
         if (target.method.toUpperCase() === 'POST') {
@@ -109,7 +109,7 @@ class DOMContentWriter implements ContentWriter {
             q.push(k+'='+escape(v));
           }
 
-          if (action.indexOf('#')) action = action.substr(action.indexOf('#')+1);
+          if (action.indexOf('#')) action = unescape(action.substr(action.indexOf('#')+1));
           if (q.length) action += '?'+q.join('&');
 
           setTimeout(function () {
@@ -387,26 +387,27 @@ class ClientRequestHandler extends ResourceRequestHandler {
     if (action.indexOf('#')) {
       action = action.substr(action.indexOf('#')+1);
     }
+    action = unescape(action);
 
     for (let i = 0; i < formElement.elements.length; i++) {
       let p = formElement.elements[i];
       let type = p.type.toLowerCase();
       let name = p.name;
-      let value = p.value;
+      let value = unescape(p.value);
 
       if (!name) continue;
 
       if (type === 'file') {
-        value = p.files[0];
-        if (!value) continue;
+        let fv = p.files[0];
+        if (!fv) continue;
 
         let pref = '';
-        let ct = value.type;
+        let ct = fv.type;
 
         if (name.indexOf('./') == 0) pref = name.substr(0, name.lastIndexOf('/') + 1);
         else if (name.lastIndexOf('/') > 0) pref = name.substr(0, name.lastIndexOf('/') + 1);
 
-        let mime = Utils.filename_mime(value.name); //try to guess one of our types first
+        let mime = Utils.filename_mime(fv.name); //try to guess one of our types first
         if (mime === 'application/octet-stream' && ct) mime = ct;
 
         if (name.lastIndexOf('/') > 0) pref = name.substr(0, name.lastIndexOf('/') + 1);
@@ -417,7 +418,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
           pref = name+'/';
         }
 
-        rv[name] = value.name;
+        rv[name] = fv.name;
         rv[pref + '_ct'] = mime;
         rv[pref + Resource.STORE_CONTENT_PROPERTY] = function (writer, callback) {
           let reader = new FileReader();
@@ -426,8 +427,8 @@ class ClientRequestHandler extends ResourceRequestHandler {
             writer.end(callback);
           };
 
-          writer.start(value.type);
-          reader.readAsArrayBuffer(value);
+          writer.start(fv.type);
+          reader.readAsArrayBuffer(fv);
         };
       }
       else if (type === 'submit') {

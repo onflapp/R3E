@@ -384,7 +384,25 @@ class ResourceRequestContext implements ScriptContext {
       });
     });
   }
-
+  public sourceTemplateScript(resourcePath: string) { //XXXXXXX
+    let self = this;
+    let tres = this.getTemplateResourceResolver();
+    tres.resolveResource(resourcePath, function (res) {
+      if (res && res.isContentResource()) {
+        res.read(new ContentWriterAdapter('utf8', function (buff) {
+          if (buff) {
+            try {   
+              eval(buff);
+            }
+            catch(ex) {
+              console.log(resourcePath);
+              console.log(ex);
+            }
+          }
+        }), null);
+      }       
+    });
+  }  
   public getQueryProperties() {
     return this.pathInfo.query;
   }
