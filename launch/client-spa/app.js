@@ -125,7 +125,7 @@ handler.registerFactory('js', new JSRendererFactory());
 handler.registerFactory('func', new InterFuncRendererFactory()); //internal functions, usefull for function-based renderers
 
 window.addEventListener('storage', function(evt) {
-  if (evt.key.charAt(0) != '_') {
+  if (evt.key.charAt(0) != '_' && frames.length == 0) {
     window.location.reload();
   }
 });
