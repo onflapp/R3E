@@ -1896,6 +1896,15 @@ class ResourceRequestHandler extends EventDispatcher {
                 });
             }
             else if (importto) {
+                let fn = data[':import'];
+                if (fn) {
+                    let imp = data[fn + '/_content'];
+                    if (imp) {
+                        data['_content'] = imp;
+                        delete data[fn + '/_content'];
+                        delete data[fn + '/_ct'];
+                    }
+                }
                 self.expandDataAndImport(resourcePath, data, function () {
                     delete data[':import'];
                     delete data['_ct'];
@@ -3316,9 +3325,14 @@ class RemoteResourceContentWriter {
         let xhr = new XMLHttpRequest();
         let self = this;
         let data = this.buffer[0];
+        let ctype = this.contentType;
+        if (ctype && ctype.indexOf('base64:') === 0) {
+            ctype = ctype.substr(7);
+            data = Utils.base642ArrayBuffer(data);
+        }
         xhr.open('POST', this.filePath, true);
-        if (this.contentType)
-            xhr.setRequestHeader('Content-Type', this.contentType);
+        if (ctype)
+            xhr.setRequestHeader('Content-Type', ctype);
         xhr.onreadystatechange = function () {
             var DONE = 4;
             var OK = 200;
@@ -4029,13 +4043,15 @@ class ClientRequestHandler extends ResourceRequestHandler {
                 let mime = Utils.filename_mime(fv.name);
                 if (mime === 'application/octet-stream' && ct)
                     mime = ct;
-                if (name.lastIndexOf('/') > 0)
-                    pref = name.substr(0, name.lastIndexOf('/') + 1);
-                else if (name.indexOf(':') == 0) {
-                    pref = '{' + name + '}/';
-                }
-                else {
-                    pref = name + '/';
+                if (action.endsWith('/')) {
+                    if (name.lastIndexOf('/') > 0)
+                        pref = name.substr(0, name.lastIndexOf('/') + 1);
+                    else if (name.indexOf(':') == 0) {
+                        pref = '{' + name + '}/';
+                    }
+                    else {
+                        pref = name + '/';
+                    }
                 }
                 rv[name] = fv.name;
                 rv[pref + '_ct'] = mime;
@@ -4206,8 +4222,16 @@ class ServerRequestHandler extends ResourceRequestHandler {
                     let mime = Utils.filename_mime(n);
                     if (mime === 'application/octet-stream' && ct)
                         mime = ct;
-                    if (n.lastIndexOf('/') > 0)
-                        pref = n.substr(0, n.lastIndexOf('/') + 1);
+                    if (rpath.endsWith('/')) {
+                        if (n.lastIndexOf('/') > 0)
+                            pref = n.substr(0, n.lastIndexOf('/') + 1);
+                        else if (n.indexOf(':') == 0) {
+                            pref = '{' + n + '}/';
+                        }
+                        else {
+                            pref = n + '/';
+                        }
+                    }
                     data[n] = f;
                     data[pref + '_ct'] = mime;
                     data[pref + Resource.STORE_CONTENT_PROPERTY] = function (writer, callback) {

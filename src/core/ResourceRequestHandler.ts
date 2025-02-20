@@ -377,6 +377,12 @@ class ResourceRequestHandler extends EventDispatcher {
 
   /************************************************************************
 
+  <form method="post" enctype="multipart/form-data" action="/content/path/">
+    upload to folder
+
+  <form method="post" enctype="multipart/form-data" action="/content/file.jpg">
+    upload to the file
+
   <form method="post" enctype="multipart/form-data" action="{{req_path "{:name}" "sel"}}>
   	<input type="file" name=":name" value="">
   	<input type="hidden" name=":name@fileName" value="val1"> <<---- override the name
@@ -384,7 +390,7 @@ class ResourceRequestHandler extends EventDispatcher {
   	<input type="hidden" name=":forward" value="{{currentPath.PREFIX}}{{currentPath.path}}.xhtml">
   </form>
 
-  <form>
+  <form method="post" enctype="multipart/form-data" action="/content/path">
   	<input type="file" name=":import" value="">
   </form>
 
@@ -516,6 +522,17 @@ class ResourceRequestHandler extends EventDispatcher {
         });
       }
       else if (importto) {
+        let fn = data[':import'];
+
+        if (fn) {
+          let imp = data[fn+'/_content'];
+          if (imp) {
+            data['_content'] = imp;
+            delete data[fn+'/_content'];
+            delete data[fn+'/_ct'];
+          }
+        }
+
         self.expandDataAndImport(resourcePath, data, function () {
           delete data[':import'];
           delete data['_ct'];

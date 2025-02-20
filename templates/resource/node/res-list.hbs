@@ -68,7 +68,7 @@
   {{else}}
     <tr>
       <td>
-        <a href="{{req_path path}}">{{name}}</a>
+        <a href="{{req_path path}}">{{or _.title name}}</a>
       </td>
       <td>
     {{#if renderType}}

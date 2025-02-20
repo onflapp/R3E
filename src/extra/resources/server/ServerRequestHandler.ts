@@ -128,7 +128,15 @@ class ServerRequestHandler extends ResourceRequestHandler {
           let mime = Utils.filename_mime(n); //try to guess one of our types first
           if (mime === 'application/octet-stream' && ct) mime = ct;
 
-          if (n.lastIndexOf('/') > 0) pref = n.substr(0, n.lastIndexOf('/') + 1);
+          if (rpath.endsWith('/')) {
+            if (n.lastIndexOf('/') > 0) pref = n.substr(0, n.lastIndexOf('/') + 1);
+            else if (n.indexOf(':') == 0) {
+              pref = '{'+n+'}/';
+            }
+            else {
+              pref = n+'/';
+            }
+          }
 
           data[n] = f;
           data[pref + '_ct'] = mime;

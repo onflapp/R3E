@@ -25,6 +25,7 @@
     }
 
     var p = Utils.absolute_path(rv.join(''), context.R['PATH']);
+    p = escape(p);
     rv = []
 
     if (context.C['APP_PREFIX']) rv.push(context.C['APP_PREFIX']);
@@ -106,7 +107,8 @@
     }
 
     var p = rv.join('/');
-    return Utils.absolute_path(p, context.R['RES_PATH']);
+    p = Utils.absolute_path(p, context.R['RES_PATH']);
+    return escape(p);
   });
 /*
  * reset "R" "SELECTOR"
