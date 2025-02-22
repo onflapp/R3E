@@ -13,7 +13,14 @@ class SPARequestHandler extends ClientRequestHandler {
   }
 
   public forwardRequest(rpath: string) {
-    let p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + rpath;
+    let p = rpath;
+    if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) {
+      //use the full URL
+    }
+    else {
+      p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + rpath;
+    }
+
     if (p == window.location.toString()) {
       let self = this;
       let p = rpath;
