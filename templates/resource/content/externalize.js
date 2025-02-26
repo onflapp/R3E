@@ -1,8 +1,9 @@
 (function (res, writer, ctx) {
   var clientside = (typeof window != 'undefined');
-  var xref = res['_xref'];
+  var xref = res['externalizedPath'];
 
   if (xref) {
+    if (xref.charAt(0) == '/') xref = xref.substr(1);
     var url = escape(xref);
     writer.start('text/plain');
     writer.write(url);

@@ -8,6 +8,10 @@ interface ScriptContext {
   renderResource(resourcePath: string, rstype: string, selector: string) : Promise<any>;
   readResource(resourcePath: string, writer: ContentWriter, callback: any);
 
+  /* content */
+  resolveTemplateResourceContent(resourcePath: string) : Promise<string>;
+  resolveResourceContent(resourcePath: string) : Promise<string>;
+
   /* store */
   storeResource(resourcePath: string, data: any) : Promise<void>;
   storeAndResolveResource(resourcePath: string, data: any) : Promise<Resource>;

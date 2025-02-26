@@ -384,6 +384,24 @@ class ResourceRequestContext implements ScriptContext {
       });
     });
   }
+
+  public resolveResourceContent(resourcePath: string) : Promise<string> {
+    let self = this;
+    let rres = this.getResourceResolver();
+    return new Promise(function (resolve) {
+      rres.resolveResource(resourcePath, function(res) {
+        if (res && res.isContentResource()) {
+          res.read(new ContentWriterAdapter('utf8', function (buff) {
+            resolve(buff);
+          }), null);
+        }
+        else {
+          resolve(null);
+        }
+      });
+    });
+  }
+
   public sourceTemplateScript(resourcePath: string) { //XXXXXXX
     let self = this;
     let tres = this.getTemplateResourceResolver();
@@ -517,13 +535,22 @@ class ResourceRequestContext implements ScriptContext {
       }
       map['type'] = res.getType();
       map['name'] = res.getName();
-      map['isContentResource'] = res.isContentResource();
+      if (res.isContentResource()) {
+        map['isContentResource'] = true;
 
-      let ctype = res.getContentType();
-      if (ctype) {
-        map['isTextContentResource'] = Utils.is_texttype(ctype);
-        map['contentType'] = ctype;
-        map['contentSize'] = res.getContentSize();
+        let ctype = res.getContentType();
+        if (ctype) {
+          map['isTextContentResource'] = Utils.is_texttype(ctype);
+          map['contentType'] = ctype;
+          map['contentSize'] = res.getContentSize();
+        }
+        let xpath = res.getExternalizedPath();
+        if (xpath) {
+          map['externalizedPath'] = xpath;
+        }
+      }
+      else {
+        map['isContentResource'] = false;
       }
 
       let md = res.getModificationDate();

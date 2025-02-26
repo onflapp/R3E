@@ -287,6 +287,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
   }
 
   public forwardRequest(rpath: string) {
+    Utils.flushResourceCache();
     let p = rpath;
     if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) {
       //use the full URL
@@ -327,6 +328,8 @@ class ClientRequestHandler extends ResourceRequestHandler {
   }
 
   public renderRequest(rpath: string) {
+    Utils.flushResourceCache();
+
     var rr = this.parsePath(rpath);
     var rp = rpath;
     var i = rpath.indexOf(rr.path);

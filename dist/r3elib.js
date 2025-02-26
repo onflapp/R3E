@@ -634,6 +634,9 @@ class Resource extends Data {
             }
         });
     }
+    getExternalizedPath() {
+        return null;
+    }
     isContentResource() {
         return false;
     }
@@ -1315,6 +1318,22 @@ class ResourceRequestContext {
             });
         });
     }
+    resolveResourceContent(resourcePath) {
+        let self = this;
+        let rres = this.getResourceResolver();
+        return new Promise(function (resolve) {
+            rres.resolveResource(resourcePath, function (res) {
+                if (res && res.isContentResource()) {
+                    res.read(new ContentWriterAdapter('utf8', function (buff) {
+                        resolve(buff);
+                    }), null);
+                }
+                else {
+                    resolve(null);
+                }
+            });
+        });
+    }
     sourceTemplateScript(resourcePath) {
         let self = this;
         let tres = this.getTemplateResourceResolver();
@@ -1432,12 +1451,21 @@ class ResourceRequestContext {
             }
             map['type'] = res.getType();
             map['name'] = res.getName();
-            map['isContentResource'] = res.isContentResource();
-            let ctype = res.getContentType();
-            if (ctype) {
-                map['isTextContentResource'] = Utils.is_texttype(ctype);
-                map['contentType'] = ctype;
-                map['contentSize'] = res.getContentSize();
+            if (res.isContentResource()) {
+                map['isContentResource'] = true;
+                let ctype = res.getContentType();
+                if (ctype) {
+                    map['isTextContentResource'] = Utils.is_texttype(ctype);
+                    map['contentType'] = ctype;
+                    map['contentSize'] = res.getContentSize();
+                }
+                let xpath = res.getExternalizedPath();
+                if (xpath) {
+                    map['externalizedPath'] = xpath;
+                }
+            }
+            else {
+                map['isContentResource'] = false;
             }
             let md = res.getModificationDate();
             if (md) {
@@ -3266,6 +3294,10 @@ class StoredObjectContentResource extends ObjectContentResource {
         this.storageResource = storage;
         this.rootResource = root;
     }
+    getExternalizedPath() {
+        let path = this.values['_content'];
+        return path;
+    }
     read(writer, callback) {
         if (this.storageResource) {
             let rres = new ResourceResolver(this.storageResource);
@@ -3934,6 +3966,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
         console.log('status:' + code);
     }
     forwardRequest(rpath) {
+        Utils.flushResourceCache();
         let p = rpath;
         if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) {
         }
@@ -3968,6 +4001,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
         this.renderRequest(path);
     }
     renderRequest(rpath) {
+        Utils.flushResourceCache();
         var rr = this.parsePath(rpath);
         var rp = rpath;
         var i = rpath.indexOf(rr.path);
@@ -4105,6 +4139,7 @@ class SPARequestHandler extends ClientRequestHandler {
         });
     }
     forwardRequest(rpath) {
+        Utils.flushResourceCache();
         let p = rpath;
         if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) {
         }

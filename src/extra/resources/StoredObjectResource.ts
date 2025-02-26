@@ -202,6 +202,11 @@ class StoredObjectContentResource extends ObjectContentResource {
     this.rootResource = root;
   }
 
+  public getExternalizedPath(): string {
+    let path = this.values['_content'];
+    return path;
+  }
+
   public read(writer: ContentWriter, callback: any): void {
     if (this.storageResource) {
       let rres = new ResourceResolver(this.storageResource);

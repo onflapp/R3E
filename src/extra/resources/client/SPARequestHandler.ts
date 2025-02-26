@@ -13,6 +13,7 @@ class SPARequestHandler extends ClientRequestHandler {
   }
 
   public forwardRequest(rpath: string) {
+    Utils.flushResourceCache();
     let p = rpath;
     if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) {
       //use the full URL

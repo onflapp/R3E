@@ -302,6 +302,10 @@ abstract class Resource extends Data implements ContentReader {
     });
   }
 
+  public getExternalizedPath(): string {
+    return null;
+  }
+
   public isContentResource(): boolean {
     return false;
   }
