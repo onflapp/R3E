@@ -1,28 +1,37 @@
-function popupPath(path_ref, cb) {
+function popupPath(type, path_ref, cb) {
   //saveFocus();
 
-  let el = document.querySelector('#ui_popup');
-  if (!el) {
-    el = document.createElement('iframe');
-    el.id = 'ui_popup';
-    document.body.append(el);
-    window.addEventListener('click', function(evt) {
-      if (document.body.classList.contains('mode_popup-visible')) {
-        el.classList.remove('visible');
-        document.body.classList.remove('mode_popup-visible');
-        evt.preventDefault();
-        evt.stopPropagation();
-      }
-    });
+  if (type == 1) {
+    window.open(path_ref, '_blank');
+    if (!window.popupPathCB) window.popupPathCB = {};
+    window.popupPathCB[path_ref] = cb;
   }
+  else {
+    let el = document.querySelector('#ui_popup');
+    if (!el) {
+      el = document.createElement('iframe');
+      el.id = 'ui_popup';
+      document.body.append(el);
+      let onclick = function(evt) {
+        if (document.body.classList.contains('mode_popup-visible')) {
+          el.classList.remove('visible');
+          document.body.classList.remove('mode_popup-visible');
+          window.removeEventListener(onclick);
+          evt.preventDefault();
+          evt.stopPropagation();
+        }
+      };
+      window.addEventListener('click', onclick);
+    }
 
-  el.src = path_ref;
-  el.popupCB = cb;
+    el.src = path_ref;
+    el.popupCB = cb;
 
-  setTimeout(function() {
-    el.classList.add('visible');
-    document.body.classList.add('mode_popup-visible');
-  },50);
+    setTimeout(function() {
+      el.classList.add('visible');
+      document.body.classList.add('mode_popup-visible');
+    },50);
+  }
 }
 
 function getDataProperty(el, name) {    
@@ -48,6 +57,7 @@ $(function () {
   window.addEventListener('message', function(evt) {
     let path_ref = evt.source.location.toString();
     if (window.popupPathCB && window.popupPathCB[path_ref]) {
+      Utils.flushResourceCache();
       setTimeout(function() {
         window.popupPathCB[path_ref](evt.data);
         delete window.popupPathCB[path_ref];
@@ -81,13 +91,18 @@ $(function () {
   });
 
   $(document).on('click', '.act_popup-show', function(evt) {
+    evt.preventDefault();
+
     let $el = $(evt.target);
     let path = $(evt.target).data('path');
+    let href = $(evt.target).attr('href');
     let name = $(evt.target).attr('name');
     let $form = $(evt.target).parents('form');
     let $main = $('#main_data_form');
 
-    popupPath(path, function(item) {
+    if (!path && href) path = href;
+
+    popupPath(0, path, function(item) {
       Utils.flushResourceCache();
       $el.val(item);
       if ($main.length) {
@@ -100,6 +115,5 @@ $(function () {
         $form.trigger('submit');
       }
     });
-    evt.preventDefault();
   });
 });

@@ -164,11 +164,11 @@ class DOMContentWriter implements ContentWriter {
           bubbles: true,
           cancelable: true
         });
-        document.dispatchEvent(evt);
+        //document.dispatchEvent(evt);
 
         let evt1 = document.createEvent('Event');  
         evt1.initEvent('load', false, false);  
-        window.dispatchEvent(evt1);
+        //window.dispatchEvent(evt1);
       });
 
       processing = -1;

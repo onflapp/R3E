@@ -3296,6 +3296,10 @@ class StoredObjectContentResource extends ObjectContentResource {
     }
     getExternalizedPath() {
         let path = this.values['_content'];
+        if (this['rootResource'] && this['rootResource']['storageResource']) {
+            let name = this['rootResource']['storageResource'].getName();
+            path = Utils.absolute_path(name + path);
+        }
         return path;
     }
     read(writer, callback) {
@@ -3867,10 +3871,8 @@ class DOMContentWriter {
                     bubbles: true,
                     cancelable: true
                 });
-                document.dispatchEvent(evt);
                 let evt1 = document.createEvent('Event');
                 evt1.initEvent('load', false, false);
-                window.dispatchEvent(evt1);
             });
             processing = -1;
         };

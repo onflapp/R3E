@@ -204,6 +204,10 @@ class StoredObjectContentResource extends ObjectContentResource {
 
   public getExternalizedPath(): string {
     let path = this.values['_content'];
+    if (this['rootResource'] && this['rootResource']['storageResource']) {
+      let name = this['rootResource']['storageResource'].getName();
+      path = Utils.absolute_path(name + path);
+    }
     return path;
   }
 
