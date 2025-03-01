@@ -1,6 +1,6 @@
 (function (res, writer, ctx) {
   var Handlebars = res.Handlebars;
-  
+
 /*
  * path "."
  * path "/content" "res-list"
@@ -77,6 +77,12 @@
 
     return p.placeholder;
   };
+
+  Handlebars.registerHelper('partial', function (name, block) {
+    var out = block.fn();
+    Handlebars.registerPartial(name, out);
+    return '';
+  });
 
   Handlebars.registerHelper('ref_path', function () {
     var context = arguments[arguments.length-1].data.root;

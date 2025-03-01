@@ -203,10 +203,10 @@ class StoredObjectContentResource extends ObjectContentResource {
   }
 
   public getExternalizedPath(): string {
-    let path = this.values['_content'];
+    let path = this.values['_content'].substr(1);
     if (this['rootResource'] && this['rootResource']['storageResource']) {
       let name = this['rootResource']['storageResource'].getName();
-      path = Utils.absolute_path(name + path);
+      path = name + path;
     }
     return path;
   }
@@ -219,7 +219,7 @@ class StoredObjectContentResource extends ObjectContentResource {
         if (res) {
           res.read(writer, callback);
         }
-        else {
+        else if (callback) {
           callback();
         }
       });
