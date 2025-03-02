@@ -5,6 +5,7 @@ function popupPath(type, path_ref, cb) {
     window.open(path_ref, '_blank');
     if (!window.popupPathCB) window.popupPathCB = {};
     window.popupPathCB[path_ref] = cb;
+    document.body.classList.add('mode_popup-visible');
   }
   else {
     let el = document.querySelector('#ui_popup');
@@ -58,6 +59,7 @@ $(function () {
     let path_ref = evt.source.location.toString();
     if (window.popupPathCB && window.popupPathCB[path_ref]) {
       Utils.flushResourceCache();
+      document.body.classList.remove('mode_popup-visible');
       setTimeout(function() {
         window.popupPathCB[path_ref](evt.data);
         delete window.popupPathCB[path_ref];

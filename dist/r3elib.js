@@ -1856,11 +1856,11 @@ class ResourceRequestHandler extends EventDispatcher {
                                     callback();
                                 }
                                 else if (forward) {
-                                    self.handleEnd();
+                                    self.handleEnd(true);
                                     self.forwardRequest(forward);
                                 }
                                 else {
-                                    self.handleEnd();
+                                    self.handleEnd(true);
                                     self.renderRequest(rpath);
                                 }
                             }
@@ -1956,7 +1956,7 @@ class ResourceRequestHandler extends EventDispatcher {
             callback(new ErrorResource(ex));
         }
     }
-    handleEnd() {
+    handleEnd(stored) {
         this.dispatchAllEvents('ended');
     }
 }
@@ -3126,7 +3126,7 @@ class StoredObjectResource extends ObjectResource {
             this.storageResource = obj;
             this.storagePath = name;
             this.rootResource = null;
-            this.basePath = '';
+            this.basePath = Utils.filename_dir(name);
             EventDispatcher.global().addEventListener('cache-flush', function () {
                 self.flushResourceCache();
             });
@@ -3295,7 +3295,9 @@ class StoredObjectContentResource extends ObjectContentResource {
         this.rootResource = root;
     }
     getExternalizedPath() {
-        let path = this.values['_content'].substr(1);
+        let path = this.values['_content'];
+        if (path.startsWith('/'))
+            path = path.substr(1);
         if (this['rootResource'] && this['rootResource']['storageResource']) {
             let name = this['rootResource']['storageResource'].getName();
             path = name + path;
@@ -4127,6 +4129,12 @@ class ClientRequestHandler extends ResourceRequestHandler {
         info.formData = rv;
         info.formPath = path;
         return info;
+    }
+    handleEnd(stored) {
+        super.handleEnd(stored);
+        if (stored) {
+            localStorage.setItem('_md', new Date().toString());
+        }
     }
 }
 class SPARequestHandler extends ClientRequestHandler {

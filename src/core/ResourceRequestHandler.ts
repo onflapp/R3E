@@ -450,11 +450,11 @@ class ResourceRequestHandler extends EventDispatcher {
                   callback();
                 }
                 else if (forward) {
-                  self.handleEnd();
+                  self.handleEnd(true);
                   self.forwardRequest(forward);
                 }
                 else {
-                  self.handleEnd();
+                  self.handleEnd(true);
                   self.renderRequest(rpath);
                 }
               }
@@ -558,7 +558,7 @@ class ResourceRequestHandler extends EventDispatcher {
     }
   }
 
-  public handleEnd() {
+  public handleEnd(stored?: boolean) {
     this.dispatchAllEvents('ended');
   }
 }

@@ -464,4 +464,11 @@ class ClientRequestHandler extends ResourceRequestHandler {
 
     return info;
   }
+
+  public handleEnd(stored?: boolean) {
+    super.handleEnd(stored);
+    if (stored) {
+      localStorage.setItem('_md', new Date().toString());
+    }
+  }
 }

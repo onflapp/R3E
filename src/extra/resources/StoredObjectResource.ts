@@ -14,7 +14,7 @@ class StoredObjectResource extends ObjectResource {
       this.storageResource = obj;
       this.storagePath = name;
       this.rootResource = null;
-      this.basePath = '';
+      this.basePath = Utils.filename_dir(name);
 
       EventDispatcher.global().addEventListener('cache-flush', function() {
         self.flushResourceCache();
@@ -203,7 +203,9 @@ class StoredObjectContentResource extends ObjectContentResource {
   }
 
   public getExternalizedPath(): string {
-    let path = this.values['_content'].substr(1);
+    let path = this.values['_content'];
+    if (path.startsWith('/')) path = path.substr(1);
+
     if (this['rootResource'] && this['rootResource']['storageResource']) {
       let name = this['rootResource']['storageResource'].getName();
       path = name + path;
