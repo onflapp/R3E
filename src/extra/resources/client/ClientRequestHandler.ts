@@ -396,11 +396,12 @@ class ClientRequestHandler extends ResourceRequestHandler {
       let p = formElement.elements[i];
       let type = p.type.toLowerCase();
       let name = p.name;
-      let value = unescape(p.value);
+      let value = p.value;
 
       if (!name) continue;
 
       if (type === 'file') {
+        value = unescape(p.value);
         let fv = p.files[0];
         if (!fv) continue;
 
