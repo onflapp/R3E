@@ -60,6 +60,10 @@ class ResourceRequestContext implements ScriptContext {
 
   public renderResource(resourcePath: string, rstype: string, selector: string) : Promise<any>{
     let self = this;
+    if (arguments.length == 2) {
+      selector = rstype;
+      rstype = null;
+    }
     return new Promise(function (resolve) {
       self.resourceRequestHandler.renderResource(resourcePath, rstype, selector, self, function(contentType, content) {
         resolve({ contentType:contentType, content:content });
@@ -402,7 +406,7 @@ class ResourceRequestContext implements ScriptContext {
     });
   }
 
-  public sourceTemplateScript(resourcePath: string) { //XXXXXXX
+  public sourceTemplateScript(resourcePath: string) {
     let self = this;
     let tres = this.getTemplateResourceResolver();
     tres.resolveResource(resourcePath, function (res) {

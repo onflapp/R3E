@@ -1,4 +1,22 @@
 class Utils {
+    static setObjectAtPath(obj, path, val) {
+        let paths = path.split('/');
+        let o = obj;
+        for (let i = 0; i < paths.length; i++) {
+            let n = paths[i];
+            let v = o[n];
+            if (i == paths.length - 1) {
+                o[n] = val;
+            }
+            else {
+                if (!v) {
+                    v = {};
+                    o[n] = v;
+                }
+                o = v;
+            }
+        }
+    }
     static expandValue(val, data) {
         if (typeof val !== 'string')
             return val;
@@ -1011,6 +1029,10 @@ class ResourceRequestContext {
     }
     renderResource(resourcePath, rstype, selector) {
         let self = this;
+        if (arguments.length == 2) {
+            selector = rstype;
+            rstype = null;
+        }
         return new Promise(function (resolve) {
             self.resourceRequestHandler.renderResource(resourcePath, rstype, selector, self, function (contentType, content) {
                 resolve({ contentType: contentType, content: content });
@@ -4068,6 +4090,8 @@ class ClientRequestHandler extends ResourceRequestHandler {
             let value = p.value;
             if (!name)
                 continue;
+            if (name.charAt(0) == ':')
+                value = unescape(value);
             if (type === 'file') {
                 value = unescape(p.value);
                 let fv = p.files[0];

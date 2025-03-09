@@ -400,6 +400,8 @@ class ClientRequestHandler extends ResourceRequestHandler {
 
       if (!name) continue;
 
+      if (name.charAt(0) == ':') value = unescape(value); //might be :copy or other special value
+
       if (type === 'file') {
         value = unescape(p.value);
         let fv = p.files[0];

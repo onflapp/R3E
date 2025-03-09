@@ -1,4 +1,24 @@
 class Utils {
+  public static setObjectAtPath(obj, path, val) {
+    let paths = path.split('/');
+    let o = obj;
+    for (let i = 0; i < paths.length; i++) {
+      let n = paths[i];
+      let v = o[n];
+
+      if (i == paths.length - 1) {
+        o[n] = val;
+      }
+      else {
+        if (!v) {
+          v = {};
+          o[n] = v;
+        }
+        o = v;
+      }
+    }
+  }
+
   public static expandValue(val, data) {
     if (typeof val !== 'string') return val;
 

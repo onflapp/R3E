@@ -149,6 +149,11 @@ window.templates={
         "_pt": "resource/content",
         "_content": "(async function (res, writer, ctx) {\n  writer.start('object/javascript');\n\n  let path = ctx.getCurrentResourcePath();\n\n  let parentResources = [];\n  let parentPaths = [];\n  let ps = Utils.split_path(path);\n  ps.pop();\n\n  while (1) {\n    let rpath = ps.join('/');\n    if (rpath == '') break;\n    \n    let r = await ctx.resolveResource('/'+rpath);\n    parentResources.unshift(r);\n\n    ps.pop();\n  }\n\n  writer.write(parentResources);\n  writer.end();\n});\n"
       },
+      "properties-all.js": {
+        "_ct": "text/javascript",
+        "_pt": "resource/content",
+        "_content": "(function (res, writer, ctx) {\n  let path = ctx.getCurrentResourcePath();\n  let rv = {};\n\n  ctx.exportAllResources(path, 0, {\n    start: function (ctype) {\n    },\n    write: function (data) {\n      let p = data.values[':path'];\n      let c = 0;\n      for (let k in data.values) {\n        if (k.charAt(0) == '_') continue;\n        if (k.charAt(0) == ':') continue;\n\n        let v = data.values[k];\n        Utils.setObjectAtPath(rv, p+'/'+k, v);\n        c++;\n      }\n      if (c == 0) {\n        Utils.setObjectAtPath(rv, p, {});\n      }\n    },\n    error: function (err) {\n      console.log(err);\n    },\n    end: function () {\n      let n = res['name'];\n      writer.start('object/javascript');\n      writer.write(rv[n]);\n      writer.end();\n    }\n  }, true);\n});\n"
+      },
       "properties.js": {
         "_ct": "text/javascript",
         "_pt": "resource/content",
@@ -278,5 +283,5 @@ window.templates={
       }
     }
   },
-  "_md": "1740998119085"
+  "_md": "1741546365707"
 }
