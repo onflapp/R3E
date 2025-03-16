@@ -95,7 +95,7 @@
       return rv;
     }
     else {
-      return '';
+      return path_func.apply(this, arguments);
     }
   });
 

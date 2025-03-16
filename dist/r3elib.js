@@ -3832,6 +3832,13 @@ class DOMContentWriter {
                 let action = unescape(target.getAttribute('action'));
                 let info = requestHandler.parseFormElement(target, evt.submitter);
                 let forward = info.formData[':forward'];
+                if (forward && forward.indexOf('|') != -1) {
+                    let a = forward.split('|');
+                    if (a[0].length == 0)
+                        forward = a[1];
+                    else
+                        forward = a[0];
+                }
                 if (forward && forward.indexOf('#')) {
                     info.formData[':forward'] = unescape(forward.substr(forward.indexOf('#') + 1));
                 }

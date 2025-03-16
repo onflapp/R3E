@@ -14,7 +14,7 @@
 
 <body>
   <h3>Copy "{{name}}"
-    <a class="button" href="{{req_path "../" "res-list"}}">cancel</a>
+    <a class="button" href="{{ref_path "/" "ui-close"}}">cancel</a>
   </h3>
 
   <ol class="paths">
@@ -54,7 +54,7 @@
 
     <input name=":name|newUUID" value="Copy of {{R.NAME}}" autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false">
     <input type="hidden" name=":copyto" value="{{res_path R.DATA_PATH "{:name}"}}">
-    <input type="hidden" name=":forward" value="{{req_path R.DATA_PATH "res-list"}}">
+    <input type="hidden" name=":forward" value="{{ref_path "/" "ui-close"}}">
 
     <button type="submit">copy</button>
   </form>
