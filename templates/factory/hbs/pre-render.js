@@ -340,6 +340,54 @@
     return new Handlebars.SafeString(txt);
   });
 
+  Handlebars.registerHelper('include_http', function () {
+    if (arguments.length < 2) return ''
+
+    var block = arguments[arguments.length-1];
+    var context = block.data.root._context;
+    var session = block.data.root._session;
+    var p = session.makeOutputPlaceholder();
+
+    var clean_up = function(text) {
+      var t = text.toLowerCase();
+      var s = t.indexOf('<body');
+      if (s != -1) s = t.indexOf('>', s);
+      var e = t.indexOf('</body>');
+
+      if (s != -1 && e != -1) return text.substr(s+1, e-s-1);
+      else return text;
+    };
+
+    var fetch_content = function(path) {
+      fetch(path).then(function(respose) {
+        if (respose.ok) {
+          respose.text().then(function(text) {
+            var t = clean_up(text);
+          console.log(t);
+            p.write(t);
+            p.end();
+          });
+        }
+        else {
+          p.write('error:'+path);
+          p.end();
+        }
+      }).catch(function(ex) {
+        p.write('error:'+ex);
+        p.end();
+      });
+    };
+
+    var args = [];
+    for (var i = 0; i < arguments.length-1; i++) {
+      args.push(arguments[i]);
+    }
+
+    fetch_content(args.join(''));
+
+    return p.placeholder;
+  });
+
   Handlebars.registerHelper('include_css', function () {
     if (arguments.length < 2) return ''
 
