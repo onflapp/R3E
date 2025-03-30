@@ -1746,6 +1746,9 @@ class ResourceRequestHandler extends EventDispatcher {
     getConfigProperties() {
         return this.configProperties;
     }
+    getRootContext() {
+        return this.makeContext(null);
+    }
     setConfigProperties(cfg) {
         this.configProperties = cfg;
     }
