@@ -19,9 +19,9 @@
   </h3>
  
   <ol class="paths">
-    <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
+    <li>HOME / </li>
 {{#include "." "parents"}}
-    <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
+    <li>{{name}} / </li>
 {{/include}}
     <li>{{name}}</li>
   </ol>
@@ -71,7 +71,7 @@
 {{/include}}
     </select>
 
-    <input type="hidden" name=":forward" value="{{ref_path R.PATH "res-list"}}">
+    <input type="hidden" name=":forward" value="{{req_path R.PATH "ui-close"}}">
     <button type="submit">save</button>
   </form>
 

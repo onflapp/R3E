@@ -84,21 +84,6 @@
     return '';
   });
 
-  Handlebars.registerHelper('ref_path', function () {
-    var context = arguments[arguments.length-1].data.root;
-    var refurl = context.R['REF_URL'];
-
-    if (refurl) {
-      var rv = '';
-      if (context.C['APP_PREFIX']) rv += context.C['APP_PREFIX'];
-      rv += refurl;
-      return rv;
-    }
-    else {
-      return path_func.apply(this, arguments);
-    }
-  });
-
   Handlebars.registerHelper('req_path', path_func);
 
   Handlebars.registerHelper('res_path', function () {

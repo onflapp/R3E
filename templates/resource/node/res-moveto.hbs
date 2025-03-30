@@ -14,13 +14,13 @@
 
 <body>
   <h3>Move "{{name}}"
-    <a class="button" href="{{ref_path "/" "ui-close"}}">cancel</a>
+    <a class="button" href="{{req_path "." "ui-close"}}">cancel</a>
   </h3>
 
   <ol class="paths">
-    <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
+    <li>HOME / </li>
 {{#include "." "parents"}}
-    <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
+    <li>{{name}} / </li>
 {{/include}}
     <li>{{name}}</li>
   </ol>
@@ -54,7 +54,7 @@
     
     <input name=":name|newUUID" value="{{R.NAME}}" autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false">
     <input type="hidden" name=":moveto" value="{{res_path R.DATA_PATH "{:name}"}}">
-    <input type="hidden" name=":forward" value="{{ref_path "/" "ui-close"}}">
+    <input type="hidden" name=":forward" value="{{req_path "." "ui-close"}}">
 
     <button type="submit">move</button>
   </form>

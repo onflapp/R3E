@@ -14,13 +14,13 @@
 
 <body>
   <h3>Delete
-    <a class="button" href="{{ref_path "/" "ui-close"}}">cancel</a>
+    <a class="button" href="{{req_path "." "ui-close"}}">cancel</a>
   </h3>
 
   <ol class="paths">
-    <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
+    <li>HOME / </li>
 {{#include "." "parents"}}
-    <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
+    <li>{{name}} / </li>
 {{/include}}
     <li>{{name}}</li>
   </ol>
@@ -30,7 +30,7 @@
   <form method="post" action="{{res_path "."}}">
     <input type="hidden" name="_rt" value="{{renderType}}">
     <input type="hidden" name=":delete" value="{{res_path "."}}">
-    <input type="hidden" name=":forward" value="{{ref_path "/" "ui-close"}}">
+    <input type="hidden" name=":forward" value="{{req_path "." "ui-close"}}">
     <button type="submit">delete</button>
   </form>
 
