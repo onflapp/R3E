@@ -21,6 +21,13 @@ class ResponseContentWriter implements ContentWriter {
       this.transform = 'json';
     }
 
+    let headers = this.requestHandler._headers();
+    if (headers) {
+      for (let key in headers) {
+        this.respose.setHeader(key, headers[key]);
+      }
+    }
+
     this.respose.setHeader('content-type', c);
   }
   public write(content) {
@@ -61,6 +68,7 @@ class ResponseContentWriter implements ContentWriter {
 
 class ServerRequestHandler extends ResourceRequestHandler {
   private resposeContentWriter: ResponseContentWriter;
+  private headers;
 
   constructor(resourceResolver: ResourceResolver, templateResolver: ResourceResolver, res) {
     let writer = new ResponseContentWriter(res);
@@ -214,5 +222,15 @@ class ServerRequestHandler extends ResourceRequestHandler {
 
   public sendStatus(code: number) {
     this.resposeContentWriter.sendStatus(code);
+  }
+
+  public _headers() {
+    return this.headers;
+  }
+
+  public setHeader(key: string, val: string) {
+    if (!this.headers) this.headers = {};
+    if (val) this.headers[key] = val;
+    else delete this.headers[key];
   }
 }

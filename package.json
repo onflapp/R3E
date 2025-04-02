@@ -25,6 +25,7 @@
     "micromatch": "^4.0.5",
     "multiparty": "^4.1.3",
     "pouchdb": "^7.0.0",
-    "querystring": "^0.2.0"
+    "querystring": "^0.2.0",
+    "quicklook-thumbnail": "^1.0.0"
   }
 }

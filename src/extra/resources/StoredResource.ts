@@ -7,6 +7,7 @@ abstract class StoredResource extends Resource {
   protected contentSize: number = -1;
   protected resourceCache = {};
   protected loaded = false;
+  protected enableCache: boolean = true;
 
   constructor(name: string, base ? : string, prefix ? : string) {
     super(name);
@@ -34,7 +35,7 @@ abstract class StoredResource extends Resource {
   }
 
   protected setCachedResource(name: string, res: StoredResource): Resource {
-    if (res) {
+    if (res && this.enableCache) {
       this.resourceCache[name] = res;
     }
     return res;
@@ -43,6 +44,11 @@ abstract class StoredResource extends Resource {
   protected clearCachedResource(name: string) {
     if (name) delete this.resourceCache[name];
     else this.resourceCache = {};
+  }
+
+  public setEnableResourceCache(cache: boolean) {
+    this.enableCache = cache;
+    this.flushResourceCache();
   }
 
   public flushResourceCache() {
@@ -124,10 +130,13 @@ abstract class StoredResource extends Resource {
       if (walking) {
         this.childNames = null;
         res = this.setCachedResource(name, this.makeNewResource(name));
+        if (res instanceof StoredResource) res.setEnableResourceCache(this.enableCache);
         callback(res);
       }
       else {
         res = this.makeNewResource(name);
+        if (res instanceof StoredResource) res.setEnableResourceCache(this.enableCache);
+
         res.resolveItself(function(rv) {
           if (rv) {
             self.setCachedResource(name, res as StoredResource);
@@ -156,6 +165,8 @@ abstract class StoredResource extends Resource {
 
   public allocateChildResource(name: string, callback: ResourceCallback): void {
     let res = this.setCachedResource(name, this.makeNewResource(name));
+    if (res instanceof StoredResource) res.setEnableResourceCache(this.enableCache);
+
     this.childNames = null;
     callback(res);
   }

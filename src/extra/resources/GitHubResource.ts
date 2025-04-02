@@ -53,6 +53,7 @@ class GitHubResource extends StoredResource {
   protected makeNewResource(name: string) {
     let path = this.getStoragePath();
     let res = new GitHubResource(this.repo, name, path);
+    res.setEnableResourceCache(this.enableCache);
 
     return res;
   }

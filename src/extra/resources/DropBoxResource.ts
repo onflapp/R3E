@@ -105,7 +105,10 @@ class DropBoxResource extends StoredResource {
 
   protected makeNewResource(name: string) {
     let path = this.getStoragePath();
-    return new DropBoxResource(this.dbx, name, path);
+    let res = new DropBoxResource(this.dbx, name, path);
+    res.setEnableResourceCache(this.enableCache);
+
+    return res;
   }
 
   protected storeProperties(callback) {

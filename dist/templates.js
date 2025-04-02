@@ -1,10 +1,5 @@
 window.templates={
   "any": {
-    "default.js": {
-      "_ct": "text/javascript",
-      "_pt": "resource/content",
-      "_content": "(function (res, writer, ctx) {\r\n  writer.start('text/html');\r\n\r\n  writer.write('name:' + res.name);\r\n  writer.write('\x3Ch1>render types:\x3C/h1>');\r\n  writer.write('\x3Cul>');\r\n\r\n  var types = res.renderTypes;\r\n  for (var i = 0; i \x3C types.length; i++) {\r\n    writer.write('\x3Cli>' + types[i] + '\x3C/li>');\r\n  }\r\n  writer.write('\x3C/ul>');\r\n\r\n  writer.write('\x3Ch1>properties:\x3C/h1>');\r\n  writer.write('\x3Cul>');\r\n\r\n  for (var name in res._) {\r\n    var val = res._[name];\r\n    writer.write('\x3Cli>' + name + '=' + val + '\x3C/li>');\r\n  }\r\n\r\n  writer.write('\x3C/ul>');\r\n\r\n  var w = writer.makeNestedContentWriter();\r\n  ctx.listResourceNames('.').then(function (children) {\r\n    w.write('\x3Ch1>children:\x3C/h1>');\r\n    w.write('\x3Cul>');\r\n\r\n    for (var i = 0; i \x3C children.length; i++) {\r\n      var child = children[i];\r\n      w.write('\x3Cli>' + child + '\x3C/a>\x3C/li>');\r\n    }\r\n    w.write('\x3C/ul>');\r\n    w.end();\r\n  });\r\n\r\n  writer.end();\r\n})"
-    },
     "dump.js": {
       "_ct": "text/javascript",
       "_pt": "resource/content",
@@ -14,6 +9,11 @@ window.templates={
       "_ct": "text/javascript",
       "_pt": "resource/content",
       "_content": "(function (res, writer) {\n  writer.start('application/json');\n  writer.write(JSON.stringify(res, null, 2));\n  writer.end();\n});\n"
+    },
+    "default.js": {
+      "_ct": "text/javascript",
+      "_pt": "resource/content",
+      "_content": "(function (res, writer, ctx) {\r\n  writer.start('text/html');\r\n\r\n  writer.write('name:' + res.name);\r\n  writer.write('\x3Ch1>render types:\x3C/h1>');\r\n  writer.write('\x3Cul>');\r\n\r\n  var types = res.renderTypes;\r\n  for (var i = 0; i \x3C types.length; i++) {\r\n    writer.write('\x3Cli>' + types[i] + '\x3C/li>');\r\n  }\r\n  writer.write('\x3C/ul>');\r\n\r\n  writer.write('\x3Ch1>properties:\x3C/h1>');\r\n  writer.write('\x3Cul>');\r\n\r\n  for (var name in res._) {\r\n    var val = res._[name];\r\n    writer.write('\x3Cli>' + name + '=' + val + '\x3C/li>');\r\n  }\r\n\r\n  writer.write('\x3C/ul>');\r\n\r\n  var w = writer.makeNestedContentWriter();\r\n  ctx.listResourceNames('.').then(function (children) {\r\n    w.write('\x3Ch1>children:\x3C/h1>');\r\n    w.write('\x3Cul>');\r\n\r\n    for (var i = 0; i \x3C children.length; i++) {\r\n      var child = children[i];\r\n      w.write('\x3Cli>' + child + '\x3C/a>\x3C/li>');\r\n    }\r\n    w.write('\x3C/ul>');\r\n    w.end();\r\n  });\r\n\r\n  writer.end();\r\n})"
     },
     "pre-render.js": {
       "_ct": "text/javascript",
@@ -288,5 +288,5 @@ window.templates={
       }
     }
   },
-  "_md": "1743363012535"
+  "_md": "1743609340792"
 }

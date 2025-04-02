@@ -246,7 +246,9 @@ class PouchDBResource extends StoredResource {
 
   protected makeNewResource(name: string) {
     let path = this.getStoragePath();
-    return new PouchDBResource(this.db, path, name);
+    let res = new PouchDBResource(this.db, path, name);
+
+    res.setEnableResourceCache(this.enableCache);
   }
 
   public removeChildResource(name: string, callback) {

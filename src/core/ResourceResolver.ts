@@ -13,10 +13,10 @@ class ResourceResolver {
       this.resource.resolveItself(callback);
     }
     else {
-      let paths = Utils.split_path(path);
-      let p = paths.shift();
+      let l = Utils.split_path(path);
+      let p = l.shift();
 
-      let resolve_path = function (res: Resource, name: string) {
+      let resolve_path = function (res: Resource, name: string, paths) {
         let walking = false;
         if (paths.length > 0) walking = true;
 
@@ -31,12 +31,12 @@ class ResourceResolver {
           }
           else {
             let p = paths.shift();
-            resolve_path(rv, p);
+            resolve_path(rv, p, paths);
           }
         }, walking);
       };
 
-      resolve_path(this.resource, p);
+      resolve_path(self.resource, p, l);
     }
   }
 

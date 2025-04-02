@@ -44,6 +44,8 @@ var config = {
   'USER_TEMPLATES':'/user-templates',
 };
 
+//app.use('/static', express.static('static'));
+
 //handlers for GET and POST for express
 app.get('/*', function (req, res) {
   var handler = new r.ServerRequestHandler(rres, rtmp, res);

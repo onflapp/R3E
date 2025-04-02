@@ -690,9 +690,9 @@ class ResourceResolver {
             this.resource.resolveItself(callback);
         }
         else {
-            let paths = Utils.split_path(path);
-            let p = paths.shift();
-            let resolve_path = function (res, name) {
+            let l = Utils.split_path(path);
+            let p = l.shift();
+            let resolve_path = function (res, name, paths) {
                 let walking = false;
                 if (paths.length > 0)
                     walking = true;
@@ -707,11 +707,11 @@ class ResourceResolver {
                     }
                     else {
                         let p = paths.shift();
-                        resolve_path(rv, p);
+                        resolve_path(rv, p, paths);
                     }
                 }, walking);
             };
-            resolve_path(this.resource, p);
+            resolve_path(self.resource, p, l);
         }
     }
     storeResource(path, data, callback) {
@@ -2654,11 +2654,12 @@ class JSRendererFactory {
     makeRenderer(resource, callback) {
         resource.read(new ContentWriterAdapter('utf8', function (data) {
             if (data) {
+                var p = Utils.get_trace_path(resource);
                 try {
+                    data = '/* ' + p + ' */\n' + data;
                     var func = eval(data);
                 }
                 catch (ex) {
-                    console.log('path:' + Utils.get_trace_path(data));
                     console.log(data);
                     console.log(ex);
                     callback(null, ex);
@@ -2954,6 +2955,7 @@ class StoredResource extends Resource {
         this.contentSize = -1;
         this.resourceCache = {};
         this.loaded = false;
+        this.enableCache = true;
         let self = this;
         if (typeof base !== 'undefined') {
             this.baseName = name;
@@ -2974,7 +2976,7 @@ class StoredResource extends Resource {
         return res;
     }
     setCachedResource(name, res) {
-        if (res) {
+        if (res && this.enableCache) {
             this.resourceCache[name] = res;
         }
         return res;
@@ -2984,6 +2986,10 @@ class StoredResource extends Resource {
             delete this.resourceCache[name];
         else
             this.resourceCache = {};
+    }
+    setEnableResourceCache(cache) {
+        this.enableCache = cache;
+        this.flushResourceCache();
     }
     flushResourceCache() {
         this.resourceCache = {};
@@ -3062,10 +3068,14 @@ class StoredResource extends Resource {
             if (walking) {
                 this.childNames = null;
                 res = this.setCachedResource(name, this.makeNewResource(name));
+                if (res instanceof StoredResource)
+                    res.setEnableResourceCache(this.enableCache);
                 callback(res);
             }
             else {
                 res = this.makeNewResource(name);
+                if (res instanceof StoredResource)
+                    res.setEnableResourceCache(this.enableCache);
                 res.resolveItself(function (rv) {
                     if (rv) {
                         self.setCachedResource(name, res);
@@ -3092,6 +3102,8 @@ class StoredResource extends Resource {
     }
     allocateChildResource(name, callback) {
         let res = this.setCachedResource(name, this.makeNewResource(name));
+        if (res instanceof StoredResource)
+            res.setEnableResourceCache(this.enableCache);
         this.childNames = null;
         callback(res);
     }
@@ -3418,6 +3430,7 @@ class RemoteResource extends StoredResource {
     makeNewResource(name) {
         let path = this.getStoragePath();
         let res = new RemoteResource(name, path, this.basePrefix);
+        res.setEnableResourceCache(this.enableCache);
         return res;
     }
     ensurePathExists(path, callback) {
@@ -4191,16 +4204,14 @@ class SPARequestHandler extends ClientRequestHandler {
         else {
             p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + rpath;
         }
-        if (p == window.location.toString()) {
-            let self = this;
-            let p = rpath;
-            setTimeout(function () {
-                self.handleRequest(p);
-            }, 10);
-        }
-        else {
-            window.location.replace(p);
-        }
+        clearTimeout(window['__r3eforwardcb']);
+        window['__r3eforwardcb'] = setTimeout(function () {
+            delete window['__r3eforwardcb'];
+            if (p == window.location.toString())
+                window.location.reload();
+            else
+                window.location.replace(p);
+        }, 50);
     }
 }
 class ResponseContentWriter {
@@ -4217,6 +4228,12 @@ class ResponseContentWriter {
         if (c === 'object/javascript') {
             c = 'application/json';
             this.transform = 'json';
+        }
+        let headers = this.requestHandler._headers();
+        if (headers) {
+            for (let key in headers) {
+                this.respose.setHeader(key, headers[key]);
+            }
         }
         this.respose.setHeader('content-type', c);
     }
@@ -4385,6 +4402,17 @@ class ServerRequestHandler extends ResourceRequestHandler {
     sendStatus(code) {
         this.resposeContentWriter.sendStatus(code);
     }
+    _headers() {
+        return this.headers;
+    }
+    setHeader(key, val) {
+        if (!this.headers)
+            this.headers = {};
+        if (val)
+            this.headers[key] = val;
+        else
+            delete this.headers[key];
+    }
 }
 class FileResourceContentWriter {
     constructor(filePath) {
@@ -4420,7 +4448,9 @@ class FileResource extends StoredResource {
     }
     makeNewResource(name) {
         let path = this.getStoragePath();
-        return new FileResource(name, path);
+        let res = new FileResource(name, path);
+        res.setEnableResourceCache(this.enableCache);
+        return res;
     }
     getType() {
         if (!this.isDirectory)
@@ -4769,7 +4799,8 @@ class PouchDBResource extends StoredResource {
     }
     makeNewResource(name) {
         let path = this.getStoragePath();
-        return new PouchDBResource(this.db, path, name);
+        let res = new PouchDBResource(this.db, path, name);
+        res.setEnableResourceCache(this.enableCache);
     }
     removeChildResource(name, callback) {
         let self = this;
@@ -4971,7 +5002,9 @@ class DropBoxResource extends StoredResource {
     }
     makeNewResource(name) {
         let path = this.getStoragePath();
-        return new DropBoxResource(this.dbx, name, path);
+        let res = new DropBoxResource(this.dbx, name, path);
+        res.setEnableResourceCache(this.enableCache);
+        return res;
     }
     storeProperties(callback) {
         let self = this;
@@ -5191,6 +5224,7 @@ class GitHubResource extends StoredResource {
     makeNewResource(name) {
         let path = this.getStoragePath();
         let res = new GitHubResource(this.repo, name, path);
+        res.setEnableResourceCache(this.enableCache);
         return res;
     }
     getStoragePath(name) {

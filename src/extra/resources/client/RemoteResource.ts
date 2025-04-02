@@ -60,6 +60,7 @@ class RemoteResource extends StoredResource {
   protected makeNewResource(name: string) {
     let path = this.getStoragePath();
     let res = new RemoteResource(name, path, this.basePrefix);
+    res.setEnableResourceCache(this.enableCache);
 
     return res;
   }

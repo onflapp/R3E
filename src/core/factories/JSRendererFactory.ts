@@ -4,11 +4,12 @@ class JSRendererFactory implements RendererFactory {
   public makeRenderer(resource: Resource, callback: RendererFactoryCallback) {
     resource.read(new ContentWriterAdapter('utf8', function (data) {
       if (data) {
+        var p = Utils.get_trace_path(resource);
         try {
+          data = '/* '+p+' */\n'+data;
           var func = eval(data);
         }
         catch (ex) {
-          console.log('path:' + Utils.get_trace_path(data));
           console.log(data);
           console.log(ex);
           callback(null, ex);

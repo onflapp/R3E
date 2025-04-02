@@ -41,7 +41,10 @@ class FileResource extends StoredResource {
 
   protected makeNewResource(name: string) {
     let path = this.getStoragePath();
-    return new FileResource(name, path);
+    let res = new FileResource(name, path);
+    res.setEnableResourceCache(this.enableCache);
+
+    return res;
   }
 
   public getType(): string {
