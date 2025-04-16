@@ -421,8 +421,10 @@ class ResourceRequestHandler extends EventDispatcher {
 
     if (context && info && info.resourcePath) {
       data = Utils.expandValues(data, data);
+      let transform = data[':transform'];
+      if (!transform) transform = 'pre-store';
 
-      self.transformResource(data, 'pre-store', context, function (values: any) {
+      self.transformResource(data, transform, context, function (values: any) {
         if (values['content']) {
           self.contentWriter.start(values['contentType']);
           self.contentWriter.write(values['content']);

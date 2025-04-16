@@ -64,6 +64,57 @@ class Utils {
         });
         return uuid;
     }
+    static makeRank(prev, next) {
+        let fbyte = function (ch) {
+            return ch.charCodeAt(0);
+        };
+        let MIN_CHAR = fbyte('0');
+        let MAX_CHAR = fbyte('z');
+        let getChar = function (str, i, defaultChar) {
+            if (i >= str.length) {
+                return defaultChar;
+            }
+            return fbyte(str.charAt(i));
+        };
+        let string = function (b) {
+            return String.fromCharCode(b);
+        };
+        let mid = function (prev, next) {
+            return Math.floor((prev + next) / 2);
+        };
+        let insert = function (prev, next) {
+            if (prev === '' || !prev) {
+                prev = string(MIN_CHAR);
+            }
+            if (next === '' || !next) {
+                next = string(MAX_CHAR);
+            }
+            let rank = '';
+            let i = 0;
+            while (true) {
+                let prevChar = getChar(prev, i, MIN_CHAR);
+                let nextChar = getChar(next, i, MAX_CHAR);
+                if (prevChar === nextChar) {
+                    rank += string(prevChar);
+                    i++;
+                    continue;
+                }
+                let midChar = mid(prevChar, nextChar);
+                if (midChar === prevChar || midChar === nextChar) {
+                    rank += string(prevChar);
+                    i++;
+                    continue;
+                }
+                rank += string(midChar);
+                break;
+            }
+            if (rank >= next) {
+                return [prev, false];
+            }
+            return [rank, true];
+        };
+        return insert(prev, next)[0];
+    }
     static listSortByNames(list, names) {
         let rv = [];
         let done = {};
@@ -1850,7 +1901,10 @@ class ResourceRequestHandler extends EventDispatcher {
         };
         if (context && info && info.resourcePath) {
             data = Utils.expandValues(data, data);
-            self.transformResource(data, 'pre-store', context, function (values) {
+            let transform = data[':transform'];
+            if (!transform)
+                transform = 'pre-store';
+            self.transformResource(data, transform, context, function (values) {
                 if (values['content']) {
                     self.contentWriter.start(values['contentType']);
                     self.contentWriter.write(values['content']);
@@ -3800,9 +3854,6 @@ class DOMContentWriter {
                 };
             }
         };
-        dopatch(window);
-        dopatch(window.document);
-        dopatch(window.document.body);
         if (!window['_customElements_orig_define']) {
             if (window['customElements']) {
                 window['_customElements_orig_define'] = CustomElementRegistry.prototype.define;
@@ -3828,6 +3879,7 @@ class DOMContentWriter {
                 if (this.__localpath) {
                     let info = self.requestHandler.parseFormData(this.__localpath, data);
                     let cb = this.onreadystatechange;
+                    delete this.__localpath;
                     self.requestHandler.handleStore(info.formPath, info.formData, function (rv) {
                         if (cb)
                             cb();
@@ -3835,6 +3887,14 @@ class DOMContentWriter {
                 }
                 else {
                     window['XMLHttpRequest']['_prototype_orig_send'].call(this, data);
+                }
+            };
+            window['XMLHttpRequest']['_prototype_orig_setRequestHeader'] = window['XMLHttpRequest'].prototype.setRequestHeader;
+            window['XMLHttpRequest'].prototype.setRequestHeader = function (n, v) {
+                if (this.__localpath) {
+                }
+                else {
+                    window['XMLHttpRequest']['_prototype_orig_setRequestHeader'].call(this, n, v);
                 }
             };
         }

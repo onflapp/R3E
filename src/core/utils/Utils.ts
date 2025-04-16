@@ -75,6 +75,70 @@ class Utils {
     return uuid;
   }
 
+  public static makeRank(prev, next): string {
+    let fbyte = function(ch){
+      return ch.charCodeAt(0);
+    };
+
+    let MIN_CHAR = fbyte('0');
+    let MAX_CHAR = fbyte('z');
+
+    let getChar = function(str, i, defaultChar){
+      if (i >= str.length) {
+        return defaultChar;
+      }
+      return fbyte(str.charAt(i));
+    };
+
+    let string = function(b) {
+      return String.fromCharCode(b);
+    };
+
+    let mid = function(prev, next) {
+      return Math.floor((prev + next) / 2);
+    };
+
+    let insert = function(prev, next) {
+      if (prev === '' || !prev) {
+        prev = string(MIN_CHAR);
+      }
+      if (next === '' || !next) {
+        next = string(MAX_CHAR);
+      }
+
+      let rank = '';
+      let i = 0;
+
+      while (true) {
+        let prevChar = getChar(prev, i, MIN_CHAR);
+        let nextChar = getChar(next, i, MAX_CHAR);
+
+        if (prevChar === nextChar) {
+          rank += string(prevChar);
+          i++;
+          continue;
+        }
+
+        let midChar = mid(prevChar, nextChar);
+        if (midChar === prevChar || midChar === nextChar) {
+          rank += string(prevChar);
+          i++;
+          continue;
+        }
+
+        rank += string(midChar);
+        break;
+      }
+
+      if (rank >= next) {
+        return [prev, false];
+      }
+      return [rank, true];
+    };
+
+    return insert(prev, next)[0];
+  }
+
   public static listSortByNames(list, names) {
     let rv = [];
     let done = {};

@@ -40,9 +40,11 @@ class DOMContentWriter implements ContentWriter {
       }
     };
 
+    /*
     dopatch(window);
     dopatch(window.document);
     dopatch(window.document.body);
+    */
 
     if (!window['_customElements_orig_define']) {
       if (window['customElements']) {
@@ -71,12 +73,22 @@ class DOMContentWriter implements ContentWriter {
         if (this.__localpath) {
           let info = self.requestHandler.parseFormData(this.__localpath, data);
           let cb = this.onreadystatechange;
+          delete this.__localpath;
           self.requestHandler.handleStore(info.formPath, info.formData, function(rv) {
             if (cb) cb();
           });
         }
         else {
           window['XMLHttpRequest']['_prototype_orig_send'].call(this, data);
+        }
+      };
+
+      window['XMLHttpRequest']['_prototype_orig_setRequestHeader'] = window['XMLHttpRequest'].prototype.setRequestHeader;
+      window['XMLHttpRequest'].prototype.setRequestHeader = function (n, v) {
+        if (this.__localpath) {
+        }
+        else {
+          window['XMLHttpRequest']['_prototype_orig_setRequestHeader'].call(this, n, v);
         }
       };
     }
