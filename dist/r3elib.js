@@ -3877,13 +3877,32 @@ class DOMContentWriter {
             window['XMLHttpRequest']['_prototype_orig_send'] = window['XMLHttpRequest'].prototype.send;
             window['XMLHttpRequest'].prototype.send = function (data) {
                 if (this.__localpath) {
-                    let info = self.requestHandler.parseFormData(this.__localpath, data);
-                    let cb = this.onreadystatechange;
-                    delete this.__localpath;
-                    self.requestHandler.handleStore(info.formPath, info.formData, function (rv) {
-                        if (cb)
-                            cb();
-                    });
+                    if (data['arrayBuffer']) {
+                        let val = {};
+                        let tp = data['type'];
+                        val['_ct'] = tp;
+                        val['_content'] = function (writer, callback) {
+                            writer.start(tp);
+                            writer.write(data);
+                            writer.end(callback);
+                        };
+                        let cb = this.onreadystatechange;
+                        let path = this.__localpath;
+                        delete this.__localpath;
+                        self.requestHandler.handleStore(path, val, function (rv) {
+                            if (cb)
+                                cb();
+                        });
+                    }
+                    else {
+                        let info = self.requestHandler.parseFormData(this.__localpath, data);
+                        let cb = this.onreadystatechange;
+                        delete this.__localpath;
+                        self.requestHandler.handleStore(info.formPath, info.formData, function (rv) {
+                            if (cb)
+                                cb();
+                        });
+                    }
                 }
                 else {
                     window['XMLHttpRequest']['_prototype_orig_send'].call(this, data);
