@@ -147,6 +147,17 @@ class ObjectContentResourceWriter implements ContentWriter {
       if (this.istext && typeof window !== 'undefined') this.values['_content'] = new window['TextDecoder']('utf-8').decode(data);
       else this.values['_content64'] = Utils.ArrayBuffer2base64(data);
     }
+    else if (data instanceof Blob) {
+      let self = this;
+      data.arrayBuffer().then(function(val) {
+        self.values['_content64'] = Utils.ArrayBuffer2base64(val);
+        self.values['_content64sz'] = data.size;
+
+        if (callback) callback();
+      });
+      this.buffer = [];
+      return; //must end here;
+    }
     else if (typeof Buffer !== 'undefined' && data instanceof Buffer) {
       data = Buffer.concat(this.buffer);
       if (this.istext) {

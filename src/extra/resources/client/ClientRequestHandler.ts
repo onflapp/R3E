@@ -317,6 +317,10 @@ class ClientRequestHandler extends ResourceRequestHandler {
     });
   }
 
+  protected assignContext(context: ResourceRequestContext, pathInfo: PathInfo) {
+    window['R3E'] = {context:context, info:pathInfo};
+  }
+
   public sendStatus(code: number) {
     console.log('status:'+code);
   }

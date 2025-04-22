@@ -118,6 +118,9 @@ class ResourceRequestHandler extends EventDispatcher {
     });
   }
 
+  protected assignContext(context: ResourceRequestContext, pathInfo: PathInfo) {
+  }
+
   protected makeContext(pathInfo: PathInfo): ResourceRequestContext {
     if (pathInfo) {
       pathInfo.refererURL = this.refererPath;
@@ -319,6 +322,8 @@ class ResourceRequestHandler extends EventDispatcher {
     try {
       if (info) {
         let sel = info.selector?info.selector:'default';
+
+        self.assignContext(context, info);
 
         rres.resolveResource(info.resourcePath, function (res) {
           if (!res) {

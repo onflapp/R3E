@@ -1670,6 +1670,8 @@ class ResourceRequestHandler extends EventDispatcher {
             }
         });
     }
+    assignContext(context, pathInfo) {
+    }
     makeContext(pathInfo) {
         if (pathInfo) {
             pathInfo.refererURL = this.refererPath;
@@ -1835,6 +1837,7 @@ class ResourceRequestHandler extends EventDispatcher {
         try {
             if (info) {
                 let sel = info.selector ? info.selector : 'default';
+                self.assignContext(context, info);
                 rres.resolveResource(info.resourcePath, function (res) {
                     if (!res) {
                         res = new NotFoundResource(info.resourcePath);
@@ -2432,6 +2435,17 @@ class ObjectContentResourceWriter {
                 this.values['_content'] = new window['TextDecoder']('utf-8').decode(data);
             else
                 this.values['_content64'] = Utils.ArrayBuffer2base64(data);
+        }
+        else if (data instanceof Blob) {
+            let self = this;
+            data.arrayBuffer().then(function (val) {
+                self.values['_content64'] = Utils.ArrayBuffer2base64(val);
+                self.values['_content64sz'] = data.size;
+                if (callback)
+                    callback();
+            });
+            this.buffer = [];
+            return;
         }
         else if (typeof Buffer !== 'undefined' && data instanceof Buffer) {
             data = Buffer.concat(this.buffer);
@@ -4089,6 +4103,9 @@ class ClientRequestHandler extends ResourceRequestHandler {
         window.addEventListener('hashchange', function (evt) {
             window.location.reload();
         });
+    }
+    assignContext(context, pathInfo) {
+        window['R3E'] = { context: context, info: pathInfo };
     }
     sendStatus(code) {
         console.log('status:' + code);
