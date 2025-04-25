@@ -3891,6 +3891,7 @@ class DOMContentWriter {
             window['XMLHttpRequest']['_prototype_orig_send'] = window['XMLHttpRequest'].prototype.send;
             window['XMLHttpRequest'].prototype.send = function (data) {
                 if (this.__localpath) {
+                    Object.defineProperty(this, 'readyState', { get: function () { return 4; } });
                     if (data['arrayBuffer']) {
                         let val = {};
                         let tp = data['type'];
