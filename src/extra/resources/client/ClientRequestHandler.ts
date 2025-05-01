@@ -232,6 +232,7 @@ class DOMContentWriter implements ContentWriter {
 
   protected updateDocument(content) {
     let self = this;
+    let u = window.location.toString();
 
     this.patchWindowObjects();
 
@@ -242,6 +243,10 @@ class DOMContentWriter implements ContentWriter {
       self.evaluateScripts();
       self.loadExternal();
       self.attachListeners();
+      
+      if (window.parent == window) {
+        sessionStorage.setItem('__CURRENT_REQUEST_URL', u);
+      }
 
       self.requestHandler.dispatchAllEvents('loaded', this);
     };
@@ -346,24 +351,48 @@ class ClientRequestHandler extends ResourceRequestHandler {
   }
 
   public handleRequest(rpath: string) {
-    var path = rpath;
-    var x = rpath.indexOf('?');
-    var p = {};
+    let path = rpath;
+    let x = rpath.indexOf('?');
+    let p = {};
     if (x > 0) {
-      var q = rpath.substr(x+1);
+      let q = rpath.substr(x+1);
       path = rpath.substr(0, x);
 
-      var a = q.split('&');
-      for (var i = 0; i < a.length; i++) {
-        var c = a[i].indexOf('=');
+      let a = q.split('&');
+      for (let i = 0; i < a.length; i++) {
+        let c = a[i].indexOf('=');
         if (c > 0) {
-          var n = a[i].substr(0, c);
-          var v = a[i].substr(c+1);
+          let n = a[i].substr(0, c);
+          let v = a[i].substr(c+1);
 
           p[unescape(n)] = unescape(v);
         }
       }
     }
+
+    if (window.parent == window) {
+      let uu = window.location.toString();
+      let cr = sessionStorage.getItem('__CURRENT_REQUEST_URL');
+      let lr = sessionStorage.getItem('__LAST_REQUEST_URL');
+
+      if (cr && uu != cr) {
+        lr = cr;
+        sessionStorage.setItem('__LAST_REQUEST_URL', cr);
+      }
+
+      if (lr) {
+        let i = lr.indexOf('#');
+        if (i > 0) this.refererPath = lr.substr(i+1);
+        else this.refererPath = null;
+
+        this.refererURL = lr;
+      }
+      else {
+        this.refererPath = null;
+        this.refererURL = null;
+      }
+    }
+
     this.queryProperties = p;
     this.renderRequest(path);
   }
@@ -371,31 +400,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
   public renderRequest(rpath: string) {
     Utils.flushResourceCache();
 
-    var rr = this.parsePath(rpath);
-    var rp = rpath;
-    var i = rpath.indexOf(rr.path);
-    if (i > 0) rp = rp.substr(i);
-
-    var rp0 = sessionStorage['__LAST_REQUEST_PATH0'];
-    var rp1 = sessionStorage['__LAST_REQUEST_PATH1'];
-    this.refererPath = rp1?rp1:rp0;
     this.currentPath = rpath;
-    if (window.parent == window) {
-      if (!rp0) {
-        sessionStorage['__LAST_REQUEST_PATH0'] = rp;
-        sessionStorage['__LAST_REQUEST_PATH1'] = '';
-      }
-      else if (rp0 != rp) {
-        if (rp0 != rp1) {
-          sessionStorage['__LAST_REQUEST_PATH0'] = rp;
-          sessionStorage['__LAST_REQUEST_PATH1'] = rp0;
-          this.refererPath = rp0;
-        }
-        else {
-          sessionStorage['__LAST_REQUEST_PATH0'] = rp;
-        }
-      }
-    }
     super.renderRequest(rpath);
   }
 
