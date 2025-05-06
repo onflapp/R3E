@@ -7,17 +7,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
-  {{include_css "resource/res-ui.css"}}
+  {{include_css "_libs/ui.css"}}
 
   <title>copy to</title>
 </head>
 
 <body>
-  <h3>Copy "{{name}}"
-    <a class="button" href="{{req_path "." "ui-close"}}">cancel</a>
-  </h3>
+  <h1>Copy "{{name}}"
+    <a class="ui_button pull-right" href="{{req_path "." "ui-close"}}">X</a>
+  </h1>
 
-  <ol class="paths">
+  <ol class="ui_paths">
     <li>HOME / </li>
 {{#include "." "parents"}}
     <li>{{name}} / </li>
@@ -25,9 +25,9 @@
     <li>{{name}}</li>
   </ol>
 
-  <h4>to</h4>
+  <h1>to</h1>
 
-  <ol class="paths">
+  <ol class="ui_paths">
     <li><a href="{{req_path "." "res-copyto"}}/">HOME</a></li>
 {{#include R.DATA_PATH "parents"}}
     <li><a href="{{req_path "." "res-copyto"}}{{path}}">{{name}}</a></li>
@@ -49,10 +49,10 @@
 {{/include}}
   </ol>
 
-  <h4>name</h4>
+  <h3>name:</h3>
   <form method="post" action="{{R.PATH}}">
 
-    <input name=":name|newUUID" value="Copy of {{R.NAME}}" autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false">
+    <input type="text" name=":name|newUUID" value="Copy of {{R.NAME}}" autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false">
     <input type="hidden" name=":copyto" value="{{res_path R.DATA_PATH "{:name}"}}">
     <input type="hidden" name=":forward" value="{{req_path "." "ui-close"}}">
 
@@ -61,10 +61,10 @@
 
   <h3>Export</h3>
 
-  <a class="button" target="_blank" href="{{req_path "." "export"}}">as JSON</a>
-  <a class="button" href="{{req_path "." "res-exportto"}}{{R.DATA_PATH}}">to resource...</a>
+  <a class="ui_button" target="_blank" href="{{req_path "." "export"}}">as JSON</a>
+  <a class="ui_button" href="{{req_path "." "res-exportto"}}{{R.DATA_PATH}}">to resource...</a>
 {{#if isContentResource}}
-  <a class="button" href="{{req_path "." "res-importto"}}{{R.DATA_PATH}}">import into...</a>
+  <a class="ui_button" href="{{req_path "." "res-importto"}}{{R.DATA_PATH}}">import into...</a>
 {{/if}}
 
 </body>

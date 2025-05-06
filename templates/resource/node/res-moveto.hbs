@@ -7,17 +7,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
-  {{include_css "resource/res-ui.css"}}
+  {{include_css "_libs/ui.css"}}
 
   <title>move to</title>
 </head>
 
 <body>
-  <h3>Move "{{name}}"
-    <a class="button" href="{{req_path "." "ui-close"}}">cancel</a>
-  </h3>
+  <h1>Move "{{name}}"
+    <a class="ui_button pull-right" href="{{req_path "." "ui-close"}}">X</a>
+  </h1>
 
-  <ol class="paths">
+  <ol class="ui_paths">
     <li>HOME / </li>
 {{#include "." "parents"}}
     <li>{{name}} / </li>
@@ -25,9 +25,9 @@
     <li>{{name}}</li>
   </ol>
 
-  <h4>to</h4>
+  <h1>to</h1>
 
-  <ol class="paths">
+  <ol class="ui_paths">
     <li><a href="{{req_path "." "res-moveto"}}/">HOME</a></li>
 {{#include R.DATA_PATH "parents"}}
     <li><a href="{{req_path "." "res-moveto"}}{{path}}">{{name}}</a></li>
@@ -49,10 +49,9 @@
 {{/include}}
   </ol>
 
+  <h3>name:</h3>
   <form method="POST" action="{{R.PATH}}">
-    <h4>name</h4>
-    
-    <input name=":name|newUUID" value="{{R.NAME}}" autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false">
+    <input type="text" name=":name|newUUID" value="{{R.NAME}}" autocorrect="off" autocapitalize="off" autocomplete="off" spellcheck="false">
     <input type="hidden" name=":moveto" value="{{res_path R.DATA_PATH "{:name}"}}">
     <input type="hidden" name=":forward" value="{{req_path "." "ui-close"}}">
 

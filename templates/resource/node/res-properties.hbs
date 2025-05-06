@@ -7,34 +7,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
-  {{include_css "resource/res-ui.css" "resource/node/res-list.css"}}
+  {{include_css "_libs/ui.css" "resource/node/res-list.css"}}
 
   <title>properties:{{R.PATH}}</title>
 </head>
 
 <body>
+  <h1>Properties for "{{name}}"
+    <a class="ui_button pull-right" href="{{req_path "." "ui-close"}}">X</a>
+  </h1>
 
-  <ol class="paths">
-    <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
+  <ol class="ui_paths">
+    <li><a href="{{req_path "/"}}">HOME</a></li>
 {{#include "." "parents"}}
-    <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
+    <li><a href="{{req_path path}}">{{name}}</a></li>
 {{/include}}
     <li>{{name}}</li>
   </ol>
 
-  <div class="buttons">
-    <a href="{{req_path "." "res-renderer"}}">r</a>
-    <a href="{{req_path "." "res-list"}}">list</a>
-  </div>
+  <a class="ui_button" href="{{req_path "." "res-renderer"}}">renderer</a>
 
-  <h4>Resource Properties</h4>
+  <h3>Resource Properties</h3>
 
   <table>
 {{#include "." "keyvalues"}}
     <tr>
       <td>{{name}}</td>
       <td>
-        <input name="{{name}}" value="{{value}}" form="save_form" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false">
+        <input type="text" name="{{name}}" value="{{value}}" form="save_form" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false">
       </td>
       <td>
         <button type="submit" form="save_form" style="display:none">+</button>
@@ -47,10 +47,10 @@
 {{/include}}
     <tr>
       <td>
-        <input name=":name" value="" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="name" form="save_form">
+        <input type="text" name=":name" value="" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="name" form="save_form">
       </td>
       <td>
-        <input name="{:name}" value="" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="value" form="save_form">
+        <input type="text" name="{:name}" value="" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="value" form="save_form">
       </td>
       <td>
         <button type="submit" form="save_form">+</button>

@@ -7,18 +7,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
-  {{include_css "resource/res-ui.css"}}
+  {{include_css "_libs/ui.css"}}
 
   <title>renderer properties</title>
 </head>
 
 <body>
 
-  <h3>Renderer Properties
-    <a class="button" href="{{req_path R.PATH "res-list"}}">cancel</a>
-  </h3>
+  <h1>Renderer Properties "{{name}}"
+    <a class="ui_button pull-right" href="{{req_path R.PATH "ui-close"}}">X</a>
+  </h1>
  
-  <ol class="paths">
+  <ol class="ui_paths">
     <li>HOME / </li>
 {{#include "." "parents"}}
     <li>{{name}} / </li>
@@ -26,13 +26,13 @@
     <li>{{name}}</li>
   </ol>
   
-  <h4>Set User Defined Renderers</h4>
+  <h3>Set User Defined Renderers</h3>
     
   <p>User defined renderer templates are stored in <a href="{{req_path C.USER_TEMPLATES "/" renderType "res-list"}}">{{C.USER_TEMPLATES}}/{{renderType}}</a>
-  <a class="button" href="{{req_path C.USER_TEMPLATES "res-create"}}">create template...</a>
+  <a class="ui_button" href="{{req_path C.USER_TEMPLATES "res-create"}}">create template...</a>
   </p>
 
-  <h4>Renderer will take following types into consideration</h4>
+  <h3>Renderer will take following types into consideration</h3>
   <ol>
 {{#if renderType}}
       <li>renderType: <b>{{renderType}}</b></li>
@@ -53,7 +53,7 @@
   </ol>          
 
   <form method="post" id="save_form" action="{{R.PATH}}">
-    <label>render type</label>
+    <label>render <b>type:</b></label>
     <select name="_rt">
       <option value="">not set</option>
       <option disabled>-</option>
@@ -62,7 +62,7 @@
 {{/include}}
     </select>
             
-    <label class="col-sm-4">render super type</label>
+    <label class="col-sm-4">render <b>super type:</b></label>
     <select class="form-control" name="_st">
       <option value="">not set</option>
       <option disabled>-</option>

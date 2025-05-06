@@ -7,18 +7,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
-  {{include_css "resource/res-ui.css"}}
+  {{include_css "_libs/ui.css"}}
 
   <title>create</title>
 </head>
 
 <body>
 
-  <h3>Create New Template in "{{name}}"
-    <a class="button" href="{{req_path "." "res-list"}}">cancel</a>
-  </h3>
+  <h1>Create New Template in "{{name}}"
+    <a class="ui_button pull-right" href="{{req_path "." "ui-close"}}">X</a>
+  </h1>
   
-  <ol class="paths">
+  <ol class="ui_paths">
     <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
 {{#include "." "parents"}}
     <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
@@ -26,7 +26,7 @@
     <li>{{name}}</li>
   </ol>
 
-  <h4>Renderer Template</h4>
+  <h3>Renderer Template</h3>
 
   <p>
     Renderer template is resolved by scanning for a file matching specific naming convention pattern.
@@ -41,9 +41,9 @@
   </ul>
 
   <form method="post" action="{{R.PATH}}/{:name}/{:sel}.{:ext}">
-    <input name=":name" value="{{R.DATA_PATH}}" placeholder="full path" required="" autocomplete="off">
+    <input type="text" name=":name" value="{{R.DATA_PATH}}" placeholder="full path" required="" autocomplete="off">
     {{C.X}}
-    <input name=":sel" value="default" placeholder="selector" required="" autocomplete="off">
+    <input type="text" name=":sel" value="default" placeholder="selector" required="" autocomplete="off">
     .
     <select name=":ext" style="width:40px">
       <optgroup label="Handlebars">
@@ -61,29 +61,29 @@
     <button type="submit" value="add">add</button>
   </form>
 
-  <h4>Create Directory</h4>
+  <h3>Create Directory</h3>
 
   <form method="post" action="{{res_path R.PATH "{:name}"}}">
-    <input name=":name" value="" required="" placeholder="full path" autocomplete="off">
-    <input type="hidden" name=":forward" value="{{req_path R.PATH "res-list"}}">
+    <input type="text" name=":name" value="" required="" placeholder="full path" autocomplete="off">
+    <input type="hidden" name=":forward" value="{{req_path R.PATH "ui-close"}}">
 
     <button type="submit" value="add">add</button>
   </form>
 
-  <h4>Upload File</h4>
+  <h3>Upload File</h3>
   
   <form method="post" enctype="multipart/form-data" action="{{res_path R.PATH}}">
     <input type="file" name=":import" value="">
-    <input type="hidden" name=":forward" value="{{req_path R.PATH "res-list"}}">
+    <input type="hidden" name=":forward" value="{{req_path R.PATH "ui-close"}}">
 
     <button type="submit">upload</button>
   </form>
 
-  <h4>Import File</h4>
+  <h3>Import File</h3>
   
   <form method="post" enctype="multipart/form-data" action="{{res_path R.PATH}}">
     <input type="file" name=":import" value="">
-    <input type="hidden" name=":forward" value="{{req_path R.PATH "res-list"}}">
+    <input type="hidden" name=":forward" value="{{req_path R.PATH "ui-close"}}">
 
     <button type="submit">import</button>
   </form>

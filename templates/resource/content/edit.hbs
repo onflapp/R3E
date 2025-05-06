@@ -7,15 +7,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
-  {{include_css "resource/content/edit.css" "resource/res-ui.css"}}
-  {{include_js "resource/res-ui.js"}}
+  {{include_css "resource/content/edit.css" "_libs/ui.css"}}
+  {{include_js "_libs/ui.js"}}
 
   <title>edit:{{R.PATH}}</title>
 </head>
 
 <body>
-  <div class="head">
-    <ol class="paths">
+  <div class="sec_head">
+    <ol class="ui_paths">
       <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
 {{#include "." "parents"}}
       <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
@@ -24,8 +24,8 @@
     </ol>
 
 {{#match isTextContentResource}}
-    <div class="buttons">
-      <a href="{{req_path ".." "res-list"}}">cancel</a>
+    <div class="sec_buttons pull-right">
+      <a class="ui_button" href="{{req_path ".." "res-list"}}">cancel</a>
       <button type="submit" form="text_form">save</button>
     </div>
 
@@ -34,7 +34,7 @@
   <form method="post" action="{{res_path R.PATH}}" id="text_form">
     <input type="hidden" name=":forward" value="{{req_path "."}}">
 
-    <textarea autocorrect="off" autocapitalize="none" autocomplete="off" autofocus="on" spellcheck="false" name="_content">{{include_safe "." "text"}}</textarea>
+    <textarea id="edit_view" autocorrect="off" autocapitalize="none" autocomplete="off" autofocus="on" spellcheck="false" name="_content">{{include_safe "." "text"}}</textarea>
 
     <input type="hidden" name="_rt" value="resource/content"></input>
     <input type="hidden" name="_ct" value="{{contentType}}"></input>
@@ -43,8 +43,8 @@
 {{/match}}
 {{#match contentType "startsWith" "image/"}}
     <div class="toolbar">
-      <a href="{{req_path ".." "res-list"}}">cancel</a>
-      <a target="_blank" href="{{include "." "externalize"}}">view</a>
+      <a class="ui_button" href="{{req_path ".." "res-list"}}">cancel</a>
+      <a class="ui_button" target="_blank" href="{{include "." "externalize"}}">view</a>
     </div>
 
   </div>
@@ -55,8 +55,8 @@
 {{#match contentType "startsWith" "application/pdf"}}
 
     <div class="toolbar">
-      <a href="{{req_path ".." "res-list"}}">cancel</a>
-      <a target="_blank" href="{{include "." "externalize"}}">open</a>
+      <a class="ui_button" href="{{req_path ".." "res-list"}}">cancel</a>
+      <a class="ui_button" target="_blank" href="{{include "." "externalize"}}">open</a>
     </div>
   
   </div>

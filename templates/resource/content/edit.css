@@ -7,9 +7,10 @@ body {
   display: flex;
   flex-flow: column;
 }
-.head {
-  margin: 4px;
+
+.sec_head {
   margin-left: 8px;
+  margin-right: 8px;
   flex: 0 1 auto;
 }
 
@@ -29,9 +30,7 @@ textarea:focus {
   margin: 0;
 }
 
-textarea {
-  border-radius: 0;
-  border: 1px solid black;
+#edit_view {
   resize: none;
   box-sizing: border-box;
   padding-left: 8px;

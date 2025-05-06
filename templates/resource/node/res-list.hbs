@@ -7,13 +7,13 @@
   <meta name="viewport" content="user-scalable=no,width=device-width, initial-scale=1.0">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   
-  {{include_css "resource/res-ui.css" "resource/node/res-list.css"}}
+  {{include_css "_libs/ui.css" "resource/node/res-list.css"}}
 
   <title>list:{{R.PATH}}</title>
 </head>
 
 <body>
-  <ol class="paths">
+  <ol class="ui_paths">
     <li><a href="{{req_path "/"}}">HOME</a></li>
 {{#include "." "parents"}}
     <li><a href="{{req_path path}}">{{name}}</a></li>
@@ -21,37 +21,42 @@
     <li>{{name}}</li>
   </ol>
 
-  <div class="buttons">
-    <a href="{{req_path "." "res-create"}}">n</a>
-    <a href="{{req_path "." "res-renderer"}}">r</a>
+  <div class="sec_buttons">
+    <a class="ui_button" target="_blank" href="{{req_path "." "res-create"}}">new</a>
+    <a class="ui_button" target="_blank" href="{{req_path "." "res-renderer"}}">render</a>
 {{#if renderType}}
-    <a href="{{req_path C.USER_TEMPLATES "/" renderType "res-list"}}">t</a>
-    <a target="_blank" href="{{req_path "." "default"}}">render as ({{renderType}})</a>
+    <a class="ui_button" target="_blank" href="{{req_path C.USER_TEMPLATES "/" renderType "res-list"}}">temp</a>
+    <a class="ui_button" target="_blank" href="{{req_path "." "default"}}">render as ({{renderType}})</a>
 {{/if}}
-    <a target="_blank" href="{{req_path "." "dump"}}">x</a>
-    <a href="{{req_path "." "res-properties"}}">props</a>
+    <a class="ui_button" target="_blank" href="{{req_path "." "res-properties"}}">properties</a>
+    <a class="ui_button" target="_blank" href="{{req_path "." "dump"}}">dump</a>
 
-
-    <form method="get" action="{{req_path "." "res-search"}}">
+    <form class="pull-right" method="get" action="{{req_path "." "res-search"}}">
       <input name="q" type="text" placeholder="search" value="{{Q.q}}">
       <button type="submit">search</button>
     </form>
   </div>
 
-  <table>
-{{#include "." "keyvalues"}}
-    <tr>
-      <td>
-        {{name}}
-      </td>
-      <td>
-        {{value}}
-      </td>
-    </tr>
-{{/include}}
-  </table>
+  <div class="sec_props">
+    <h3>properties:</h3>
 
-  <table>
+    <table class="full-width">
+  {{#include "." "keyvalues"}}
+      <tr>
+        <td>
+          {{name}}
+        </td>
+        <td>
+          {{value}}
+        </td>
+      </tr>
+  {{/include}}
+    </table>
+  </div>
+
+  <h3>nodes:</h3>
+
+  <table class="sec_nodes full-width">
 {{#include "." "children"}}
   {{#if isContentResource}}
     <tr>
@@ -68,15 +73,15 @@
   {{else}}
     <tr>
       <td>
-        <a href="{{req_path path}}">{{or _.title name}}</a>
+        <a href="{{req_path path}}">{{or _.title name}}/</a>
       </td>
       <td>
     {{#if renderType}}
-        <a href="{{req_path C.USER_TEMPLATES "/" renderType "res-list"}}">{{renderType}}</a>
+        <a target="_blank" href="{{req_path C.USER_TEMPLATES "/" renderType "res-list"}}">{{renderType}}</a>
     {{else}}
         {{type}}
     {{/if}}
-        <a href="{{req_path path "res-renderer"}}">renderer</a>
+        <a target="_blank" href="{{req_path path "res-renderer"}}">renderer</a>
       </td>
       <td>
         {{include path "res-list-actions"}}

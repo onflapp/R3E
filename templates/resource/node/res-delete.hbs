@@ -7,17 +7,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
-  {{include_css "resource/res-ui.css"}}
+  {{include_css "_libs/ui.css"}}
 
   <title>delete:{{R.PATH}}</title>
 </head>
 
 <body>
-  <h3>Delete
-    <a class="button" href="{{req_path "." "ui-close"}}">cancel</a>
-  </h3>
+  <h1>Delete "{{name}}"
+    <a class="ui_button pull-right" href="{{req_path "." "ui-close"}}">X</a>
+  </h1>
 
-  <ol class="paths">
+  <ol class="ui_paths">
     <li>HOME / </li>
 {{#include "." "parents"}}
     <li>{{name}} / </li>
@@ -25,7 +25,7 @@
     <li>{{name}}</li>
   </ol>
 
-  <h4>Are you sure you want to delete "{{name}}"?</h4>
+  <h4>Are you sure you want to delete "{{name}}"?
 
   <form method="post" action="{{res_path "."}}">
     <input type="hidden" name="_rt" value="{{renderType}}">
@@ -33,6 +33,7 @@
     <input type="hidden" name=":forward" value="{{req_path "." "ui-close"}}">
     <button type="submit">delete</button>
   </form>
+  </h4>
 
 </body>
 

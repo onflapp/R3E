@@ -7,18 +7,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
-  {{include_css "resource/res-ui.css"}}
+  {{include_css "_libs/ui.css"}}
 
   <title>create</title>
 </head>
 
 <body>
 
-  <h3>Create New Resource in "{{name}}" 
-    <a class="button" href="{{req_path "." "res-list"}}">cancel</a>
-  </h3>
+  <h1>Create New Resource in "{{name}}" 
+    <a class="ui_button pull-right" href="{{req_path "." "ui-close"}}">X</a>
+  </h1>
 
-  <ol class="paths">
+  <ol class="ui_paths">
     <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
 {{#include "." "parents"}}
     <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
@@ -26,10 +26,10 @@
     <li>{{name}}</li>
   </ol>
 
-  <h4>Resource Node</h4>
+  <h3>Resource Node</h3>
   
   <form method="post" action="{{res_path R.PATH "{:name}"}}">
-    <input name=":name|newUUID" value="" autocomplete="off" placeholder="name">
+    <input type="text" name=":name|newUUID" value="" autocomplete="off" placeholder="name">
 
     <select name="_rt">
       <option value="">type not set</option>
@@ -39,34 +39,34 @@
 {{/include}}
     </select>
               
-    <input type="hidden" name=":forward" value="{{req_path R.PATH "res-list"}}">
+    <input type="hidden" name=":forward" value="{{req_path R.PATH "ui-close"}}">
     <button type="submit">add</button>
   </form>
 
-  <h4>Empty File</h4>
+  <h3>Empty File</h3>
 
   <form method="post" action="{{res_path R.PATH "{:name}"}}">
-    <input name=":name|newUUID" value="" autocomplete="off" placeholder="file name">
+    <input type="text" name=":name|newUUID" value="" autocomplete="off" placeholder="file name">
     <input type="hidden" name="_content" value=""></input>
     
-    <input type="hidden" name=":forward" value="{{req_path "." "res-list"}}">
+    <input type="hidden" name=":forward" value="{{req_path "." "ui-close"}}">
     <button type="submit">add</button>
   </form>
 
-  <h4>Upload File</h4>
+  <h3>Upload File</h3>
 
   <form method="post" enctype="multipart/form-data" action="{{res_path R.PATH "{:name}"}}">
     <input type="file" name=":filename" value="">
-    <input name=":name|:filename|newUUID" value="" autocomplete="off" placeholder="file name">
-    <input type="hidden" name=":forward" value="{{req_path "." "res-list"}}">
+    <input type="text" name=":name|:filename|newUUID" value="" autocomplete="off" placeholder="as new file name">
+    <input type="hidden" name=":forward" value="{{req_path "." "ui-close"}}">
     <button type="submit">upload</button>
   </form>
 
-  <h4>Import File</h4>
+  <h3>Import File</h3>
   
   <form method="post" enctype="multipart/form-data" action="{{R.PATH}}">
     <input type="file" name=":import" value="">
-    <input type="hidden" name=":forward" value="{{req_path "." "res-list"}}">
+    <input type="hidden" name=":forward" value="{{req_path "." "ui-close"}}">
 
     <button type="submit">import</button>
   </form>

@@ -1,0 +1,241 @@
+:root {
+  --border: 2px;
+  --border-color: lightgray;
+  --button-color: lightblue;
+  --primary-color: black;
+  --input-color: white;
+  --radius: 0px;
+  --margin: 8px;
+  --padding: 1px 8px 2px 8px;
+}
+
+body {
+  background-color: honeydew;
+  color: black;
+  font-family: system-ui;
+  font-size: 13px;
+  cursor: default;
+}
+
+.ui_paths li {
+  display: inline-block;
+}
+
+.ui_paths li a {
+  border-right: 1px solid black;
+  padding-right: 4px;
+  text-decoration: none;
+}
+
+.ui_paths {
+  padding-inline-start: 0;
+}
+
+
+span.ui_button {
+  display: inline-block;
+}
+
+div.ui_button {
+  width: fit-content;
+}
+
+.ui_label {
+  margin-bottom: 10px;
+}
+
+div.ui_label {
+  margin-top:4px;
+}
+
+.ui_label.info {
+  font-size: smaller;
+  background-color: lightgray;
+  color: gray;
+}
+
+.ui_button {
+  user-select: none;
+  -webkit-user-select: none;
+  margin-bottom: var(--margin);
+  border: var(--border) solid var(--border-color);
+  padding: var(--padding);
+  border-radius: var(--radius);
+  background-color: var(--button-color);
+  text-decoration: none;
+  color: inherit;
+}
+
+.ui_tag {
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
+  padding: 2px 6px 2px 6px;
+  border-top-right-radius: 6px;
+  background-color: lightgray;
+}
+
+.ui_tag .ui_button {
+  border: 0;
+  padding-right: 0;
+  background-color: revert;
+}
+
+.ui_button.default {
+  border-color: var(--primary-color);
+}
+
+.ui_button.disabled {
+  border-color: lightgray;
+  color: gray;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.pull-right {
+  float: inline-end;
+}
+
+.ui_group {
+  user-select: none;
+  -webkit-user-select: none;
+  margin-top: 26px;
+}
+
+form {
+  display: inline-block;
+}
+
+textarea {
+  background-color: var(--input-color);
+  border: 1px dotted gray;
+  padding-bottom: 1px;
+  font-size: inherit;
+  margin-bottom: var(--margin);
+}
+textarea:focus {
+  outline: 0;
+  padding-bottom: 0;
+  border-bottom: solid 2px blue;
+}
+
+input {
+  font-family: inherit;
+  margin: 0;
+  margin-left: 2px;
+  margin-right: 2px;
+}
+
+input[type=checkbox] {
+  xtransform: translateY(2px);
+  margin-top: 2px;
+  margin-bottom: 10px;
+}
+
+input[type=radio] {
+  xtransform: translateY(2px);
+  margin-top: 2px;
+  margin-bottom: 10px;
+}
+
+input[type=range] {
+  appearance: none;
+  background-color: var(--border-color);
+  height: 2px;
+  margin-top: 2px;
+  margin-bottom: 10px;
+  margin-right: 4px;
+  margin-left: 4px;
+}
+
+input[type=range]::-webkit-slider-thumb {
+  appearance: none;
+  background-color: var(--button-color);
+  border: var(--border) solid var(--border-color);
+  height: 12px;
+  width: 12px;
+  border-radius: 6px;
+}
+
+input[type=text],
+input[type=date],
+input[type=time],
+input[type=week],
+input[type=datetime-local] {
+  font-size: var(--size);
+  border: 0;
+  padding-left: 0;
+  padding-bottom: 1px;
+  border-bottom: dotted 1px gray;
+  background-color: inherit;
+  margin-top: 2px;
+  margin-bottom: 10px;
+  background-color: var(--input-color);
+}
+
+input[type=text]:focus {
+  outline: 0;
+  padding-bottom: 0;
+  border-bottom: solid 2px blue;
+}
+
+input[type=file] {
+  color: gray;
+  border-bottom: dotted 1px gray;
+  font-family: inherit;
+  font-size: inherit;
+  padding: var(--padding);
+  padding-left: 0;
+  margin-top: 1px;
+  margin-bottom: 10px;
+  max-width: 110px;
+}
+
+::-webkit-file-upload-button {
+  width: 1px;
+  color: rgba(0,0,0,0);
+  border: 0;
+  padding: 0;
+  background-color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+button,input[type=submit] {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background-color: inherit;
+  border: var(--border) solid var(--border-color);
+  padding: var(--padding);
+  border-radius: var(--radius);
+  margin-bottom: var(--margin);
+  background-color: var(--button-color);
+}
+
+select {
+  font-family: inherit;
+  font-size: inherit;
+  border: 0;
+  border-radius: 0;
+  appearance: none;
+  border-bottom: dotted 1px gray;
+  padding: var(--padding);
+  padding-bottom: 1px;
+  color: inherit;
+  background-color: inherit;
+  margin-bottom: 8px;
+}
+
+select:focus {
+  outline: 0;
+  padding-bottom: 1px;
+  border-bottom: solid 2px blue;
+}
+
+table {
+  border-spacing: 0;
+  margin-bottom: var(--margin);
+}

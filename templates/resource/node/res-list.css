@@ -1,10 +1,15 @@
-table {
-  width: 100%;
-  border-spacing: 0;
-  margin-bottom: 1rem;
+table td {
+  xborder-bottom: 1px solid lightgray;
 }
 
-table td {
-  border-left: 1px solid black;
-  padding-left: 4px;
+table td a {
+  text-decoration: none;
+}
+
+table.sec_nodes tr:hover {
+  background-color: lightblue;
+}
+
+.sec_props {
+  background-color: lightgray;
 }
