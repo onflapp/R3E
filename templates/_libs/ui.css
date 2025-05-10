@@ -1,14 +1,14 @@
 :root {
   --font: system-ui;
-  --size: 12px;
+  --size: 13px;
   --border: 1px;
   --border-color: black;
   --button-color: white;
   --primary-color: black;
   --input-color: white;
   --radius: 0px;
-  --margin: 6px 0px 0px 0px; /*top right bottom left */
-  --margin-input: 6px;
+  --margin-base: 6px;
+  --margin: var(--margin-base) 0px 0px 0px; /*top right bottom left */
   --padding: 2px 4px 2px 4px;
 }
 
@@ -54,6 +54,10 @@ div.ui_button {
   width: fit-content;
 }
 
+.ui_button-group {
+  font-size: 0; /* hack to deal with the whitespace */
+}
+
 .ui_button-group .ui_button:first-child {
   border-bottom-left-radius: var(--radius);
   border-top-left-radius: var(--radius);
@@ -85,7 +89,11 @@ div.ui_button {
   margin-top: 0px;
 }
 
-.ui_group.dialog {
+html:has(body.ui_dialog) {
+  background-color: gray;
+}
+
+.ui_dialog {
   border: 8px solid var(--border-color);
   padding: 8px 8px 8px 8px;
 }
@@ -126,6 +134,10 @@ body.ui_group {
   margin: var(--margin);
 }
 
+.ui_label .ui_button {
+  margin: 0;
+}
+
 .ui_label.info {
   font-size: smaller;
   background-color: lightgray;
@@ -142,8 +154,10 @@ body.ui_group {
   background-color: var(--button-color);
   text-decoration: none;
   color: inherit;
+  text-align: center;
   font-family: var(--font);
   font-size: var(--size);
+  min-width: calc(var(--size) * 1.5);
 }
 
 .ui_tag {
@@ -181,6 +195,11 @@ body.ui_group {
   float: inline-end;
 }
 
+.underlined {
+  border-bottom: 1px solid black;
+  margin-bottom: calc(var(--margin-base) * 2) !important;
+}
+
 form {
   display: inline-block;
 }
@@ -200,7 +219,7 @@ input {
   font-size: var(--size);
   margin: var(--margin);
   padding: var(--padding);
-  margin-right: var(--margin-input);
+  margin-right: var(--margin-base);
 }
 
 input[type=checkbox] {
@@ -248,7 +267,7 @@ input[type=file] {
   padding: var(--padding);
   padding-left: 0;
   margin: var(--margin);
-  margin-right: var(--margin-input);
+  margin-right: var(--margin-base);
   max-width: 110px;
 }
 
@@ -274,6 +293,8 @@ button,input[type=submit] {
   margin: var(--margin);
   border-radius: var(--radius);
   background-color: var(--button-color);
+  min-width: calc(var(--size) * 1.5);
+  text-align: center;
 }
 
 select {
@@ -287,7 +308,7 @@ select {
   color: inherit;
   background-color: inherit;
   margin: var(--margin);
-  margin-right: var(--margin-input);
+  margin-right: var(--margin-base);
 }
 
 table {
