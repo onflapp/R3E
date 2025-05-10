@@ -7,13 +7,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
-  {{include_css "resource/res-ui.css"}}
+  {{include_css "_libs/ui.css"}}
 
   <title>Index Search</title>
 </head>
 
-<body>
-  <ol class="paths">
+<body class="ui_group">
+
+  <ol class="ui_paths">
     <li><a href="{{req_path "/"}}">HOME</a></li>
 {{#include "." "parents"}}
     <li><a href="{{req_path path}}">{{name}}</a></li>
@@ -22,8 +23,8 @@
   </ol>
 
   <form method="get" action="{{req_path "." "res-list"}}">
-    <a class="button" href="{{req_path "." "res-create"}}">create</a>
-    <a class="button" href="{{req_path "." "/_THE_INDEX_" "res-delete"}}">clear</a>
+    <a target="_blank" class="ui_button" href="{{req_path "." "res-create"}}">create</a>
+    <a target="_blank" class="ui_button" href="{{req_path "." "/_THE_INDEX_" "res-delete"}}">clear</a>
     <input name="q" type="text" placeholder="search" value="{{Q.q}}">
     <button type="submit">search</button>
   </form>

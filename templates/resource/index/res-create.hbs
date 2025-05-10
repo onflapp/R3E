@@ -7,18 +7,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
-  {{include_css "resource/res-ui.css"}}
+  {{include_css "_libs/ui.css"}}
 
   <title>index content</title>
 </head>
 
-<body>
+<body class="ui_group dialog">
 
-  <h3>Index Resource Content
-    <a class="button" href="{{req_path "." "res-list"}}">cancel</a>
-  </h3>
+  <h1>Index Resource Content
+    <a class="ui_button pull-right" href="{{req_path "." "ui-close"}}">X</a>
+  </h1>
 
-  <ol class="paths">
+  <ol class="ui_paths">
     <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
 {{#include "." "parents"}}
     <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
@@ -30,7 +30,7 @@
 
   <form method="post" enctype="multipart/form-data" action="{{res_path R.PATH "{:name}"}}">
     <textarea autocorrect="off" autocapitalize="none" autocomplete="off" autofocus="on" spellcheck="false" name="_content"></textarea>
-    <input name=":name|newUUID" value="" autocomplete="off" placeholder="reference path">
+    <input type="text" name=":name|newUUID" value="" autocomplete="off" placeholder="reference path">
     <input type="hidden" name=":forward" value="{{req_path R.PATH "res-list"}}">
     <button type="submit">index</button>
   </form>
@@ -39,7 +39,7 @@
 
   <form method="post" enctype="multipart/form-data" action="{{res_path R.PATH "{:name}"}}">
     <input type="file" name=":filename" value="">
-    <input name=":name|:filename|newUUID" value="" autocomplete="off" placeholder="reference path">
+    <input type="text" name=":name|:filename|newUUID" value="" autocomplete="off" placeholder="reference path">
     <input type="hidden" name=":forward" value="{{req_path R.PATH "res-list"}}">
     <button type="submit">upload</button>
   </form>

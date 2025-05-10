@@ -7,13 +7,14 @@
   <meta name="viewport" content="user-scalable=no,width=device-width, initial-scale=1.0">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   
-  {{include_css "resource/res-ui.css" "resource/node/res-list.css"}}
+  {{include_css "_libs/ui.css" "resource/node/res-list.css"}}
 
   <title>search:{{R.PATH}}</title>
 </head>
 
-<body>
-  <ol class="paths">
+<body class="ui_group">
+
+  <ol class="ui_paths">
     <li><a href="{{req_path "/" "res-list"}}">HOME</a></li>
 {{#include "." "parents"}}
     <li><a href="{{req_path path "res-list"}}">{{name}}</a></li>
@@ -61,6 +62,6 @@
   {{/if}}
 {{/include}}
   </table>
-</body>
 
+</body>
 </html>
