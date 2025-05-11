@@ -391,6 +391,8 @@ class ClientRequestHandler extends ResourceRequestHandler {
         this.refererPath = null;
         this.refererURL = null;
       }
+
+      this.currentURL = uu;      
     }
 
     this.queryProperties = p;

@@ -482,6 +482,19 @@ class ResourceRequestContext implements ScriptContext {
     });
   }
 
+  public copyResources(resourcePaths: string, dest: string) : Promise<any[]> {
+    let r = [];
+    for (let i = 0; i < resourcePaths.length; i++) {
+      let s = resourcePaths[i];
+      let d = Utils.filename(s);
+      if (d) {
+        d = Utils.filename_path_append(dest, d);
+        r.push(this.storeResource(s, {':copyto':d}));
+      }
+    }
+    return Promise.all(r);
+  }
+
   public getSessionProperties(): any {
     let p = this.sessionData.getValues();
     p['RENDER_COUNT'] = this.sessionData.renderSessionCount;
@@ -491,6 +504,7 @@ class ResourceRequestContext implements ScriptContext {
 
   public getRequestProperties(): any {
     let p = {};
+    p['URL'] = this.pathInfo.currentURL;    
     p['PATH'] = this.pathInfo.path;
     p['NAME'] = this.pathInfo.name;
     p['DIRNAME'] = this.pathInfo.dirname;
@@ -596,6 +610,7 @@ class PathInfo {
   public resourcePath: string;
   public referer: PathInfo;
   public refererURL: string;
+  public currentURL: string;
   public query: any;
 
   public clone(): PathInfo {
@@ -612,6 +627,7 @@ class PathInfo {
     pi.referer = this.referer;
     pi.query = this.query;
     pi.refererURL = this.refererURL;
+    pi.currentURL = this.currentURL;    
 
     return pi;
   }

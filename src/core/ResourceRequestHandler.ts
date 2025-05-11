@@ -13,6 +13,7 @@ class ResourceRequestHandler extends EventDispatcher {
 
   protected refererPath: string;
   protected refererURL: string;
+  protected currentURL: string;
   protected queryProperties: any;
   protected configProperties: any;
   protected pathParserRegexp: RegExp;
@@ -125,6 +126,7 @@ class ResourceRequestHandler extends EventDispatcher {
   protected makeContext(pathInfo: PathInfo): ResourceRequestContext {
     if (pathInfo) {
       pathInfo.refererURL = this.refererURL;
+      pathInfo.currentURL = this.currentURL;
       pathInfo.referer = this.parsePath(this.refererPath);
       pathInfo.query = this.queryProperties;
 

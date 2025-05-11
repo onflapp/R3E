@@ -1477,6 +1477,18 @@ class ResourceRequestContext {
             });
         });
     }
+    copyResources(resourcePaths, dest) {
+        let r = [];
+        for (let i = 0; i < resourcePaths.length; i++) {
+            let s = resourcePaths[i];
+            let d = Utils.filename(s);
+            if (d) {
+                d = Utils.filename_path_append(dest, d);
+                r.push(this.storeResource(s, { ':copyto': d }));
+            }
+        }
+        return Promise.all(r);
+    }
     getSessionProperties() {
         let p = this.sessionData.getValues();
         p['RENDER_COUNT'] = this.sessionData.renderSessionCount;
@@ -1484,6 +1496,7 @@ class ResourceRequestContext {
     }
     getRequestProperties() {
         let p = {};
+        p['URL'] = this.pathInfo.currentURL;
         p['PATH'] = this.pathInfo.path;
         p['NAME'] = this.pathInfo.name;
         p['DIRNAME'] = this.pathInfo.dirname;
@@ -1580,6 +1593,7 @@ class PathInfo {
         pi.referer = this.referer;
         pi.query = this.query;
         pi.refererURL = this.refererURL;
+        pi.currentURL = this.currentURL;
         return pi;
     }
 }
@@ -1675,6 +1689,7 @@ class ResourceRequestHandler extends EventDispatcher {
     makeContext(pathInfo) {
         if (pathInfo) {
             pathInfo.refererURL = this.refererURL;
+            pathInfo.currentURL = this.currentURL;
             pathInfo.referer = this.parsePath(this.refererPath);
             pathInfo.query = this.queryProperties;
             let context = new ResourceRequestContext(pathInfo, this, new SessionData());
@@ -4167,6 +4182,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
                 this.refererPath = null;
                 this.refererURL = null;
             }
+            this.currentURL = uu;
         }
         this.queryProperties = p;
         this.renderRequest(path);

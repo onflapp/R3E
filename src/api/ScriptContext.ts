@@ -15,6 +15,7 @@ interface ScriptContext {
   /* store */
   storeResource(resourcePath: string, data: any) : Promise<void>;
   storeAndResolveResource(resourcePath: string, data: any) : Promise<Resource>;
+  copyResources(resourcePaths: string, dest: string) : Promise<any[]>;
 
   /* export */
   exportAllResources(resourcePath: string, level, writer: ContentWriter, incSource ? : boolean): void;
