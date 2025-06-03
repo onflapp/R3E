@@ -9,6 +9,10 @@
 
   {{include_css "_libs/ui.css"}}
 
+  {{#partial "text_opts"}}
+autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+  {{/partial}}
+
   <title>create</title>
 </head>
 
@@ -21,7 +25,7 @@
   <h3>Temporary ObjectResource</h3>
 
   <form method="post" action="{{res_path R.PATH "{:name}"}}">
-    <input type="text" name=":name|newUUID" value="" autocomplete="off" placeholder="name">
+    <input type="text" name=":name|newUUID" value="" {{> text_opts}} placeholder="name">
     <input type="hidden" name=":forward" value="{{req_path R.PATH "ui-close"}}">
     <button type="submit">add</button>
   </form>

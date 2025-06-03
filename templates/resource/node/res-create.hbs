@@ -9,6 +9,10 @@
 
   {{include_css "_libs/ui.css"}}
 
+  {{#partial "text_opts"}}
+autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+  {{/partial}}
+
   <title>create</title>
 </head>
 
@@ -27,9 +31,9 @@
   </ol>
 
   <h3>Resource Node</h3>
-  
+
   <form method="post" action="{{res_path R.PATH "{:name}"}}">
-    <input type="text" name=":name|newUUID" value="" autocomplete="off" placeholder="name">
+    <input type="text" name=":name|newUUID" value="" {{> text_opts}} placeholder="name">
 
     <select name="_rt">
       <option value="">type not set</option>
@@ -46,7 +50,7 @@
   <h3>Empty File</h3>
 
   <form method="post" action="{{res_path R.PATH "{:name}"}}">
-    <input type="text" name=":name|newUUID" value="" autocomplete="off" placeholder="file name">
+    <input type="text" name=":name|newUUID" value="" {{> text_opts}} placeholder="file name">
     <input type="hidden" name="_content" value=""></input>
     
     <input type="hidden" name=":forward" value="{{req_path "." "ui-close"}}">
@@ -57,7 +61,7 @@
 
   <form method="post" enctype="multipart/form-data" action="{{res_path R.PATH "{:name}"}}">
     <input type="file" name=":filename" value="">
-    <input type="text" name=":name|:filename|newUUID" value="" autocomplete="off" placeholder="as new file name">
+    <input type="text" name=":name|:filename|newUUID" value="" {{> text_opts}} placeholder="as new file name">
     <input type="hidden" name=":forward" value="{{req_path "." "ui-close"}}">
     <button type="submit">upload</button>
   </form>

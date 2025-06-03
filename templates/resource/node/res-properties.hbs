@@ -9,6 +9,10 @@
 
   {{include_css "_libs/ui.css" "resource/node/res-list.css"}}
 
+  {{#partial "text_opts"}}
+autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+  {{/partial}}
+
   <title>properties:{{R.PATH}}</title>
 </head>
 
@@ -35,7 +39,7 @@
     <tr>
       <td>{{name}}</td>
       <td>
-        <input type="text" name="{{name}}" value="{{value}}" form="save_form" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false">
+        <input type="text" name="{{name}}" value="{{value}}" form="save_form" {{> text_opts}}>
       </td>
       <td>
         <button type="submit" form="save_form" style="display:none">+</button>
@@ -48,10 +52,10 @@
 {{/include}}
     <tr>
       <td>
-        <input type="text" name=":name" value="" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="name" form="save_form">
+        <input type="text" name=":name" value="" autocorrect="off" {{> text_opts}} form="save_form">
       </td>
       <td>
-        <input type="text" name="{:name}" value="" autocorrect="off" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="value" form="save_form">
+        <input type="text" name="{:name}" value="" autocorrect="off" {{> text_opts}} form="save_form">
       </td>
       <td>
         <button type="submit" form="save_form">+</button>

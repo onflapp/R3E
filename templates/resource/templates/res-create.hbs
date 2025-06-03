@@ -9,6 +9,10 @@
 
   {{include_css "_libs/ui.css"}}
 
+  {{#partial "text_opts"}}
+autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+  {{/partial}}
+
   <title>create</title>
 </head>
 
@@ -41,9 +45,9 @@
   </ul>
 
   <form method="post" action="{{R.PATH}}/{:name}/{:sel}.{:ext}">
-    <input type="text" name=":name" value="{{R.DATA_PATH}}" placeholder="full path" required="" autocomplete="off">
+    <input type="text" name=":name" value="{{R.DATA_PATH}}" placeholder="full path" required="" {{> text_opts}}>
     {{C.X}}
-    <input type="text" name=":sel" value="default" placeholder="selector" required="" autocomplete="off">
+    <input type="text" name=":sel" value="default" placeholder="selector" required="" {{>text_opts}}>
     .
     <select name=":ext" style="width:40px">
       <optgroup label="Handlebars">
@@ -64,7 +68,7 @@
   <h3>Create Directory</h3>
 
   <form method="post" action="{{res_path R.PATH "{:name}"}}">
-    <input type="text" name=":name" value="" required="" placeholder="full path" autocomplete="off">
+    <input type="text" name=":name" value="" required="" placeholder="full path" {{>text_opts}}>
     <input type="hidden" name=":forward" value="{{req_path R.PATH "ui-close"}}">
 
     <button type="submit" value="add">add</button>

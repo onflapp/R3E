@@ -212,6 +212,7 @@ textarea {
   font-size: inherit;
   margin: var(--margin);
   vertical-align: bottom;
+  box-sizing: border-box;
 }
 
 input {
@@ -220,6 +221,7 @@ input {
   margin: var(--margin);
   padding: var(--padding);
   margin-right: var(--margin-base);
+  box-sizing: border-box;
 }
 
 input[type=checkbox] {

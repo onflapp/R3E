@@ -9,6 +9,10 @@
 
   {{include_css "_libs/ui.css"}}
 
+  {{#partial "text_opts"}}
+autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+  {{/partial}}
+
   <title>index content</title>
 </head>
 
@@ -29,8 +33,8 @@
   <h4>Index Text</h4>
 
   <form method="post" enctype="multipart/form-data" action="{{res_path R.PATH "{:name}"}}">
-    <textarea autocorrect="off" autocapitalize="none" autocomplete="off" autofocus="on" spellcheck="false" name="_content"></textarea>
-    <input type="text" name=":name|newUUID" value="" autocomplete="off" placeholder="reference path">
+    <textarea autocorrect="off" autocapitalize="none" {{> text_opts}} name="_content"></textarea>
+    <input type="text" name=":name|newUUID" value="" {{> text_opts}} placeholder="reference path">
     <input type="hidden" name=":forward" value="{{req_path R.PATH "res-list"}}">
     <button type="submit">index</button>
   </form>
@@ -39,7 +43,7 @@
 
   <form method="post" enctype="multipart/form-data" action="{{res_path R.PATH "{:name}"}}">
     <input type="file" name=":filename" value="">
-    <input type="text" name=":name|:filename|newUUID" value="" autocomplete="off" placeholder="reference path">
+    <input type="text" name=":name|:filename|newUUID" value="" {{> text_opts}} placeholder="reference path">
     <input type="hidden" name=":forward" value="{{req_path R.PATH "res-list"}}">
     <button type="submit">upload</button>
   </form>

@@ -9,6 +9,10 @@
   
   {{include_css "_libs/ui.css" "resource/node/res-list.css"}}
 
+  {{#partial "text_opts"}}
+autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+  {{/partial}}
+
   <title>list:{{R.PATH}}</title>
 </head>
 
@@ -33,7 +37,7 @@
     <a class="ui_button" target="_blank" href="{{req_path "." "dump"}}">dump</a>
 
     <form class="pull-right" method="get" action="{{req_path "." "res-search"}}">
-      <input name="q" type="text" placeholder="search" value="{{Q.q}}">
+      <input name="q" type="text" placeholder="search" value="{{Q.q}}" {{> text_opts}}>
       <button type="submit">search</button>
     </form>
   </div>
