@@ -1,7 +1,7 @@
 :root {
   --font: system-ui;
-  --size: 13px;
-  --border: 1px;
+  --size: 12px;
+  --border: 2px;
   --border-color: black;
   --button-color: white;
   --primary-color: black;
@@ -9,7 +9,7 @@
   --radius: 0px;
   --margin-base: 6px;
   --margin: var(--margin-base) 0px 0px 0px; /*top right bottom left */
-  --padding: 2px 4px 2px 4px;
+  --padding: 2px 6px 2px 6px;
 }
 
 body {
@@ -82,7 +82,16 @@ div.ui_button {
 
 .ui_group {
   font-family: var(--font);
+  font-size: var(--size);
   margin: var(--margin);
+}
+
+.ui_group-box {
+  border-radius: var(--radius);
+  border: 1px solid lightgray;
+  font-family: var(--font);
+  margin: var(--margin);
+  padding: 6px 12px 12px 12px; /*top right bottom left */
 }
 
 .ui_group > *:first-child {
@@ -99,8 +108,7 @@ html:has(body.ui_dialog) {
 }
 
 body.ui_group {
-  font-family: var(--font);
-  margin: 8px 8px 8px 8px;
+  margin: 12px 12px 12px 12px;
 }
 
 .ui_group p {
@@ -126,6 +134,27 @@ body.ui_group {
 .ui_group h4 {
   font-size: small;
   margin: var(--margin);
+}
+
+.ui_group ul {
+  margin: var(--margin);
+  padding-inline-start: 16px;
+}
+
+.ui_group ol {
+  margin: var(--margin);
+  padding-inline-start: 16px;
+}
+
+.ui_group hr {
+  margin: var(--margin);
+  border: 1px solid lightgray;
+  border-bottom-width: 0;
+}
+
+.ui_sep {
+  width: var(--margin-base);
+  display: inline-block;
 }
 
 .ui_label {
@@ -187,12 +216,24 @@ body.ui_group {
   color: gray;
 }
 
+.ui_button.borderless {
+  background-color: initial;
+}
+
 .full-width {
   width: 100%;
 }
 
 .pull-right {
   float: inline-end;
+}
+
+.borderless {
+  border: 0;
+}
+
+.bold {
+  font-weight: bold;
 }
 
 .underlined {

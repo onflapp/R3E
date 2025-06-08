@@ -2,87 +2,101 @@
   <head>
     <link rel="stylesheet" href="../templates/_libs/ui.css">
   </head>
-  <body>
-<div class="ui_group">
-    <ul class="ui_paths">
-      <li>home</li>
-      <li><a href="#">items</a></li>
-      <li><a href="#">stuff</a></li>
-    </ul>
-
-    <h1>buttons</h1>
-
+  <body class="ui_group">
     <div>
-      <span class="ui_button default">primary</span>
-      <span class="ui_button disabled">disabled</span>
-      <span class="ui_button">normal</span>
-      <span class="ui_button pull-right">X</span>
-    </div>
+        <ul class="ui_paths">
+          <li>home</li>
+          <li><a href="#">items</a></li>
+          <li><a href="#">stuff</a></li>
+        </ul>
 
-    <div class="ui_button default">primary</div>
-    <div class="ui_button disabled">disabled</div>
- 
-    <div class="ui_button-group">
-      <span class="ui_button"> action a</span><span class="ui_button disabled"> action b</span><span class="ui_button"> action c</span>
-    </div>
-
-    <p>regular text</p>
-
-    <h4>h4: tags</h4>
-
-    <span class="ui_tag">tag A</span>
-    <span class="ui_tag">tag A</span>
-    <span class="ui_tag">tag A</span>
-    <span class="ui_tag">tag A</span>
-    <span class="ui_tag">tag A <span class="ui_button">X</span></span>
-    <span class="ui_button">add</span>
-
-    <h1 class="ui_label">forms</h1>
-
-    <form action="#">
-      <div>text: <input type="text"></input> <span class="ui_button">save</span></div>
-      <div>text: <input type="text"></div>
-      <div>text: <input type="text"></input> <span class="ui_button">add</span> <span class="ui_button">rem</span> </div>
-
-      <div>
-        check: <input type="checkbox">
-        radio: <input type="radio">
-        select: <select>
-          <option value="a">Volvo</option>
-          <option value="b">Saab</option>
-          <option value="c">Opel</option>
-          <option value="d">Audi</option>
-        </select>
-      <input type="text"></input>
-        file: <input type="file"></input><span class="ui_label info">NOTE: xxxx</span>
-      </div>
-      <div>
-        file: <input type="file"></input><span class="ui_label info">NOTE: xxxx</span>
-      </div><div>
-        <div class="ui_label">This is cool</div>
-        <input type="range" min="-10" max="10" />button: <input type="submit"></input><br>
-<input
-  type="date"
-  id="meeting-time"
-  name="meeting-time"
-  value="2018-06-12T19:30"
-  min="2018-06-07T00:00"
-  max="2018-06-14T00:00" />
-<input
-    type="number"/>
-
-  <h3>h3 heading</h3>
+        <h1>buttons</h1>
 
         <div>
-          <span class="ui_button">save</span>
-          <button>submit</button>
+          <span class="ui_button default">primary</span>
+          <span class="ui_button disabled">disabled</span>
+          <hr>
+          <span class="ui_button">normal</span>
+          <span class="ui_button borderless pull-right bold">X</span>
         </div>
-      </div>
 
-<textarea class="full-width"></textarea>
+        <div class="ui_button default">primary</div>
+        <div class="ui_button disabled">disabled</div>
+
+        <div class="ui_button-group">
+          <span class="ui_button"> action a</span><span class="ui_button disabled"> action b</span><span class="ui_button"> action c</span>
+        </div>
+
+        <p>regular text</p>
+
+        <h4>h4: tags</h4>
+
+        <span class="ui_tag">tag A</span>
+        <span class="ui_tag">tag A</span>
+        <span class="ui_tag">tag A</span>
+        <span class="ui_tag">tag A</span>
+        <span class="ui_tag">tag A <span class="ui_button">X</span></span>
+        <span class="ui_button">add</span>
+
+        <h1 class="ui_label">forms</h1>
+
+        <form action="#">
+          <div>text: <input type="text"></input> <span class="ui_button">save</span></div>
+          <div>text: <input type="text"></div>
+          <div>text: <input type="text"></input> <span class="ui_button">add</span> <span class="ui_button">rem</span> </div>
+
+          <div>
+            check: <input type="checkbox">
+            radio: <input type="radio">
+            select: <select>
+              <option value="a">Volvo</option>
+              <option value="b">Saab</option>
+              <option value="c">Opel</option>
+              <option value="d">Audi</option>
+            </select>
+            <input type="text"></input>
+            file: <input type="file"></input><span class="ui_label info">NOTE: xxxx</span>
+          </div>
+
+          <div>
+            file: <input type="file"></input><span class="ui_label info">NOTE: xxxx</span>
+          </div>
+
+          <div class="ui_group-box">
+            <span class="ui_button">box button</span>
+            <h1 class="ui_label">Group Box</h1>
+            <div class="ui_label">This is cool</div>
+            <input type="range" min="-10" max="10" />button: <input type="submit"></input><br>
+            <input
+              type="date"
+              id="meeting-time"
+              name="meeting-time"
+              value="2018-06-12T19:30"
+              min="2018-06-07T00:00"
+              max="2018-06-14T00:00" />
+            <input type="number"/>
+
+            <h3>h3 heading</h3>
+
+            <div>
+              <span class="ui_button">save</span>
+              <button>submit</button>
+              <span class="ui_sep"></span>
+              <button>cancel</button>
+            </div>
+          </div>
+
+          <p>text</p>
+          <ul>
+            <li>item 1</li>
+            <li>item 2</li>
+            <li>item 3</li>
+          </ul>
+
+          <textarea name="test" class="full-width"></textarea>
           <button>Save</button>
 
-    </form>
-</div>
+        </form>
+    </div>
   </body>
 </html>
