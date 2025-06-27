@@ -2015,7 +2015,7 @@ class ResourceRequestHandler extends EventDispatcher {
                 });
             }
             else if (remove) {
-                rres.removeResource(resourcePath, function () {
+                rres.removeResource(remove, function () {
                     self.dispatchAllEvents('post-remove', remove, data);
                     callback();
                 });
