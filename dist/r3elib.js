@@ -1460,6 +1460,9 @@ class ResourceRequestContext {
     }
     storeResource(resourcePath, data) {
         let self = this;
+        data = self.resourceRequestHandler.transformValues(data);
+        data = Utils.expandValues(data, data);
+        resourcePath = Utils.expandValue(resourcePath, data);
         return new Promise(function (resolve) {
             self.resourceRequestHandler.storeResource(resourcePath, data, function () {
                 resolve();
@@ -1469,6 +1472,9 @@ class ResourceRequestContext {
     storeAndResolveResource(resourcePath, data) {
         let rres = this.getResourceResolver();
         let self = this;
+        data = self.resourceRequestHandler.transformValues(data);
+        data = Utils.expandValues(data, data);
+        resourcePath = Utils.expandValue(resourcePath, data);
         return new Promise(function (resolve) {
             self.resourceRequestHandler.storeResource(resourcePath, data, function () {
                 rres.resolveResource(resourcePath, function (res) {
@@ -2722,7 +2728,7 @@ class TemplateRendererFactory {
                     }
                     else {
                         console.log(tfunc);
-                        callback(null, new Error('invlid renderer function'));
+                        callback(null, new Error('invalid renderer function'));
                     }
                 });
             }

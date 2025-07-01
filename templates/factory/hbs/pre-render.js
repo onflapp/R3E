@@ -101,6 +101,7 @@
     p = Utils.absolute_path(p, context.R['RES_PATH']);
     return escape(p);
   });
+
 /*
  * reset "R" "SELECTOR"
  * reset "R" "REF_SELECTOR"

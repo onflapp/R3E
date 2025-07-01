@@ -454,6 +454,7 @@ class ResourceRequestContext implements ScriptContext {
 
   public storeRequest(resourcePath: string, data: any) {
     let self = this;
+
     data = self.resourceRequestHandler.transformValues(data);
     data = Utils.expandValues(data, data);
     resourcePath = Utils.expandValue(resourcePath, data);
@@ -462,6 +463,10 @@ class ResourceRequestContext implements ScriptContext {
 
   public storeResource(resourcePath: string, data: any) : Promise<void> {
     let self = this;
+
+    data = self.resourceRequestHandler.transformValues(data);
+    data = Utils.expandValues(data, data);
+    resourcePath = Utils.expandValue(resourcePath, data);
     return new Promise(function (resolve) {
       self.resourceRequestHandler.storeResource(resourcePath, data, function() {
         resolve();
@@ -473,6 +478,9 @@ class ResourceRequestContext implements ScriptContext {
     let rres = this.getResourceResolver();
     let self = this;
 
+    data = self.resourceRequestHandler.transformValues(data);
+    data = Utils.expandValues(data, data);
+    resourcePath = Utils.expandValue(resourcePath, data);
     return new Promise(function (resolve) {
       self.resourceRequestHandler.storeResource(resourcePath, data, function() {
         rres.resolveResource(resourcePath, function(res) {

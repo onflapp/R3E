@@ -166,7 +166,7 @@ class TemplateRendererFactory implements RendererFactory {
           }
           else {
             console.log(tfunc);
-            callback(null, new Error('invlid renderer function'));
+            callback(null, new Error('invalid renderer function'));
           }
         });
       }
