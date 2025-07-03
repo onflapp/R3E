@@ -204,10 +204,10 @@ body.ui_group {
   background-color: lightgray;
   font-family: var(--font);
   font-size: var(--size);
+  border: 0;
 }
 
 .ui_tag .ui_button {
-  border: 0;
   padding-right: 0;
   background-color: revert;
 }
