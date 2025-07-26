@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
+  {{include_css "_libs/ui.css"}}
+
+  {{#partial "text_opts"}}
+autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+  {{/partial}}
+
+  <title>move to</title>
+</head>
+
+<body class="ui_group ui_dialog">
+
+  <h1 class="ui_label underlined">Move "{{name}}"
+    <a class="ui_button pull-right" href="{{req_path "." "ui-close"}}">X</a>
+  </h1>
+
+  <ol>
+{{#include "." "keyvalues"}}
+    <li>{{value}}</li>
+    <input form="move_sel" type="hidden" name=":movefrom:{{key}}" value="{{value}}">
+{{/include}}
+  </ol>
+
+  <h1>to</h1>
+
+  <ol class="ui_paths">
+    <li><a href="{{req_path "." "res-moveto"}}/">HOME</a></li>
+{{#include R.DATA_PATH "parents"}}
+    <li><a href="{{req_path "." "res-moveto"}}{{path}}">{{name}}</a></li>
+{{/include}}
+    <li class="active">{{R.DATA_NAME}}</li>
+  </ol>
+
+  <ol>
+{{#include R.DATA_PATH "children"}}
+  {{#if isContentResource}}
+    <li>{{name}}</li>
+  {{else}}
+    {{#match path "!startsWith" ../R.PATH}}
+    <li>
+      <a href="{{req_path "." "res-moveto"}}{{path}}">{{name}}</a>
+    </li>
+    {{/match}}
+  {{/if}}
+{{/include}}
+  </ol>
+
+  <form id="move_sel" method="POST" action="{{R.PATH}}">
+    <input type="hidden" name=":moveto" value="{{res_path R.DATA_PATH}}">
+    <input type="hidden" name=":forward" value="{{req_path "." "ui-close"}}">
+
+    <button type="submit">move</button>
+  </form>
+
+</body>
+</html>

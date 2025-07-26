@@ -42,6 +42,17 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
     </form>
   </div>
 
+  <div class="ui_button-group">
+    <form id="save_selection" method="post" action="{{res_path "/session/selection"}}">
+      <input type="hidden" name="_rt" value="resource/selection">
+      <input type="hidden" name=":reset" value="{{res_path "/session/selection"}}">
+
+      <a class="ui_button act_dialog-show" href="{{req_path "/session/selection" "res-delete"}}">delete</a>
+      <a class="ui_button act_dialog-show" href="{{req_path "/session/selection" "res-copyto"}}{{path}}/..">copy</a>
+      <a class="ui_button act_dialog-show" href="{{req_path "/session/selection" "res-moveto"}}{{path}}/..">move</a>
+    </form>
+  </div>
+
   <div class="sec_props">
     <h3>properties:</h3>
 
@@ -49,7 +60,7 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
   {{#include "." "keyvalues"}}
       <tr>
         <td>
-          {{name}}
+          {{key}}
         </td>
         <td>
           {{value}}
@@ -66,6 +77,9 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
   {{#if isContentResource}}
     <tr>
       <td>
+        <input form="save_selection" type="checkbox" name="{{hash path}}" value="{{path}}">
+      </td>
+      <td>
         <a href="{{req_path path "edit"}}">{{name}}</a>
       </td>
       <td>
@@ -77,6 +91,9 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
     </tr>
   {{else}}
     <tr>
+      <td>
+        <input form="save_selection" type="checkbox" name="{{hash path}}" value="{{path}}">
+      </td>
       <td>
         <a href="{{req_path path}}">{{or _.title name}}/</a>
       </td>

@@ -75,6 +75,16 @@ class Utils {
     return uuid;
   }
 
+  public static makeHash(str): number {
+    let h = 0, l = str.length, i = 0;
+    if (l > 0) {
+      while (i < l) {
+        h = (h << 5) - h + str.charCodeAt(i++) | 0;
+      }
+    }
+    return h;
+  }
+
   public static makeRank(prev, next): string {
     let fbyte = function(ch){
       return ch.charCodeAt(0);
@@ -188,6 +198,24 @@ class Utils {
       }
 
       list.splice(x, 0, item);
+    }
+  }
+
+  public static compareNames(a, b) {
+    let xa = a.lastIndexOf('_');
+    let xb = b.lastIndexOf('_');
+    if (xa > 0 && xb > 0) {
+      let na = Number.parseInt(a.substr(xa+1));
+      let nb = Number.parseInt(b.substr(xb+1));
+      if (Number.isNaN(na) || Number.isNaN(nb)) {
+        return a.localeCompare(b);
+      }
+      else {
+        return (na - nb);
+      }
+    }
+    else {
+      return a.localeCompare(b);
     }
   }
 

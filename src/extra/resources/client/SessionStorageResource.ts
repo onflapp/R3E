@@ -8,12 +8,21 @@ class SessionStorageResource extends LocalStorageResource {
   public storeLocalStorage() {
     let data = JSON.stringify(this.values, null, 2);
     sessionStorage.setItem(this.storageName, data);
+
+    localStorage.setItem('__SESSION_'+this.storageName, data);
   }
 
   public loadLocalStorage() {
     let data = sessionStorage.getItem(this.storageName);
     if (data) {
       this.values = JSON.parse(data);
+    }
+    else {
+      //load the initial values from the localStorage
+      data = localStorage.getItem('__SESSION_'+this.storageName);
+      if (data) {
+        this.values = JSON.parse(data);
+      }
     }
   }
 }

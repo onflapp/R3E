@@ -64,6 +64,15 @@ class Utils {
         });
         return uuid;
     }
+    static makeHash(str) {
+        let h = 0, l = str.length, i = 0;
+        if (l > 0) {
+            while (i < l) {
+                h = (h << 5) - h + str.charCodeAt(i++) | 0;
+            }
+        }
+        return h;
+    }
     static makeRank(prev, next) {
         let fbyte = function (ch) {
             return ch.charCodeAt(0);
@@ -166,6 +175,23 @@ class Utils {
                     x = list.length;
             }
             list.splice(x, 0, item);
+        }
+    }
+    static compareNames(a, b) {
+        let xa = a.lastIndexOf('_');
+        let xb = b.lastIndexOf('_');
+        if (xa > 0 && xb > 0) {
+            let na = Number.parseInt(a.substr(xa + 1));
+            let nb = Number.parseInt(b.substr(xb + 1));
+            if (Number.isNaN(na) || Number.isNaN(nb)) {
+                return a.localeCompare(b);
+            }
+            else {
+                return (na - nb);
+            }
+        }
+        else {
+            return a.localeCompare(b);
         }
     }
     static unescape(str) {
@@ -562,6 +588,9 @@ class Resource extends Data {
     getModificationDate() {
         return null;
     }
+    getCreationDate() {
+        return null;
+    }
     getRenderTypes() {
         let rv = [];
         let rt = this.getRenderType();
@@ -596,6 +625,7 @@ class Resource extends Data {
         let names = this.getPropertyNames();
         let ct = this.getContentType();
         let md = this.getModificationDate();
+        let cd = this.getCreationDate();
         let rv = {};
         for (var i = 0; i < names.length; i++) {
             let name = names[i];
@@ -622,6 +652,9 @@ class Resource extends Data {
         }
         if (md) {
             rv[Resource.STORE_MODIFICATIONDATE_PROPERTY] = '' + md.getTime();
+        }
+        if (cd) {
+            rv[Resource.STORE_CREATIONDATE_PROPERTY] = '' + cd.getTime();
         }
         callback(new Data(rv));
     }
@@ -729,6 +762,7 @@ Resource.STORE_RENDERTYPE_PROPERTY = '_rt';
 Resource.STORE_RENDERSUPERTYPE_PROPERTY = '_st';
 Resource.STORE_RESOURCETYPE_PROPERTY = '_pt';
 Resource.STORE_MODIFICATIONDATE_PROPERTY = '_md';
+Resource.STORE_CREATIONDATE_PROPERTY = '_cd';
 class ResourceResolver {
     constructor(resource) {
         this.resource = resource;
@@ -1560,12 +1594,15 @@ class ResourceRequestContext {
                 map['isContentResource'] = false;
             }
             let md = res.getModificationDate();
-            if (md) {
+            if (md)
                 map['modificationDate'] = md.getTime();
-            }
-            else {
+            else
                 map['modificationDate'] = 0;
-            }
+            let cd = res.getCreationDate();
+            if (cd)
+                map['creationDate'] = cd.getTime();
+            else
+                map['creationDate'] = 0;
             map['_'] = res.getProperties();
             map['path'] = this.getCurrentResourcePath();
         }
@@ -1982,48 +2019,91 @@ class ResourceRequestHandler extends EventDispatcher {
     storeResource(resourcePath, data, callback) {
         let self = this;
         let rres = this.resourceResolver;
+        let processing = 0;
+        let extractpaths = function (name) {
+            let rv = [];
+            for (let k in data) {
+                if (k.indexOf(name) == 0) {
+                    let p = Utils.absolute_path(data[k], resourcePath);
+                    if (p)
+                        rv.push(p);
+                }
+            }
+            return rv;
+        };
         let storedata = function (path) {
+            processing++;
             self.expandDataAndStore(path, data, function () {
                 self.dispatchAllEvents('stored', path, data);
-                callback();
+                processing--;
+                if (processing == 0)
+                    callback();
             });
         };
         try {
-            let remove = Utils.absolute_path(data[':delete'], resourcePath);
+            let remove = extractpaths(':delete');
+            let copyfrom = extractpaths(':copyfrom');
+            let movefrom = extractpaths(':movefrom');
             let copyto = Utils.absolute_path(data[':copyto'], resourcePath);
             let cloneto = Utils.absolute_path(data[':cloneto'], resourcePath);
-            let copyfrom = Utils.absolute_path(data[':copyfrom'], resourcePath);
             let moveto = Utils.absolute_path(data[':moveto'], resourcePath);
             let importto = Utils.absolute_path(data[':import'], resourcePath);
             let reset = Utils.absolute_path(data[':reset'], resourcePath);
-            if (copyto) {
+            if (copyfrom.length && copyto) {
+                for (let i = 0; i < copyfrom.length; i++) {
+                    processing++;
+                    let dest = Utils.filename_path_append(copyto, Utils.filename(copyfrom[i]));
+                    rres.copyResource(copyfrom[i], dest, function () {
+                        processing--;
+                        self.dispatchAllEvents('post-copyfrom', dest, data);
+                        storedata(dest);
+                    });
+                }
+            }
+            else if (movefrom.length && moveto) {
+                for (let i = 0; i < movefrom.length; i++) {
+                    processing++;
+                    let dest = Utils.filename_path_append(moveto, Utils.filename(movefrom[i]));
+                    rres.moveResource(movefrom[i], dest, function () {
+                        processing--;
+                        self.dispatchAllEvents('post-movefrom', dest, data);
+                        storedata(dest);
+                    });
+                }
+            }
+            else if (remove.length) {
+                for (let i = 0; i < remove.length; i++) {
+                    processing++;
+                    rres.removeResource(remove[i], function () {
+                        processing--;
+                        self.dispatchAllEvents('post-remove', remove[i], data);
+                        if (processing == 0)
+                            callback();
+                    });
+                }
+            }
+            else if (copyto) {
+                processing++;
                 rres.copyResource(resourcePath, copyto, function () {
+                    processing--;
                     self.dispatchAllEvents('post-copyto', copyto, data);
                     storedata(copyto);
                 });
             }
             else if (cloneto) {
+                processing++;
                 rres.cloneResource(resourcePath, cloneto, function () {
+                    processing--;
                     self.dispatchAllEvents('post-cloneto', cloneto, data);
                     storedata(cloneto);
                 });
             }
-            else if (copyfrom) {
-                rres.copyResource(copyfrom, resourcePath, function () {
-                    self.dispatchAllEvents('post-copyfrom', resourcePath, data);
-                    storedata(resourcePath);
-                });
-            }
             else if (moveto) {
+                processing++;
                 rres.moveResource(resourcePath, moveto, function () {
+                    processing--;
                     self.dispatchAllEvents('post-moveto', moveto, data);
                     storedata(moveto);
-                });
-            }
-            else if (remove) {
-                rres.removeResource(remove, function () {
-                    self.dispatchAllEvents('post-remove', remove, data);
-                    callback();
                 });
             }
             else if (importto) {
@@ -2045,7 +2125,9 @@ class ResourceRequestHandler extends EventDispatcher {
                 });
             }
             else if (reset) {
+                processing++;
                 rres.removeResource(reset, function () {
+                    processing--;
                     self.dispatchAllEvents('pre-store', resourcePath, data);
                     storedata(resourcePath);
                 });
@@ -2348,6 +2430,15 @@ class ObjectResource extends Resource {
         let md = this.values['_md'];
         if (typeof md === "string") {
             return new Date(parseInt(md));
+        }
+        else {
+            return null;
+        }
+    }
+    getCreationDate() {
+        let cd = this.values['_cd'];
+        if (typeof cd === "string") {
+            return new Date(parseInt(cd));
         }
         else {
             return null;
@@ -3849,11 +3940,18 @@ class SessionStorageResource extends LocalStorageResource {
     storeLocalStorage() {
         let data = JSON.stringify(this.values, null, 2);
         sessionStorage.setItem(this.storageName, data);
+        localStorage.setItem('__SESSION_' + this.storageName, data);
     }
     loadLocalStorage() {
         let data = sessionStorage.getItem(this.storageName);
         if (data) {
             this.values = JSON.parse(data);
+        }
+        else {
+            data = localStorage.getItem('__SESSION_' + this.storageName);
+            if (data) {
+                this.values = JSON.parse(data);
+            }
         }
     }
 }
@@ -4302,7 +4400,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
     }
     handleEnd(stored) {
         super.handleEnd(stored);
-        if (stored) {
+        if (stored && localStorage) {
             localStorage.setItem('_md', new Date().toString());
         }
     }

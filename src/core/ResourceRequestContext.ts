@@ -580,12 +580,12 @@ class ResourceRequestContext implements ScriptContext {
       }
 
       let md = res.getModificationDate();
-      if (md) {
-        map['modificationDate'] = md.getTime();
-      }
-      else {
-        map['modificationDate'] = 0;
-      }
+      if (md) map['modificationDate'] = md.getTime();
+      else    map['modificationDate'] = 0;
+
+      let cd = res.getCreationDate();
+      if (cd) map['creationDate'] = cd.getTime();
+      else    map['creationDate'] = 0;
 
       map['_'] = res.getProperties();
       map['path'] = this.getCurrentResourcePath();

@@ -37,7 +37,7 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
   <table>
 {{#include "." "keyvalues"}}
     <tr>
-      <td>{{name}}</td>
+      <td>{{key}}</td>
       <td>
         <input type="text" name="{{name}}" value="{{value}}" form="save_form" {{> text_opts}}>
       </td>
@@ -45,7 +45,7 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
         <button type="submit" form="save_form" style="display:none">+</button>
         <form method="post" action="{{res_path "."}}">
           <input type="hidden" name=":forward" value="{{req_path "."}}">
-          <button type="submit" name="{{name}}">-</button>
+          <button type="submit" name="{{key}}">-</button>
         </form>
       </td>
     </tr>

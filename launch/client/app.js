@@ -99,14 +99,25 @@ var handler = new ClientRequestHandler(rres, rtmp);
 handler.setPathParserPattern('^(?<path>\\/.*?)(\\.@(?<selector>[a-z\\-_]+)(?<dataPath>\\/.*?)?)?$');
 handler.setConfigProperties(config);
 
-handler.registerValueTranformer('newUUID', function(data) {
-  var lastid = Tools.makeID(userContent);
+handler.registerValueTranformer('newUUID', function(data, key) {
+  var lastid = Tools.makeID(userContent, 'LAST_ITEM_ID');
   var n = 'item';
 
   if (data && data['_rt'] && data['_rt'].length) {
     n = data['_rt'];
     n = Utils.expandValue(n, data);
     n = n.replaceAll('/', '_');
+  }
+  else if (data) {
+    var z = '{'+key+'}/_rt';
+    for (var k in data) {
+      if (k.endsWith(z)) {
+        n = data[k];
+        n = Utils.expandValue(n, data);
+        n = n.replaceAll('/', '_');
+        break;
+      }
+    }
   }
 
   return n+'_'+lastid;

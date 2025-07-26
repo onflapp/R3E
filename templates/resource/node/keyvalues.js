@@ -13,7 +13,7 @@
     var val = res._[name];
 
     rv.push({
-      name: name,
+      key: name,
       value: val
     });
   }

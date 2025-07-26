@@ -275,7 +275,7 @@ input {
 }
 
 input[type=checkbox] {
-  xtransform: translateY(2px);
+  margin: revert;
 }
 
 input[type=radio] {
@@ -367,4 +367,9 @@ table {
   font-size: inherit;
   border-spacing: 0;
   margin-bottom: var(--margin);
+  border-collapse: collapse;
+}
+
+table tr {
+  border-bottom: 1px solid lightgray;
 }

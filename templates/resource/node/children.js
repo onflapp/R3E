@@ -5,7 +5,7 @@
   let rv = [];
 
   children.sort(function(a, b) {
-    return a.name.localeCompare(b.name);
+    return Utils.compareNames(a.name, b.name);
   });
 
   writer.write(children);

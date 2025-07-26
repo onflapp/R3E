@@ -1,5 +1,8 @@
 (function (res, writer, ctx) {
-  res['_md'] = '' + (new Date().getTime());
+  let tm = (new Date().getTime());
+
+  if (!res['_cd']) res['_cd'] = '' + tm;
+  res['_md'] = '' + tm;
 
   writer.write(res);
   writer.end();

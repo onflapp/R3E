@@ -520,7 +520,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
 
   public handleEnd(stored?: boolean) {
     super.handleEnd(stored);
-    if (stored) {
+    if (stored && localStorage) {
       localStorage.setItem('_md', new Date().toString());
     }
   }

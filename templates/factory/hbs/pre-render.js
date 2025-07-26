@@ -414,5 +414,11 @@
     return JSON.stringify(rv, null, 2);
   });
 
+  Handlebars.registerHelper('hash', function (block) {
+    if (!block) return '';
+    return Utils.makeHash(block);
+  });
+
+
   writer.end();
 });

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>crop</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta charset="UTF-8">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+      
+  <script src="../cash.js" type="text/javascript"></script>
+  <script src="../ui-crop.js" type="text/javascript"></script>
+
+<style>
+.ui_cropframe {
+  cursor: move;
+  background-color: black;
+}
+
+.ui_cropframe .ui_cropframe-handle {
+  background-color: red;
+  width: 40px;
+  height: 40px;
+  cursor: nwse-resize;
+}
+
+.ui_cropframe img {
+  max-width: unset !important;
+}
+
+.sec_img-frame {
+  overflow: hidden;
+}
+
+#out {
+  position: fixed;
+  bottom: 0px;
+}
+</style>
+</head>
+
+<body>
+  <div class="sec_img-frame">
+    <img src="test.jpg">
+  </div>
+  <img id="out">
+</body>
+  <script>
+  $(document).on('dblclick', function(evt) {
+    var target = evt.target;
+    $(target).crop({
+      frame:'sec_img-frame',
+      callback:function(img) {
+        console.log(img);
+        target.parentElement.classList.add('cropped');
+
+        $(target).renderToCanvas({
+          callback:function(canvas, img) {
+            $('#out').attr('src', canvas.toDataURL());
+          }
+        });
+      }
+    });
+    evt.preventDefault();
+    return false;
+  });
+  </script>
+</html>

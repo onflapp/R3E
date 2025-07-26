@@ -396,8 +396,8 @@ class ResourceRequestHandler extends EventDispatcher {
     upload to the file
 
   <form method="post" enctype="multipart/form-data" action="{{req_path "{:name}" "sel"}}>
-  	<input type="file" name=":name" value="">
-  	<input type="hidden" name=":name@fileName" value="val1"> <<---- override the name
+  	<input type="file" name=":filename" value="">
+  	<input type="hidden" name=":name|:filename|newUUID" value="val1"> <<---- override the name
   	<input type="hidden" name="prop" value="val1">
   	<input type="hidden" name=":forward" value="{{currentPath.PREFIX}}{{currentPath.path}}.xhtml">
   </form>
@@ -488,51 +488,93 @@ class ResourceRequestHandler extends EventDispatcher {
   public storeResource(resourcePath: string, data: any, callback) {
     let self = this;
     let rres = this.resourceResolver;
+    let processing = 0;
+
+    let extractpaths = function(name) {
+      let rv = [];
+      for (let k in data) {
+        if (k.indexOf(name) == 0) {
+          let p = Utils.absolute_path(data[k], resourcePath);
+          if (p) rv.push(p);
+        }
+      }
+      return rv;
+    };
 
     let storedata = function(path) {
+      processing++;
       self.expandDataAndStore(path, data, function () {
         self.dispatchAllEvents('stored', path, data);
-        callback();
+        processing--;
+        if (processing == 0) callback();
       });
     };
 
     try {
-      let remove   = Utils.absolute_path(data[':delete'], resourcePath);
+      let remove   = extractpaths(':delete');
+      let copyfrom = extractpaths(':copyfrom');
+      let movefrom = extractpaths(':movefrom');
+
       let copyto   = Utils.absolute_path(data[':copyto'], resourcePath);
       let cloneto  = Utils.absolute_path(data[':cloneto'], resourcePath);
-      let copyfrom = Utils.absolute_path(data[':copyfrom'], resourcePath);
       let moveto   = Utils.absolute_path(data[':moveto'], resourcePath);
       let importto = Utils.absolute_path(data[':import'], resourcePath);
       let reset    = Utils.absolute_path(data[':reset'], resourcePath);
 
-      if (copyto) {
+      if (copyfrom.length && copyto) {
+        for (let i = 0; i < copyfrom.length; i++) {
+          processing++;
+          let dest = Utils.filename_path_append(copyto, Utils.filename(copyfrom[i]));
+          rres.copyResource(copyfrom[i], dest, function () {
+            processing--;
+            self.dispatchAllEvents('post-copyfrom', dest, data);
+            storedata(dest);
+          });
+        }
+      }
+      else if (movefrom.length && moveto) {
+        for (let i = 0; i < movefrom.length; i++) {
+          processing++;
+          let dest = Utils.filename_path_append(moveto, Utils.filename(movefrom[i]));
+          rres.moveResource(movefrom[i], dest, function () {
+            processing--;
+            self.dispatchAllEvents('post-movefrom', dest, data);
+            storedata(dest);
+          });
+        }
+      }
+      else if (remove.length) {
+        for (let i = 0; i < remove.length; i++) {
+          processing++;
+          rres.removeResource(remove[i], function () {
+            processing--;
+            self.dispatchAllEvents('post-remove', remove[i], data);
+            if (processing == 0) callback();
+          });
+        }
+      }
+      else if (copyto) {
+        processing++;
         rres.copyResource(resourcePath, copyto, function () {
+          processing--;
           self.dispatchAllEvents('post-copyto', copyto, data);
           storedata(copyto);
         });
       }
       else if (cloneto) {
+        processing++;
         rres.cloneResource(resourcePath, cloneto, function () {
+          processing--;
           self.dispatchAllEvents('post-cloneto', cloneto, data);
           storedata(cloneto);
         });
       }
-      else if (copyfrom) {
-        rres.copyResource(copyfrom, resourcePath, function () {
-          self.dispatchAllEvents('post-copyfrom', resourcePath, data);
-          storedata(resourcePath);
-        });
-      }
       else if (moveto) {
+        processing++;
         rres.moveResource(resourcePath, moveto, function () {
+          processing--;
           self.dispatchAllEvents('post-moveto', moveto, data);
           storedata(moveto);
-        });
-      }
-      else if (remove) {
-        rres.removeResource(remove, function () {
-          self.dispatchAllEvents('post-remove', remove, data);
-          callback();
         });
       }
       else if (importto) {
@@ -557,7 +599,9 @@ class ResourceRequestHandler extends EventDispatcher {
         });
       }
       else if (reset) {
+        processing++;
         rres.removeResource(reset, function () {
+          processing--;
           self.dispatchAllEvents('pre-store', resourcePath, data);
           storedata(resourcePath);
         });
