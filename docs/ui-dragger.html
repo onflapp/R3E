@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>crop</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta charset="UTF-8">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+      
+  <script src="../libs/cash.js" type="text/javascript"></script>
+  <script src="../libs/ui-dragger.js" type="text/javascript"></script>
+
+<style>
+.table {
+  border: 2px solid black;
+  width: 100%;
+  border-collapse: collapse;
+}
+.table tr {
+  background-color: lightgray;
+}
+
+.ui_dragger-ghost {
+  background-color: red;
+}
+
+.ui_dragger-placeholder {
+  background-color: blue;
+}
+
+.ui_dragger-canvas {
+  position: relative;
+  border: 1px solid black;
+  height: 500px;
+  overflow: scroll;
+}
+
+.ui_dragger-canvas .ui_dragger-item {
+  position: absolute;
+  height: 100px;
+  width: 100px;
+  border: 1px solid black;
+  background-color: lightgray;
+}
+
+.ui_dragger-canvas .ui_dragger-item .ui_dragger-resizer {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  color: gray;
+  background-color: black;
+}
+
+.boxA {
+  border: 1px solid black;
+}
+
+.boxA .ui_dragger-item {
+  height: 100px;
+  width: 100px;
+  border: 1px solid black;
+  background-color: lightgray;
+}
+
+.boxB {
+  border: 1px solid black;
+}
+
+.boxB .ui_dragger-item {
+  height: 100px;
+  width: 100px;
+  border: 1px solid black;
+  background-color: lightgray;
+}
+
+.boxC {
+  border: 1px solid black;
+}
+
+.boxC .ui_dragger-item {
+  height: 100px;
+  width: 100px;
+  border: 1px solid black;
+  background-color: lightgray;
+}
+
+.boxC.ui_dragger-container {
+  min-height: 100px;
+  min-width: 100px;
+  border: 1px solid black;
+}
+
+.ui_dragger-item.selected {
+  background-color: gray;
+}
+
+.ui_dragger-container.over {
+  border: 2px solid red;
+}
+
+</style>
+</head>
+
+<body>
+  <h1>table 1</h1>
+  <table class="table ui_dragger-container">
+    <tr class="ui_dragger-item">
+      <td>row 1</td>
+      <td>xxx</td>
+      <td>yyy</td>
+    </tr>
+    <tr class="ui_dragger-item">
+      <td>row 2</td>
+      <td>aaa</td>
+      <td>bbb</td>
+    </tr>
+    <tr class="ui_dragger-item">
+      <td>row 3</td>
+      <td>aaa</td>
+      <td>bbb</td>
+    </tr>
+    <tr class="ui_dragger-item">
+      <td>row 4</td>
+      <td>aaa</td>
+      <td>bbb</td>
+    </tr>
+    <tr class="ui_dragger-item ui_dragger-container">
+      <td>container 5</td>
+      <td>qqq</td>
+      <td>www</td>
+    </tr>
+  </table>
+
+  <h1>table 2</h1>
+  <table class="table">
+    <tr class="ui_dragger-item">
+      <td><span class="ui_dragger-handle">:::</span>one</td>
+      <td>xxx</td>
+      <td>yyy</td>
+    </tr>
+    <tr>
+      <td>two</td>
+      <td>aaa</td>
+      <td>bbb</td>
+    </tr>
+    <tr>
+      <td>three</td>
+      <td>qqq</td>
+      <td>www</td>
+    </tr>
+  </table>
+
+  <h1>list</h1>
+  <ol>
+    <li class="ui_dragger-item">one</li>
+    <li class="ui_dragger-item">two</li>
+    <li class="ui_dragger-item">three</li>
+  </ol>
+
+  <h1>boxes</h1>
+  <table>
+    <tr>
+      <td>
+        <div class="boxA ui_dragger-container">
+          <div class="ui_dragger-item">one</div>
+          <div class="ui_dragger-item">two</div>
+          <div class="ui_dragger-item">three</div>
+        </div>
+      </td>
+      <td>
+        <div class="boxB">
+          <div class="ui_dragger-item">one</div>
+          <div class="ui_dragger-item">two</div>
+          <div class="ui_dragger-item">three</div>
+        </div>
+      </td>
+      <td>
+        <div class="boxC ui_dragger-container">
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <h1>freeform</h1>
+  <div class="ui_dragger-canvas">
+    <div class="ui_dragger-item">
+      <span class="ui_dragger-handle">move</span>
+      <span class="ui_dragger-resizer">resize</span>
+      <br>
+      one
+    </div>
+    <div class="ui_dragger-item">
+      <span class="ui_dragger-handle">move</span>
+      <span class="ui_dragger-resizer">resize</span>
+      <br>
+      two
+    </div>
+    <div class="ui_dragger-item">
+      <span class="ui_dragger-handle">move</span>
+      <span class="ui_dragger-resizer">resize</span>
+      <br>
+      three
+    </div>
+  </div>
+
+</body>
+  <script>
+    $('table').dragger();
+    $('ol').dragger();
+    $('.boxA').dragger();
+    $('.boxB').dragger();
+    $('.boxC').dragger();
+    $('.ui_dragger-canvas').dragger();
+  </script>
+</html>
