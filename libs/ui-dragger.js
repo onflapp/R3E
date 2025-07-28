@@ -69,9 +69,12 @@ function Dragger(el) {
       this.PLACEHOLDER = fel;
     }
 
-    fel.style.top = rect.y + rect.height + "px";
-    fel.style.left = rect.left + "px";
-    fel.style.width = rect.width + "px";
+    var offx = window.pageXOffset;
+    var offy = window.pageYOffset;
+
+    fel.style.top = offy + rect.y + rect.height + "px";
+    fel.style.left = offx + rect.left - 2 + "px";
+    fel.style.width = rect.width + 4 + "px";
     fel.style.display = 'block';
   };
 
@@ -201,11 +204,38 @@ function Dragger(el) {
     if (self.DESTINATION) {
       self.DESTINATION.classList.remove(self.OVER_CLASS);
       if (self.DESTINATION != self.ITEM.parentElement) {
-        self.DESTINATION.appendChild(self.ITEM);
+        if (self.ondropped(self.ITEM, 'over', self.DESTINATION)) {
+          if (self._isCanvas(self.DESTINATION) && !self.isFreehand && self.GHOST) {
+            var offx = window.pageXOffset;
+            var offy = window.pageYOffset;
+            var ra = self.GHOST.getBoundingClientRect();
+            var rb = self.DESTINATION.getBoundingClientRect();
+
+            self.ITEM.style.top = (ra.top - rb.top) + 'px';
+            self.ITEM.style.left = (ra.left - rb.left) + 'px';
+            self.DESTINATION.appendChild(self.ITEM);
+          }
+          else {
+            self.DESTINATION.appendChild(self.ITEM);
+          }
+        }
       }
     }
     else if (self.AFTER) {
-      self.AFTER.parentElement.insertBefore(self.ITEM, self.AFTER.nextElementSibling);
+      if (self.ondropped(self.ITEM, 'after', self.AFTER)) {
+        self.AFTER.parentElement.insertBefore(self.ITEM, self.AFTER.nextElementSibling);
+      }
+    }
+    else if (self.isResizing) {
+      self.ITEM.style.zIndex = null;
+      self.onresized(self.ITEM);
+    }
+    else if (self.isScrolling) {
+      self.onscrolled(self.CONTAINER);
+    }
+    else if (self.isFreehand) {
+      self.ITEM.style.zIndex = null;
+      self.onmoved(self.ITEM);
     }
 
     self.cleanup();
@@ -242,11 +272,13 @@ function Dragger(el) {
       this.GHOST.style.left = (posx - this.ORIGIN_DX - offx) + "px";
     }
   
-    var el = document.elementFromPoint(ei.pageX, ei.pageY-5);
+    offx = window.pageXOffset;
+    offy = window.pageYOffset;
+    var el = document.elementFromPoint(ei.pageX - offx, ei.pageY - 5 - offy);
     var it = this.getDragDestinationItem(el);
     var dest = this.getDragDestination(el);
 
-    if (dest && dest.querySelector('.'+this.ITEM_CLASS)) {
+    if (dest && dest.querySelector('.'+this.ITEM_CLASS) && !this._isCanvas(dest)) {
       dest = null;
     }
 
@@ -256,6 +288,7 @@ function Dragger(el) {
       if (ra.y > rb.y) it = null;
       if (it == this.ITEM) it = null;
       if (it == this.ITEM.previousElementSibling) it = null;
+      if (this._isCanvas(it)) it = null;
     }
 
     this.makePlaceholder(it);
@@ -300,9 +333,14 @@ function Dragger(el) {
 
     var dx = posx - this.ORIGIN_X;
     var dy = posy - this.ORIGIN_Y;
+    var sz = {};
+    sz.x = this.ORIGIN_W - dx;
+    sz.y = this.ORIGIN_H - dy;
 
-    this.CONTAINER.scrollLeft = this.ORIGIN_W - dx;
-    this.CONTAINER.scrollTop = this.ORIGIN_H - dy;
+    if (this.onscrolling(this.CONTAINER, sz)) {
+      this.CONTAINER.scrollLeft = sz.x;
+      this.CONTAINER.scrollTop = sz.y;
+    }
 
     evt.preventDefault();
     return false;
@@ -315,32 +353,35 @@ function Dragger(el) {
 
     var dx = posx - this.ORIGIN_X;
     var dy = posy - this.ORIGIN_Y;
-    this.ITEM.style.height = (this.ORIGIN_H + dy) + "px";
-    this.ITEM.style.width = (this.ORIGIN_W + dx) + "px";
+    var sz = {};
+    sz.height = (this.ORIGIN_H + dy);
+    sz.width = (this.ORIGIN_W + dx);
 
-    //var sz = {width:d.SOURCE.clientWidth, height:d.SOURCE.clientHeight};
-    //d.resizing(d.SOURCE, sz);
+    if (this.onresizing(this.ITEM, sz)) {
+      this.ITEM.style.height = sz.height + "px";
+      this.ITEM.style.width = sz.width + "px";
+    }
   
     evt.preventDefault();
     return false;
   };
 
   this.drag_enter = function(evt) {
-    var ei = this._eventInfo(evt);
+    var ei = self._eventInfo(evt);
 
-    d.ORIGIN_X = ei.pageX;
-    d.ORIGIN_Y= ei.pageY;
+    self.ORIGIN_X = Math.round(ei.pageX);
+    self.ORIGIN_Y= Math.round(ei.pageY);
 
-    d.ORIGIN_DX = Math.round(ei.pageX);
-    d.ORIGIN_DY = Math.round(ei.pageY);
+    self.ORIGIN_DX = Math.round(ei.pageX);
+    self.ORIGIN_DY = Math.round(ei.pageY);
 
-    document.addEventListener('dragover', this.drag_over, false);
-    document.addEventListener('drop', this.drop_external, false);
+    document.addEventListener('dragover', self.drag_over, false);
+    document.addEventListener('drop', self.drop_external, false);
   };
 
   this.drag_leave = function(evt) {
-    var ei = this._eventInfo(evt);
-    var r = this.CONTAINER.getBoundingClientRect();
+    var ei = self._eventInfo(evt);
+    var r = self.CONTAINER.getBoundingClientRect();
     var outside = false;
 
     if      (ei.pageY < r.top) outside = true;
@@ -349,22 +390,17 @@ function Dragger(el) {
     else if (ei.pageX > r.left + r.width) outside = true;
 
     if (outside) {
-      document.removeEventListener('dragover', d.drag_over);
-      document.removeEventListener('drop', d.drop_external);
-      d.cleanup();
+      document.removeEventListener('dragover', self.drag_over);
+      document.removeEventListener('drop', self.drop_external);
+      self.cleanup();
     }
   };
 
   this.drop_external = function(evt) {
-    if (d.DESTINATION_INSERT && d.DESTINATION) {
-      if (d.DESTINATION_INSERT == d.INSERT_BEFORE) d.droppedExternal(evt.dataTransfer, "before", d.DESTINATION);
-      else                                         d.droppedExternal(evt.dataTransfer, "after",  d.DESTINATION);
-    }
-    d.cleanup();
-    if (d.stop) d.stop(evt);
+    self.cleanup();
 
-    document.removeEventListener('dragover', d.drag_over);
-    document.removeEventListener('drop', d.drop_external);
+    document.removeEventListener('dragover', self.drag_over);
+    document.removeEventListener('drop', self.drop_external);
 
     evt.stopPropagation();
     evt.preventDefault();
@@ -372,7 +408,7 @@ function Dragger(el) {
   };
 
   this.drag_over = function(evt) {
-    this.mouse_move(evt);
+    //self.mouse_move(evt);
 
     evt.stopPropagation();
     evt.preventDefault();
@@ -397,8 +433,8 @@ function Dragger(el) {
 
     if (el) {
       this.ITEM = el;
-      this.ORIGIN_X = ei.pageX;
-      this.ORIGIN_Y= ei.pageY;
+      this.ORIGIN_X = Math.round(ei.pageX);
+      this.ORIGIN_Y = Math.round(ei.pageY);
 
       var off = $(el).offset();
       this.ORIGIN_DX = Math.round(ei.pageX - off.left);
@@ -406,6 +442,10 @@ function Dragger(el) {
 
       if (!this.isResizing) {
         this.GHOST = this.makeGhost(el);
+      }
+
+      if (this.isFreehand) {
+        this.ITEM.style.zIndex = 1;
       }
 
       this.ITEM.classList.add(this.SELECTED_CLASS);
@@ -417,6 +457,17 @@ function Dragger(el) {
     document.addEventListener(this.EVT_UP, this.mouse_up, false);
     document.addEventListener(this.EVT_MOVE, this.mouse_move, false);
     document.addEventListener('touchcancel', this._touchcancel, false);
+  };
+
+  this._isCanvas = function(el) {
+    var p = el;
+    while (p) {
+      if (p.classList.contains('ui_dragger-canvas')) {
+        return true;
+      }
+      p = p.parentElement;
+    }
+    return false;
   };
 
   this._eventInfo = function(evt) {
@@ -444,32 +495,7 @@ function Dragger(el) {
     return false;
   };
 
-  this.resized = function(source) {
-    //to be overridden
-  };
-
-  this.scrolling = function(source, pos) {
-    //to be overridden
-  };
-
-  this.scrolled = function(source) {
-    //to be overridden
-  };
-
-  this.resizing = function(source, size) {
-    //to be overridden
-  };
-
-  this.dropped = function(source, pos, destination) {
-    //to be overridden
-  };
-
-  this.droppedExternal = function(source, pos, destination) {
-    //to be overridden
-  };
-
   this.cleanup = function() {
-    //self.rm_fillers();
     clearTimeout(self.TRACK_TO);
 
     if (self.ITEM) {
@@ -498,12 +524,49 @@ function Dragger(el) {
     self.DESTINATION = null;
     self.AFTER = null;
 
+    self.ORIGIN_DX = 0;
+    self.ORIGIN_DY = 0;
+    self.ORIGIN_X = 0;
+    self.ORIGIN_Y = 0;
+    self.ORIGIN_W = 0;
+    self.ORIGIN_H = 0;
+
+    self.isTouch = false;
     self.isTracking = false;
     self.isResizing = false;
     self.isScrolling = false;
-    
+    self.useHandle = false;
+
     document.body.classList.remove(self.DRAGGING_CLASS);
     document.body.classList.remove(self.RESIZING_CLASS);
+  };
+
+  this.onscrolling = function(source, pos) {
+    //to be overridden
+    return true;
+  };
+
+  this.onscrolled = function(source) {
+    //to be overridden
+  };
+
+  this.onresizing = function(source, size) {
+    //to be overridden
+    return true;
+  };
+
+  this.onresized = function(source) {
+    //to be overridden
+  };
+
+  //over / after
+  this.ondropped = function(source, pos, destination) {
+    //to be overridden
+    return true;
+  };
+
+  this.onmoved = function(source, pos) {
+    //to be overridden
   };
 
   this.init = function(el) {
@@ -516,8 +579,8 @@ function Dragger(el) {
     }
 
     el.addEventListener(this.EVT_DOWN, this.mouse_down, false);
-    //el.addEventListener('dragenter', d.drag_enter, false);
-    //el.addEventListener('dragleave', d.drag_leave, false);
+    el.addEventListener('dragenter', this.drag_enter, false);
+    el.addEventListener('dragleave', this.drag_leave, false);
 
     this.CONTAINER = el;
     el.classList.add('ui_dragger');

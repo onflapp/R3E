@@ -25,6 +25,7 @@ ImageCropper = {
   },
 
   unlockBody:function () {
+    document.body.classList.add('cropping');
     document.body.style.height = "";
     document.body.style.width = "";
   },
@@ -34,6 +35,14 @@ ImageCropper = {
     var w = $(document.body).width();
     document.body.style.height = h+"px";
     document.body.style.width = w+"px";
+    document.body.classList.remove('cropping');
+  },
+
+  resetFrame:function(img) {
+    var target = img;
+    target.style["marginLeft"] = null;
+    target.style["marginTop"] = null;
+    target.removeAttribute('width');
   },
 
   onCancel:function(evt) {
@@ -113,6 +122,7 @@ ImageCropper = {
     if (img && evt.dataTransfer.files.length > 0) {
       var fl = evt.dataTransfer.files[0];
       if (fl.type.indexOf('image/') === 0) {
+        ImageCropper.resetFrame(img);
         var reader  = new FileReader();
         reader.onload = function(evt) {
           img.src = reader.result;
@@ -122,6 +132,7 @@ ImageCropper = {
     }
     else if (img && url) {
       if (url.match('(\.jpg|\.png|\.svg)$')) {
+        ImageCropper.resetFrame();
         img.src = url;
       }
     }
@@ -239,6 +250,7 @@ ImageCropper = {
       handle.style.right = "0px";
       handle.style.zIndex = 90;
       frame.appendChild(handle);
+      frame.classList.add('selected');
 
       img.addEventListener(c.CROP_EVT_DOWN, c.onMoveStart, false);
       handle.addEventListener(c.CROP_EVT_DOWN, c.onResizeStart, false);
@@ -395,8 +407,7 @@ $.fn.crop = function (options) {
   }
 
   if (options == 'destroy') {
-          ImageCropper.rmCropFrame(); //XXX
-
+    ImageCropper.rmCropFrame();
   }
   else {
     var settings = {

@@ -6,6 +6,7 @@
   --button-color: white;
   --primary-color: black;
   --input-color: white;
+  --selection-color: Highlight;
   --radius: 0px;
   --margin-base: 6px;
   --margin: var(--margin-base) 0px 0px 0px; /*top right bottom left */
@@ -363,13 +364,70 @@ select {
   margin-right: var(--margin-base);
 }
 
-table {
+.ui_table {
   font-size: inherit;
   border-spacing: 0;
   margin-bottom: var(--margin);
   border-collapse: collapse;
+  width: 100%;
 }
 
-table tr {
+.ui_table tr {
   border-bottom: 1px solid lightgray;
 }
+
+.ui_dragger-placeholder {
+  background-color: var(--selection-color);
+  border-radius: 3px;
+}
+
+.ui_dragger-ghost {
+  background-color: black;
+  color: white;
+  opacity: 0.8;
+}
+
+.ui_dragger-canvas {
+  position: relative;
+  border: 1px solid black;
+  height: 500px;
+  overflow: scroll;
+}
+
+.ui_dragger-canvas .ui_dragger-item {
+  position: absolute;
+}
+
+.ui_dragger-item.selected {
+  opacity: 0.5;
+}
+
+.ui_dragger-container.over {
+  outline: 2px solid var(--selection-color);
+}
+
+.ui_cropframe {
+  cursor: move;
+  background-color: black;
+}
+
+.ui_cropframe .ui_cropframe-handle {
+  background-color: var(--selection-color);
+  width: 40px;
+  height: 40px;
+  border-top-left-radius: 40px;
+  cursor: nwse-resize;
+}
+
+div:has(> .ui_cropframe.selected) {
+  overflow: unset;
+}
+
+.ui_cropframe.selected {
+  outline: 2px solid var(--selection-color);
+}
+
+.ui_cropframe img {
+  max-width: unset !important;
+}
+
