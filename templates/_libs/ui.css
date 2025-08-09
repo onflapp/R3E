@@ -396,10 +396,11 @@ select {
 
 .ui_dragger-canvas .ui_dragger-item {
   position: absolute;
+  margin: 0;
 }
 
 .ui_dragger-item.selected {
-  opacity: 0.5;
+  opacity: 0.8;
 }
 
 .ui_dragger-container.over {

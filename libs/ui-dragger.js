@@ -1,4 +1,4 @@
-function Dragger(el) {
+function Dragger() {
   this.GHOST_CLASS = "ui_dragger-ghost";
   this.CONTAINER_CLASS = 'ui_dragger-container';
   this.ITEM_CLASS = 'ui_dragger-item';
@@ -23,6 +23,7 @@ function Dragger(el) {
   this.TRACK_TO = null;
 
   this.timeout = 10;
+  this.actions = 0;
 
   this.ORIGIN_DX = 0;
   this.ORIGIN_DY = 0;
@@ -39,8 +40,6 @@ function Dragger(el) {
   this.useGhost = true;
   this.useHandle = false;
   this.lockVertical = false;
-
-  var self = this;
 
   this.makePlaceholder = function(el) {
     if (this.isScrolling) return;
@@ -119,6 +118,11 @@ function Dragger(el) {
     }
   };
 
+  this.getScrollableItem = function(el) {
+    if (this.isFreehand && el == this.CONTAINER) return el;
+    else return null;
+  };
+
   this.getDragItem = function(el) {
     var p = el;
     var handle = 0;
@@ -169,76 +173,74 @@ function Dragger(el) {
   this.mouse_down = function(evt) {
     if (evt.button > 0 || evt.ctrlKey) return;
 
-    if (self.isFreehand && evt.target == self.CONTAINER) {
-      self.isScrolling = true;
+    var sit = this.getScrollableItem(evt.target);
+    if (sit) {
+      this.isScrolling = true;
+      this.CONTAINER = sit;
     }
     else {
-      var it = self.getDragItem(evt.target);
+      var it = this.getDragItem(evt.target);
       if (!it) {
         console.log('unable to get drag item!');
         return;
       }
     }
 
-    var ei = self._eventInfo(evt);
+    var ei = this._eventInfo(evt);
+    //clearTimeout(this.TRACK_TO);
+    //this.TRACK_TO = setTimeout(function() {
+    
+    if (this._delegate('onstart', it)) {
+      this.startTracking(it, ei);
 
-    clearTimeout(self.TRACK_TO);
-    self.TRACK_TO = setTimeout(function() {
-      /*
-      var el = document.elementFromPoint(ei.pageX, ei.pageY);
-      var it = self.getDragItem(el);
-      if (!it && !self.isScrolling) return;
-      */
-
-      self.startTracking(it, ei);
-    },self.timeout);
-
-    if (!self.isTouch) {
       evt.stopPropagation();
       evt.preventDefault();
       return false;
     }
+    else {
+      this.cleanup();
+    }
   };
 
   this.mouse_up = function(evt) {
-    if (self.DESTINATION) {
-      self.DESTINATION.classList.remove(self.OVER_CLASS);
-      if (self.DESTINATION != self.ITEM.parentElement) {
-        if (self.ondropped(self.ITEM, 'over', self.DESTINATION)) {
-          if (self._isCanvas(self.DESTINATION) && !self.isFreehand && self.GHOST) {
+    if (this.DESTINATION) {
+      this.DESTINATION.classList.remove(this.OVER_CLASS);
+      if (this.DESTINATION != this.ITEM.parentElement) {
+        if (this._delegate('ondropped', this.ITEM, 'over', this.DESTINATION)) {
+          if (this._isCanvas(this.DESTINATION) && !this.isFreehand && this.GHOST) {
             var offx = window.pageXOffset;
             var offy = window.pageYOffset;
-            var ra = self.GHOST.getBoundingClientRect();
-            var rb = self.DESTINATION.getBoundingClientRect();
+            var ra = this.GHOST.getBoundingClientRect();
+            var rb = this.DESTINATION.getBoundingClientRect();
 
-            self.ITEM.style.top = (ra.top - rb.top) + 'px';
-            self.ITEM.style.left = (ra.left - rb.left) + 'px';
-            self.DESTINATION.appendChild(self.ITEM);
+            this.ITEM.style.top = (ra.top - rb.top) + 'px';
+            this.ITEM.style.left = (ra.left - rb.left) + 'px';
+            this.DESTINATION.appendChild(this.ITEM);
           }
           else {
-            self.DESTINATION.appendChild(self.ITEM);
+            this.DESTINATION.appendChild(this.ITEM);
           }
         }
       }
     }
-    else if (self.AFTER) {
-      if (self.ondropped(self.ITEM, 'after', self.AFTER)) {
-        self.AFTER.parentElement.insertBefore(self.ITEM, self.AFTER.nextElementSibling);
+    else if (this.AFTER) {
+      if (this._delegate('ondropped', this.ITEM, 'after', this.AFTER)) {
+        this.AFTER.parentElement.insertBefore(this.ITEM, this.AFTER.nextElementSibling);
       }
     }
-    else if (self.isResizing) {
-      self.ITEM.style.zIndex = null;
-      self.onresized(self.ITEM);
+    else if (this.isResizing) {
+      this.ITEM.style.zIndex = null;
+      if (this.actions > 0) this._delegate('onresized', this.ITEM);
     }
-    else if (self.isScrolling) {
-      self.onscrolled(self.CONTAINER);
+    else if (this.isScrolling) {
+      if (this.actions > 0) this._delegate('onscrolled', this.CONTAINER);
     }
-    else if (self.isFreehand) {
-      self.ITEM.style.zIndex = null;
-      self.onmoved(self.ITEM);
+    else if (this.isFreehand) {
+      this.ITEM.style.zIndex = null;
+      if (this.actions > 0) this._delegate('onmoved',this.ITEM);
     }
 
-    self.cleanup();
+    this.cleanup();
     evt.preventDefault();
     return false;
   };
@@ -254,6 +256,7 @@ function Dragger(el) {
 
     this.GHOST.style.top = (posy - this.ORIGIN_DY - rect.top - offy) + "px";
     this.GHOST.style.left = (posx - this.ORIGIN_DX - rect.left - offx) + "px"; 
+    this.actions++;
 
     evt.preventDefault();
     return false;
@@ -303,7 +306,7 @@ function Dragger(el) {
       this.AFTER = null;
     }
 
-    if (dest) {
+    if (dest && dest != this.ITEM) {
       if (this.DESTINATION && this.DESTINATION != dest) this.DESTINATION.classList.remove(this.OVER_CLASS);
       if (dest != this.CONTAINER) dest.classList.add(this.OVER_CLASS);
 
@@ -320,10 +323,10 @@ function Dragger(el) {
   };
 
   this.mouse_move = function(evt) {
-    if     (self.isScrolling) self.mouse_move_scroll(evt);
-    else if (self.isResizing) self.mouse_move_resize(evt);
-    else if (self.isFreehand) self.mouse_move_freehand(evt);
-    else                      self.mouse_move_sortable(evt); 
+    if     (this.isScrolling) this.mouse_move_scroll(evt);
+    else if (this.isResizing) this.mouse_move_resize(evt);
+    else if (this.isFreehand) this.mouse_move_freehand(evt);
+    else                      this.mouse_move_sortable(evt); 
   };
 
   this.mouse_move_scroll = function(evt) {
@@ -337,9 +340,10 @@ function Dragger(el) {
     sz.x = this.ORIGIN_W - dx;
     sz.y = this.ORIGIN_H - dy;
 
-    if (this.onscrolling(this.CONTAINER, sz)) {
+    if (this._delegate('onscrolling', this.CONTAINER, sz)) {
       this.CONTAINER.scrollLeft = sz.x;
       this.CONTAINER.scrollTop = sz.y;
+      this.actions++;
     }
 
     evt.preventDefault();
@@ -357,9 +361,10 @@ function Dragger(el) {
     sz.height = (this.ORIGIN_H + dy);
     sz.width = (this.ORIGIN_W + dx);
 
-    if (this.onresizing(this.ITEM, sz)) {
+    if (this._delegate('onresizing', this.ITEM, sz)) {
       this.ITEM.style.height = sz.height + "px";
       this.ITEM.style.width = sz.width + "px";
+      this.actions++;
     }
   
     evt.preventDefault();
@@ -367,21 +372,24 @@ function Dragger(el) {
   };
 
   this.drag_enter = function(evt) {
-    var ei = self._eventInfo(evt);
+    var ei = this._eventInfo(evt);
 
-    self.ORIGIN_X = Math.round(ei.pageX);
-    self.ORIGIN_Y= Math.round(ei.pageY);
+    this.ORIGIN_X = Math.round(ei.pageX);
+    this.ORIGIN_Y= Math.round(ei.pageY);
 
-    self.ORIGIN_DX = Math.round(ei.pageX);
-    self.ORIGIN_DY = Math.round(ei.pageY);
+    this.ORIGIN_DX = Math.round(ei.pageX);
+    this.ORIGIN_DY = Math.round(ei.pageY);
 
-    document.addEventListener('dragover', self.drag_over, false);
-    document.addEventListener('drop', self.drop_external, false);
+    this._drag_over_evt = this.drag_over.bind(this);
+    this._drop_external_evt = this.drop_external.bind(this);
+
+    document.addEventListener('dragover', this._drag_over_evt, false);
+    document.addEventListener('drop', this._drop_external_evt, false);
   };
 
   this.drag_leave = function(evt) {
-    var ei = self._eventInfo(evt);
-    var r = self.CONTAINER.getBoundingClientRect();
+    var ei = this._eventInfo(evt);
+    var r = this.CONTAINER.getBoundingClientRect();
     var outside = false;
 
     if      (ei.pageY < r.top) outside = true;
@@ -390,17 +398,17 @@ function Dragger(el) {
     else if (ei.pageX > r.left + r.width) outside = true;
 
     if (outside) {
-      document.removeEventListener('dragover', self.drag_over);
-      document.removeEventListener('drop', self.drop_external);
-      self.cleanup();
+      document.removeEventListener('dragover', this._drag_over_evt);
+      document.removeEventListener('drop', this._drop_external_evt);
+      this.cleanup();
     }
   };
 
   this.drop_external = function(evt) {
-    self.cleanup();
+    this.cleanup();
 
-    document.removeEventListener('dragover', self.drag_over);
-    document.removeEventListener('drop', self.drop_external);
+    document.removeEventListener('dragover', this._drag_over_evt);
+    document.removeEventListener('drop', this._drop_external_evt);
 
     evt.stopPropagation();
     evt.preventDefault();
@@ -408,7 +416,7 @@ function Dragger(el) {
   };
 
   this.drag_over = function(evt) {
-    //self.mouse_move(evt);
+    //this.mouse_move(evt);
 
     evt.stopPropagation();
     evt.preventDefault();
@@ -454,8 +462,11 @@ function Dragger(el) {
 
     document.body.classList.add(this.DRAGGING_CLASS);
 
-    document.addEventListener(this.EVT_UP, this.mouse_up, false);
-    document.addEventListener(this.EVT_MOVE, this.mouse_move, false);
+    this._mouse_up_evt = this.mouse_up.bind(this);
+    this._mouse_move_evt = this.mouse_move.bind(this);
+
+    document.addEventListener(this.EVT_UP, this._mouse_up_evt, false);
+    document.addEventListener(this.EVT_MOVE, this._mouse_move_evt, false);
     document.addEventListener('touchcancel', this._touchcancel, false);
   };
 
@@ -495,52 +506,10 @@ function Dragger(el) {
     return false;
   };
 
-  this.cleanup = function() {
-    clearTimeout(self.TRACK_TO);
-
-    if (self.ITEM) {
-      self.ITEM.removeEventListener('touchmove', self._ignoreEvent);
-      self.ITEM.classList.remove(self.SELECTED_CLASS);
-    }
-    
-    document.removeEventListener('touchcancel', self._touchcancel);
-    document.removeEventListener(self.EVT_MOVE, self.mouse_move);
-    document.removeEventListener(self.EVT_UP, self.mouse_up);
-    
-    if (self.GHOST) {
-      self.GHOST.classList.remove(self.GHOST_CLASS);
-      if (self.useGhost) {
-        self.GHOST.parentElement.removeChild(self.GHOST);
-      }
-    }
-    
-    if (self.PLACEHOLDER) {
-      self.PLACEHOLDER.parentElement.removeChild(self.PLACEHOLDER);
-    }
-
-    self.GHOST = null;
-    self.ITEM = null;
-    self.PLACEHOLDER = null;
-    self.DESTINATION = null;
-    self.AFTER = null;
-
-    self.ORIGIN_DX = 0;
-    self.ORIGIN_DY = 0;
-    self.ORIGIN_X = 0;
-    self.ORIGIN_Y = 0;
-    self.ORIGIN_W = 0;
-    self.ORIGIN_H = 0;
-
-    self.isTouch = false;
-    self.isTracking = false;
-    self.isResizing = false;
-    self.isScrolling = false;
-    self.useHandle = false;
-
-    document.body.classList.remove(self.DRAGGING_CLASS);
-    document.body.classList.remove(self.RESIZING_CLASS);
+  this._delegate = function(n, a, b, c, d) {
+    return this[n](a, b, c, d);
   };
-
+  
   this.onscrolling = function(source, pos) {
     //to be overridden
     return true;
@@ -549,27 +518,78 @@ function Dragger(el) {
   this.onscrolled = function(source) {
     //to be overridden
   };
-
+  
   this.onresizing = function(source, size) {
     //to be overridden
     return true;
   };
-
+  
   this.onresized = function(source) {
     //to be overridden
   };
-
-  //over / after
+  
   this.ondropped = function(source, pos, destination) {
+    //over / after
     //to be overridden
     return true;
   };
-
+  
   this.onmoved = function(source, pos) {
     //to be overridden
   };
 
-  this.init = function(el) {
+  this.onstart = function(item) {
+    //to be overridden
+    return true;
+  };
+
+  this.cleanup = function() {
+    clearTimeout(this.TRACK_TO);
+    this.actions = 0;
+
+    if (this.ITEM) {
+      this.ITEM.removeEventListener('touchmove', this._ignoreEvent);
+      this.ITEM.classList.remove(this.SELECTED_CLASS);
+    }
+    
+    document.removeEventListener('touchcancel', this._touchcancel);
+    document.removeEventListener(this.EVT_MOVE, this._mouse_move_evt);
+    document.removeEventListener(this.EVT_UP, this._mouse_up_evt);
+    
+    if (this.GHOST) {
+      this.GHOST.classList.remove(this.GHOST_CLASS);
+      if (this.useGhost) {
+        this.GHOST.parentElement.removeChild(this.GHOST);
+      }
+    }
+    
+    if (this.PLACEHOLDER) {
+      this.PLACEHOLDER.parentElement.removeChild(this.PLACEHOLDER);
+    }
+
+    this.GHOST = null;
+    this.ITEM = null;
+    this.PLACEHOLDER = null;
+    this.DESTINATION = null;
+    this.AFTER = null;
+
+    this.ORIGIN_DX = 0;
+    this.ORIGIN_DY = 0;
+    this.ORIGIN_X = 0;
+    this.ORIGIN_Y = 0;
+    this.ORIGIN_W = 0;
+    this.ORIGIN_H = 0;
+
+    this.isTouch = false;
+    this.isTracking = false;
+    this.isResizing = false;
+    this.isScrolling = false;
+
+    document.body.classList.remove(this.DRAGGING_CLASS);
+    document.body.classList.remove(this.RESIZING_CLASS);
+  };
+
+  this.init = function(el, opts) {
     if ("ontouchstart" in window) {
       this.EVT_MOVE = "touchmove";
       this.EVT_DOWN = "touchstart";
@@ -578,9 +598,19 @@ function Dragger(el) {
       this.isTouch = true;
     }
 
-    el.addEventListener(this.EVT_DOWN, this.mouse_down, false);
-    el.addEventListener('dragenter', this.drag_enter, false);
-    el.addEventListener('dragleave', this.drag_leave, false);
+    if (opts) {
+      for (var k in opts) {
+        this[k] = opts[k];
+      }
+    }
+
+    this._mouse_down_evt = this.mouse_down.bind(this);
+    this._drag_enter_evt = this.drag_enter.bind(this);
+    this._drag_leave_evt = this.drag_leave.bind(this);
+
+    el.addEventListener(this.EVT_DOWN, this._mouse_down_evt, false);
+    el.addEventListener('dragenter', this._drag_enter_evt, false);
+    el.addEventListener('dragleave', this._drag_leave_evt, false);
 
     this.CONTAINER = el;
     el.classList.add('ui_dragger');
@@ -589,10 +619,6 @@ function Dragger(el) {
       this.isFreehand = true;
       this.lockVertical = false;
       this.useGhost = false;
-    }
-
-    if (el.querySelector('.ui_dragger-item .ui_dragger-handle') != null) {
-      this.useHandle = true;
     }
   };
 
@@ -608,8 +634,7 @@ $.fn.dragger = function (options) {
   else {
     this.each(function(n,it) {
       var d = new Dragger();
-      $.extend(d, options);
-      d.init(it);
+      d.init(it, options);
     });
   }
 };

@@ -75,8 +75,8 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
   <table class="sec_nodes full-width">
 {{#include "." "children"}}
   {{#if isContentResource}}
-    <tr>
-      <td>
+    <tr class="ui_dragger-item">
+      <td class="ui_dragger-handle">
         <input form="save_selection" type="checkbox" name="{{hash path}}" value="{{path}}">
       </td>
       <td>
@@ -90,8 +90,8 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
       </td>
     </tr>
   {{else}}
-    <tr>
-      <td>
+    <tr class="ui_dragger-item">
+      <td class="ui_dragger-hadle">
         <input form="save_selection" type="checkbox" name="{{hash path}}" value="{{path}}">
       </td>
       <td>
