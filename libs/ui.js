@@ -296,7 +296,7 @@ function saveCurrentContentPath() {
   sessionStorage.setItem('__CURRENT_CONTENT_PATH', v);
 }
 
-function storeDocumentHTML(ctx, doc, dest) { //XXX
+function storeDocumentHTML(ctx, doc, dest) {
   return new Promise(function (resolve) {
     let $doc = $(doc);
     let process = 0;
@@ -381,7 +381,7 @@ $(function () {
         document.body.classList.remove(cn);
       }
       else {
-        /* XXX
+        /*
         if (window.getSelection().type == 'Range') {
           evt.preventDefault();
           return;
@@ -502,7 +502,7 @@ $(function () {
     }
   });
 
-  $(document).on('change', '.act_form-submit', function(evt) { //XXX
+  $(document).on('change', '.act_form-submit', function(evt) {
     evt.preventDefault();
 
     let $form = $(evt.target.form);

@@ -135,10 +135,23 @@
   </table>
 
   <h1>list</h1>
-  <ol>
-    <li class="ui_dragger-item">one</li>
+  <ol class="list">
+    <li class="ui_dragger-item"><a href="..">one</a></li>
     <li class="ui_dragger-item">two</li>
     <li class="ui_dragger-item">three</li>
+  </ol>
+
+  <h1>tree</h1>
+  <ol class="tree">
+    <li class="ui_dragger-item ui_dragger-container">one</li>
+    <li class="ui_dragger-item ui_dragger-container">two</li>
+    <li class="ui_dragger-item ui_dragger-container">three
+      <ol>
+        <li class="ui_dragger-item ui_dragger-container">ONE</li>
+        <li class="ui_dragger-item ui_dragger-container">TWO</li>
+        <li class="ui_dragger-item ui_dragger-container">THREE</li>
+      </ol>
+    </li>
   </ol>
 
   <h1>boxes</h1>
@@ -195,8 +208,11 @@
         return true;
       }
     });
-    $('ol').dragger();
-    $('.boxA').dragger();
+    $('.tree').dragger();
+    $('.list').dragger();
+    $('.boxA').dragger({
+      timeout: 0
+    });
     $('.boxB').dragger();
     $('.boxC').dragger();
     $('.ui_dragger-canvas').dragger({

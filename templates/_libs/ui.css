@@ -137,13 +137,15 @@ body.ui_group {
   margin: var(--margin);
 }
 
-.ui_group ul {
+.ui_group ul,
+.ui_group ol {
   margin: var(--margin);
   padding-inline-start: 16px;
 }
 
-.ui_group ol {
-  margin: var(--margin);
+.ui_group li > ul ,
+.ui_group li > ol {
+  margin: unset;
   padding-inline-start: 16px;
 }
 
@@ -192,6 +194,7 @@ body.ui_group {
   text-align: center;
   font-family: var(--font);
   font-size: var(--size);
+  font-weight: normal;
   min-width: calc(var(--size) * 1.5);
 }
 

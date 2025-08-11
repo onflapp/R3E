@@ -858,6 +858,14 @@ class ResourceResolver {
     }
     moveResource(fromPath, toPath, callback) {
         let self = this;
+        if (fromPath === '/' || fromPath === '') {
+            callback();
+            return;
+        }
+        if (fromPath === toPath) {
+            callback();
+            return;
+        }
         self.copyResource(fromPath, toPath, function () {
             self.removeResource(fromPath, function () {
                 callback();

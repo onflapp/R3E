@@ -22,7 +22,7 @@ function Dragger() {
   this.PLACEHOLDER = null;
   this.TRACK_TO = null;
 
-  this.timeout = 10;
+  this.timeout = 100;
   this.actions = 0;
 
   this.ORIGIN_DX = 0;
@@ -113,6 +113,10 @@ function Dragger() {
     if (el.tagName == 'TR') {
       return '<table>'+el.outerHTML+'</table>';
     }
+    else if (el.tagName == 'LI') {
+      var t = el.parentElement.tagName;
+      return '<'+t+' style="margin-top:0;margin-bottom:0">'+el.outerHTML+'</'+t+'>';
+    }
     else {
       return el.outerHTML;
     }
@@ -167,7 +171,7 @@ function Dragger() {
       }
       p = p.parentElement;
     }
-    return p;
+    return null;
   };
 
   this.mouse_down = function(evt) {
@@ -187,59 +191,107 @@ function Dragger() {
     }
 
     var ei = this._eventInfo(evt);
-    //clearTimeout(this.TRACK_TO);
-    //this.TRACK_TO = setTimeout(function() {
-    
-    if (this._delegate('onstart', it)) {
-      this.startTracking(it, ei);
 
-      evt.stopPropagation();
-      evt.preventDefault();
-      return false;
+    if (this.timeout == 0 || this.isResizing || this.isFreehand) {
+      if (this._delegate('onstart', it)) {
+        this.startTracking(it, ei);
+      }
+      else {
+        this.cleanup();
+      }
     }
     else {
-      this.cleanup();
-    }
+      var self = this;
+      var check_up = function(evt) {
+        document.removeEventListener(self.EVT_UP, check_up);
+        document.removeEventListener(self.EVT_MOVE, check_up);
+
+        clearTimeout(self.TRACK_TO);
+      };
+
+      this.TRACK_TO = setTimeout(function() {
+        if (self._delegate('onstart', it)) {
+          self.startTracking(it, ei);
+        }
+        else {
+          self.cleanup();
+        }
+      }, this.timeout);
+
+      document.addEventListener(this.EVT_UP, check_up, false);
+      document.addEventListener(this.EVT_MOVE, check_up, false);
+    };
+
+    evt.stopPropagation();
+    evt.preventDefault();
+    return false;
   };
 
   this.mouse_up = function(evt) {
-    if (this.DESTINATION) {
-      this.DESTINATION.classList.remove(this.OVER_CLASS);
-      if (this.DESTINATION != this.ITEM.parentElement) {
-        if (this._delegate('ondropped', this.ITEM, 'over', this.DESTINATION)) {
-          if (this._isCanvas(this.DESTINATION) && !this.isFreehand && this.GHOST) {
-            var offx = window.pageXOffset;
-            var offy = window.pageYOffset;
-            var ra = this.GHOST.getBoundingClientRect();
-            var rb = this.DESTINATION.getBoundingClientRect();
+    var success = false;
+    try {
+      if (this.DESTINATION) {
+        this.DESTINATION.classList.remove(this.OVER_CLASS);
+        if (this.DESTINATION != this.ITEM.parentElement) {
+          if (this._delegate('ondropped', this.ITEM, 'over', this.DESTINATION)) {
+            if (this._isCanvas(this.DESTINATION) && !this.isFreehand && this.GHOST) {
+              var offx = window.pageXOffset;
+              var offy = window.pageYOffset;
+              var ra = this.GHOST.getBoundingClientRect();
+              var rb = this.DESTINATION.getBoundingClientRect();
 
-            this.ITEM.style.top = (ra.top - rb.top) + 'px';
-            this.ITEM.style.left = (ra.left - rb.left) + 'px';
-            this.DESTINATION.appendChild(this.ITEM);
-          }
-          else {
-            this.DESTINATION.appendChild(this.ITEM);
+              this.ITEM.style.top = (ra.top - rb.top) + 'px';
+              this.ITEM.style.left = (ra.left - rb.left) + 'px';
+              this._appendChild(this.DESTINATION, this.ITEM);
+              success= true;
+            }
+            else {
+              this._appendChild(this.DESTINATION, this.ITEM);
+              success= true;
+            }
           }
         }
       }
-    }
-    else if (this.AFTER) {
-      if (this._delegate('ondropped', this.ITEM, 'after', this.AFTER)) {
-        this.AFTER.parentElement.insertBefore(this.ITEM, this.AFTER.nextElementSibling);
+      else if (this.AFTER) {
+        if (this._delegate('ondropped', this.ITEM, 'after', this.AFTER)) {
+          this.AFTER.parentElement.insertBefore(this.ITEM, this.AFTER.nextElementSibling);
+          success= true;
+        }
+      }
+      else if (this.isResizing) {
+        this.ITEM.style.zIndex = null;
+        if (this.actions > 0) {
+          this._delegate('onresized', this.ITEM);
+          success = true;
+        }
+      }
+      else if (this.isScrolling) {
+        if (this.actions > 0) {
+          this._delegate('onscrolled', this.CONTAINER);
+          success = true;
+        }
+      }
+      else if (this.isFreehand) {
+        this.ITEM.style.zIndex = null;
+        if (this.actions > 0) {
+          this._delegate('onmoved',this.ITEM);
+          success = true;
+        }
       }
     }
-    else if (this.isResizing) {
-      this.ITEM.style.zIndex = null;
-      if (this.actions > 0) this._delegate('onresized', this.ITEM);
-    }
-    else if (this.isScrolling) {
-      if (this.actions > 0) this._delegate('onscrolled', this.CONTAINER);
-    }
-    else if (this.isFreehand) {
-      this.ITEM.style.zIndex = null;
-      if (this.actions > 0) this._delegate('onmoved',this.ITEM);
+    catch(ex) {
+      success = false;
     }
 
+    var cancel_click = function(evt) {
+      evt.target.removeEventListener('click', cancel_click);
+      evt.preventDefault();
+      evt.stopPropagation();
+      return false;
+    };
+    evt.target.addEventListener('click', cancel_click);
+
+    this._delegate('onfinish', success);
     this.cleanup();
     evt.preventDefault();
     return false;
@@ -277,7 +329,7 @@ function Dragger() {
   
     offx = window.pageXOffset;
     offy = window.pageYOffset;
-    var el = document.elementFromPoint(ei.pageX - offx, ei.pageY - 5 - offy);
+    var el = document.elementFromPoint(ei.pageX - offx, ei.pageY - 3 - offy);
     var it = this.getDragDestinationItem(el);
     var dest = this.getDragDestination(el);
 
@@ -470,6 +522,21 @@ function Dragger() {
     document.addEventListener('touchcancel', this._touchcancel, false);
   };
 
+  this._appendChild = function(dest, src) {
+    if (src.tagName == 'LI' && dest.tagName == 'LI') {
+      var t = dest.parentElement.tagName;
+      var l = dest.querySelector(t);
+      if (l == null) {
+        l = document.createElement(t);
+        dest.appendChild(l);
+      }
+      l.appendChild(src);
+    }
+    else {
+      dest.appendChild(src);
+    }
+  };
+
   this._isCanvas = function(el) {
     var p = el;
     while (p) {
@@ -539,6 +606,11 @@ function Dragger() {
   };
 
   this.onstart = function(item) {
+    //to be overridden
+    return true;
+  };
+
+  this.onfinish = function(success) {
     //to be overridden
     return true;
   };

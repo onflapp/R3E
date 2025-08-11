@@ -185,3 +185,55 @@ Highlighter = {
     });
   }
 };
+
+DraggableList = {
+  commitChanges:function(drag) {
+    if (drag.action_move) {
+      for (let i = 0; i < drag.action_move.length; i++) {
+        let it = drag.action_move[i];
+        let url = '#' + it.from;
+        submitDataAsync({':moveto':it.to}, url, function() {
+          console.log('done');
+        });
+      }
+    }
+  },
+  init:function() {
+    $('.ui_draggable-list').dragger({
+      ondropped:function(source, pos, destination) {
+        let f = source.dataset['item_ref'];
+        let t = destination.dataset['item_ref'];
+
+        if (pos == 'over') {
+          t = t + '/' + Utils.filename(f);
+        }
+        else if (pos == 'after') {
+          t = Utils.filename_dir(t) + '/' + Utils.filename(f);
+        }
+
+        if (f == t) {
+          cosole.log('is the same file:' + f);
+          return false;
+        }
+
+        this.action_move = [];
+        this.action_move.push({
+          position:pos,
+          from:f,
+          to:t
+        });
+            
+        //over / after
+        //to be overridden
+        return true;
+      },
+
+      onfinish:function(success) {
+        if (success) {
+          DraggableList.commitChanges(this);
+        }
+        console.log(success);
+      }
+    });
+  }
+}
