@@ -514,12 +514,11 @@ class ResourceRequestContext implements ScriptContext {
     let p = {};
     p['URL'] = this.pathInfo.currentURL;    
     p['PATH'] = this.pathInfo.path;
+    p['RES_PATH'] = this.pathInfo.resourcePath;
+    p['SELECTOR'] = this.pathInfo.selector;
+
     p['NAME'] = this.pathInfo.name;
     p['DIRNAME'] = this.pathInfo.dirname;
-    p['SELECTOR'] = this.pathInfo.selector;
-    p['DATA_PATH'] = this.pathInfo.dataPath;
-    p['DATA_NAME'] = this.pathInfo.dataName;
-    p['RES_PATH'] = this.pathInfo.resourcePath;
 
     p['PARENT_NAME'] = Utils.filename(this.pathInfo.dirname);
     p['PARENT_DIRNAME'] = Utils.filename_dir(this.pathInfo.dirname);
@@ -528,6 +527,14 @@ class ResourceRequestContext implements ScriptContext {
       p['REF_URL'] = this.pathInfo.refererURL;
       p['REF_PATH'] = this.pathInfo.referer.path;
       p['REF_SELECTOR'] = this.pathInfo.referer.selector;
+    }
+
+    p['DATA_NAME'] = this.pathInfo.dataName;
+    p['DATA_PATH'] = this.pathInfo.dataPath;
+
+    if (this.pathInfo.dataPath) {
+      p['DATA_DIRNAME'] = Utils.filename_dir(this.pathInfo.dataPath);
+      p['DATA_PATHNAME'] = this.pathInfo.dataPath.substr(this.pathInfo.path.length);
     }
 
     return p;

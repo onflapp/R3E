@@ -9,17 +9,29 @@
     writer.end();
   }
   else if (clientside) {
-    if (res['isContentResource']) {
-      ctx.readResource('.', new ContentWriterAdapter('blob', function (data, ctype) {
-        var blob = new Blob([data], {
-          type: ctype ? ctype : 'application/octet-binary'
-        });
-        var url = URL.createObjectURL(blob);
+     if (typeof window['__path2url'] == 'undefined') window.__path2url = {};  
 
+    if (res['isContentResource']) {
+      var path = res['path'];
+      var url = window.__path2url[path];
+      if (url) {
         writer.start('text/plain');
         writer.write(url);
-        writer.end();
-      }));
+        writer.end();      
+      }
+      else {
+        ctx.readResource('.', new ContentWriterAdapter('blob', function (data, ctype) {
+          var blob = new Blob([data], {
+            type: ctype ? ctype : 'application/octet-binary'
+          });
+          var url = URL.createObjectURL(blob);
+          window.__path2url[path] = url;
+
+          writer.start('text/plain');
+          writer.write(url);
+          writer.end();
+        }));
+      }
     }
     else {
       writer.error(new Error('resource has no content'));

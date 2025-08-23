@@ -42,10 +42,12 @@
           for (var k in context['Q']) {
             if (i == 0) rv.push('?');
             else rv.push('&');
+
             var v = context['Q'][k];
             rv.push(escape(k));
             rv.push('=');
-            rv.push(escape(v));
+            rv.push(escape(v?v:''));
+            i++;
           }
         }
       }

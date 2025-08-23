@@ -44,7 +44,7 @@ function popupPath(type, path_ref, cb) {
   let onclick = function(evt) {
     if (document.body.classList.contains('mode_popup-visible')) {
       delete el.removeCB;
-      clearEditMode();
+      clearMode('edit');
       el.classList.remove('visible');
       document.body.classList.remove('mode_popup-visible');
       bg.removeEventListener('click', onclick);
@@ -201,12 +201,12 @@ function restoreHighlightMode() {
   window.dispatchEvent(new Event('resize'));
 }
 
-function clearEditMode() {
-  sessionStorage.removeItem('__LAST_EDIT_MODE');
+function clearMode(name) {
+  sessionStorage.removeItem(`__LAST_MODE_${name}`);
 }
 
-function saveEditMode() {
-  let i = $(".mode_edit.visible").attr('id');
+function saveMode(name) {
+  let i = $(`.mode_${name}`).attr('id');
   let v = {
     element:i,
     scroll:document.scrollingElement.scrollTop,
@@ -214,12 +214,13 @@ function saveEditMode() {
     location:window.location.toString()
   };
 
-  sessionStorage.setItem('__LAST_EDIT_MODE', JSON.stringify(v));
+  sessionStorage.setItem(`__LAST_MODE_${name}`, JSON.stringify(v));
 }
 
-function restoreEditMode() {
+function restoreMode(name, reset) {
   if (parent != window) return;
-  let v = JSON.parse(sessionStorage.getItem('__LAST_EDIT_MODE'));
+  let cl = `mode_${name}`;
+  let v = JSON.parse(sessionStorage.getItem(`__LAST_MODE_${name}`));
   let u = window.location.toString();
 
   if (!v) return;
@@ -228,9 +229,7 @@ function restoreEditMode() {
   if (v.location == u) {
     let $el = $('#'+v.element);
     if ($el.length) {
-      $el.addClass('mode_edit');
-      $el.addClass('visible');
-      document.body.classList.add('edit');
+      $el.addClass(cl);
       //$el.get(0).scrollIntoViewIfNeeded();
       console.log($el.get(0));
       console.log('scroll into view');
@@ -245,50 +244,12 @@ function restoreEditMode() {
       });
     }
     else {
-      console.log('no element found ' + v.element);
+      document.body.classList.add(cl);
     }
   }
 
-  sessionStorage.removeItem('__LAST_EDIT_MODE');
+  if (reset) sessionStorage.removeItem(`__LAST_MODE_${name}`);
   window.dispatchEvent(new Event('resize'));
-}
-
-function clearViewMode() {
-  sessionStorage.removeItem('__LAST_VIEW_MODE');
-}
-
-function saveViewMode() {
-  let i = $(".focused").attr('id');
-  let v = {
-    element:i,
-    scroll:document.scrollingElement.scrollTop,
-    height:0,/*document.scrollingElement.clientHeight,*/
-    location:window.location.toString()
-  };
-
-  sessionStorage.setItem('__LAST_VIEW_MODE', JSON.stringify(v));
-}
-
-function restoreViewMode() {
-  if (parent != window) return;
-  let v = JSON.parse(sessionStorage.getItem('__LAST_VIEW_MODE'));
-  let u = window.location.toString();
-
-  if (v && v.location == u) {
-    let el = document.getElementById(v.element);
-    //if (el) el.scrollIntoViewIfNeeded();
-    requestAnimationFrame(function() {
-      if (el && document.scrollingElement.clientHeight == v.height) {
-        document.scrollingElement.scrollTop = v.scroll;
-        el.scrollIntoViewIfNeeded();
-      }
-      else if (el) {
-        el.scrollIntoView();//{ behavior: "smooth"});
-      }
-    });
-  }
-
-  sessionStorage.removeItem('__LAST_VIEW_MODE');
 }
 
 function saveCurrentContentPath() {
@@ -360,57 +321,37 @@ $(function () {
     }
   });
 
-/* data-mode_id or id
+/*
  * data-mode_sel="sel" data-mode="edit"
  */
 
   $(document).on('click', '.act_mode-toggle', function(evt) {
+    let sv = evt.target.dataset['mode_save'];
     let nm = evt.target.dataset['mode_sel'];
     let cn = evt.target.dataset['mode'];
     let cl = 'mode_'+cn;
-
-    let el = document.querySelector(`[data-mode_id=${nm}`);
-    if (!el) el = document.getElementById(nm);
+    let el = document.getElementById(nm);
 
     if (el) {
       if (el.classList.contains(cl)) {
         if (evt.target.tagName == 'TEXTAREA') return;
 
         el.classList.remove(cl);
-        el.classList.remove('visible');
-        document.body.classList.remove(cn);
+        clearMode(cn);
       }
       else {
-        /*
-        if (window.getSelection().type == 'Range') {
-          evt.preventDefault();
-          return;
-        }
-        */
-
-        $('[data-mode_id].visible').each(function(x, it) {
-          it.classList.remove('visible');
-          let n = it.dataset['mode'];
-          if (n) {
-            document.body.classList.remove(n);
-            delete it.dataset['mode'];
-          }
-        });
-
         el.classList.add(cl);
-        el.classList.add('visible');
-        el.dataset['mode'] = cn;
-        document.body.classList.add(cn);
+        if (sv) saveMode(cn);
       }
     }
     else {
       if (document.body.classList.contains(cl)) {
         document.body.classList.remove(cl);
-        document.body.classList.remove(cn);
+        clearMode(cn);
       }
       else {
         document.body.classList.add(cl);
-        document.body.classList.add(cn);
+        if (sv) saveMode(cn);
       }
     }
 
@@ -445,13 +386,14 @@ $(function () {
     let main = $el.data('form');
     let href = $el.attr('href');
     let name = $el.attr('name');
+    let save = $el.data('mode_save');
     let $form = $el.parents('form');
     let $main = main?$(main):null;
 
     if (!path && href) path = href;
 
     popupPath(0, path, function(item) {
-      saveEditMode();
+      if (save) saveMode(save);
       Utils.flushResourceCache();
       $el.val(item);
       if ($main && $main.length) {
@@ -483,13 +425,14 @@ $(function () {
     let main = $el.data('form');
     let href = $el.attr('href');
     let name = $el.attr('name');
+    let save = $el.data('mode_save');
     let $main = $(main);
 
     if (!$main || $main.length == 0) $main = $el.parents('form');
     if (!path && href) path = href;
     if (!path) path = $main.find("input[name=':forward']").val();
 
-    saveEditMode();
+    if (save) saveMode(save);
     Utils.flushResourceCache();
     if ($main && $main.length) {
       submitFormAsync($main.get(0), function() {

@@ -67,7 +67,7 @@ class HBSRendererFactory extends TemplateRendererFactory {
             }
           }
           else {
-            let it = content;
+            let it = content ? content : {};
 
             if (typeof block.fn === 'function') {
               let map = it;

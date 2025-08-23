@@ -22,7 +22,7 @@ function Dragger() {
   this.PLACEHOLDER = null;
   this.TRACK_TO = null;
 
-  this.timeout = 100;
+  this.timeout = 250;
   this.actions = 0;
 
   this.ORIGIN_DX = 0;
@@ -204,12 +204,16 @@ function Dragger() {
       var self = this;
       var check_up = function(evt) {
         document.removeEventListener(self.EVT_UP, check_up);
-        document.removeEventListener(self.EVT_MOVE, check_up);
 
+        var ee = self._eventInfo(evt);
+        var dx = ei.pageX - ee.pageX;
+        var dy = ei.pageY - ee.pageY;
+        var dt = ee.timestamp - ei.timestamp;
         clearTimeout(self.TRACK_TO);
       };
 
       this.TRACK_TO = setTimeout(function() {
+        document.removeEventListener(self.EVT_UP, check_up);
         if (self._delegate('onstart', it)) {
           self.startTracking(it, ei);
         }
@@ -219,7 +223,6 @@ function Dragger() {
       }, this.timeout);
 
       document.addEventListener(this.EVT_UP, check_up, false);
-      document.addEventListener(this.EVT_MOVE, check_up, false);
     };
 
     evt.stopPropagation();
@@ -283,13 +286,19 @@ function Dragger() {
       success = false;
     }
 
+    var el = evt.target;
     var cancel_click = function(evt) {
-      evt.target.removeEventListener('click', cancel_click);
+      el.removeEventListener('click', cancel_click);
       evt.preventDefault();
       evt.stopPropagation();
       return false;
     };
-    evt.target.addEventListener('click', cancel_click);
+
+    setTimeout(function() { //make sure we don't miss to remove the event!
+      el.removeEventListener('click', cancel_click);
+    },50);
+
+    el.addEventListener('click', cancel_click);
 
     this._delegate('onfinish', success);
     this.cleanup();
@@ -332,10 +341,6 @@ function Dragger() {
     var el = document.elementFromPoint(ei.pageX - offx, ei.pageY - 3 - offy);
     var it = this.getDragDestinationItem(el);
     var dest = this.getDragDestination(el);
-
-    if (dest && dest.querySelector('.'+this.ITEM_CLASS) && !this._isCanvas(dest)) {
-      dest = null;
-    }
 
     if (it) {
       var ra = it.getBoundingClientRect();
@@ -552,12 +557,14 @@ function Dragger() {
     if (evt.targetTouches) {
       var t = evt.targetTouches[0];
       return {
+        timestamp:evt.timeStamp,
         pageX:t.pageX,
         pageY:t.pageY
       };
     }
     else {
       return {
+        timestamp:evt.timeStamp,
         pageX:evt.pageX,
         pageY:evt.pageY
       };

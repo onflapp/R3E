@@ -25,7 +25,7 @@ ImageCropper = {
   },
 
   unlockBody:function () {
-    document.body.classList.add('cropping');
+    document.body.classList.remove('cropping');
     document.body.style.height = "";
     document.body.style.width = "";
   },
@@ -35,7 +35,7 @@ ImageCropper = {
     var w = $(document.body).width();
     document.body.style.height = h+"px";
     document.body.style.width = w+"px";
-    document.body.classList.remove('cropping');
+    document.body.classList.add('cropping');
   },
 
   resetFrame:function(img) {

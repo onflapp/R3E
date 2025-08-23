@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>modes</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+  <meta charset="UTF-8">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  <link rel="stylesheet" href="../templates/_libs/ui.css">
+
+  <script src="../libs/cash.js" type="text/javascript"></script>
+  <script src="../libs/ui.js" type="text/javascript"></script>
+
+<style>
+
+.mode_edit .mode_edit-hidden {
+  display:none;
+}
+
+body:not(.mode_edit) .mode_edit-visible {
+  display:none;
+}
+
+.mode_detail-visible:not(.mode_detail) {
+  display:none;
+}
+
+</style>
+</head>
+
+<body class="ui_group">
+  <div>
+    <a href="#" data-mode="edit" data-mode_save="true" class="act_mode-toggle ui_button mode_edit-hidden">edit</a>
+    <a href="#" data-mode="edit" class="act_mode-toggle ui_button mode_edit-visible">save</a>
+  </div>
+  <div class="mode_edit-visible">
+    <h1>mode edit</h1>
+    edit mode
+
+    <a href="#" data-mode="detail" data-mode_save="true" data-mode_sel="sec_detail" class="act_mode-toggle ui_button">detail</a>
+    <div id="sec_detail" class="mode_detail-visible">
+      <h2>detail mode</h2>
+      edit mode
+    </div>
+  </div>
+
+</body>
+  <script>
+    restoreMode('edit');
+    restoreMode('detail');
+  </script>
+</html>

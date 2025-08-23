@@ -187,13 +187,16 @@ Highlighter = {
 };
 
 DraggableList = {
-  commitChanges:function(drag) {
+  commitChanges:function(drag, cb) {
     if (drag.action_move) {
       for (let i = 0; i < drag.action_move.length; i++) {
         let it = drag.action_move[i];
         let url = '#' + it.from;
-        submitDataAsync({':moveto':it.to}, url, function() {
-          console.log('done');
+        let forward = document.body.dataset['base_url'];
+        let opts = {':moveto':it.to};
+
+        submitDataAsync(opts, url, function() {
+          if (cb) cb();
         });
       }
     }
@@ -230,7 +233,9 @@ DraggableList = {
 
       onfinish:function(success) {
         if (success) {
-          DraggableList.commitChanges(this);
+          DraggableList.commitChanges(this, function() {
+            window.location.reload();
+          });
         }
         console.log(success);
       }

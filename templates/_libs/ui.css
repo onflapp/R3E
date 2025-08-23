@@ -13,13 +13,6 @@
   --padding: 2px 6px 2px 6px;
 }
 
-body {
-  background-color: white;/*honeydew;*/
-  color: black;
-  font-size: 11px;
-  cursor: default;
-}
-
 .ui_paths li {
   display: inline-block;
 }
@@ -41,6 +34,7 @@ body {
   list-style: none;
   margin: var(--margin);
   padding-inline-start: 0 !important;
+  display: inline-block;
 }
 
 span.ui_button {
@@ -49,6 +43,7 @@ span.ui_button {
 
 a.ui_button {
   display: inline-block;
+  cursor: default;
 }
 
 div.ui_button {
@@ -82,9 +77,27 @@ div.ui_button {
 }
 
 .ui_group {
+  cursor: default;
+  color: black;
   font-family: var(--font);
   font-size: var(--size);
   margin: var(--margin);
+}
+
+.ui_group-base {
+  cursor: default;
+  color: black;
+  font-family: var(--font);
+  font-size: var(--size);
+  margin: 0;
+}
+
+.ui_group-base > .ui_button,
+.ui_group-base > input,
+.ui_group-base > .ui_group,
+.ui_group-base > .ui_label,
+.ui_group-base > .ui_group-box {
+  margin: 0;
 }
 
 .ui_group-box {
@@ -100,12 +113,13 @@ div.ui_button {
 }
 
 html:has(body.ui_dialog) {
-  background-color: gray;
+  background-color: lightgray;
 }
 
 .ui_dialog {
-  border: 8px solid var(--border-color);
-  padding: 4px 8px 8px 8px;
+  background-color: white;
+  border: 2px solid gray;
+  padding: 12px 12px 12px 12px;
 }
 
 body.ui_group {
@@ -114,17 +128,18 @@ body.ui_group {
 
 .ui_group p {
   font-size: var(--size);
-  margin: var(--margin);
+  margin-top: var(--margin-base);
+  margin-bottom: 0;
 }
 
 .ui_group h1 {
   font-size: x-large;
-  margin: var(--margin);
+  margin: calc(var(--margin-base)*2) 0px calc(var(--margin-base)*2) 0px;
 }
 
 .ui_group h2 {
   font-size: large;
-  margin: var(--margin);
+  margin: var(--margin-base) 0px var(--margin-base) 0px;
 }
 
 .ui_group h3 {
@@ -139,14 +154,27 @@ body.ui_group {
 
 .ui_group ul,
 .ui_group ol {
+  list-style-type: square;
   margin: var(--margin);
   padding-inline-start: 16px;
+}
+
+.ui_group li::marker {
+  color: gray;
+}
+
+.ui_group li:has(ul > li) {
+  list-style-type: disclosure-open;
+}
+
+.ui_group li:has(ul > li)::marker {
+  color: black !important;
 }
 
 .ui_group li > ul ,
 .ui_group li > ol {
   margin: unset;
-  padding-inline-start: 16px;
+  padding-inline-start: 24px;
 }
 
 .ui_group hr {
@@ -156,8 +184,10 @@ body.ui_group {
 }
 
 .ui_sep {
-  width: var(--margin-base);
+  content:'.';
   display: inline-block;
+  margin: var(--margin);
+  opacity: 0;
 }
 
 .ui_text {
@@ -166,9 +196,11 @@ body.ui_group {
 }
 
 .ui_label {
+  display: inline-block;
   font-family: var(--font);
   font-size: var(--size);
   margin: var(--margin);
+  padding: var(--padding);
 }
 
 .ui_label .ui_button {
@@ -201,6 +233,7 @@ body.ui_group {
 .ui_tag {
   user-select: none;
   -webkit-user-select: none;
+  display: inline-block;
   margin: var(--margin);
   cursor: pointer;
   padding: var(--padding);
@@ -208,12 +241,21 @@ body.ui_group {
   background-color: lightgray;
   font-family: var(--font);
   font-size: var(--size);
-  border: 0;
+  border: 1px solid lightgray;
 }
 
 .ui_tag .ui_button {
   padding-right: 0;
-  background-color: revert;
+  background-color: lightgray;
+  transform: translateX(3px);
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+.ui_tag a {
+  color: inherit;
+  text-decoration: none;
 }
 
 .ui_button.default {
@@ -225,8 +267,10 @@ body.ui_group {
   color: gray;
 }
 
-.ui_button.borderless {
+.ui_button.inline {
   background-color: initial;
+  margin: 0;
+  border: 0;
 }
 
 .full-width {
@@ -239,6 +283,10 @@ body.ui_group {
 
 .borderless {
   border: 0;
+}
+
+.hidden {
+  display: none;
 }
 
 .invisible {
@@ -275,6 +323,7 @@ input {
   margin: var(--margin);
   padding: var(--padding);
   margin-right: var(--margin-base);
+  border-radius: 0;
   box-sizing: border-box;
 }
 
@@ -342,6 +391,7 @@ button,input[type=submit] {
   -webkit-user-select: none;
   font-family: var(--font);
   font-size: var(--size);
+  font-weight: normal;
   color: inherit;
   background-color: inherit;
   border: var(--border) solid var(--border-color);
@@ -435,3 +485,8 @@ div:has(> .ui_cropframe.selected) {
   max-width: unset !important;
 }
 
+.clearfix::after {
+  content: "";
+  clear: both;
+  display: table;
+}
