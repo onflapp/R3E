@@ -10,31 +10,36 @@
   --radius: 0px;
   --margin-base: 6px;
   --margin: var(--margin-base) 0px 0px 0px; /*top right bottom left */
-  --padding: 2px 6px 2px 6px;
+  --padding-base: 2px;
+  --padding: var(--padding-base) 6px var(--padding-base) 6px;
 }
 
-.ui_paths li {
+.ui_group .ui_paths li {
   display: inline-block;
 }
 
-.ui_paths li+li:before {
+.ui_group .ui_paths li+li:before {
   color: gray;
   content: "/\00a0";
 }
 
-.ui_paths li a {
+.ui_group .ui_paths li a {
   text-decoration: none;
 }
 
-.ui_paths {
+.ui_group .ui_paths {
   user-select: none;
   -webkit-user-select: none;
   font-family: var(--font);
   font-size: var(--size);
   list-style: none;
-  margin: var(--margin);
+  margin: 0;
   padding-inline-start: 0 !important;
   display: inline-block;
+}
+
+.ui_group.margins .ui_paths {
+  margin: var(--margin);
 }
 
 span.ui_button {
@@ -81,35 +86,6 @@ div.ui_button {
   color: black;
   font-family: var(--font);
   font-size: var(--size);
-  margin: var(--margin);
-}
-
-.ui_group-base {
-  cursor: default;
-  color: black;
-  font-family: var(--font);
-  font-size: var(--size);
-  margin: 0;
-}
-
-.ui_group-base > .ui_button,
-.ui_group-base > input,
-.ui_group-base > .ui_group,
-.ui_group-base > .ui_label,
-.ui_group-base > .ui_group-box {
-  margin: 0;
-}
-
-.ui_group-box {
-  border-radius: var(--radius);
-  border: 1px solid lightgray;
-  font-family: var(--font);
-  margin: var(--margin);
-  padding: 6px 12px 12px 12px; /*top right bottom left */
-}
-
-.ui_group > *:first-child {
-  margin-top: 0px;
 }
 
 html:has(body.ui_dialog) {
@@ -123,44 +99,70 @@ html:has(body.ui_dialog) {
 }
 
 body.ui_group {
-  margin: 12px 12px 12px 12px;
+  margin: 0;
 }
 
 .ui_group p {
   font-size: var(--size);
+  margin: 0;
+}
+
+.ui_group.margins p {
   margin-top: var(--margin-base);
   margin-bottom: 0;
 }
 
 .ui_group h1 {
   font-size: x-large;
-  margin: calc(var(--margin-base)*2) 0px calc(var(--margin-base)*2) 0px;
+  margin: 0;
 }
 
+.ui_group.margins h1 {
+  margin: calc(var(--margin-base)*2) 0px calc(var(--margin-base)*2) 0px;
+}
+ 
 .ui_group h2 {
   font-size: large;
+  margin: 0;
+}
+
+.ui_group.margins h2 {
   margin: var(--margin-base) 0px var(--margin-base) 0px;
 }
 
 .ui_group h3 {
   font-size: var(--size);
+  margin: 0;
+}
+
+.ui_group.margins h3 {
   margin: var(--margin);
 }
 
 .ui_group h4 {
   font-size: small;
+  margin: 0;
+}
+
+.ui_group.margins h4 {
   margin: var(--margin);
 }
 
 .ui_group ul,
 .ui_group ol {
   list-style-type: square;
-  margin: var(--margin);
+  margin: 0;
   padding-inline-start: 16px;
+}
+
+.ui_group.margins ul,
+.ui_group.margins ol {
+  margin: var(--margin);
 }
 
 .ui_group li::marker {
   color: gray;
+  font-size: 12px;
 }
 
 .ui_group li:has(ul > li) {
@@ -169,21 +171,31 @@ body.ui_group {
 
 .ui_group li:has(ul > li)::marker {
   color: black !important;
+  font-size: 10px;
 }
 
 .ui_group li > ul ,
 .ui_group li > ol {
-  margin: unset;
+  margin: 0;
   padding-inline-start: 24px;
 }
 
+.ui_group.margins li > ul ,
+.ui_group.margins li > ol {
+  margin: 0;
+}
+
 .ui_group hr {
-  margin: var(--margin);
+  margin: 0;
   border: 1px solid lightgray;
   border-bottom-width: 0;
 }
 
-.ui_sep {
+.ui_group.margins hr {
+  margin: var(--margin);
+}
+
+.ui_group .ui_sep {
   content:'.';
   display: inline-block;
   margin: var(--margin);
@@ -196,11 +208,14 @@ body.ui_group {
 }
 
 .ui_label {
-  display: inline-block;
   font-family: var(--font);
   font-size: var(--size);
+  padding-top: var(--padding-base);
+  padding-bottom: var(--padding-base);
+}
+
+.ui_group.margins .ui_label {
   margin: var(--margin);
-  padding: var(--padding);
 }
 
 .ui_label .ui_button {
@@ -216,7 +231,6 @@ body.ui_group {
 .ui_button {
   user-select: none;
   -webkit-user-select: none;
-  margin: var(--margin);
   border: var(--border) solid var(--border-color);
   padding: var(--padding);
   border-radius: var(--radius);
@@ -234,7 +248,6 @@ body.ui_group {
   user-select: none;
   -webkit-user-select: none;
   display: inline-block;
-  margin: var(--margin);
   cursor: pointer;
   padding: var(--padding);
   border-top-right-radius: 6px;
@@ -244,13 +257,18 @@ body.ui_group {
   border: 1px solid lightgray;
 }
 
+.ui_group.margins .ui_tag,
+.ui_group.margins .ui_button {
+  margin: var(--margin);
+}
+
 .ui_tag .ui_button {
   padding-right: 0;
   background-color: lightgray;
   transform: translateX(3px);
-  padding: 0;
-  margin: 0;
-  border: 0;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
 }
 
 .ui_tag a {
@@ -267,7 +285,12 @@ body.ui_group {
   color: gray;
 }
 
-.ui_button.inline {
+.ui_button.borderless {
+  background-color: initial;
+}
+
+.ui_button.inline,
+.ui_group.margins .ui_button.inline {
   background-color: initial;
   margin: 0;
   border: 0;
@@ -279,10 +302,6 @@ body.ui_group {
 
 .pull-right {
   float: inline-end;
-}
-
-.borderless {
-  border: 0;
 }
 
 .hidden {
@@ -302,40 +321,79 @@ body.ui_group {
   margin-bottom: calc(var(--margin-base) * 2) !important;
 }
 
-form {
+.box {
+  border-radius: var(--radius);
+  border: 1px solid lightgray;
+  padding: 12px 12px 12px 12px; /*top right bottom left */
+}
+
+body.ui_group.margins.box {
+  margin: 0;
+  padding: 12px 12px 12px 12px; /*top right bottom left */
+}
+
+.ui_group.margins .box,
+.ui_group.margins.box {
+  padding: 6px 12px 12px 12px; /*top right bottom left */
+}
+
+
+.ui_group.margins .box,
+.ui_group.margins.box {
+  margin: var(--margin);
+}
+
+.marginless {
+  margin: 0 !important;
+}
+
+.marginless > * {
+  margin: 0 !important;
+}
+
+.borderless {
+  border: 0 !important;
+}
+
+.ui_group form {
   display: inline-block;
 }
 
-textarea {
+.ui_group textarea {
   font-family: var(--font);
   font-size: var(--size);
   background-color: var(--input-color);
   border: 1px dotted gray;
   font-size: inherit;
-  margin: var(--margin);
+  margin: 0;
   vertical-align: bottom;
   box-sizing: border-box;
 }
 
-input {
+.ui_group input {
   font-family: var(--font);
   font-size: var(--size);
-  margin: var(--margin);
   padding: var(--padding);
   margin-right: var(--margin-base);
+  margin: 0;
   border-radius: 0;
   box-sizing: border-box;
 }
 
-input[type=checkbox] {
-  margin: revert;
+.ui_group.margins textarea,
+.ui_group.margins button,
+.ui_group.margins select {
+  margin: var(--margin);
 }
 
-input[type=radio] {
+.ui_group input[type=checkbox] {
+}
+
+.ui_group input[type=radio] {
   xtransform: translateY(2px);
 }
 
-input[type=range] {
+.ui_group input[type=range] {
   appearance: none;
   background-color: var(--border-color);
   height: 2px;
@@ -343,7 +401,7 @@ input[type=range] {
   transform: translateY(-3px);
 }
 
-input[type=range]::-webkit-slider-thumb {
+.ui_group input[type=range]::-webkit-slider-thumb {
   appearance: none;
   background-color: var(--button-color);
   border: var(--border) solid var(--border-color);
@@ -352,26 +410,38 @@ input[type=range]::-webkit-slider-thumb {
   border-radius: 6px;
 }
 
-input[type=text],
-input[type=number],
-input[type=date],
-input[type=time],
-input[type=week],
-input[type=datetime-local] {
+.ui_group.margins input[type=file],
+.ui_group.margins input[type=submit],
+.ui_group.margins input[type=text],
+.ui_group.margins input[type=number],
+.ui_group.margins input[type=date],
+.ui_group.margins input[type=time],
+.ui_group.margins input[type=week],
+.ui_group.margins input[type=datetime-local] {
+  margin: var(--margin);
+}
+
+.ui_group input[type=text],
+.ui_group input[type=number],
+.ui_group input[type=date],
+.ui_group input[type=time],
+.ui_group input[type=week],
+.ui_group input[type=datetime-local] {
+  margin: 0;
   border: 0;
   border-bottom: dotted 1px gray;
   background-color: inherit;
   background-color: var(--input-color);
 }
 
-input[type=file] {
+.ui_group input[type=file] {
   color: gray;
   border-bottom: dotted 1px gray;
   font-family: inherit;
   font-size: inherit;
   padding: var(--padding);
   padding-left: 0;
-  margin: var(--margin);
+  margin: 0;
   margin-right: var(--margin-base);
   max-width: 110px;
 }
@@ -386,7 +456,8 @@ input[type=file] {
   font-size: inherit;
 }
 
-button,input[type=submit] {
+.ui_group button,
+.ui_group input[type=submit] {
   user-select: none;
   -webkit-user-select: none;
   font-family: var(--font);
@@ -396,14 +467,14 @@ button,input[type=submit] {
   background-color: inherit;
   border: var(--border) solid var(--border-color);
   padding: var(--padding);
-  margin: var(--margin);
+  margin: 0;
   border-radius: var(--radius);
   background-color: var(--button-color);
   min-width: calc(var(--size) * 1.5);
   text-align: center;
 }
 
-select {
+.ui_group select {
   font-family: var(--font);
   font-size: var(--size);
   border: 0;
@@ -413,16 +484,19 @@ select {
   padding: var(--padding);
   color: inherit;
   background-color: inherit;
-  margin: var(--margin);
+  margin: 0;
   margin-right: var(--margin-base);
 }
 
 .ui_table {
   font-size: inherit;
   border-spacing: 0;
-  margin-bottom: var(--margin);
   border-collapse: collapse;
   width: 100%;
+}
+
+.ui_group.margins .ui_table {
+  margin-bottom: var(--margin);
 }
 
 .ui_table tr {
