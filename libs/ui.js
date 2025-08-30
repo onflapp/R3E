@@ -310,7 +310,7 @@ $(function () {
     }
     else {
       setTimeout(function() {
-        let el = $('[src="'+evt.source.location.toString()+'"]').get(0);
+        let el = evt.source.frameElement;
         if (el && el['popupCB']) {
           document.body.classList.remove('mode_popup-visible');
           el.popupCB(evt.data);
@@ -366,6 +366,10 @@ $(function () {
   $(document).on('click', '.act_popup-item-sel', function(evt) {
     let item_ref = $(evt.target).data('item_ref');
     if (!item_ref) item_ref = $(evt.target).parents('[data-item_ref]').data('item_ref');
+    if (!item_ref && evt.target.form) {
+      let data = handler.parseFormElement(evt.target.form);
+      if (data) item_ref = data.formData;
+    }
 
     if (item_ref) {
       if (window.top != window) {

@@ -16,9 +16,9 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
   <title>create</title>
 </head>
 
-<body class="ui_group ui_dialog">
+<body class="ui_group ui_dialog margins">
 
-  <h1>Create New Root Resource
+  <h1 class="ui_label underlined">Create New Root Resource
     <a class="ui_button inline pull-right" href="{{req_path "." "ui-close"}}">X</a>
   </h1>
 
@@ -27,7 +27,7 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
   <form method="post" action="{{res_path R.PATH "{:name}"}}">
     <input type="text" name=":name|newUUID" value="" {{> text_opts}} placeholder="name">
     <input type="hidden" name=":forward" value="{{req_path R.PATH "ui-close"}}">
-    <button type="submit">add</button>
+    <button type="submit">Add</button>
   </form>
 
   <h3>Import File</h3>
@@ -36,7 +36,7 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
     <input type="file" name=":import" value="">
     <input type="hidden" name=":forward" value="{{req_path R.PATH "ui-close"}}">
 
-    <button type="submit">import</button>
+    <button type="submit">Import</button>
   </form>
 
 </body>

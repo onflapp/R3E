@@ -12,7 +12,7 @@
   <title>delete:{{R.PATH}}</title>
 </head>
 
-<body class="ui_group ui_dialog">
+<body class="ui_group ui_dialog margins">
 
   <h1 class="ui_label underlined">Delete "{{name}}"
     <a class="ui_button inline pull-right" href="{{req_path "." "ui-close"}}">X</a>
@@ -32,7 +32,7 @@
     <input type="hidden" name="_rt" value="{{renderType}}">
     <input type="hidden" name=":delete" value="{{res_path "."}}">
     <input type="hidden" name=":forward" value="{{req_path "." "ui-close"}}">
-    <button type="submit">delete</button>
+    <button type="submit">Delete</button>
   </form>
   </h4>
 

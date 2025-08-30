@@ -16,7 +16,7 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
   <title>list:{{R.PATH}}</title>
 </head>
 
-<body class="ui_group">
+<body class="ui_group margins">
 
   <ol class="ui_paths">
     <li><a href="{{req_path "/"}}">HOME</a></li>
@@ -38,7 +38,7 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
 
     <form class="pull-right" method="get" action="{{req_path "." "res-search"}}">
       <input name="q" type="text" placeholder="search" value="{{Q.q}}" {{> text_opts}}>
-      <button type="submit">search</button>
+      <button type="submit">Search</button>
     </form>
   </div>
 

@@ -16,7 +16,7 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
   <title>create</title>
 </head>
 
-<body class="ui_group ui_dialog">
+<body class="ui_group ui_dialog margins">
 
   <h1 class="ui_label underlined">Create New Resource in "{{name}}" 
     <a class="ui_button inline pull-right" href="{{req_path "." "ui-close"}}">X</a>
@@ -44,7 +44,7 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
     </select>
               
     <input type="hidden" name=":forward" value="{{req_path R.PATH "ui-close"}}">
-    <button type="submit">add</button>
+    <button type="submit">Add</button>
   </form>
 
   <h3>Empty File</h3>
@@ -54,7 +54,7 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
     <input type="hidden" name="_content" value=""></input>
     
     <input type="hidden" name=":forward" value="{{req_path "." "ui-close"}}">
-    <button type="submit">add</button>
+    <button type="submit">Add</button>
   </form>
 
   <h3>Upload File</h3>
@@ -63,7 +63,7 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
     <input type="file" name=":filename" value="">
     <input type="text" name=":name|:filename|newUUID" value="" {{> text_opts}} placeholder="as new file name">
     <input type="hidden" name=":forward" value="{{req_path "." "ui-close"}}">
-    <button type="submit">upload</button>
+    <button type="submit">Upload</button>
   </form>
 
   <h3>Import File</h3>
@@ -72,7 +72,7 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
     <input type="file" name=":import" value="">
     <input type="hidden" name=":forward" value="{{req_path "." "ui-close"}}">
 
-    <button type="submit">import</button>
+    <button type="submit">Import</button>
   </form>
 
 </body>

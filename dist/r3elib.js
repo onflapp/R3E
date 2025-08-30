@@ -4091,7 +4091,10 @@ class DOMContentWriter {
                     });
                 }
                 else {
+                    let i = action.lastIndexOf('?');
                     let q = [];
+                    if (i > 0)
+                        action = action.substr(0, i);
                     for (let k in info.formData) {
                         let v = info.formData[k];
                         q.push(k + '=' + escape(v));

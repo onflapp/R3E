@@ -2,16 +2,30 @@
   --font: system-ui;
   --size: 12px;
   --border: 1px;
-  --border-color: black;
-  --button-color: white;
-  --primary-color: black;
-  --input-color: white;
-  --selection-color: Highlight;
-  --radius: 0px;
+  --radius: 0;
   --margin-base: 6px;
   --margin: var(--margin-base) 0px 0px 0px; /*top right bottom left */
-  --padding-base: 2px;
-  --padding: var(--padding-base) 6px var(--padding-base) 6px;
+  --padding-base: 3px;
+  --padding: var(--padding-base) 10px var(--padding-base) 10px;
+
+  --color: unset;
+  --box-color: lightgray;
+  --border-color: black;
+  --button-color: unset;
+  --button-text: black;
+  --link-color: LinkText;
+  --primary-color: black;
+  --input-color: white;
+  --input-text: black;
+  --selection-color: Highlight;
+}
+
+@media (pointer:coarse) {
+  :root {
+    --size: 20px;
+    --padding-base: 4px;
+    --padding: var(--padding-base) 8px var(--padding-base) 8px;
+  }
 }
 
 .ui_group .ui_paths li {
@@ -19,12 +33,13 @@
 }
 
 .ui_group .ui_paths li+li:before {
-  color: gray;
+  color: var(--box-color);
   content: "/\00a0";
 }
 
 .ui_group .ui_paths li a {
   text-decoration: none;
+  color: var(--link-color);
 }
 
 .ui_group .ui_paths {
@@ -46,9 +61,11 @@ span.ui_button {
   display: inline-block;
 }
 
+.ui_group a.ui_button,
 a.ui_button {
   display: inline-block;
   cursor: default;
+  color: var(--button-text);
 }
 
 div.ui_button {
@@ -83,19 +100,35 @@ div.ui_button {
 
 .ui_group {
   cursor: default;
-  color: black;
+  color: var(--color);
   font-family: var(--font);
   font-size: var(--size);
+  box-sizing: border-box;
+}
+
+.margins .ui_group {
+  margin: var(--margin);
 }
 
 html:has(body.ui_dialog) {
-  background-color: lightgray;
+  background-color: gray;
+}
+
+body.ui_dialog.ui_group,
+body.ui_dialog {
+  margin: 20px;
+}
+
+body.ui_dialog.ui_group.margins,
+body.ui_dialog.margins {
+  padding-top: 0;
 }
 
 .ui_dialog {
   background-color: white;
-  border: 2px solid gray;
-  padding: 12px 12px 12px 12px;
+  border: var(--border) solid var(--box-color);
+  border-radius: calc(var(--radius) * 2);
+  padding: 20px;
 }
 
 body.ui_group {
@@ -161,7 +194,7 @@ body.ui_group {
 }
 
 .ui_group li::marker {
-  color: gray;
+  color: var(--box-color);
   font-size: 12px;
 }
 
@@ -170,7 +203,7 @@ body.ui_group {
 }
 
 .ui_group li:has(ul > li)::marker {
-  color: black !important;
+  color: var(--box-color) !important;
   font-size: 10px;
 }
 
@@ -187,7 +220,7 @@ body.ui_group {
 
 .ui_group hr {
   margin: 0;
-  border: 1px solid lightgray;
+  border: 1px solid var(--box-color);
   border-bottom-width: 0;
 }
 
@@ -196,10 +229,12 @@ body.ui_group {
 }
 
 .ui_group .ui_sep {
-  content:'.';
   display: inline-block;
+  color: var(--box-color);
+}
+
+.ui_group.margins .ui_sep {
   margin: var(--margin);
-  opacity: 0;
 }
 
 .ui_text {
@@ -222,6 +257,12 @@ body.ui_group {
   margin: 0;
 }
 
+.ui_label a,
+.ui_group a {
+  text-decoration: none;
+  color: var(--link-color);
+}
+
 .ui_label.info {
   font-size: smaller;
   background-color: lightgray;
@@ -236,7 +277,7 @@ body.ui_group {
   border-radius: var(--radius);
   background-color: var(--button-color);
   text-decoration: none;
-  color: inherit;
+  color: var(--button-text);
   text-align: center;
   font-family: var(--font);
   font-size: var(--size);
@@ -265,10 +306,12 @@ body.ui_group {
 .ui_tag .ui_button {
   padding-right: 0;
   background-color: lightgray;
-  transform: translateX(3px);
+  color: gray;
+  transform: translateX(6px);
   padding: 0 !important;
   margin: 0 !important;
   border: 0 !important;
+  font-weight: bold;
 }
 
 .ui_tag a {
@@ -287,6 +330,7 @@ body.ui_group {
 
 .ui_button.borderless {
   background-color: initial;
+  font-weight: bold;
 }
 
 .ui_button.inline,
@@ -294,6 +338,12 @@ body.ui_group {
   background-color: initial;
   margin: 0;
   border: 0;
+  font-weight: bold;
+}
+
+.ui_button.inline:last-child,
+.ui_group.margins .ui_button.inline:last-child {
+  padding-right: 0;
 }
 
 .full-width {
@@ -323,28 +373,21 @@ body.ui_group {
 
 .box {
   border-radius: var(--radius);
-  border: 1px solid lightgray;
+  border: 1px solid var(--box-color);
+}
+
+.padding {
   padding: 12px 12px 12px 12px; /*top right bottom left */
 }
 
-body.ui_group.margins.box {
+body.margins.padding {
   margin: 0;
-  padding: 12px 12px 12px 12px; /*top right bottom left */
-}
-
-.ui_group.margins .box,
-.ui_group.margins.box {
   padding: 6px 12px 12px 12px; /*top right bottom left */
 }
 
-
-.ui_group.margins .box,
-.ui_group.margins.box {
-  margin: var(--margin);
-}
-
-.marginless {
-  margin: 0 !important;
+.margins .padding,
+.margins.padding {
+  padding: 6px 12px 12px 12px; /*top right bottom left */
 }
 
 .marginless > * {
@@ -363,7 +406,8 @@ body.ui_group.margins.box {
   font-family: var(--font);
   font-size: var(--size);
   background-color: var(--input-color);
-  border: 1px dotted gray;
+  border: 1px dotted var(--border-color);
+  border-radius: 0;
   font-size: inherit;
   margin: 0;
   vertical-align: bottom;
@@ -373,11 +417,17 @@ body.ui_group.margins.box {
 .ui_group input {
   font-family: var(--font);
   font-size: var(--size);
-  padding: var(--padding);
+  padding: var(--padding-base) var(--padding-base) var(--padding-base) var(--padding-base); 
   margin-right: var(--margin-base);
   margin: 0;
   border-radius: 0;
   box-sizing: border-box;
+}
+
+.ui_group input:focus {
+  outline-color: var(--selection-color);
+  outline-width: 2px;
+  outline-style: solid;
 }
 
 .ui_group.margins textarea,
@@ -429,14 +479,14 @@ body.ui_group.margins.box {
 .ui_group input[type=datetime-local] {
   margin: 0;
   border: 0;
-  border-bottom: dotted 1px gray;
-  background-color: inherit;
+  border-bottom: dotted 1px var(--border-color);
   background-color: var(--input-color);
+  color: var(--input-text);
 }
 
 .ui_group input[type=file] {
   color: gray;
-  border-bottom: dotted 1px gray;
+  border-bottom: dotted 1px var(--border-color);
   font-family: inherit;
   font-size: inherit;
   padding: var(--padding);
@@ -463,7 +513,7 @@ body.ui_group.margins.box {
   font-family: var(--font);
   font-size: var(--size);
   font-weight: normal;
-  color: inherit;
+  color: var(--button-text);
   background-color: inherit;
   border: var(--border) solid var(--border-color);
   padding: var(--padding);

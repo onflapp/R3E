@@ -16,7 +16,7 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
   <title>copy to</title>
 </head>
 
-<body class="ui_group ui_dialog">
+<body class="ui_group ui_dialog margins">
 
   <h1 class="ui_label underlined">Copy "{{name}}"
     <a class="ui_button inline pull-right" href="{{req_path "." "ui-close"}}">X</a>
@@ -61,7 +61,7 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
     <input type="hidden" name=":copyto" value="{{res_path R.DATA_PATH "{:name}"}}">
     <input type="hidden" name=":forward" value="{{req_path "." "ui-close"}}">
 
-    <button type="submit">copy</button>
+    <button type="submit">Copy</button>
   </form>
 
   <h3>Export</h3>
@@ -69,7 +69,7 @@ autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
   <a class="ui_button" target="_blank" href="{{req_path "." "export"}}">as JSON</a>
   <a class="ui_button" href="{{req_path "." "res-exportto"}}{{R.DATA_PATH}}">to resource...</a>
 {{#if isContentResource}}
-  <a class="ui_button" href="{{req_path "." "res-importto"}}{{R.DATA_PATH}}">import into...</a>
+  <a class="ui_button" href="{{req_path "." "res-importto"}}{{R.DATA_PATH}}">Import into...</a>
 {{/if}}
 
 </body>
