@@ -44,7 +44,6 @@ function popupPath(type, path_ref, cb) {
   let onclick = function(evt) {
     if (document.body.classList.contains('mode_popup-visible')) {
       delete el.removeCB;
-      clearMode('edit');
       el.classList.remove('visible');
       document.body.classList.remove('mode_popup-visible');
       bg.removeEventListener('click', onclick);
@@ -53,6 +52,9 @@ function popupPath(type, path_ref, cb) {
       if (evt) {
         evt.preventDefault();
         evt.stopPropagation();
+      }
+      if (el['popupCB']) {
+        el.popupCB();
       }
     }
   };
@@ -68,7 +70,7 @@ function popupPath(type, path_ref, cb) {
     delete el.removeCB;
     bg.removeEventListener('click', onclick);
     bg.remove();
-    Utils.flushResourceCache();
+    if (val) Utils.flushResourceCache();
     cb(val);
   };
 
@@ -205,13 +207,14 @@ function clearMode(name) {
   sessionStorage.removeItem(`__LAST_MODE_${name}`);
 }
 
-function saveMode(name) {
+function saveMode(name, any) {
   let i = $(`.mode_${name}`).attr('id');
+  let l = window.location.toString();
   let v = {
     element:i,
     scroll:document.scrollingElement.scrollTop,
     height:document.scrollingElement.clientHeight,
-    location:window.location.toString()
+    location:(any ? '*' : l)
   };
 
   sessionStorage.setItem(`__LAST_MODE_${name}`, JSON.stringify(v));
@@ -225,11 +228,11 @@ function restoreMode(name, reset) {
 
   if (!v) return;
 
-  console.log(v);
-  if (v.location == u) {
+  if (v.location == u || v.location == '*') {
     let $el = $('#'+v.element);
     if ($el.length) {
       $el.addClass(cl);
+      document.body.classList.add(name);
       //$el.get(0).scrollIntoViewIfNeeded();
       console.log($el.get(0));
       console.log('scroll into view');
@@ -245,6 +248,7 @@ function restoreMode(name, reset) {
     }
     else {
       document.body.classList.add(cl);
+      document.body.classList.add(name);
     }
   }
 
@@ -337,20 +341,24 @@ $(function () {
         if (evt.target.tagName == 'TEXTAREA') return;
 
         el.classList.remove(cl);
+        document.body.classList.remove(cn);
         clearMode(cn);
       }
       else {
         el.classList.add(cl);
+        document.body.classList.add(cn);
         if (sv) saveMode(cn);
       }
     }
     else {
       if (document.body.classList.contains(cl)) {
         document.body.classList.remove(cl);
+        document.body.classList.remove(cn);
         clearMode(cn);
       }
       else {
         document.body.classList.add(cl);
+        document.body.classList.add(cn);
         if (sv) saveMode(cn);
       }
     }
