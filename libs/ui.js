@@ -405,6 +405,7 @@ $(function () {
     if (!path && href) path = href;
 
     popupPath(0, path, function(item) {
+      if (!item) return;
       if (save) saveMode(save);
       Utils.flushResourceCache();
       $el.val(item);

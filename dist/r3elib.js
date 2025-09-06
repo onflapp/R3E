@@ -3063,6 +3063,15 @@ class HBSRendererFactory extends TemplateRendererFactory {
             if (!selector)
                 selector = 'default';
             let render = function (contentType, content) {
+                if (contentType === 'application/json') {
+                    try {
+                        content = JSON.parse(content);
+                        contentType = 'object/javascript';
+                    }
+                    catch (ex) {
+                        console.log(ex);
+                    }
+                }
                 if (contentType === 'object/javascript') {
                     let out = '';
                     if (Array.isArray(content)) {

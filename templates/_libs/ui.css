@@ -147,6 +147,7 @@ body.ui_group {
 
 .ui_group h1 {
   font-size: x-large;
+  font-weight: normal;
   margin: 0;
 }
 
@@ -156,10 +157,12 @@ body.ui_group {
  
 .ui_group h2 {
   font-size: large;
+  font-weight: normal;
   margin: 0;
 }
 
 .ui_group.margins h2 {
+  font-weight: normal;
   margin: var(--margin-base) 0px var(--margin-base) 0px;
 }
 
@@ -210,7 +213,7 @@ body.ui_group {
 .ui_group li > ul ,
 .ui_group li > ol {
   margin: 0;
-  padding-inline-start: 24px;
+  padding-inline-start: 16px;
 }
 
 .ui_group.margins li > ul ,
@@ -247,6 +250,10 @@ body.ui_group {
   font-size: var(--size);
   padding-top: var(--padding-base);
   padding-bottom: var(--padding-base);
+}
+
+li .ui_label {
+  padding: unset;
 }
 
 .ui_group.margins .ui_label {
@@ -337,6 +344,7 @@ body.ui_group {
 .ui_group.margins .ui_button.inline {
   background-color: initial;
   margin: 0;
+  padding: 0;
   border: 0;
   font-weight: bold;
 }
@@ -453,7 +461,7 @@ body.margins.padding {
 
 .ui_group input[type=range]::-webkit-slider-thumb {
   appearance: none;
-  background-color: var(--button-color);
+  background-color: var(--input-color);
   border: var(--border) solid var(--border-color);
   height: 12px;
   width: 12px;
