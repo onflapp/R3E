@@ -18,14 +18,19 @@
   --input-color: white;
   --input-text: black;
   --selection-color: Highlight;
+  --selection-text: white;
+  --list-offset: 16px;
+  --list-marker: 12px;
 }
 
 @media (pointer:coarse) {
   :root {
-    --size: 20px;
-    --padding-base: 4px;
-    --padding: var(--padding-base) 8px var(--padding-base) 8px;
+    --size: 14px;
+    --margin-base: 12px;
+    --padding-base: 6px;
+    --padding: 8px 6px 8px 6px;
   }
+  
 }
 
 .ui_group .ui_paths li {
@@ -201,11 +206,13 @@ body.ui_group {
   font-size: 12px;
 }
 
-.ui_group li:has(ul > li) {
+.ui_group li:has(ul > li),
+.ui_group li:has(ol > li) {
   list-style-type: disclosure-open;
 }
 
-.ui_group li:has(ul > li)::marker {
+.ui_group li:has(ul > li)::marker,
+.ui_group li:has(ol > li)::marker {
   color: var(--box-color) !important;
   font-size: 10px;
 }
@@ -253,7 +260,7 @@ body.ui_group {
 }
 
 li .ui_label {
-  padding: unset;
+  margin: 0 !important;
 }
 
 .ui_group.margins .ui_label {
@@ -266,6 +273,7 @@ li .ui_label {
 
 .ui_label a,
 .ui_group a {
+  -webkit-tap-highlight-color: transparent;
   text-decoration: none;
   color: var(--link-color);
 }
@@ -277,6 +285,7 @@ li .ui_label {
 }
 
 .ui_button {
+  -webkit-tap-highlight-color: transparent;
   user-select: none;
   -webkit-user-select: none;
   border: var(--border) solid var(--border-color);
@@ -293,6 +302,7 @@ li .ui_label {
 }
 
 .ui_tag {
+  -webkit-tap-highlight-color: transparent;
   user-select: none;
   -webkit-user-select: none;
   display: inline-block;
@@ -302,7 +312,7 @@ li .ui_label {
   background-color: lightgray;
   font-family: var(--font);
   font-size: var(--size);
-  border: 1px solid lightgray;
+  xborder: 1px solid lightgray;
 }
 
 .ui_group.margins .ui_tag,
@@ -354,6 +364,54 @@ li .ui_label {
   padding-right: 0;
 }
 
+.ui_group .ui_tree,
+.ui_group .ui_tree ul,
+.ui_group .ui_tree li,
+.ui_group .ui_tree ol {
+  list-style-type: none;
+  padding-inline-start: 0px;
+}
+
+.ui_tree li .ui_tree-item {
+  margin: 0 !important;
+  padding: var(--padding-base) 3px var(--padding-base) 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ui_tree .ui_tree-item > div {
+  margin-left: var(--list-marker);
+}
+
+.ui_tree div.ui_tree-item:before {
+  content:'-';
+  visibility: hidden;
+  float: left;
+  color: var(--box-color);
+  width: var(--list-marker);
+}
+
+.ui_tree div.ui_tree-item:has( + ol li):before,
+.ui_tree div.ui_tree-item:has( + ul li):before {
+  content:'\23F7';
+  visibility: visible;
+}
+
+.ui_tree ol .ui_tree-item { padding-left: calc(var(--list-offset) * 1); }
+.ui_tree ol ol .ui_tree-item { padding-left: calc(var(--list-offset) * 2); }
+.ui_tree ol ol ol .ui_tree-item { padding-left: calc(var(--list-offset) * 3); }
+.ui_tree ol ol ol ol .ui_tree-item { padding-left: calc(var(--list-offset) * 4); }
+.ui_tree ol ol ol ol ol .ui_tree-item { padding-left: calc(var(--list-offset) * 5); }
+.ui_tree ol ol ol ol ol ol .ui_tree-item { padding-left: calc(var(--list-offset) * 6); }
+
+.ui_tree ul .ui_tree-item { padding-left: calc(var(--list-offset) * 1); }
+.ui_tree ul ul .ui_tree-item { padding-left: calc(var(--list-offset) * 2); }
+.ui_tree ul ul ul .ui_tree-item { padding-left: calc(var(--list-offset) * 3); }
+.ui_tree ul ul ul ul .ui_tree-item { padding-left: calc(var(--list-offset) * 4); }
+.ui_tree ul ul ul ul ul .ui_tree-item { padding-left: calc(var(--list-offset) * 5); }
+.ui_tree ul ul ul ul ul ul .ui_tree-item { padding-left: calc(var(--list-offset) * 6); }
+
 .full-width {
   width: 100%;
 }
@@ -400,6 +458,22 @@ body.margins.padding {
 
 .marginless > * {
   margin: 0 !important;
+}
+
+.selected {
+  background-color: var(--selection-color);
+  border-radius: 2px;
+  color: var(--selection-text);
+}
+
+.nonselectable {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.selectable {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 .borderless {
@@ -457,6 +531,7 @@ body.margins.padding {
   height: 2px;
   padding: 1px 0px 1px 0px;
   transform: translateY(-3px);
+  outline: none;
 }
 
 .ui_group input[type=range]::-webkit-slider-thumb {
@@ -465,7 +540,16 @@ body.margins.padding {
   border: var(--border) solid var(--border-color);
   height: 12px;
   width: 12px;
+  box-shadow: none;
   border-radius: 6px;
+}
+
+@media (pointer:coarse) {
+  .ui_group input[type=range]::-webkit-slider-thumb {
+    height: 24px;
+    width: 24px;
+    border-radius: 12px;
+  }
 }
 
 .ui_group.margins input[type=file],

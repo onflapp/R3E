@@ -437,13 +437,13 @@ $(function () {
     let path = $el.data('path');
     let main = $el.data('form');
     let href = $el.attr('href');
-    let name = $el.attr('name');
     let save = $el.data('mode_save');
-    let $main = $(main);
+    let $form = $el.parents('form');
+    let $main = main?$(main):null;
 
-    if (!$main || $main.length == 0) $main = $el.parents('form');
     if (!path && href) path = href;
     if (!path) path = $main.find("input[name=':forward']").val();
+    if (!$main || $main.length == 0) $main = $el.parents('form');
 
     if (save) saveMode(save);
     Utils.flushResourceCache();
@@ -457,6 +457,38 @@ $(function () {
       window.open(path, '_blank');
     }
   });
+
+  /*
+    <button type="submit" class="act_dialog-confirm" data-message="Delete?">x</button>
+  */
+
+  $(document).on('click', '.act_dialog-confirm', function(evt) {
+    evt.preventDefault();
+
+    let $el = $(evt.target);
+    let main = $el.data('form');
+    let msg = $el.data('message');
+    let save = $el.data('mode_save');
+    let $main = main?$(main):null;
+    let $form = $el.parents('form');
+
+    if (!msg) msg = 'Do you want to continue?';
+
+    if (!confirm(msg)) return;
+
+    if (save) saveMode(save);
+    Utils.flushResourceCache();
+    if ($main && $main.length) {
+      submitFormAsync($main.get(0), function() {
+        Utils.flushResourceCache();
+        $form.trigger('submit');
+      });
+    }
+    else {
+      $form.trigger('submit');
+    }
+  });
+
 
   $(document).on('change', '.act_form-submit', function(evt) {
     evt.preventDefault();
