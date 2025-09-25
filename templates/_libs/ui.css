@@ -7,6 +7,7 @@
   --margin: var(--margin-base) 0px 0px 0px; /*top right bottom left */
   --padding-base: 3px;
   --padding: var(--padding-base) 10px var(--padding-base) 10px;
+  --padding-inline: calc(var(--padding-base) + var(--border)) 0 calc(var(--padding-base) + var(--border)) 0;
 
   --color: unset;
   --box-color: lightgray;
@@ -35,6 +36,7 @@
 
 .ui_group .ui_paths li {
   display: inline-block;
+  padding: var(--padding-inline);
 }
 
 .ui_group .ui_paths li+li:before {
@@ -241,6 +243,7 @@ body.ui_group {
 .ui_group .ui_sep {
   display: inline-block;
   color: var(--box-color);
+  padding: var(--padding-inline);
 }
 
 .ui_group.margins .ui_sep {
@@ -255,8 +258,11 @@ body.ui_group {
 .ui_label {
   font-family: var(--font);
   font-size: var(--size);
-  padding-top: var(--padding-base);
-  padding-bottom: var(--padding-base);
+  padding: var(--padding-inline);
+}
+
+span.ui_label {
+  display: inline-block;
 }
 
 li .ui_label {
