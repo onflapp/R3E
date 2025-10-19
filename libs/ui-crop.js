@@ -399,6 +399,7 @@ $.fn.renderToCanvas = function (options) {
 };
 
 $.fn.crop = function (options) {
+  document.getSelection().removeAllRanges();
   var c = ImageCropper;
   if ("ontouchstart" in window) {
     c.CROP_EVT_MOVE = "touchmove";

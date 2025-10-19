@@ -2,7 +2,7 @@
   --font: system-ui;
   --size: 12px;
   --border: 1px;
-  --radius: 0;
+  --radius: 2px;
   --margin-base: 6px;
   --margin: var(--margin-base) 0px 0px 0px; /*top right bottom left */
   --padding-base: 3px;
@@ -10,14 +10,17 @@
   --padding-inline: calc(var(--padding-base) + var(--border)) 0 calc(var(--padding-base) + var(--border)) 0;
 
   --color: unset;
-  --box-color: lightgray;
-  --border-color: black;
+  --box-color: #DEDEDE;
+  --primary-color: #767676;
+  --border-color: #767676;
+  --border-color: gray;
   --button-color: unset;
   --button-text: black;
   --link-color: LinkText;
-  --primary-color: black;
   --input-color: white;
   --input-text: black;
+  --input-border: 1px solid #E3E3E3;
+  --input-border_b: 1px solid #BBBBBB;
   --selection-color: Highlight;
   --selection-text: white;
   --list-offset: 16px;
@@ -153,6 +156,7 @@ body.ui_group {
 }
 
 .ui_group h1 {
+  color: var(--border-color);
   font-size: x-large;
   font-weight: normal;
   margin: 0;
@@ -163,6 +167,7 @@ body.ui_group {
 }
  
 .ui_group h2 {
+  color: var(--border-color);
   font-size: large;
   font-weight: normal;
   margin: 0;
@@ -174,6 +179,7 @@ body.ui_group {
 }
 
 .ui_group h3 {
+  color: var(--border-color);
   font-size: var(--size);
   margin: 0;
 }
@@ -183,6 +189,7 @@ body.ui_group {
 }
 
 .ui_group h4 {
+  color: var(--border-color);
   font-size: small;
   margin: 0;
 }
@@ -204,7 +211,7 @@ body.ui_group {
 }
 
 .ui_group li::marker {
-  color: var(--box-color);
+  color: var(--border-color);
   font-size: 12px;
 }
 
@@ -215,7 +222,7 @@ body.ui_group {
 
 .ui_group li:has(ul > li)::marker,
 .ui_group li:has(ol > li)::marker {
-  color: var(--box-color) !important;
+  color: var(--border-color) !important;
   font-size: 10px;
 }
 
@@ -394,7 +401,7 @@ li .ui_label {
   content:'-';
   visibility: hidden;
   float: left;
-  color: var(--box-color);
+  color: var(--border-color);
   width: var(--list-marker);
 }
 
@@ -402,6 +409,7 @@ li .ui_label {
 .ui_tree div.ui_tree-item:has( + ul li):before {
   content:'\23F7';
   visibility: visible;
+  font-size: var(--size);
 }
 
 .ui_tree ol .ui_tree-item { padding-left: calc(var(--list-offset) * 1); }
@@ -494,7 +502,11 @@ body.margins.padding {
   font-family: var(--font);
   font-size: var(--size);
   background-color: var(--input-color);
-  border: 1px dotted var(--border-color);
+  border: var(--input-border_b);
+  padding: var(--padding-base) var(--padding-base) var(--padding-base) var(--padding-base); 
+  outline-color: var(--selection-color);
+  outline-width: 2px;
+  outline-style: solid;
   border-radius: 0;
   font-size: inherit;
   margin: 0;
@@ -577,14 +589,25 @@ body.margins.padding {
 .ui_group input[type=datetime-local] {
   margin: 0;
   border: 0;
-  border-bottom: dotted 1px var(--border-color);
+  border: var(--input-border);
+  border-bottom: var(--input-border_b);
   background-color: var(--input-color);
   color: var(--input-text);
 }
 
+.ui_group.margins input[type=date],
+.ui_group.margins input[type=time],
+.ui_group.margins input[type=week],
+.ui_group.margins input[type=datetime-local] {
+  border: 0;
+  border-bottom: var(--input-border_b);
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
 .ui_group input[type=file] {
   color: gray;
-  border-bottom: dotted 1px var(--border-color);
+  border-bottom: var(--input-border_b);
   font-family: inherit;
   font-size: inherit;
   padding: var(--padding);
@@ -628,7 +651,7 @@ body.margins.padding {
   border: 0;
   border-radius: 0;
   appearance: none;
-  border-bottom: var(--border) solid var(--border-color);
+  border-bottom: var(--input-border_b);
   padding: var(--padding);
   color: inherit;
   background-color: inherit;

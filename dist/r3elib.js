@@ -1449,23 +1449,54 @@ class ResourceRequestContext {
             });
         });
     }
+    callTemplateScript(resourcePath, res, writer) {
+        let self = this;
+        self.sourceTemplateScript(resourcePath).then(function (func) {
+            if (func && typeof func == 'function') {
+                try {
+                    func(res, writer, self);
+                }
+                catch (ex) {
+                    console.log(resourcePath);
+                    console.log(ex);
+                }
+            }
+            else {
+                console.log('' + resourcePath + ' is not template function');
+            }
+        });
+    }
     sourceTemplateScript(resourcePath) {
         let self = this;
         let tres = this.getTemplateResourceResolver();
-        tres.resolveResource(resourcePath, function (res) {
-            if (res && res.isContentResource()) {
-                res.read(new ContentWriterAdapter('utf8', function (buff) {
-                    if (buff) {
-                        try {
-                            eval(buff);
+        if (resourcePath.charAt(0) == '/') {
+            tres = this.getResourceResolver();
+        }
+        return new Promise(function (resolve) {
+            tres.resolveResource(resourcePath, function (res) {
+                if (res && res.isContentResource()) {
+                    res.read(new ContentWriterAdapter('utf8', function (buff) {
+                        if (buff) {
+                            try {
+                                let rv = eval(buff);
+                                resolve(rv);
+                            }
+                            catch (ex) {
+                                console.log(resourcePath);
+                                console.log(ex);
+                                resolve(null);
+                            }
                         }
-                        catch (ex) {
-                            console.log(resourcePath);
-                            console.log(ex);
+                        else {
+                            resolve(null);
                         }
-                    }
-                }), null);
-            }
+                    }), null);
+                }
+                else {
+                    console.log('' + resourcePath + ' is not template');
+                    resolve(null);
+                }
+            });
         });
     }
     getQueryProperties() {

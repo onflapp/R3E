@@ -126,7 +126,7 @@ function triggerAction(cl) {
   setTimeout(function() {
     var el = document.querySelector(cl);
     if (el) el.click();
-  },100);
+  },50);
 }
 
 function toggleFilterMode(cl) {
@@ -288,6 +288,18 @@ function storeDocumentHTML(ctx, doc, dest) {
 
     done();
   });
+}
+
+function formChanges(form) {
+  if (!form) return 0;
+  if (!form.elements) return 0;
+
+  let changes = 0;
+  for (var i = 0; i < form.elements.length; i++) {
+    var it = form.elements[i];
+    if (it.tagName == 'INPUT' && it.getAttribute('value') != it.value) changes++;
+  }
+  return changes;
 }
 
 function storeDocumentIMG(ctx, src, dest, cb) {
@@ -489,6 +501,24 @@ $(function () {
     }
   });
 
+  $(document).on('click', '.act_trigger', function(evt) {
+    let nm = evt.target.dataset['trigger_sel'];
+    let en = evt.target.dataset['trigger'];
+
+    evt.preventDefault();
+    evt.stopPropagation();
+
+    let $el = $(nm);
+    if ($el.length == 0) {
+      console.log('unable to find action ' + nm);
+    }
+    else if (!en || en == 'click') {
+      triggerAction(nm);
+    }
+    else {
+      $el.trigger(en);
+    }
+  });
 
   $(document).on('change', '.act_form-submit', function(evt) {
     evt.preventDefault();
@@ -510,3 +540,4 @@ $.post = function(url, data, cb) {
 
 $.get = function(url, data, cb) {
 };
+
