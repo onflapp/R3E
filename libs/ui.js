@@ -87,6 +87,15 @@ function cancelPopupPath() {
   }
 }
 
+function closePopupPath(val) {
+  if (window.top != window) {
+    window.top.postMessage(val, window.location);
+  }
+  else if (window.opener != window) {
+    window.opener.postMessage(val, window.location);
+  }
+}
+
 function getDataProperty(el, name) {
   let val = $(el).data(name);
   if (val) return val;
