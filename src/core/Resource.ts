@@ -147,6 +147,10 @@ abstract class Resource extends Data implements ContentReader {
     return null;
   }
 
+  public getPreferredChidrenOrder(): Array < string > {
+    return null;
+  }
+
   public getRenderTypes(): Array < string > {
     let rv = [];
     let rt = this.getRenderType();
@@ -292,6 +296,7 @@ abstract class Resource extends Data implements ContentReader {
 
   public listChildrenResources(callback: any) {
     let self = this;
+    let order = this.getPreferredChidrenOrder();
     this.listChildrenNames(function (ls) {
       let rv = [];
       let sz = 0;
@@ -302,6 +307,7 @@ abstract class Resource extends Data implements ContentReader {
             sz++;
             if (res) rv.push(res);
             if (sz === ls.length) {
+              rv = Tools.reorderChildren(rv, order);
               callback(rv);
             }
           });

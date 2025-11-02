@@ -150,6 +150,8 @@ class Utils {
   }
 
   public static listSortByNames(list, names) {
+    if (!names || names.length == 0) return list;
+
     let rv = [];
     let done = {};
     for (let i = 0; i < names.length; i++) {
@@ -168,6 +170,9 @@ class Utils {
 
   public static listRemoveNames(list, names) {
     let rv = [];
+    if (!list) return rv;
+    if (!names) return rv;
+
     for (let i = 0; i < list.length; i++) {
       if (names.indexOf(list[i]) === -1) {
         rv.push(list[i]);
@@ -177,8 +182,17 @@ class Utils {
   }
 
   public static listMoveItem(list, item, ref, offset) {
+    if (list == null) return [item];
+
     let x = 0;
     let v = list.indexOf(item);
+
+    if (typeof offset == 'undefined') offset = 1;
+    if (!ref) {
+      list.unshift(item);
+      return list;
+    }
+
     if (item === ref) {
       x = v + offset;
       if (x >= 0) {
@@ -199,6 +213,8 @@ class Utils {
 
       list.splice(x, 0, item);
     }
+
+    return list;
   }
 
   public static compareNames(a, b) {

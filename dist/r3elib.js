@@ -125,6 +125,8 @@ class Utils {
         return insert(prev, next)[0];
     }
     static listSortByNames(list, names) {
+        if (!names || names.length == 0)
+            return list;
         let rv = [];
         let done = {};
         for (let i = 0; i < names.length; i++) {
@@ -142,6 +144,10 @@ class Utils {
     }
     static listRemoveNames(list, names) {
         let rv = [];
+        if (!list)
+            return rv;
+        if (!names)
+            return rv;
         for (let i = 0; i < list.length; i++) {
             if (names.indexOf(list[i]) === -1) {
                 rv.push(list[i]);
@@ -150,8 +156,16 @@ class Utils {
         return rv;
     }
     static listMoveItem(list, item, ref, offset) {
+        if (list == null)
+            return [item];
         let x = 0;
         let v = list.indexOf(item);
+        if (typeof offset == 'undefined')
+            offset = 1;
+        if (!ref) {
+            list.unshift(item);
+            return list;
+        }
         if (item === ref) {
             x = v + offset;
             if (x >= 0) {
@@ -176,6 +190,7 @@ class Utils {
             }
             list.splice(x, 0, item);
         }
+        return list;
     }
     static compareNames(a, b) {
         let xa = a.lastIndexOf('_');
@@ -591,6 +606,9 @@ class Resource extends Data {
     getCreationDate() {
         return null;
     }
+    getPreferredChidrenOrder() {
+        return null;
+    }
     getRenderTypes() {
         let rv = [];
         let rt = this.getRenderType();
@@ -715,6 +733,7 @@ class Resource extends Data {
     }
     listChildrenResources(callback) {
         let self = this;
+        let order = this.getPreferredChidrenOrder();
         this.listChildrenNames(function (ls) {
             let rv = [];
             let sz = 0;
@@ -726,6 +745,7 @@ class Resource extends Data {
                         if (res)
                             rv.push(res);
                         if (sz === ls.length) {
+                            rv = Tools.reorderChildren(rv, order);
                             callback(rv);
                         }
                     });
@@ -1636,6 +1656,9 @@ class ResourceRequestContext {
             else {
                 map['isContentResource'] = false;
             }
+            let co = res.getPreferredChidrenOrder();
+            if (co)
+                map['childrenOrder'] = co;
             let md = res.getModificationDate();
             if (md)
                 map['modificationDate'] = md.getTime();
@@ -2199,12 +2222,40 @@ class Tools {
         resource.values[name] = '' + n;
         return n;
     }
-    static reoderChildren(children, order) {
+    static reorderChildren(children, order) {
         children.sort(function (a, b) {
-            let ai = order.indexOf(a.getName());
-            let bi = order.indexOf(b.getName());
-            return (ai - bi);
+            return Utils.compareNames(a.getName(), b.getName());
         });
+        if (order) {
+            let rv = [];
+            let done = {};
+            let find = function (name) {
+                for (let z = 0; z < children.length; z++) {
+                    let it = children[z];
+                    if (it.getName() == name)
+                        return it;
+                }
+                return null;
+            };
+            for (let i = 0; i < order.length; i++) {
+                let n = order[i];
+                let c = find(n);
+                if (c) {
+                    rv.push(c);
+                    done[n] = n;
+                }
+            }
+            for (let z = 0; z < children.length; z++) {
+                let it = children[z];
+                let n = it.getName();
+                if (!done[n])
+                    rv.push(it);
+            }
+            return rv;
+        }
+        else {
+            return children;
+        }
     }
     static exportChilrenResources(resource, level, writer, incSource) {
         let processingc = 0;
@@ -2482,6 +2533,15 @@ class ObjectResource extends Resource {
         let cd = this.values['_cd'];
         if (typeof cd === "string") {
             return new Date(parseInt(cd));
+        }
+        else {
+            return null;
+        }
+    }
+    getPreferredChidrenOrder() {
+        let cd = this.values['_co'];
+        if (typeof cd === "string") {
+            return cd.split(',');
         }
         else {
             return null;

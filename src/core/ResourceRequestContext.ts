@@ -619,6 +619,9 @@ class ResourceRequestContext implements ScriptContext {
         map['isContentResource'] = false;
       }
 
+      let co = res.getPreferredChidrenOrder();
+      if (co) map['childrenOrder'] = co;
+
       let md = res.getModificationDate();
       if (md) map['modificationDate'] = md.getTime();
       else    map['modificationDate'] = 0;

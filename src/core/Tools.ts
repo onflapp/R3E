@@ -9,13 +9,41 @@ class Tools {
     return n;
   }
 
-  public static reoderChildren(children, order) {
+  public static reorderChildren(children, order) {
     children.sort(function (a, b) {
-      let ai = order.indexOf(a.getName());
-      let bi = order.indexOf(b.getName());
-
-      return (ai - bi);
+      return Utils.compareNames(a.getName(), b.getName());        
     });
+    if (order) {
+      let rv = [];
+      let done = {};
+      let find = function(name) {
+        for (let z = 0; z < children.length; z++) {
+          let it = children[z];
+          if (it.getName() == name) return it;
+        }
+        return null;
+      };
+
+      for (let i = 0; i < order.length; i++) {
+        let n = order[i];
+        let c = find(n);
+        if (c) {
+          rv.push(c);
+          done[n] = n;
+        }
+      }
+
+      for (let z = 0; z < children.length; z++) {
+        let it = children[z];
+        let n = it.getName();
+        if (!done[n]) rv.push(it);
+      }
+
+      return rv;
+    }
+    else {
+      return children;
+    }
   }
 
   public static exportChilrenResources(resource: Resource, level, writer: ContentWriter, incSource ? : boolean): void {

@@ -382,15 +382,41 @@ li .ui_label {
 .ui_group .ui_tree li,
 .ui_group .ui_tree ol {
   list-style-type: none;
-  padding-inline-start: 0px;
+  /*padding-inline-start: 0px;*/
 }
 
 .ui_tree li .ui_tree-item {
-  margin: 0 !important;
+  margin: 0;
   padding: var(--padding-base) 3px var(--padding-base) 3px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.ui_tree.list li .ui_tree-item {
+  margin-bottom: 1px;
+  border-radius: var(--radius);
+  border: 1px solid var(--box-color);
+}
+.ui_tree.guided ul,
+.ui_tree.guided ol {
+  position: relative;
+}
+ 
+.ui_tree.guided ul:before,
+.ui_tree.guided ol:before {
+  display: block;
+  content: '';
+  position: absolute;
+  bottom: 0;
+  top: 0;
+  left: 7px;
+  border-left: 1px dotted var(--box-color);
+}
+
+.sec_item.ui_tree-item.selected + ul:before,
+.sec_item.ui_tree-item.selected + ol:before {
+  border-left: 1px solid var(--selection-color);
 }
 
 .ui_tree .ui_tree-item > div {
@@ -405,13 +431,23 @@ li .ui_label {
   width: var(--list-marker);
 }
 
+.ui_tree div.ui_tree-item:has( + ol li),
+.ui_tree div.ui_tree-item:has( + ol li) a,
+.ui_tree div.ui_tree-item:has( + ul li),
+.ui_tree div.ui_tree-item:has( + ul li) a {
+  font-weight: bold;
+}
+
 .ui_tree div.ui_tree-item:has( + ol li):before,
 .ui_tree div.ui_tree-item:has( + ul li):before {
   content:'\23F7';
   visibility: visible;
   font-size: var(--size);
+  position: relative;
+  left: 2px;
 }
 
+/*
 .ui_tree ol .ui_tree-item { padding-left: calc(var(--list-offset) * 1); }
 .ui_tree ol ol .ui_tree-item { padding-left: calc(var(--list-offset) * 2); }
 .ui_tree ol ol ol .ui_tree-item { padding-left: calc(var(--list-offset) * 3); }
@@ -425,6 +461,7 @@ li .ui_label {
 .ui_tree ul ul ul ul .ui_tree-item { padding-left: calc(var(--list-offset) * 4); }
 .ui_tree ul ul ul ul ul .ui_tree-item { padding-left: calc(var(--list-offset) * 5); }
 .ui_tree ul ul ul ul ul ul .ui_tree-item { padding-left: calc(var(--list-offset) * 6); }
+*/
 
 .full-width {
   width: 100%;
@@ -680,9 +717,8 @@ body.margins.padding {
 }
 
 .ui_dragger-ghost {
-  background-color: black;
-  color: white;
-  opacity: 0.8;
+  background-color: var(--selection-color);
+  color: var(--selection-text);
 }
 
 .ui_dragger-canvas {
@@ -697,8 +733,8 @@ body.margins.padding {
   margin: 0;
 }
 
-.ui_dragger-item.selected {
-  opacity: 0.8;
+.dragging .ui_dragger-item.selected {
+  opacity: 0.5;
 }
 
 .ui_dragger-container.over {

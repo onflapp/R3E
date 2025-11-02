@@ -235,7 +235,14 @@ function Dragger() {
     try {
       if (this.DESTINATION) {
         this.DESTINATION.classList.remove(this.OVER_CLASS);
-        if (this.DESTINATION != this.ITEM.parentElement) {
+        var id = this.getDragDestination(this.ITEM.parentElement);
+        if (this.DESTINATION == id) {
+          if (this._delegate('ondropped', this.ITEM, 'over', this.DESTINATION)) {
+            this.ITEM.parentElement.insertBefore(this.ITEM, this.ITEM.parentElement.firstChild);
+            success= true;
+          }
+        }
+        else {
           if (this._delegate('ondropped', this.ITEM, 'over', this.DESTINATION)) {
             if (this._isCanvas(this.DESTINATION) && !this.isFreehand && this.GHOST) {
               var offx = window.pageXOffset;
@@ -341,6 +348,9 @@ function Dragger() {
     var el = document.elementFromPoint(ei.pageX - offx, ei.pageY - 3 - offy);
     var it = this.getDragDestinationItem(el);
     var dest = this.getDragDestination(el);
+    var isc = false;//this._isChildOf(it, dest);
+
+    if (isc) it = null;
 
     if (it) {
       var ra = it.getBoundingClientRect();
@@ -363,7 +373,7 @@ function Dragger() {
       this.AFTER = null;
     }
 
-    if (dest && dest != this.ITEM) {
+    if (dest && dest != this.ITEM && !isc) {
       if (this.DESTINATION && this.DESTINATION != dest) this.DESTINATION.classList.remove(this.OVER_CLASS);
       if (dest != this.CONTAINER) dest.classList.add(this.OVER_CLASS);
 
@@ -540,6 +550,22 @@ function Dragger() {
     else {
       dest.appendChild(src);
     }
+  };
+
+  this._isChildOf = function(it, dest) {
+    if (!it) return false;
+    if (!dest) return false;
+
+    var p = it;
+    while (p) {
+      if (p == dest) {
+        console.log(p);
+        return true;
+      }
+      p = p.parentElement;
+    }
+
+    return false;
   };
 
   this._isCanvas = function(el) {

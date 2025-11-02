@@ -42,6 +42,16 @@ class ObjectResource extends Resource {
     }
   }
 
+  public getPreferredChidrenOrder(): Array < string > {
+    let cd = this.values['_co'];
+    if (typeof cd === "string") {
+      return cd.split(',');
+    }
+    else {
+      return null;
+    }
+  }
+
   public resolveChildResource(name: string, callback: ResourceCallback, walking ? : boolean): void {
     let rv = this.values[name];
 
