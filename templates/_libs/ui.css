@@ -363,6 +363,12 @@ li .ui_label {
   font-weight: bold;
 }
 
+.ui_button.rounded {
+  min-width: initial;
+  border-radius: var(--size);
+  width: 2px;
+}
+
 .ui_button.inline,
 .ui_group.margins .ui_button.inline {
   background-color: initial;
@@ -382,7 +388,10 @@ li .ui_label {
 .ui_group .ui_tree li,
 .ui_group .ui_tree ol {
   list-style-type: none;
-  /*padding-inline-start: 0px;*/
+}
+
+.ui_group .ui_tree {
+  padding-inline-start: 0px;
 }
 
 .ui_tree li .ui_tree-item {
