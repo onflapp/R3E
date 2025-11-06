@@ -2118,22 +2118,26 @@ class ResourceRequestHandler extends EventDispatcher {
             if (copyfrom.length && copyto) {
                 for (let i = 0; i < copyfrom.length; i++) {
                     processing++;
-                    let dest = Utils.filename_path_append(copyto, Utils.filename(copyfrom[i]));
-                    rres.copyResource(copyfrom[i], dest, function () {
+                    let to = copyto;
+                    if (data[':copyto'].endsWith('/'))
+                        to = Utils.filename_path_append(copyto, Utils.filename(copyfrom[i]));
+                    rres.copyResource(copyfrom[i], to, function () {
                         processing--;
-                        self.dispatchAllEvents('post-copyfrom', dest, data);
-                        storedata(dest);
+                        self.dispatchAllEvents('post-copyfrom', to, data);
+                        storedata(resourcePath);
                     });
                 }
             }
             else if (movefrom.length && moveto) {
                 for (let i = 0; i < movefrom.length; i++) {
                     processing++;
-                    let dest = Utils.filename_path_append(moveto, Utils.filename(movefrom[i]));
-                    rres.moveResource(movefrom[i], dest, function () {
+                    let to = moveto;
+                    if (data[':moveto'].endsWith('/'))
+                        to = Utils.filename_path_append(moveto, Utils.filename(movefrom[i]));
+                    rres.moveResource(movefrom[i], to, function () {
                         processing--;
-                        self.dispatchAllEvents('post-movefrom', dest, data);
-                        storedata(dest);
+                        self.dispatchAllEvents('post-movefrom', to, data);
+                        storedata(resourcePath);
                     });
                 }
             }
