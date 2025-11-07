@@ -22,30 +22,30 @@ window.templates={
       "_pt": "resource/content",
       "_content": "(function (res, writer, ctx) {\n  res['R'] = ctx.getRequestProperties();\n  res['Q'] = ctx.getQueryProperties();\n  res['C'] = ctx.getConfigProperties();\n  res['S'] = ctx.getSessionProperties();\n\n  writer.start('application/json');\n  writer.write(JSON.stringify(res, null, 2));\n  writer.end();\n});\n"
     },
-    "keyvalues.js": {
-      "_ct": "text/javascript",
-      "_pt": "resource/content",
-      "_content": "(function (res, writer, ctx) {\n  writer.start('object/javascript');\n  \n  let rv = [];\n  let names = Object.keys(res._);\n\n  names.sort(function(a, b) {\n    return a.localeCompare(b);\n  });\n\n  for (var i = 0; i \x3C names.length; i++) {\n    var name = names[i];\n    var val = res._[name];\n\n    rv.push({\n      key: name,\n      value: val\n    });\n  }\n\n  writer.write(rv);\n  writer.end();\n})\n"
-    },
     "json.js": {
       "_ct": "text/javascript",
       "_pt": "resource/content",
       "_content": "(function (res, writer) {\n  writer.start('application/json');\n  writer.write(JSON.stringify(res, null, 2));\n  writer.end();\n});\n"
     },
-    "object.js": {
+    "keyvalues.js": {
       "_ct": "text/javascript",
       "_pt": "resource/content",
-      "_content": "(function (res, writer) {\n  writer.start('object/javascript');\n  writer.write(res);\n  writer.end();\n});\n"
+      "_content": "(function (res, writer, ctx) {\n  writer.start('object/javascript');\n  \n  let rv = [];\n  let names = Object.keys(res._);\n\n  names.sort(function(a, b) {\n    return a.localeCompare(b);\n  });\n\n  for (var i = 0; i \x3C names.length; i++) {\n    var name = names[i];\n    var val = res._[name];\n\n    rv.push({\n      key: name,\n      value: val\n    });\n  }\n\n  writer.write(rv);\n  writer.end();\n})\n"
+    },
+    "pre-render.js": {
+      "_ct": "text/javascript",
+      "_pt": "resource/content",
+      "_content": "(function (res, writer, ctx) {\n  writer.end();\n});\n"
     },
     "pre-store.js": {
       "_ct": "text/javascript",
       "_pt": "resource/content",
       "_content": "(function (res, writer, ctx) {\n  let tm = (new Date().getTime());\n\n  if (!res['_cd']) res['_cd'] = '' + tm;\n  res['_md'] = '' + tm;\n\n  writer.write(res);\n  writer.end();\n});\n"
     },
-    "pre-render.js": {
+    "object.js": {
       "_ct": "text/javascript",
       "_pt": "resource/content",
-      "_content": "(function (res, writer, ctx) {\n  writer.end();\n});\n"
+      "_content": "(function (res, writer) {\n  writer.start('object/javascript');\n  writer.write(res);\n  writer.end();\n});\n"
     },
     "ui-close.hbs": {
       "_ct": "text/plain",
@@ -81,23 +81,6 @@ window.templates={
     }
   },
   "resource": {
-    "index": {
-      "children.js": {
-        "_ct": "text/javascript",
-        "_pt": "resource/content",
-        "_content": "(function (res, writer, ctx) {\n  writer.start('object/javascript');\n  var qp = ctx.getQueryProperties();\n  var qry = '';\n\n  if (qp && qp['q']) qry = qp['q'];\n  if (!qry) {\n    writer.write([]);\n    writer.end();\n    return;\n  }\n\n  ctx.searchResources('.', qry).then(function(ls) {\n    var rv = [];\n    for (var i = 0; i \x3C ls.length; i++) {\n      var it = ls[i];\n      rv.push(it);\n    } \n    writer.write(rv);\n    writer.end();\n  });\n})\n"
-      },
-      "res-create.hbs": {
-        "_ct": "text/plain",
-        "_pt": "resource/content",
-        "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  {{include_css \"_libs/ui.css\"}}\n\n  {{#partial \"text_opts\"}}\nautocomplete=\"off\" autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\"\n  {{/partial}}\n\n  \x3Ctitle>index content\x3C/title>\n\x3C/head>\n\n\x3Cbody class=\"ui_group dialog\">\n\n  \x3Ch1>Index Resource Content\n    \x3Ca class=\"ui_button pull-right\" href=\"{{req_path \".\" \"ui-close\"}}\">X\x3C/a>\n  \x3C/h1>\n\n  \x3Col class=\"ui_paths\">\n    \x3Cli>\x3Ca href=\"{{req_path \"/\" \"res-list\"}}\">HOME\x3C/a>\x3C/li>\n{{#include \".\" \"parents\"}}\n    \x3Cli>\x3Ca href=\"{{req_path path \"res-list\"}}\">{{name}}\x3C/a>\x3C/li>\n{{/include}}\n    \x3Cli>{{name}}\x3C/li>\n  \x3C/ol>\n\n  \x3Ch4>Index Text\x3C/h4>\n\n  \x3Cform method=\"post\" enctype=\"multipart/form-data\" action=\"{{res_path R.PATH \"{:name}\"}}\">\n    \x3Ctextarea autocorrect=\"off\" autocapitalize=\"none\" {{> text_opts}} name=\"_content\">\x3C/textarea>\n    \x3Cinput type=\"text\" name=\":name|newUUID\" value=\"\" {{> text_opts}} placeholder=\"reference path\">\n    \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{req_path R.PATH \"res-list\"}}\">\n    \x3Cbutton type=\"submit\">index\x3C/button>\n  \x3C/form>\n\n  \x3Ch4>Index File\x3C/h4>\n\n  \x3Cform method=\"post\" enctype=\"multipart/form-data\" action=\"{{res_path R.PATH \"{:name}\"}}\">\n    \x3Cinput type=\"file\" name=\":filename\" value=\"\">\n    \x3Cinput type=\"text\" name=\":name|:filename|newUUID\" value=\"\" {{> text_opts}} placeholder=\"reference path\">\n    \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{req_path R.PATH \"res-list\"}}\">\n    \x3Cbutton type=\"submit\">upload\x3C/button>\n  \x3C/form>\n\n  \x3Ch4>Import File\x3C/h4>\n          \n  \x3Cform method=\"post\" enctype=\"multipart/form-data\" action=\"{{res_path R.PATH}}\">\n    \x3Cinput class=\"form-control\" type=\"file\" name=\":import\" value=\"\">\n    \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{req_path R.PATH \"res-list\"}}\">\n    \x3Cbutton type=\"submit\">import\x3C/button>\n  \x3C/form>\n\n\x3C/body>\n\x3C/html>\n"
-      },
-      "res-list.hbs": {
-        "_ct": "text/plain",
-        "_pt": "resource/content",
-        "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  {{include_css \"_libs/ui.css\"}}\n\n  \x3Ctitle>Index Search\x3C/title>\n\x3C/head>\n\n\x3Cbody class=\"ui_group\">\n\n  \x3Col class=\"ui_paths\">\n    \x3Cli>\x3Ca href=\"{{req_path \"/\"}}\">HOME\x3C/a>\x3C/li>\n{{#include \".\" \"parents\"}}\n    \x3Cli>\x3Ca href=\"{{req_path path}}\">{{name}}\x3C/a>\x3C/li>\n{{/include}}\n    \x3Cli>{{name}}\x3C/li>\n  \x3C/ol>\n\n  \x3Cform method=\"get\" action=\"{{req_path \".\" \"res-list\"}}\">\n    \x3Ca target=\"_blank\" class=\"ui_button\" href=\"{{req_path \".\" \"res-create\"}}\">create\x3C/a>\n    \x3Ca target=\"_blank\" class=\"ui_button\" href=\"{{req_path \".\" \"/_THE_INDEX_\" \"res-delete\"}}\">clear\x3C/a>\n    \x3Cinput name=\"q\" type=\"text\" placeholder=\"search\" value=\"{{Q.q}}\">\n    \x3Cbutton type=\"submit\">search\x3C/button>\n  \x3C/form>\n\n  \x3Ctable>\n{{#include \".\" \"children\"}}\n    \x3Ctr>\n      \x3Ctd>\n        \x3Ca href=\"{{req_path path \"res-list\"}}\">{{name}}\x3C/a>\n      \x3C/td>\n    \x3C/tr>\n{{/include}}\n  \x3C/table>\n\n\x3C/body>\n\x3C/html>\n"
-      }
-    },
     "content": {
       "default.js": {
         "_ct": "text/javascript",
@@ -201,15 +184,15 @@ window.templates={
         "_pt": "resource/content",
         "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  {{include_css \"_libs/ui.css\"}}\n\n  \x3Ctitle>delete:{{R.PATH}}\x3C/title>\n\x3C/head>\n\n\x3Cbody class=\"ui_group ui_dialog margins\">\n\n  \x3Ch1 class=\"ui_label underlined\">Delete \"{{name}}\"\n    \x3Ca class=\"ui_button inline pull-right\" href=\"{{req_path \".\" \"ui-close\"}}\">X\x3C/a>\n  \x3C/h1>\n\n  \x3Col class=\"ui_paths\">\n    \x3Cli>HOME\x3C/li>\n{{#include \".\" \"parents\"}}\n    \x3Cli>{{name}}\x3C/li>\n{{/include}}\n    \x3Cli>{{name}}\x3C/li>\n  \x3C/ol>\n\n  \x3Ch4>Are you sure you want to delete \"{{name}}\"?\n\n  \x3Cform method=\"post\" action=\"{{res_path \".\"}}\">\n    \x3Cinput type=\"hidden\" name=\"_rt\" value=\"{{renderType}}\">\n    \x3Cinput type=\"hidden\" name=\":delete\" value=\"{{res_path \".\"}}\">\n    \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{req_path \".\" \"ui-close\"}}\">\n    \x3Cbutton type=\"submit\">Delete\x3C/button>\n  \x3C/form>\n  \x3C/h4>\n\n\x3C/body>\n\n\x3C/html>\n"
       },
-      "res-list-actions.hbs": {
-        "_ct": "text/plain",
-        "_pt": "resource/content",
-        "_content": "  \x3Ca target=\"_blank\" href=\"{{req_path path \"res-delete\"}}\">d\x3C/a>\n  \x3Ca target=\"_blank\" href=\"{{req_path path \"res-copyto\"}}{{path}}/..\">c\x3C/a>\n  \x3Ca target=\"_blank\" href=\"{{req_path path \"res-moveto\"}}{{path}}/..\">m\x3C/a>\n  \x3Ca target=\"_blank\" href=\"{{req_path path \"res-properties\"}}\">p\x3C/a>\n{{#if renderType}}\n  \x3Ca target=\"_blank\" href=\"{{req_path path \"\"}}\">v\x3C/a>\n{{/if}}\n"
-      },
       "res-exportto.hbs": {
         "_ct": "text/plain",
         "_pt": "resource/content",
         "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  {{include_css \"_libs/ui.css\"}}\n\n  \x3Ctitle>export to\x3C/title>\n\x3C/head>\n\n\x3Cbody class=\"ui_group dialog\">\n\n  \x3Ch1 class=ui_label underlined\">Export from \"{{name}}\"\n    \x3Ca class=\"ui_button inline pull-right\" href=\"{{req_path \"../\" \"ui-close\"}}\">X\x3C/a>\n  \x3C/h1>\n\n  \x3Col class=\"ui_paths\">\n    \x3Cli>\x3Ca href=\"{{req_path \"/\" \"res-list\"}}\">HOME\x3C/a>\x3C/li>\n{{#include \".\" \"parents\"}}\n    \x3Cli>\x3Ca href=\"{{req_path path \"res-list\"}}\">{{name}}\x3C/a>\x3C/li>\n{{/include}}\n    \x3Cli>{{name}}\x3C/li>\n  \x3C/ol>\n\n  \x3Ch1>to\x3C/h1>\n\n  \x3Col class=\"ui_paths\">\n    \x3Cli>\x3Ca href=\"{{req_path \".\" \"res-exportto\"}}/\">HOME\x3C/a>\x3C/li>\n{{#include R.DATA_PATH \"parents\"}}\n    \x3Cli>\x3Ca href=\"{{req_path \".\" \"res-exportto\"}}{{path}}\">{{name}}\x3C/a>\x3C/li>\n{{/include}}\n    \x3Cli class=\"active\">{{R.DATA_NAME}}\x3C/li>\n  \x3C/ol>\n\n  \x3Col>\n{{#include R.DATA_PATH \"children\"}}\n  {{#if isContentResource}}\n    \x3Cli>{{name}}\x3C/li>\n  {{else}}\n    {{#match path \"!startsWith\" R.PATH}}\n    \x3Cli>\n      \x3Ca href=\"{{req_path \".\" \"res-exportto\"}}{{path}}\">{{name}}\x3C/a>\n    \x3C/li>\n    {{/match}}\n  {{/if}}\n{{/include}}\n  \x3C/ol>\n\n  \x3Cform method=\"post\" action=\"{{res_path \".\"}}{{C.X}}export{{res_path R.DATA_PATH \"{:name}\"}}\">\n    \x3Cinput type=\"text\" name=\":name|newUUID\" value=\"{{R.NAME}}.json\" autocorrect=\"off\" autocapitalize=\"off\" autocomplete=\"off\" spellcheck=\"false\">\n    \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{req_path R.DATA_PATH \"res-list\"}}\">\n    \x3Cbutton type=\"submit\">export\x3C/button>\n  \x3C/form>\n\n\x3C/body>\n\x3C/html>\n"
+      },
+      "res-list-actions.hbs": {
+        "_ct": "text/plain",
+        "_pt": "resource/content",
+        "_content": "  \x3Ca target=\"_blank\" href=\"{{req_path path \"res-delete\"}}\">d\x3C/a>\n  \x3Ca target=\"_blank\" href=\"{{req_path path \"res-copyto\"}}{{path}}/..\">c\x3C/a>\n  \x3Ca target=\"_blank\" href=\"{{req_path path \"res-moveto\"}}{{path}}/..\">m\x3C/a>\n  \x3Ca target=\"_blank\" href=\"{{req_path path \"res-properties\"}}\">p\x3C/a>\n{{#if renderType}}\n  \x3Ca target=\"_blank\" href=\"{{req_path path \"\"}}\">v\x3C/a>\n{{/if}}\n"
       },
       "res-list.css": {
         "_ct": "text/css",
@@ -245,6 +228,23 @@ window.templates={
         "_ct": "text/plain",
         "_pt": "resource/content",
         "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  {{include_css \"resource/res-ui.css\"}}\n\n  \x3Ctitle>shell:{{R.PATH}}\x3C/title>\n\x3C/head>\n  \x3Cstyle>\n    #commandline {\n      width: 100%;\n    }\n  \x3C/style>\n  \x3C!--script>\n      window.addEventListener('DOMContentLoaded', function() {\n        var cmd = document.querySelector('#commandline');\n        if (cmd) {\n          cmd.focus();\n        }\n      });\n  \x3C/script-->\n\n\x3Cbody>\n  \x3Cdiv class=\"head\">\n    \x3Col class=\"paths\">\n      \x3Cli>\x3Ca href=\"{{req_path \"/\" \"res-list\"}}\">HOME\x3C/a>\x3C/li>\n{{#include \".\" \"parents\"}}\n      \x3Cli>\x3Ca href=\"{{req_path path \"res-list\"}}\">{{name}}\x3C/a>\x3C/li>\n{{/include}}\n      \x3Cli>\x3Ca href=\"{{req_path path \"res-list\"}}\">{{name}}\x3C/a>\x3C/li>\n    \x3C/ol>\n\n    \x3Cpre>\n    \x3C/pre>\n\n    \x3Cform method=\"post\" action=\"{{res_path R.PATH}}\">\n      \x3Cinput type=\"hidden\" name=\"_rt\" value=\"system/shell\">\n      \x3Cinput id=\"commandline\" type=\"text\" autocorrect=\"off\" autocapitalize=\"none\" autocomplete=\"off\" spellcheck=\"false\" name=\":command\">\n      \x3Cinput type=\"submit\">\n    \x3C/form>\n    \x3Cpre>XXX\x3C/pre>\n  \x3C/div>\n\x3C/body>\n\n\x3C/html>\n"
+      }
+    },
+    "index": {
+      "children.js": {
+        "_ct": "text/javascript",
+        "_pt": "resource/content",
+        "_content": "(function (res, writer, ctx) {\n  writer.start('object/javascript');\n  var qp = ctx.getQueryProperties();\n  var qry = '';\n\n  if (qp && qp['q']) qry = qp['q'];\n  if (!qry) {\n    writer.write([]);\n    writer.end();\n    return;\n  }\n\n  ctx.searchResources('.', qry).then(function(ls) {\n    var rv = [];\n    for (var i = 0; i \x3C ls.length; i++) {\n      var it = ls[i];\n      rv.push(it);\n    } \n    writer.write(rv);\n    writer.end();\n  });\n})\n"
+      },
+      "res-create.hbs": {
+        "_ct": "text/plain",
+        "_pt": "resource/content",
+        "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  {{include_css \"_libs/ui.css\"}}\n\n  {{#partial \"text_opts\"}}\nautocomplete=\"off\" autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\"\n  {{/partial}}\n\n  \x3Ctitle>index content\x3C/title>\n\x3C/head>\n\n\x3Cbody class=\"ui_group dialog\">\n\n  \x3Ch1>Index Resource Content\n    \x3Ca class=\"ui_button pull-right\" href=\"{{req_path \".\" \"ui-close\"}}\">X\x3C/a>\n  \x3C/h1>\n\n  \x3Col class=\"ui_paths\">\n    \x3Cli>\x3Ca href=\"{{req_path \"/\" \"res-list\"}}\">HOME\x3C/a>\x3C/li>\n{{#include \".\" \"parents\"}}\n    \x3Cli>\x3Ca href=\"{{req_path path \"res-list\"}}\">{{name}}\x3C/a>\x3C/li>\n{{/include}}\n    \x3Cli>{{name}}\x3C/li>\n  \x3C/ol>\n\n  \x3Ch4>Index Text\x3C/h4>\n\n  \x3Cform method=\"post\" enctype=\"multipart/form-data\" action=\"{{res_path R.PATH \"{:name}\"}}\">\n    \x3Ctextarea autocorrect=\"off\" autocapitalize=\"none\" {{> text_opts}} name=\"_content\">\x3C/textarea>\n    \x3Cinput type=\"text\" name=\":name|newUUID\" value=\"\" {{> text_opts}} placeholder=\"reference path\">\n    \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{req_path R.PATH \"res-list\"}}\">\n    \x3Cbutton type=\"submit\">index\x3C/button>\n  \x3C/form>\n\n  \x3Ch4>Index File\x3C/h4>\n\n  \x3Cform method=\"post\" enctype=\"multipart/form-data\" action=\"{{res_path R.PATH \"{:name}\"}}\">\n    \x3Cinput type=\"file\" name=\":filename\" value=\"\">\n    \x3Cinput type=\"text\" name=\":name|:filename|newUUID\" value=\"\" {{> text_opts}} placeholder=\"reference path\">\n    \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{req_path R.PATH \"res-list\"}}\">\n    \x3Cbutton type=\"submit\">upload\x3C/button>\n  \x3C/form>\n\n  \x3Ch4>Import File\x3C/h4>\n          \n  \x3Cform method=\"post\" enctype=\"multipart/form-data\" action=\"{{res_path R.PATH}}\">\n    \x3Cinput class=\"form-control\" type=\"file\" name=\":import\" value=\"\">\n    \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{req_path R.PATH \"res-list\"}}\">\n    \x3Cbutton type=\"submit\">import\x3C/button>\n  \x3C/form>\n\n\x3C/body>\n\x3C/html>\n"
+      },
+      "res-list.hbs": {
+        "_ct": "text/plain",
+        "_pt": "resource/content",
+        "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  {{include_css \"_libs/ui.css\"}}\n\n  \x3Ctitle>Index Search\x3C/title>\n\x3C/head>\n\n\x3Cbody class=\"ui_group\">\n\n  \x3Col class=\"ui_paths\">\n    \x3Cli>\x3Ca href=\"{{req_path \"/\"}}\">HOME\x3C/a>\x3C/li>\n{{#include \".\" \"parents\"}}\n    \x3Cli>\x3Ca href=\"{{req_path path}}\">{{name}}\x3C/a>\x3C/li>\n{{/include}}\n    \x3Cli>{{name}}\x3C/li>\n  \x3C/ol>\n\n  \x3Cform method=\"get\" action=\"{{req_path \".\" \"res-list\"}}\">\n    \x3Ca target=\"_blank\" class=\"ui_button\" href=\"{{req_path \".\" \"res-create\"}}\">create\x3C/a>\n    \x3Ca target=\"_blank\" class=\"ui_button\" href=\"{{req_path \".\" \"/_THE_INDEX_\" \"res-delete\"}}\">clear\x3C/a>\n    \x3Cinput name=\"q\" type=\"text\" placeholder=\"search\" value=\"{{Q.q}}\">\n    \x3Cbutton type=\"submit\">search\x3C/button>\n  \x3C/form>\n\n  \x3Ctable>\n{{#include \".\" \"children\"}}\n    \x3Ctr>\n      \x3Ctd>\n        \x3Ca href=\"{{req_path path \"res-list\"}}\">{{name}}\x3C/a>\n      \x3C/td>\n    \x3C/tr>\n{{/include}}\n  \x3C/table>\n\n\x3C/body>\n\x3C/html>\n"
       }
     },
     "notfound": {
@@ -317,6 +317,6 @@ window.templates={
       }
     }
   },
-  "_cd": "1762460432650",
-  "_md": "1762460432650"
+  "_cd": "1762512290827",
+  "_md": "1762512290827"
 }
