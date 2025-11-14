@@ -27,6 +27,30 @@ function exec_once(name, tout, func) {
   }
 }
 
+function dialogPath(type, path_ref, cb) {
+  let w = window.open(path_ref);
+  let b = window.__dialogBC;
+
+  if (!b) {
+    b = new BroadcastChannel('global_dialog_ui');
+    b.addEventListener('message', function(evt) {
+      if (cb) cb(evt.data);
+    });
+    window.__dialogBC = b;
+  }
+}
+
+function closeDialogPath(val) {
+  let b = window.__dialogBC;
+  if (!b) {
+    let b = new BroadcastChannel('global_dialog_ui');
+    window.__dialogBC = b;
+  }
+
+  window.__dialogBC.postMessage(val, window.location);
+  window.close();
+}
+
 function popupPath(type, path_ref, cb) {
   //saveFocus();
 
@@ -549,4 +573,3 @@ $.post = function(url, data, cb) {
 
 $.get = function(url, data, cb) {
 };
-
