@@ -12,7 +12,7 @@ class Tools {
 
     n++;
     resource.values[name] = '' + n;
-    localStorage.setItem(name, n);
+    localStorage.setItem(name, '' + n);
     return n;
   }
 

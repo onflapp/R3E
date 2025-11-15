@@ -2217,13 +2217,18 @@ class ResourceRequestHandler extends EventDispatcher {
 }
 class Tools {
     static makeID(resource, name) {
-        let v = resource.getProperty(name);
-        let n = Number.parseInt(v);
-        if (!n)
-            n = 1;
-        else
-            n++;
+        let sv = localStorage.getItem(name);
+        let rv = resource.getProperty(name);
+        let sn = Number.parseInt(sv);
+        let rn = Number.parseInt(rv);
+        let n = 1;
+        if (sn && rn && sn > rn)
+            n = sn;
+        else if (rn)
+            n = rn;
+        n++;
         resource.values[name] = '' + n;
+        localStorage.setItem(name, '' + n);
         return n;
     }
     static reorderChildren(children, order) {
