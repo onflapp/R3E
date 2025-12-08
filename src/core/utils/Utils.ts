@@ -250,6 +250,7 @@ class Utils {
 
   public static filename_path_append(path: string, name: string): string {
     if (!name) return path;
+    if (!path) return name;
 
     let p = path;
     if (p.charAt(p.length - 1) != '/') p += '/';

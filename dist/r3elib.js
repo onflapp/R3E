@@ -227,6 +227,8 @@ class Utils {
     static filename_path_append(path, name) {
         if (!name)
             return path;
+        if (!path)
+            return name;
         let p = path;
         if (p.charAt(p.length - 1) != '/')
             p += '/';
