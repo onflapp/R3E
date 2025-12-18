@@ -17,6 +17,11 @@ window.templates={
       "_pt": "resource/content",
       "_content": "(function (res, writer, ctx) {\r\n  writer.start('text/html');\r\n\r\n  writer.write('name:' + res.name);\r\n  writer.write('\x3Ch1>render types:\x3C/h1>');\r\n  writer.write('\x3Cul>');\r\n\r\n  var types = res.renderTypes;\r\n  for (var i = 0; i \x3C types.length; i++) {\r\n    writer.write('\x3Cli>' + types[i] + '\x3C/li>');\r\n  }\r\n  writer.write('\x3C/ul>');\r\n\r\n  writer.write('\x3Ch1>properties:\x3C/h1>');\r\n  writer.write('\x3Cul>');\r\n\r\n  for (var name in res._) {\r\n    var val = res._[name];\r\n    writer.write('\x3Cli>' + name + '=' + val + '\x3C/li>');\r\n  }\r\n\r\n  writer.write('\x3C/ul>');\r\n\r\n  var w = writer.makeNestedContentWriter();\r\n  ctx.listResourceNames('.').then(function (children) {\r\n    w.write('\x3Ch1>children:\x3C/h1>');\r\n    w.write('\x3Cul>');\r\n\r\n    for (var i = 0; i \x3C children.length; i++) {\r\n      var child = children[i];\r\n      w.write('\x3Cli>' + child + '\x3C/a>\x3C/li>');\r\n    }\r\n    w.write('\x3C/ul>');\r\n    w.end();\r\n  });\r\n\r\n  writer.end();\r\n})"
     },
+    "dump.js": {
+      "_ct": "text/javascript",
+      "_pt": "resource/content",
+      "_content": "(function (res, writer, ctx) {\n  res['R'] = ctx.getRequestProperties();\n  res['Q'] = ctx.getQueryProperties();\n  res['C'] = ctx.getConfigProperties();\n  res['S'] = ctx.getSessionProperties();\n\n  writer.start('application/json');\n  writer.write(JSON.stringify(res, null, 2));\n  writer.end();\n});\n"
+    },
     "json.js": {
       "_ct": "text/javascript",
       "_pt": "resource/content",
@@ -26,11 +31,6 @@ window.templates={
       "_ct": "text/javascript",
       "_pt": "resource/content",
       "_content": "(function (res, writer, ctx) {\n  writer.start('object/javascript');\n  \n  let rv = [];\n  let names = Object.keys(res._);\n\n  names.sort(function(a, b) {\n    return a.localeCompare(b);\n  });\n\n  for (var i = 0; i \x3C names.length; i++) {\n    var name = names[i];\n    var val = res._[name];\n\n    rv.push({\n      key: name,\n      value: val\n    });\n  }\n\n  writer.write(rv);\n  writer.end();\n})\n"
-    },
-    "dump.js": {
-      "_ct": "text/javascript",
-      "_pt": "resource/content",
-      "_content": "(function (res, writer, ctx) {\n  res['R'] = ctx.getRequestProperties();\n  res['Q'] = ctx.getQueryProperties();\n  res['C'] = ctx.getConfigProperties();\n  res['S'] = ctx.getSessionProperties();\n\n  writer.start('application/json');\n  writer.write(JSON.stringify(res, null, 2));\n  writer.end();\n});\n"
     },
     "object.js": {
       "_ct": "text/javascript",
@@ -97,15 +97,15 @@ window.templates={
         "_pt": "resource/content",
         "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  {{include_css \"resource/content/edit.css\" \"_libs/ui.css\"}}\n  {{include_js \"_libs/ui.js\"}}\n\n  \x3Ctitle>edit:{{R.PATH}}\x3C/title>\n\x3C/head>\n\n\x3Cbody class=\"ui_group margins\">\n  \x3Cdiv class=\"sec_head\">\n    \x3Col class=\"ui_paths\">\n      \x3Cli>\x3Ca href=\"{{req_path \"/\" \"res-list\"}}\">HOME\x3C/a>\x3C/li>\n{{#include \".\" \"parents\"}}\n      \x3Cli>\x3Ca href=\"{{req_path path \"res-list\"}}\">{{name}}\x3C/a>\x3C/li>\n{{/include}}\n      \x3Cli>{{name}}\x3C/li>\n    \x3C/ol>\n\n{{#match isTextContentResource}}\n    \x3Cdiv class=\"sec_buttons pull-right\">\n      \x3Ca class=\"ui_button\" href=\"{{req_path \"..\" \"res-list\"}}\">cancel\x3C/a>\n      \x3Cbutton type=\"submit\" form=\"text_form\">save\x3C/button>\n    \x3C/div>\n\n  \x3C/div>\n\n  \x3Cform method=\"post\" action=\"{{res_path R.PATH}}\" id=\"text_form\">\n    \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{req_path \".\"}}\">\n\n    \x3Ctextarea id=\"edit_view\" autocorrect=\"off\" autocapitalize=\"none\" autocomplete=\"off\" autofocus=\"on\" spellcheck=\"false\" name=\"_content\">{{include_safe \".\" \"text\"}}\x3C/textarea>\n\n    \x3Cinput type=\"hidden\" name=\"_rt\" value=\"resource/content\">\x3C/input>\n    \x3Cinput type=\"hidden\" name=\"_ct\" value=\"{{contentType}}\">\x3C/input>\n  \x3C/form>\n\n{{/match}}\n{{#match contentType \"startsWith\" \"image/\"}}\n    \x3Cdiv class=\"toolbar\">\n      \x3Ca class=\"ui_button\" href=\"{{req_path \"..\" \"res-list\"}}\">cancel\x3C/a>\n      \x3Ca class=\"ui_button\" target=\"_blank\" href=\"{{include \".\" \"externalize\"}}\">view\x3C/a>\n    \x3C/div>\n\n  \x3C/div>\n\n  \x3Cimg src=\"{{include \".\" \"externalize\"}}\" id=\"image_view\">\x3C/img>\n\n{{/match}}\n{{#match contentType \"startsWith\" \"application/pdf\"}}\n\n    \x3Cdiv class=\"toolbar\">\n      \x3Ca class=\"ui_button\" href=\"{{req_path \"..\" \"res-list\"}}\">cancel\x3C/a>\n      \x3Ca class=\"ui_button\" target=\"_blank\" href=\"{{include \".\" \"externalize\"}}\">open\x3C/a>\n    \x3C/div>\n  \n  \x3C/div>\n\n  \x3Ciframe src=\"{{include \".\" \"externalize\"}}\" id=\"pdf_view\">\x3C/iframe>\n\n{{/match}}\n{{#default}}\n\n    \x3Cdiv>unknown file type of {{contentType}}\x3C/div>\n    \x3Ca href=\"{{include \".\" \"externalize\"}}\" download target=\"_blank\">Download\x3C/a>\n\n{{/default}}\n  \x3Cscript>fix_textarea()\x3C/script>\n\x3C/body>\n\n\x3C/html>\n"
       },
-      "externalize.js": {
-        "_ct": "text/javascript",
-        "_pt": "resource/content",
-        "_content": "(function (res, writer, ctx) {\n  var clientside = (typeof window != 'undefined');\n  var xref = res['externalizedPath'];\n\n  if (xref) {\n    var url = escape(xref);\n    writer.start('text/plain');\n    writer.write(url);\n    writer.end();\n  }\n  else if (clientside) {\n     if (typeof window['__path2url'] == 'undefined') window.__path2url = {};  \n\n    if (res['isContentResource']) {\n      var path = res['path'];\n      var url = window.__path2url[path];\n      if (url) {\n        writer.start('text/plain');\n        writer.write(url);\n        writer.end();      \n      }\n      else {\n        ctx.readResource('.', new ContentWriterAdapter('blob', function (data, ctype) {\n          var blob = new Blob([data], {\n            type: ctype ? ctype : 'application/octet-binary'\n          });\n          var url = URL.createObjectURL(blob);\n          window.__path2url[path] = url;\n\n          writer.start('text/plain');\n          writer.write(url);\n          writer.end();\n        }));\n      }\n    }\n    else {\n      writer.error(new Error('resource has no content'));\n      writer.end();\n    }\n  }\n  else {\n    var url = ctx.pathInfo.resourcePath;\n    writer.start('text/plain');\n    writer.write(url);\n    writer.end();\n  }\n});\n"
-      },
       "import.js": {
         "_ct": "text/javascript",
         "_pt": "resource/content",
         "_content": "(function (res, writer, ctx) {\n  var path = ctx.getCurrentDataPath();\n\n  ctx.readResource('.', new ContentWriterAdapter('utf8', function (buff) {\n    ctx.storeResource(path, {\n      '_content':buff,\n      ':import':path\n    }, \n    function() {\n      writer.start('text/plain');\n      writer.write('done');\n      writer.end();\n    });\n  }));\n});\n"
+      },
+      "externalize.js": {
+        "_ct": "text/javascript",
+        "_pt": "resource/content",
+        "_content": "(function (res, writer, ctx) {\n  var clientside = (typeof window != 'undefined');\n  var xref = res['externalizedPath'];\n\n  if (xref) {\n    var url = escape(xref);\n    writer.start('text/plain');\n    writer.write(url);\n    writer.end();\n  }\n  else if (clientside) {\n     if (typeof window['__path2url'] == 'undefined') window.__path2url = {};  \n\n    if (res['isContentResource']) {\n      var path = res['path'];\n      var url = window.__path2url[path];\n      if (url) {\n        writer.start('text/plain');\n        writer.write(url);\n        writer.end();      \n      }\n      else {\n        ctx.readResource('.', new ContentWriterAdapter('blob', function (data, ctype) {\n          var blob = new Blob([data], {\n            type: ctype ? ctype : 'application/octet-binary'\n          });\n          var url = URL.createObjectURL(blob);\n          window.__path2url[path] = url;\n\n          writer.start('text/plain');\n          writer.write(url);\n          writer.end();\n        }));\n      }\n    }\n    else {\n      writer.error(new Error('resource has no content'));\n      writer.end();\n    }\n  }\n  else {\n    var url = ctx.pathInfo.resourcePath;\n    writer.start('text/plain');\n    writer.write(url);\n    writer.end();\n  }\n});\n"
       },
       "res-importto.hbs": {
         "_ct": "text/plain",
@@ -141,15 +141,15 @@ window.templates={
       }
     },
     "node": {
-      "dev-tools.js": {
-        "_ct": "text/javascript",
-        "_pt": "resource/content",
-        "_content": "let el = document.createElement('div');\nel.style.position = 'fixed';\nel.style.top = '0';\nel.style.right = '10px';\nel.style.border = '1px solid black';\nel.style.backgroundColor = 'gray';\n\nlet rbut = document.createElement('div');\nrbut.innerHTML = 'R';\nrbut.addEventListener('click', function() {\n  let u = window.location.toString().replace(/.@.*$/, '');\n  window.open(u+'.@res-list');\n});\n\nlet tbut = document.createElement('div');\ntbut.innerHTML = 'T';\ntbut.addEventListener('click', function() {\n  let u = window.location.toString().replace(/.@.*$/, '');\n  window.open(u+'.@res-renderer');\n});\n\nlet dbut = document.createElement('div');\ndbut.innerHTML = 'D';\ndbut.addEventListener('click', function() {\n  let u = window.location.toString().replace(/.@.*$/, '');\n  window.open(u+'.@dump');\n});\n\nlet xbut = document.createElement('div');\nxbut.innerHTML = 'X';\nxbut.addEventListener('click', function() {\n  showTraceMarkers(document.body.childNodes);\n});\n\nel.appendChild(rbut);\nel.appendChild(tbut);\nel.appendChild(dbut);\nel.appendChild(xbut);\n\ndocument.body.appendChild(el);\n\nwindow.addEventListener(\"storage\", function(evt) {\n  if (evt.key == '_res_ui_content_change_') {\n    setTimeout(function() {\n      window.location.reload();\n    }, 500);\n  }\n});\n\nfunction showTraceMarkers(ls) {\n  for (let i = 0; i \x3C ls.length; i++) {\n    let node = ls[i];\n    if (node.nodeType == 8) {\n      let val = node.nodeValue;\n      let el = document.createElement('div');\n      el.style.backgroundColor = 'yellow';\n      el.innerHTML = val;\n      node.parentNode.replaceChild(el, node);\n    }\n    else {\n      showTraceMarkers(node.childNodes);\n    }\n  }\n}\n"
-      },
       "children.js": {
         "_ct": "text/javascript",
         "_pt": "resource/content",
         "_content": "(async function (res, writer, ctx) {\n  writer.start('object/javascript');\n\n  let children = await ctx.listResources('.');\n\n  writer.write(children);\n})\n"
+      },
+      "dev-tools.js": {
+        "_ct": "text/javascript",
+        "_pt": "resource/content",
+        "_content": "let el = document.createElement('div');\nel.style.position = 'fixed';\nel.style.top = '0';\nel.style.right = '10px';\nel.style.border = '1px solid black';\nel.style.backgroundColor = 'gray';\n\nlet rbut = document.createElement('div');\nrbut.innerHTML = 'R';\nrbut.addEventListener('click', function() {\n  let u = window.location.toString().replace(/.@.*$/, '');\n  window.open(u+'.@res-list');\n});\n\nlet tbut = document.createElement('div');\ntbut.innerHTML = 'T';\ntbut.addEventListener('click', function() {\n  let u = window.location.toString().replace(/.@.*$/, '');\n  window.open(u+'.@res-renderer');\n});\n\nlet dbut = document.createElement('div');\ndbut.innerHTML = 'D';\ndbut.addEventListener('click', function() {\n  let u = window.location.toString().replace(/.@.*$/, '');\n  window.open(u+'.@dump');\n});\n\nlet xbut = document.createElement('div');\nxbut.innerHTML = 'X';\nxbut.addEventListener('click', function() {\n  showTraceMarkers(document.body.childNodes);\n});\n\nel.appendChild(rbut);\nel.appendChild(tbut);\nel.appendChild(dbut);\nel.appendChild(xbut);\n\ndocument.body.appendChild(el);\n\nwindow.addEventListener(\"storage\", function(evt) {\n  if (evt.key == '_res_ui_content_change_') {\n    setTimeout(function() {\n      window.location.reload();\n    }, 500);\n  }\n});\n\nfunction showTraceMarkers(ls) {\n  for (let i = 0; i \x3C ls.length; i++) {\n    let node = ls[i];\n    if (node.nodeType == 8) {\n      let val = node.nodeValue;\n      let el = document.createElement('div');\n      el.style.backgroundColor = 'yellow';\n      el.innerHTML = val;\n      node.parentNode.replaceChild(el, node);\n    }\n    else {\n      showTraceMarkers(node.childNodes);\n    }\n  }\n}\n"
       },
       "export-json.js": {
         "_ct": "text/javascript",
@@ -317,6 +317,6 @@ window.templates={
       }
     }
   },
-  "_cd": "1765482611252",
-  "_md": "1765482611252"
+  "_cd": "1765554128139",
+  "_md": "1765554128139"
 }

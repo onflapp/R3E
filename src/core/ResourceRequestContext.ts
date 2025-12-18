@@ -536,6 +536,15 @@ class ResourceRequestContext implements ScriptContext {
     return Promise.all(r);
   }
 
+  public deleteResources(resourcePaths: string) : Promise<any> {
+    let r = [];
+    for (let i = 0; i < resourcePaths.length; i++) {
+      let d = resourcePaths[i];
+      r.push(this.storeResource('/', {':delete':d}));
+    }
+    return Promise.all(r);
+  }
+
   public getSessionProperties(): any {
     let p = this.sessionData.getValues();
     p['RENDER_COUNT'] = this.sessionData.renderSessionCount;

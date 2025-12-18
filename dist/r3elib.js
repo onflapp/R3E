@@ -1590,6 +1590,14 @@ class ResourceRequestContext {
         }
         return Promise.all(r);
     }
+    deleteResources(resourcePaths) {
+        let r = [];
+        for (let i = 0; i < resourcePaths.length; i++) {
+            let d = resourcePaths[i];
+            r.push(this.storeResource('/', { ':delete': d }));
+        }
+        return Promise.all(r);
+    }
     getSessionProperties() {
         let p = this.sessionData.getValues();
         p['RENDER_COUNT'] = this.sessionData.renderSessionCount;
