@@ -433,7 +433,22 @@ class ResourceRequestHandler extends EventDispatcher {
       if (!transform) transform = 'pre-store';
 
       self.transformResource(data, transform, context, function (values: any) {
-        if (values['content']) {
+        if (!values) {
+          if (callback) {
+            callback();
+          }
+        }
+        else if (values[':skipto']) {
+          let forward = values[':skipto'];
+          if (callback) {
+            callback();
+          }
+          else {
+            self.handleEnd();
+            self.forwardRequest(forward);
+          }
+        }
+        else if (values['content']) {
           self.contentWriter.start(values['contentType']);
           self.contentWriter.write(values['content']);
           self.contentWriter.end();

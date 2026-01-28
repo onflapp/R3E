@@ -98,9 +98,14 @@ class ResourceResolver {
     let self = this;
 
     self.resolveResource(dirname, function (res: Resource) {
-      res.removeChildResource(name, function () {
+      if (res) {
+        res.removeChildResource(name, function () {
+          callback();
+        });
+      }
+      else {
         callback();
-      });
+      }
     });
   }
 
