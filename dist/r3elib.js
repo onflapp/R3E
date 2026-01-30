@@ -873,9 +873,14 @@ class ResourceResolver {
         let name = Utils.filename(fromPath);
         let self = this;
         self.resolveResource(dirname, function (res) {
-            res.removeChildResource(name, function () {
+            if (res) {
+                res.removeChildResource(name, function () {
+                    callback();
+                });
+            }
+            else {
                 callback();
-            });
+            }
         });
     }
     moveResource(fromPath, toPath, callback) {
@@ -2042,7 +2047,22 @@ class ResourceRequestHandler extends EventDispatcher {
             if (!transform)
                 transform = 'pre-store';
             self.transformResource(data, transform, context, function (values) {
-                if (values['content']) {
+                if (!values) {
+                    if (callback) {
+                        callback();
+                    }
+                }
+                else if (values[':skipto']) {
+                    let forward = values[':skipto'];
+                    if (callback) {
+                        callback();
+                    }
+                    else {
+                        self.handleEnd();
+                        self.forwardRequest(forward);
+                    }
+                }
+                else if (values['content']) {
                     self.contentWriter.start(values['contentType']);
                     self.contentWriter.write(values['content']);
                     self.contentWriter.end();
@@ -3889,6 +3909,7 @@ class RemoteResource extends StoredResource {
         let self = this;
         xhr.open('POST', url, true);
         xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.setRequestHeader('X-R3E-Source', 'RemoteSource');
         xhr.onreadystatechange = function () {
             var DONE = 4;
             var OK = 200;
@@ -3909,6 +3930,7 @@ class RemoteResource extends StoredResource {
         if (!json)
             xhr.responseType = 'arraybuffer';
         xhr.open('GET', url, true);
+        xhr.setRequestHeader('X-R3E-Source', 'RemoteSource');
         xhr.onreadystatechange = function () {
             var DONE = 4;
             var OK = 200;

@@ -228,6 +228,7 @@ class RemoteResource extends StoredResource {
     xhr.open('POST', url, true);
 
     xhr.setRequestHeader('Content-Type', 'application/json'); //;charset=UTF-8');
+    xhr.setRequestHeader('X-R3E-Source', 'RemoteSource');
     xhr.onreadystatechange = function () {
       var DONE = 4;
       var OK = 200;
@@ -250,6 +251,7 @@ class RemoteResource extends StoredResource {
 
     if (!json) xhr.responseType = 'arraybuffer';
     xhr.open('GET', url, true);
+    xhr.setRequestHeader('X-R3E-Source', 'RemoteSource');
     xhr.onreadystatechange = function () {
       var DONE = 4;
       var OK = 200;
