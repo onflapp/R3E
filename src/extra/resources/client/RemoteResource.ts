@@ -30,7 +30,7 @@ class RemoteResourceContentWriter implements ContentWriter {
       data = Utils.base642ArrayBuffer(data);
     }
 
-    xhr.open('POST', this.filePath, true);
+    xhr.open('POST', escape(this.filePath), true);
 
     if (ctype) xhr.setRequestHeader('Content-Type', ctype);
 
