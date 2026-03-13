@@ -82,6 +82,30 @@
   border: 1px solid black;
 }
 
+.resizeC {
+  width: 100%;
+  height: 200px;
+  display: flex;
+}
+
+.resizeC > * {
+  border: 1px solid black;
+  min-width: 200px;
+  position: relative;
+}
+
+.resizeC .ui_dragger-resizer {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  top: 0;
+  color: gray;
+  width: 5px;
+  background-color: blue;
+  opacity: 0.5;
+  cursor: grab;
+}
+
 </style>
 </head>
 
@@ -178,6 +202,17 @@
     </tr>
   </table>
 
+  <h1>resize</h1>
+  <div class="resizeC">
+    <div>
+      one
+      <span class="ui_dragger-resizer"></span>
+    </div>
+    <div>
+      two
+    </div>
+  </div>
+
   <h1>freeform</h1>
   <div class="ui_dragger-canvas ui_dragger-container">
     <div class="ui_dragger-item">
@@ -232,6 +267,14 @@
         console.log('moved');
         return true;
       }
+    });
+
+    $('.resizeC').dragger({
+      resizingMode:'h',
+      onresized:function() {
+        console.log('resized');
+        return true;
+      },
     });
   </script>
 </html>

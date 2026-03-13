@@ -1629,6 +1629,18 @@ class ResourceRequestContext {
             p['DATA_DIRNAME'] = Utils.filename_dir(this.pathInfo.dataPath);
             p['DATA_PATHNAME'] = this.pathInfo.dataPath.substr(this.pathInfo.path.length);
         }
+        if (this.pathInfo.query) {
+            let q = '';
+            let i = 0;
+            for (let k in this.pathInfo.query) {
+                if (i > 0)
+                    q += '&';
+                q += k + '=' + escape(this.pathInfo.query[k]);
+                i++;
+            }
+            if (i > 0)
+                p['URL_QUERY'] = '?' + q;
+        }
         return p;
     }
     startRenderSession() {
@@ -3736,7 +3748,7 @@ class RemoteResourceContentWriter {
             ctype = ctype.substr(7);
             data = Utils.base642ArrayBuffer(data);
         }
-        xhr.open('POST', this.filePath, true);
+        xhr.open('POST', escape(this.filePath), true);
         if (ctype)
             xhr.setRequestHeader('Content-Type', ctype);
         xhr.onreadystatechange = function () {

@@ -383,6 +383,58 @@ li .ui_label {
   padding-right: 0;
 }
 
+.ui_group.margins .ui_columns, 
+.ui_group.margins .ui_columns {
+  margin: var(--margin);
+}
+
+.ui_columns {
+  user-select: none;
+  -webkit-user-select: none;
+  display: flex;
+  white-space: nowrap;
+  overflow-x: auto;
+  border: 1px solid var(--box-color);
+}
+
+.ui_column {
+  width: 300px;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-flow: column;
+  position: relative;
+}
+
+.ui_column-header {
+  font-size: smaller;
+  color: gray;
+  padding: var(--padding-base);
+  border-bottom: 1px solid var(--box-color);
+}
+
+.ui_column-header:after {
+  content: '';
+  display: block;
+  width: 14px;
+  height: 100;
+  position: absolute;
+  border-right: 1px solid var(--box-color);
+  right: 0;
+  top: 0;
+}
+
+.ui_columns .ui_column:last-child .ui_column-header:after {
+  display: none;
+}
+
+.ui_column-content {
+  overflow-y: scroll;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
 .ui_group .ui_tree,
 .ui_group .ui_tree ul,
 .ui_group .ui_tree li,
@@ -474,6 +526,14 @@ li .ui_label {
 
 .full-width {
   width: 100%;
+}
+
+form.full-width {
+  display: revert;
+}
+
+textarea.full-width {
+  resize: vertical;
 }
 
 .pull-right {
@@ -620,6 +680,7 @@ body.margins.padding {
 .ui_group.margins input[type=submit],
 .ui_group.margins input[type=text],
 .ui_group.margins input[type=number],
+.ui_group.margins input[type=color],
 .ui_group.margins input[type=date],
 .ui_group.margins input[type=time],
 .ui_group.margins input[type=week],
@@ -631,6 +692,7 @@ body.margins.padding {
 .ui_group input[type=number],
 .ui_group input[type=date],
 .ui_group input[type=time],
+.ui_group input[type=color],
 .ui_group input[type=week],
 .ui_group input[type=datetime-local] {
   margin: 0;
@@ -644,6 +706,7 @@ body.margins.padding {
 .ui_group.margins input[type=date],
 .ui_group.margins input[type=time],
 .ui_group.margins input[type=week],
+.ui_group.margins input[type=color],
 .ui_group.margins input[type=datetime-local] {
   border: 0;
   border-bottom: var(--input-border_b);

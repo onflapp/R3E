@@ -164,6 +164,10 @@
     return args[args.length-2];
   });
 
+/*
+ * val "place holder text %s" "value"
+ */
+
   Handlebars.registerHelper('val', function () {
     var args = arguments;
 
@@ -171,6 +175,12 @@
     else return args[1].replace('%s', args[0]);
   });
 
+  Handlebars.registerHelper('escape', function () {
+    var args = arguments;
+
+    if (!args[0]) return null;
+    else return escape(args[1]);
+  });
 
   Handlebars.registerHelper('eq', function (lvalue, rvalue, result, options) {
     if (lvalue === rvalue) return result;

@@ -579,6 +579,17 @@ class ResourceRequestContext implements ScriptContext {
       p['DATA_PATHNAME'] = this.pathInfo.dataPath.substr(this.pathInfo.path.length);
     }
 
+    if (this.pathInfo.query) {
+      let q = '';
+      let i = 0;
+      for (let k in this.pathInfo.query) {
+        if (i > 0) q += '&';
+        q += k + '=' + escape(this.pathInfo.query[k]);
+        i++;
+      }
+      if (i > 0) p['URL_QUERY'] = '?'+q;
+    }
+
     return p;
   }
 

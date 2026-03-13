@@ -41,6 +41,8 @@ function Dragger() {
   this.useHandle = false;
   this.lockVertical = false;
 
+  this.resizingMode= 'vh';
+
   this.makePlaceholder = function(el) {
     if (this.isScrolling) return;
     if (this.isResizing) return;
@@ -129,12 +131,14 @@ function Dragger() {
 
   this.getDragItem = function(el) {
     var p = el;
+    var r = null;
     var handle = 0;
     this.isResizing = false;
 
     while (p) {
       if (p.classList.contains(this.RESIZER_CLASS)) {
         this.isResizing = true;
+        r = p;
       }
       p = p.parentElement;
     }
@@ -148,6 +152,8 @@ function Dragger() {
       }
       p = p.parentElement;
     }
+
+    if (this.isResizing && r) return r.parentElement;
 
     return null;
   };
@@ -177,13 +183,14 @@ function Dragger() {
   this.mouse_down = function(evt) {
     if (evt.button > 0 || evt.ctrlKey) return;
 
+    var it = null;
     var sit = this.getScrollableItem(evt.target);
     if (sit) {
       this.isScrolling = true;
       this.CONTAINER = sit;
     }
     else {
-      var it = this.getDragItem(evt.target);
+      it = this.getDragItem(evt.target);
       if (!it) {
         console.log('unable to get drag item!');
         return;
@@ -428,9 +435,15 @@ function Dragger() {
     sz.height = (this.ORIGIN_H + dy);
     sz.width = (this.ORIGIN_W + dx);
 
+    var hor = false;
+    var ver = false;
+
+    if (this.resizingMode.indexOf('h') >= 0) hor = true;
+    if (this.resizingMode.indexOf('v') >= 0) ver = true;
+
     if (this._delegate('onresizing', this.ITEM, sz)) {
-      this.ITEM.style.height = sz.height + "px";
-      this.ITEM.style.width = sz.width + "px";
+      if (ver) this.ITEM.style.height = sz.height + "px";
+      if (hor) this.ITEM.style.width = sz.width + "px";
       this.actions++;
     }
   
