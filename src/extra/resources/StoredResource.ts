@@ -6,6 +6,7 @@ abstract class StoredResource extends Resource {
   protected isDirectory: boolean = true;
   protected contentSize: number = -1;
   protected resourceCache = {};
+  protected loadingCache = {};
   protected loaded = false;
   protected enableCache: boolean = true;
 
@@ -29,6 +30,17 @@ abstract class StoredResource extends Resource {
     }
   }
 
+  private flushLoadingCache(name, res) {
+    let lc = this.loadingCache[name];
+    if (!lc) return;
+
+    for (let i = 0; i < lc.callbacks.length; i++) {
+      let cb = lc.callbacks[i];
+      cb(res);
+    }
+    delete this.loadingCache[name];
+  }
+
   protected getCachedResource(name: string): Resource {
     let res = this.resourceCache[name];
     return res;
@@ -42,8 +54,14 @@ abstract class StoredResource extends Resource {
   }
 
   protected clearCachedResource(name: string) {
-    if (name) delete this.resourceCache[name];
-    else this.resourceCache = {};
+    if (name) {
+      delete this.resourceCache[name];
+      delete this.loadingCache[name];
+    }
+    else {
+      this.resourceCache = {};
+      this.loadingCache = {};
+    }
   }
 
   public setEnableResourceCache(cache: boolean) {
@@ -53,6 +71,7 @@ abstract class StoredResource extends Resource {
 
   public flushResourceCache() {
     this.resourceCache = {};
+    this.loadingCache = {};
     this.childNames = null;
     this.loaded = false;
   }
@@ -131,6 +150,17 @@ abstract class StoredResource extends Resource {
         this.childNames = null;
         res = this.setCachedResource(name, this.makeNewResource(name));
         if (res instanceof StoredResource) res.setEnableResourceCache(this.enableCache);
+        if (this.enableCache) {
+          let lc = self.loadingCache[name];
+          if (lc) {
+            lc.callbacks.push(callback);
+            return;
+          }
+          else {
+            self.loadingCache[name] = { callbacks:[] };
+          }
+        }
+
         callback(res);
       }
       else {
@@ -142,8 +172,12 @@ abstract class StoredResource extends Resource {
             self.setCachedResource(name, res as StoredResource);
             self.childNames = null;
             callback(res);
+            self.flushLoadingCache(name, res);
           }
-          else callback(null);
+          else {
+            callback(null);
+            self.flushLoadingCache(name, null);
+          }
         });
       }
     }

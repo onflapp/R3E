@@ -3297,6 +3297,7 @@ class StoredResource extends Resource {
         this.isDirectory = true;
         this.contentSize = -1;
         this.resourceCache = {};
+        this.loadingCache = {};
         this.loaded = false;
         this.enableCache = true;
         let self = this;
@@ -3314,6 +3315,16 @@ class StoredResource extends Resource {
             });
         }
     }
+    flushLoadingCache(name, res) {
+        let lc = this.loadingCache[name];
+        if (!lc)
+            return;
+        for (let i = 0; i < lc.callbacks.length; i++) {
+            let cb = lc.callbacks[i];
+            cb(res);
+        }
+        delete this.loadingCache[name];
+    }
     getCachedResource(name) {
         let res = this.resourceCache[name];
         return res;
@@ -3325,10 +3336,14 @@ class StoredResource extends Resource {
         return res;
     }
     clearCachedResource(name) {
-        if (name)
+        if (name) {
             delete this.resourceCache[name];
-        else
+            delete this.loadingCache[name];
+        }
+        else {
             this.resourceCache = {};
+            this.loadingCache = {};
+        }
     }
     setEnableResourceCache(cache) {
         this.enableCache = cache;
@@ -3336,6 +3351,7 @@ class StoredResource extends Resource {
     }
     flushResourceCache() {
         this.resourceCache = {};
+        this.loadingCache = {};
         this.childNames = null;
         this.loaded = false;
     }
@@ -3413,6 +3429,16 @@ class StoredResource extends Resource {
                 res = this.setCachedResource(name, this.makeNewResource(name));
                 if (res instanceof StoredResource)
                     res.setEnableResourceCache(this.enableCache);
+                if (this.enableCache) {
+                    let lc = self.loadingCache[name];
+                    if (lc) {
+                        lc.callbacks.push(callback);
+                        return;
+                    }
+                    else {
+                        self.loadingCache[name] = { callbacks: [] };
+                    }
+                }
                 callback(res);
             }
             else {
@@ -3424,9 +3450,12 @@ class StoredResource extends Resource {
                         self.setCachedResource(name, res);
                         self.childNames = null;
                         callback(res);
+                        self.flushLoadingCache(name, res);
                     }
-                    else
+                    else {
                         callback(null);
+                        self.flushLoadingCache(name, null);
+                    }
                 });
             }
         }

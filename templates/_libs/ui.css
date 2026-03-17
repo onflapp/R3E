@@ -398,7 +398,6 @@ li .ui_label {
 }
 
 .ui_column {
-  width: 300px;
   height: 100%;
   box-sizing: border-box;
   display: flex;
@@ -430,9 +429,11 @@ li .ui_label {
 
 .ui_column-content {
   overflow-y: scroll;
+  overflow-x: hidden;
   width: 100%;
   height: 100%;
   z-index: 1;
+  text-overflow: ellipsis;
 }
 
 .ui_group .ui_tree,
