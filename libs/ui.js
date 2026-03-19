@@ -294,6 +294,45 @@ function saveCurrentContentPath() {
   sessionStorage.setItem('__CURRENT_CONTENT_PATH', v);
 }
 
+function saveCurrentScrollView(list) {
+  let el = document.querySelector(list);
+  if (el) {
+    let st = el.scrollTop + 100;
+    let ch = el.clientHeight;
+    let sh = el.scrollHeight;
+    let sd = sh - ch;
+
+    if (sd > 0 && st > 0) {
+      let n = st / sd;
+      let v = {
+        scroll:n
+      };
+
+      sessionStorage.setItem('__LAST_SCROLL_VIEW', JSON.stringify(v));
+      return;
+    }
+  }
+  sessionStorage.removeItem('__LAST_SCROLL_VIEW');
+}
+
+function restoreCurrentScrollView(list) {
+  let el = document.querySelector(list);
+  let v = JSON.parse(sessionStorage.getItem('__LAST_SCROLL_VIEW'));
+  if (v && el) {
+    if (v.scroll > 0) {
+      let ch = el.clientHeight;
+      let sh = el.scrollHeight;
+      let sd = sh - ch;
+      let n = (sd * v.scroll);
+
+      //el.scrollTop = n;
+      //console.log('restore:' + n);
+      el.scrollTo({top: n, behavior: 'smooth'});
+    }
+    sessionStorage.removeItem('__LAST_SCROLL_VIEW');
+  }
+}
+
 function storeDocumentHTML(ctx, doc, dest) {
   return new Promise(function (resolve) {
     let $doc = $(doc);

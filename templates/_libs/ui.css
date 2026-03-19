@@ -504,9 +504,10 @@ li .ui_label {
 .ui_tree div.ui_tree-item:has( + ul li):before {
   content:'\23F7';
   visibility: visible;
-  font-size: var(--size);
+  line-height: var(--size);
   position: relative;
   left: 2px;
+  top: 2px;
 }
 
 /*
