@@ -453,6 +453,11 @@ class Utils {
     }
   }
 
+  static string2ArrayBuffer(str: string): ArrayBuffer {
+    var encoder = new TextEncoder();
+    return encoder.encode(str).buffer;
+  }
+
   static ENABLE_TRACE_LOG: boolean = false;
   static EXPORT_RENDER_CONTEXT: boolean = false;
 

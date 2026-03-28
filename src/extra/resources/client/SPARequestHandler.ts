@@ -4,29 +4,31 @@ class SPARequestHandler extends ClientRequestHandler {
     super(resourceResolver, templateResolver, contentWriter);
   }
 
-  protected initHandlers() {
-    let self = this;
-    window.addEventListener('hashchange', function (evt) {
-      let path = window.location.hash.substr(1);
-      self.handleRequest(path);
-    });
-  }
-
   public forwardRequest(rpath: string) {
-    Utils.flushResourceCache();
     let p = rpath;
+    let self = this;
     if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) {
-      //use the full URL
-    }
-    else {
-      p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + rpath;
+      var x = p.indexOf('#');
+      var h = p.substr(0, x);
+      if (window.location.toString().startsWith(h)) {
+        p = unescape(p.substr(x+1));
+      }
+      else {
+        Utils.flushResourceCache();
+
+        window.location.replace(p);
+        return;
+      }
     }
 
     clearTimeout(window['__r3eforwardcb']);
     window['__r3eforwardcb'] = setTimeout(function() {
       delete window['__r3eforwardcb'];
-      if (p == window.location.toString()) window.location.reload();
-      else window.location.replace(p);
-    },50);
+      self.handleRequest(p);
+    },10);
+  }
+
+  public renderRequest(rpath: string) {
+    super.__renderRequest(rpath, false);
   }
 }

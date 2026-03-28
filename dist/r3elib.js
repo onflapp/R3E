@@ -404,6 +404,10 @@ class Utils {
             return buff;
         }
     }
+    static string2ArrayBuffer(str) {
+        var encoder = new TextEncoder();
+        return encoder.encode(str).buffer;
+    }
     static log_trace(typ, msg) {
         if (Utils.ENABLE_TRACE_LOG) {
             console.log(typ + ':' + msg);
@@ -3755,9 +3759,10 @@ class StoredObjectContentResource extends ObjectContentResource {
     }
 }
 class RemoteResourceContentWriter {
-    constructor(filePath) {
+    constructor(filePath, resource) {
         this.buffer = [];
         this.filePath = filePath;
+        this.resource = resource;
     }
     start(ctype) {
         this.contentType = ctype;
@@ -3773,9 +3778,19 @@ class RemoteResourceContentWriter {
         let self = this;
         let data = this.buffer[0];
         let ctype = this.contentType;
+        let cdata = null;
         if (ctype && ctype.indexOf('base64:') === 0) {
             ctype = ctype.substr(7);
             data = Utils.base642ArrayBuffer(data);
+            cdata = data;
+        }
+        else {
+            cdata = Utils.string2ArrayBuffer(data);
+        }
+        if (cdata && this.resource['enableCache']) {
+            this.resource.values['_contentdata'] = cdata;
+            this.resource.values['_ct'] = ctype;
+            this.resource = null;
         }
         xhr.open('POST', escape(this.filePath), true);
         if (ctype)
@@ -3922,7 +3937,7 @@ class RemoteResource extends StoredResource {
         if (this.isDirectory) {
             this.isDirectory = false;
         }
-        return new RemoteResourceContentWriter(path);
+        return new RemoteResourceContentWriter(path, this);
     }
     read(writer, callback) {
         if (this.isDirectory) {
@@ -4001,8 +4016,8 @@ class RemoteResource extends StoredResource {
     }
 }
 class CachedRemoteResourceContentWriter extends RemoteResourceContentWriter {
-    constructor(filePath) {
-        super(filePath);
+    constructor(filePath, resource) {
+        super(filePath, resource);
     }
     end(callback) {
         let data = this.buffer[0];
@@ -4024,7 +4039,7 @@ class CachedRemoteResource extends RemoteResource {
         if (this.isDirectory) {
             this.isDirectory = false;
         }
-        return new CachedRemoteResourceContentWriter(path);
+        return new CachedRemoteResourceContentWriter(path, this);
     }
     remotePOST(url, values, callback) {
         let data = JSON.stringify(values);
@@ -4424,7 +4439,8 @@ class ClientRequestHandler extends ResourceRequestHandler {
     initHandlers() {
         let self = this;
         window.addEventListener('hashchange', function (evt) {
-            window.location.reload();
+            let path = window.location.hash.substr(1);
+            self.handleRequest(path);
         });
     }
     assignContext(context, pathInfo) {
@@ -4441,12 +4457,14 @@ class ClientRequestHandler extends ResourceRequestHandler {
         else {
             p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + rpath;
         }
-        if (p == window.location.toString()) {
-            window.location.reload();
-        }
-        else {
-            window.location.replace(p);
-        }
+        clearTimeout(window['__r3eforwardcb']);
+        window['__r3eforwardcb'] = setTimeout(function () {
+            delete window['__r3eforwardcb'];
+            if (p == window.location.toString())
+                window.location.reload();
+            else
+                window.location.replace(p);
+        }, 50);
     }
     handleRequest(rpath) {
         let path = rpath;
@@ -4491,7 +4509,11 @@ class ClientRequestHandler extends ResourceRequestHandler {
         this.renderRequest(path);
     }
     renderRequest(rpath) {
-        Utils.flushResourceCache();
+        this.__renderRequest(rpath, true);
+    }
+    __renderRequest(rpath, clear) {
+        if (clear)
+            Utils.flushResourceCache();
         this.currentPath = rpath;
         super.renderRequest(rpath);
     }
@@ -4606,29 +4628,29 @@ class SPARequestHandler extends ClientRequestHandler {
     constructor(resourceResolver, templateResolver, contentWriter) {
         super(resourceResolver, templateResolver, contentWriter);
     }
-    initHandlers() {
-        let self = this;
-        window.addEventListener('hashchange', function (evt) {
-            let path = window.location.hash.substr(1);
-            self.handleRequest(path);
-        });
-    }
     forwardRequest(rpath) {
-        Utils.flushResourceCache();
         let p = rpath;
+        let self = this;
         if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) {
-        }
-        else {
-            p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + rpath;
+            var x = p.indexOf('#');
+            var h = p.substr(0, x);
+            if (window.location.toString().startsWith(h)) {
+                p = unescape(p.substr(x + 1));
+            }
+            else {
+                Utils.flushResourceCache();
+                window.location.replace(p);
+                return;
+            }
         }
         clearTimeout(window['__r3eforwardcb']);
         window['__r3eforwardcb'] = setTimeout(function () {
             delete window['__r3eforwardcb'];
-            if (p == window.location.toString())
-                window.location.reload();
-            else
-                window.location.replace(p);
-        }, 50);
+            self.handleRequest(p);
+        }, 10);
+    }
+    renderRequest(rpath) {
+        super.__renderRequest(rpath, false);
     }
 }
 class ResponseContentWriter {

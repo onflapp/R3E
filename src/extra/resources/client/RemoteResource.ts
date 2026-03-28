@@ -2,9 +2,11 @@ class RemoteResourceContentWriter implements ContentWriter {
   protected filePath: string;
   protected contentType: string;
   protected buffer = [];
+  protected resource: RemoteResource;
 
-  constructor(filePath: string) {
+  constructor(filePath: string, resource: RemoteResource) {
     this.filePath = filePath;
+    this.resource = resource;
   }
 
   public start(ctype: string) {
@@ -24,10 +26,21 @@ class RemoteResourceContentWriter implements ContentWriter {
     let self = this;
     let data = this.buffer[0];
     let ctype = this.contentType;
+    let cdata = null;
 
     if (ctype && ctype.indexOf('base64:') === 0) {
       ctype = ctype.substr(7);
       data = Utils.base642ArrayBuffer(data);
+      cdata = data;
+    }
+    else {
+      cdata = Utils.string2ArrayBuffer(data);
+    }
+
+    if (cdata && this.resource['enableCache']) {
+      this.resource.values['_contentdata'] = cdata;
+      this.resource.values['_ct'] = ctype;
+      this.resource = null;
     }
 
     xhr.open('POST', escape(this.filePath), true);
@@ -194,7 +207,7 @@ class RemoteResource extends StoredResource {
     }
 
     //this.loaded = false;
-    return new RemoteResourceContentWriter(path);
+    return new RemoteResourceContentWriter(path, this);
   }
 
   public read(writer: ContentWriter, callback: any) {

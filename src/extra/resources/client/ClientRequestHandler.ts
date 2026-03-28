@@ -325,7 +325,8 @@ class ClientRequestHandler extends ResourceRequestHandler {
   protected initHandlers() {
     let self = this;
     window.addEventListener('hashchange', function (evt) {
-      window.location.reload();
+      let path = window.location.hash.substr(1);
+      self.handleRequest(path);
     });
   }
 
@@ -347,12 +348,12 @@ class ClientRequestHandler extends ResourceRequestHandler {
       p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + rpath;
     }
 
-    if (p == window.location.toString()) {
-      window.location.reload();
-    }
-    else {
-      window.location.replace(p);
-    }
+    clearTimeout(window['__r3eforwardcb']);
+    window['__r3eforwardcb'] = setTimeout(function() {
+      delete window['__r3eforwardcb'];
+      if (p == window.location.toString()) window.location.reload();
+      else window.location.replace(p);
+    },50);
   }
 
   public handleRequest(rpath: string) {
@@ -405,7 +406,11 @@ class ClientRequestHandler extends ResourceRequestHandler {
   }
 
   public renderRequest(rpath: string) {
-    Utils.flushResourceCache();
+    this.__renderRequest(rpath, true);
+  }
+
+  protected __renderRequest(rpath: string, clear: boolean) {
+    if (clear) Utils.flushResourceCache();
 
     this.currentPath = rpath;
     super.renderRequest(rpath);

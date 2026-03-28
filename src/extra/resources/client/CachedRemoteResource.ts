@@ -1,6 +1,6 @@
 class CachedRemoteResourceContentWriter extends RemoteResourceContentWriter {
-  constructor(filePath: string) {
-    super(filePath);
+  constructor(filePath: string, resource: RemoteResource) {
+    super(filePath, resource);
   }
   public end(callback: any) {
     let data = this.buffer[0];
@@ -27,7 +27,7 @@ class CachedRemoteResource extends RemoteResource {
       this.isDirectory = false;
     }
 
-    return new CachedRemoteResourceContentWriter(path);
+    return new CachedRemoteResourceContentWriter(path, this);
   }
 
   protected remotePOST(url, values, callback): void {
