@@ -460,6 +460,7 @@ class Utils {
 }
 Utils.ENABLE_TRACE_LOG = false;
 Utils.EXPORT_RENDER_CONTEXT = false;
+Utils.MAXIMIZE_CASHING = false;
 class EventDispatcher {
     constructor() {
         this._eventHandlers = {};
@@ -3779,15 +3780,18 @@ class RemoteResourceContentWriter {
         let data = this.buffer[0];
         let ctype = this.contentType;
         let cdata = null;
+        let docache = (this.resource['enableCache'] && Utils.MAXIMIZE_CASHING);
         if (ctype && ctype.indexOf('base64:') === 0) {
             ctype = ctype.substr(7);
             data = Utils.base642ArrayBuffer(data);
-            cdata = data;
+            if (docache)
+                cdata = data;
         }
         else {
-            cdata = Utils.string2ArrayBuffer(data);
+            if (docache)
+                cdata = Utils.string2ArrayBuffer(data);
         }
-        if (cdata && this.resource['enableCache']) {
+        if (cdata) {
             this.resource.values['_contentdata'] = cdata;
             this.resource.values['_ct'] = ctype;
             this.resource = null;
@@ -3938,6 +3942,10 @@ class RemoteResource extends StoredResource {
             this.isDirectory = false;
         }
         return new RemoteResourceContentWriter(path, this);
+    }
+    flushResourceCache() {
+        super.flushResourceCache();
+        delete this.values['_contentdata'];
     }
     read(writer, callback) {
         if (this.isDirectory) {
@@ -4627,6 +4635,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
 class SPARequestHandler extends ClientRequestHandler {
     constructor(resourceResolver, templateResolver, contentWriter) {
         super(resourceResolver, templateResolver, contentWriter);
+        Utils.MAXIMIZE_CASHING = true;
     }
     forwardRequest(rpath) {
         let p = rpath;

@@ -460,6 +460,7 @@ class Utils {
 
   static ENABLE_TRACE_LOG: boolean = false;
   static EXPORT_RENDER_CONTEXT: boolean = false;
+  static MAXIMIZE_CASHING: boolean = false;
 
   static log_trace(typ, msg) {
     if (Utils.ENABLE_TRACE_LOG) {

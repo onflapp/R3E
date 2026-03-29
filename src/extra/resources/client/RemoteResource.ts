@@ -27,17 +27,18 @@ class RemoteResourceContentWriter implements ContentWriter {
     let data = this.buffer[0];
     let ctype = this.contentType;
     let cdata = null;
+    let docache = (this.resource['enableCache'] && Utils.MAXIMIZE_CASHING);
 
     if (ctype && ctype.indexOf('base64:') === 0) {
       ctype = ctype.substr(7);
       data = Utils.base642ArrayBuffer(data);
-      cdata = data;
+      if (docache) cdata = data;
     }
     else {
-      cdata = Utils.string2ArrayBuffer(data);
+      if (docache) cdata = Utils.string2ArrayBuffer(data);
     }
 
-    if (cdata && this.resource['enableCache']) {
+    if (cdata) {
       this.resource.values['_contentdata'] = cdata;
       this.resource.values['_ct'] = ctype;
       this.resource = null;
@@ -208,6 +209,12 @@ class RemoteResource extends StoredResource {
 
     //this.loaded = false;
     return new RemoteResourceContentWriter(path, this);
+  }
+
+  public flushResourceCache() {
+    super.flushResourceCache();
+
+    delete this.values['_contentdata'];
   }
 
   public read(writer: ContentWriter, callback: any) {
