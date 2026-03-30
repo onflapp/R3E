@@ -493,21 +493,21 @@ li .ui_label {
   width: var(--list-marker);
 }
 
-.ui_tree div.ui_tree-item:has( + ol li),
-.ui_tree div.ui_tree-item:has( + ol li) a,
-.ui_tree div.ui_tree-item:has( + ul li),
-.ui_tree div.ui_tree-item:has( + ul li) a {
-  font-weight: bold;
-}
-
 .ui_tree div.ui_tree-item:has( + ol li):before,
 .ui_tree div.ui_tree-item:has( + ul li):before {
   content:'\23F7';
   visibility: visible;
   line-height: var(--size);
-  position: relative;
-  left: 2px;
-  top: 2px;
+}
+
+.ui_tree li.collapsed ol,
+.ui_tree li.collapsed ul {
+  display: none;
+}
+
+.ui_tree li.collapsed div.ui_tree-item:has( + ol li):before,
+.ui_tree li.collapsed div.ui_tree-item:has( + ul li):before {
+  content:'\23F5';
 }
 
 /*
