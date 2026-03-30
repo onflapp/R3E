@@ -453,6 +453,7 @@ li .ui_label {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: block;
 }
 
 .ui_tree.list li .ui_tree-item {
@@ -472,7 +473,7 @@ li .ui_label {
   position: absolute;
   bottom: 0;
   top: 0;
-  left: 7px;
+  left: 8px;
   border-left: 1px dotted var(--box-color);
 }
 
@@ -481,20 +482,18 @@ li .ui_label {
   border-left: 1px solid var(--selection-color);
 }
 
-.ui_tree .ui_tree-item > div {
-  margin-left: var(--list-marker);
-}
-
-.ui_tree div.ui_tree-item:before {
+.ui_tree .ui_tree-item:before { /* used for padding */
   content:'-';
   visibility: hidden;
   float: left;
   color: var(--border-color);
   width: var(--list-marker);
+  text-align: center;
+  padding-right: 4px;
 }
 
-.ui_tree div.ui_tree-item:has( + ol li):before,
-.ui_tree div.ui_tree-item:has( + ul li):before {
+.ui_tree .ui_tree-item:has( + ol li):before,
+.ui_tree .ui_tree-item:has( + ul li):before {
   content:'\23F7';
   visibility: visible;
   line-height: var(--size);
@@ -505,8 +504,8 @@ li .ui_label {
   display: none;
 }
 
-.ui_tree li.collapsed div.ui_tree-item:has( + ol li):before,
-.ui_tree li.collapsed div.ui_tree-item:has( + ul li):before {
+.ui_tree li.collapsed .ui_tree-item:has( + ol li):before,
+.ui_tree li.collapsed .ui_tree-item:has( + ul li):before {
   content:'\23F5';
 }
 
@@ -586,6 +585,11 @@ body.margins.padding {
   background-color: var(--selection-color);
   border-radius: 2px;
   color: var(--selection-text);
+}
+
+a.selected {
+  color: var(--selection-text);
+  cursor: default;
 }
 
 .nonselectable {
