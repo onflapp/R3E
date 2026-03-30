@@ -557,6 +557,7 @@ $(function () {
     let $form = $el.parents('form');
 
     if (!msg) msg = 'Do you want to continue?';
+    if ($form.length == 0 && $el.attr('form')) $form = $('#'+$el.attr('form'));
 
     if (!confirm(msg)) return;
 
@@ -605,26 +606,10 @@ $.post = function(url, data, cb) {
   let xhr = new XMLHttpRequest();
   xhr.open('POST', url, true);
   xhr.onreadystatechange = function () {
-    if (cb) {
-      if (this.readyState == 4) {
-        if (this.status == 200) cb(xhr.responseText);
-        else cb();
-      }
-    }
+    if (cb) cb();
   }
   xhr.send(data);
 };
 
-$.get = function(url, cb) {
-  let xhr = new XMLHttpRequest();
-  xhr.open('GET', url, true);
-  xhr.onreadystatechange = function () {
-    if (cb) {
-      if (this.readyState == 4) {
-        if (this.status == 200) cb(xhr.responseText);
-        else cb();
-      }
-    }
-  }
-  xhr.send();
+$.get = function(url, data, cb) {
 };
