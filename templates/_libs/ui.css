@@ -473,7 +473,7 @@ li .ui_label {
   position: absolute;
   bottom: 0;
   top: 0;
-  left: 8px;
+  left: 16px;
   border-left: 1px dotted var(--box-color);
 }
 
