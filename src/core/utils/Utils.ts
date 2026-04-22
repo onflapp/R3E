@@ -350,6 +350,7 @@ class Utils {
     if (ext === 'jpg' || ext === 'jpeg') return 'image/jpeg';
     if (ext === 'png') return 'image/png';
     if (ext === 'gif') return 'image/gif';
+    if (ext === 'avi') return 'video/x-msvideo';
     if (ext === 'txt') return 'text/plain';
     if (ext === 'pdf') return 'application/pdf';
     if (ext === 'html' || ext === 'htm') return 'text/html';

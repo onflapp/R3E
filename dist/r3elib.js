@@ -328,6 +328,8 @@ class Utils {
             return 'image/png';
         if (ext === 'gif')
             return 'image/gif';
+        if (ext === 'avi')
+            return 'video/x-msvideo';
         if (ext === 'txt')
             return 'text/plain';
         if (ext === 'pdf')
@@ -3923,18 +3925,32 @@ class RemoteResource extends StoredResource {
     tryLoadContent(callback) {
         let url = this.getStoragePath();
         let self = this;
-        this.remoteGET(url, false, function (data) {
-            if (data) {
-                self.values._pt = 'resource/content';
-                self.values._contentdata = data;
-                self.isDirectory = false;
-                self.loaded = true;
-                callback(true);
-            }
-            else {
-                callback(false);
-            }
-        });
+        let fullload = false;
+        if (url.endsWith('.json'))
+            fullload = true;
+        if (url.endsWith('.hbs'))
+            fullload = true;
+        if (url.endsWith('.js'))
+            fullload = true;
+        if (fullload) {
+            this.remoteGET(url, false, function (data) {
+                if (data) {
+                    self.values._pt = 'resource/content';
+                    self.values._contentdata = data;
+                    self.values._contentsz = data.byteLength;
+                    self.contentSize = data.byteLength;
+                    self.isDirectory = false;
+                    self.loaded = true;
+                    callback(true);
+                }
+                else {
+                    callback(false);
+                }
+            });
+        }
+        else {
+            callback(false);
+        }
     }
     getWriter() {
         let path = this.getStoragePath();
@@ -4014,6 +4030,28 @@ class RemoteResource extends StoredResource {
                     else {
                         callback(xhr.response);
                     }
+                }
+                else {
+                    callback(null);
+                }
+            }
+        };
+        xhr.send();
+    }
+    remoteHEAD(url, callback) {
+        let xhr = new XMLHttpRequest();
+        xhr.open('HEAD', url, true);
+        xhr.setRequestHeader('X-R3E-Source', 'RemoteSource');
+        xhr.onreadystatechange = function () {
+            var DONE = 4;
+            var OK = 200;
+            if (xhr.readyState === DONE) {
+                if (xhr.status === OK) {
+                    var headers = {};
+                    var s = xhr.getResponseHeader("content-length");
+                    if (s)
+                        headers['content-length'] = Number.parseInt(s);
+                    callback(headers);
                 }
                 else {
                     callback(null);

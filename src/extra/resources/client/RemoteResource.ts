@@ -186,19 +186,46 @@ class RemoteResource extends StoredResource {
   protected tryLoadContent(callback) {
     let url = this.getStoragePath();
     let self = this;
+    let fullload = false;
 
-    this.remoteGET(url, false, function(data) {
-      if (data) {
-        self.values._pt = 'resource/content';
-        self.values._contentdata = data;
-        self.isDirectory = false;
-        self.loaded = true;
-        callback(true);
-      }
-      else {
-        callback(false);
-      }
-    });
+    if (url.endsWith('.json')) fullload = true;
+    if (url.endsWith('.hbs')) fullload = true;
+    if (url.endsWith('.js')) fullload = true;
+
+    if (fullload) {
+      this.remoteGET(url, false, function(data) {
+        if (data) {
+          self.values._pt = 'resource/content';
+          self.values._contentdata = data;
+          self.values._contentsz = data.byteLength;
+          self.contentSize = data.byteLength;
+          self.isDirectory = false;
+          self.loaded = true;
+          callback(true);
+        }
+        else {
+          callback(false);
+        }
+      });
+    }
+    else {
+      /*
+      this.remoteHEAD(url, function(data) {
+        if (data) {
+          let sz = data['content-length'];
+          self.values._pt = 'resource/content';
+          self.contentSize = sz?sz:0;
+          self.isDirectory = false;
+          self.loaded = true;
+          callback(true);
+        }
+        else {
+          callback(false);
+        }
+      });
+      */
+      callback(false);
+    }
   }
 
   public getWriter(): ContentWriter {
@@ -291,6 +318,30 @@ class RemoteResource extends StoredResource {
           else {
             callback(xhr.response);
           }
+        }
+        else {
+          callback(null);
+        }
+      }
+    };
+
+    xhr.send();
+  }
+
+  protected remoteHEAD(url, callback): void {
+    let xhr = new XMLHttpRequest();
+
+    xhr.open('HEAD', url, true);
+    xhr.setRequestHeader('X-R3E-Source', 'RemoteSource');
+    xhr.onreadystatechange = function () {
+      var DONE = 4;
+      var OK = 200;
+      if (xhr.readyState === DONE) {
+        if (xhr.status === OK) {
+          var headers = {};
+          var s = xhr.getResponseHeader("content-length");
+          if (s) headers['content-length'] = Number.parseInt(s);
+          callback(headers);
         }
         else {
           callback(null);
