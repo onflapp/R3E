@@ -462,7 +462,6 @@ class Utils {
 }
 Utils.ENABLE_TRACE_LOG = false;
 Utils.EXPORT_RENDER_CONTEXT = false;
-Utils.MAXIMIZE_CASHING = false;
 class EventDispatcher {
     constructor() {
         this._eventHandlers = {};
@@ -2282,7 +2281,10 @@ class Tools {
     }
     static reorderChildren(children, order) {
         children.sort(function (a, b) {
-            return Utils.compareNames(a.getName(), b.getName());
+            if (typeof a == 'string')
+                return Utils.compareNames(a, b);
+            else
+                return Utils.compareNames(a.getName(), b.getName());
         });
         if (order) {
             let rv = [];
@@ -2290,22 +2292,28 @@ class Tools {
             let find = function (name) {
                 for (let z = 0; z < children.length; z++) {
                     let it = children[z];
-                    if (it.getName() == name)
-                        return it;
+                    if (typeof it == 'string') {
+                        if (it == name)
+                            return it;
+                    }
+                    else {
+                        if (it.getName() == name)
+                            return it;
+                    }
                 }
                 return null;
             };
             for (let i = 0; i < order.length; i++) {
                 let n = order[i];
                 let c = find(n);
-                if (c) {
+                if (c && !done[n]) {
                     rv.push(c);
                     done[n] = n;
                 }
             }
             for (let z = 0; z < children.length; z++) {
                 let it = children[z];
-                let n = it.getName();
+                let n = (typeof it == 'string' ? it : it.getName());
                 if (!done[n])
                     rv.push(it);
             }
@@ -3781,22 +3789,9 @@ class RemoteResourceContentWriter {
         let self = this;
         let data = this.buffer[0];
         let ctype = this.contentType;
-        let cdata = null;
-        let docache = (this.resource['enableCache'] && Utils.MAXIMIZE_CASHING);
         if (ctype && ctype.indexOf('base64:') === 0) {
             ctype = ctype.substr(7);
             data = Utils.base642ArrayBuffer(data);
-            if (docache)
-                cdata = data;
-        }
-        else {
-            if (docache)
-                cdata = Utils.string2ArrayBuffer(data);
-        }
-        if (cdata) {
-            this.resource.values['_contentdata'] = cdata;
-            this.resource.values['_ct'] = ctype;
-            this.resource = null;
         }
         xhr.open('POST', escape(this.filePath), true);
         if (ctype)
@@ -3894,8 +3889,6 @@ class RemoteResource extends StoredResource {
                         if (values) {
                             if (values._pt === 'resource/content')
                                 self.isDirectory = false;
-                            if (typeof values._contentsz !== 'undefined')
-                                self.contentSize = values._contentsz;
                             self.values = values;
                             callback(true);
                         }
@@ -3911,8 +3904,6 @@ class RemoteResource extends StoredResource {
                 if (values) {
                     if (values._pt === 'resource/content')
                         self.isDirectory = false;
-                    if (typeof values._contentsz !== 'undefined')
-                        self.contentSize = values._contentsz;
                     self.values = values;
                     callback(true);
                 }
@@ -3936,8 +3927,6 @@ class RemoteResource extends StoredResource {
             this.remoteGET(url, false, function (data) {
                 if (data) {
                     self.values._pt = 'resource/content';
-                    self.values._contentdata = data;
-                    self.values._contentsz = data.byteLength;
                     self.contentSize = data.byteLength;
                     self.isDirectory = false;
                     self.loaded = true;
@@ -3961,17 +3950,9 @@ class RemoteResource extends StoredResource {
     }
     flushResourceCache() {
         super.flushResourceCache();
-        delete this.values['_contentdata'];
     }
     read(writer, callback) {
         if (this.isDirectory) {
-            writer.end(callback);
-        }
-        else if (this.values._contentdata) {
-            let ct = this.getContentType();
-            let data = this.values._contentdata;
-            writer.start(ct);
-            writer.write(data);
             writer.end(callback);
         }
         else {
@@ -4673,7 +4654,6 @@ class ClientRequestHandler extends ResourceRequestHandler {
 class SPARequestHandler extends ClientRequestHandler {
     constructor(resourceResolver, templateResolver, contentWriter) {
         super(resourceResolver, templateResolver, contentWriter);
-        Utils.MAXIMIZE_CASHING = true;
     }
     forwardRequest(rpath) {
         let p = rpath;

@@ -18,7 +18,8 @@ class Tools {
 
   public static reorderChildren(children, order) {
     children.sort(function (a, b) {
-      return Utils.compareNames(a.getName(), b.getName());        
+      if (typeof a == 'string') return Utils.compareNames(a, b);        
+      else                      return Utils.compareNames(a.getName(), b.getName());        
     });
     if (order) {
       let rv = [];
@@ -26,7 +27,12 @@ class Tools {
       let find = function(name) {
         for (let z = 0; z < children.length; z++) {
           let it = children[z];
-          if (it.getName() == name) return it;
+          if (typeof it == 'string') {
+           if (it == name) return it;
+          }
+          else {
+            if (it.getName() == name) return it;
+          }
         }
         return null;
       };
@@ -34,7 +40,7 @@ class Tools {
       for (let i = 0; i < order.length; i++) {
         let n = order[i];
         let c = find(n);
-        if (c) {
+        if (c && !done[n]) {
           rv.push(c);
           done[n] = n;
         }
@@ -42,7 +48,7 @@ class Tools {
 
       for (let z = 0; z < children.length; z++) {
         let it = children[z];
-        let n = it.getName();
+        let n = (typeof it == 'string' ? it : it.getName());
         if (!done[n]) rv.push(it);
       }
 

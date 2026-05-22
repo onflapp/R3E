@@ -2,7 +2,6 @@ class SPARequestHandler extends ClientRequestHandler {
 
   constructor(resourceResolver: ResourceResolver, templateResolver: ResourceResolver, contentWriter: DOMContentWriter) {
     super(resourceResolver, templateResolver, contentWriter);
-    Utils.MAXIMIZE_CASHING = true;
   }
 
   public forwardRequest(rpath: string) {

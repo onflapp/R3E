@@ -82,22 +82,26 @@ function Dragger() {
   this.makeGhost = function(el) {
     if (this.useGhost) {
       var p = document.createElement("div");
-      var rect = el.getBoundingClientRect();
       var offx = window.pageXOffset;
       var offy = window.pageYOffset;
+      var rect = el.getBoundingClientRect();
 
       p.classList.add(this.GHOST_CLASS);
       p.innerHTML = this.getDragItemContent(el);
+
       p.style.position = "absolute";
       p.style.top = rect.y + offy + "px";
       p.style.left = rect.x + offx + "px";
       p.style.width = rect.width + "px";
-      p.style.height = rect.height + "px";
       p.style.overflow = "hidden";
       p.style.zIndex = 9999;
       p.style.pointerEvents = "none";
       
       document.body.appendChild(p);
+
+      if (this.isFreehand || this.isResizing || this.lockVertical) {
+        p.style.height = rect.height + "px";
+      }
 
       return p;
     }
