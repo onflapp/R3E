@@ -350,7 +350,7 @@ function storeDocumentHTML(ctx, doc, dest) {
 
       process++;
       storeDocumentIMG(ctx, src, dest, function(nsrc) {
-        it.setAttribute('src', escape(nsrc));
+        it.setAttribute('src', encodeURIComponent(nsrc));
 
         process--;
         done();
@@ -376,7 +376,7 @@ function formChanges(form) {
 
 function storeDocumentIMG(ctx, src, dest, cb) {
   let pref = config.DOC_PREFIX;
-  if (src.startsWith(pref)) src = '/content'+unescape(src.substr(pref.length));
+  if (src.startsWith(pref)) src = '/content'+decodeURIComponent(src.substr(pref.length));
 
   let n = Utils.filename(src);
   ctx.copyResources([src], dest).then(function() {

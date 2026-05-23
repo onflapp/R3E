@@ -584,7 +584,7 @@ class ResourceRequestContext implements ScriptContext {
       let i = 0;
       for (let k in this.pathInfo.query) {
         if (i > 0) q += '&';
-        q += k + '=' + escape(this.pathInfo.query[k]);
+        q += k + '=' + encodeURIComponent(this.pathInfo.query[k]);
         i++;
       }
       if (i > 0) p['URL_QUERY'] = '?'+q;

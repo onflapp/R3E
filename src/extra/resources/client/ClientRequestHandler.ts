@@ -72,6 +72,7 @@ class DOMContentWriter implements ContentWriter {
       window['XMLHttpRequest'].prototype.send = function(data) {
         if (this.__localpath) {
           Object.defineProperty(this, 'readyState', { get: function() {return 4 }});
+          Object.defineProperty(this, 'responseText', { get: function() {return this['__responseText'] }});
 
           if (data['arrayBuffer']) { //Blob?
             let val = {};
@@ -84,17 +85,21 @@ class DOMContentWriter implements ContentWriter {
             };
             let cb = this.onreadystatechange;
             let path = this.__localpath;
+            let xx = this;
             delete this.__localpath;
             self.requestHandler.handleStore(path, val, function(rv) {
-              if (cb) cb();
+              xx.__responseText = rv;
+              if (cb) cb(rv);
             });
           }
           else {
             let info = self.requestHandler.parseFormData(this.__localpath, data);
             let cb = this.onreadystatechange;
+            let xx = this;
             delete this.__localpath;
             self.requestHandler.handleStore(info.formPath, info.formData, function(rv) {
-              if (cb) cb();
+              xx.__responseText = rv;
+              if (cb) cb(rv);
             });
           }
         }
@@ -121,7 +126,7 @@ class DOMContentWriter implements ContentWriter {
 
       try {
         let target = evt.target as HTMLFormElement;
-        let action = unescape(target.getAttribute('action'));
+        let action = decodeURIComponent(target.getAttribute('action'));
         let info = requestHandler.parseFormElement(target, evt.submitter);
 
         if (!action) return;
@@ -133,7 +138,7 @@ class DOMContentWriter implements ContentWriter {
           else forward = a[0];
         }
         if (forward && forward.indexOf('#')) {
-          info.formData[':forward'] = unescape(forward.substr(forward.indexOf('#')+1));
+          info.formData[':forward'] = decodeURIComponent(forward.substr(forward.indexOf('#')+1));
         }
         
         if (target.method.toUpperCase() === 'POST') {
@@ -148,10 +153,10 @@ class DOMContentWriter implements ContentWriter {
           if (i > 0) action = action.substr(0, i);
           for (let k in info.formData) {
             let v = info.formData[k];
-            q.push(k+'='+escape(v));
+            q.push(k+'='+encodeURIComponent(v));
           }
 
-          if (action.indexOf('#')) action = unescape(action.substr(action.indexOf('#')+1));
+          if (action.indexOf('#')) action = decodeURIComponent(action.substr(action.indexOf('#')+1));
           if (q.length) action += '?'+q.join('&');
 
           setTimeout(function () {
@@ -371,7 +376,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
           let n = a[i].substr(0, c);
           let v = a[i].substr(c+1);
 
-          p[unescape(n)] = unescape(v);
+          p[decodeURIComponent(n)] = decodeURIComponent(v);
         }
       }
     }
@@ -448,7 +453,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
     if (action.indexOf('#')) {
       action = action.substr(action.indexOf('#')+1);
     }
-    action = unescape(action);
+    action = decodeURIComponent(action);
 
     for (let i = 0; i < formElement.elements.length; i++) {
       let p = formElement.elements[i];
@@ -458,10 +463,10 @@ class ClientRequestHandler extends ResourceRequestHandler {
 
       if (!name) continue;
 
-      if (name.charAt(0) == ':') value = unescape(value); //might be :copy or other special value
+      if (name.charAt(0) == ':') value = decodeURIComponent(value); //might be :copy or other special value
 
       if (type === 'file') {
-        value = unescape(p.value);
+        value = decodeURIComponent(p.value);
         let fv = p.files[0];
         if (!fv) continue;
 

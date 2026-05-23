@@ -235,9 +235,18 @@ class Utils {
     }
   }
 
+  public static escape(str: string): string {
+    if (!str) return str;
+    let v = encodeURIComponent(str);
+    v = v.replaceAll('%2F', '/');
+    v = v.replaceAll('%40', '@');
+
+    return v;
+  }
+
   public static unescape(str: string): string {
     if (!str) return str;
-    else return unescape(str);
+    else return decodeURIComponent(str);
   }
 
   public static string2object(str: string, obj ? : object): object {

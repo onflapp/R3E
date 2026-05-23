@@ -435,13 +435,13 @@ class ResourceRequestHandler extends EventDispatcher {
       self.transformResource(data, transform, context, function (values: any) {
         if (!values) {
           if (callback) {
-            callback();
+            callback(info.resourcePath);
           }
         }
         else if (values[':skipto']) {
           let forward = values[':skipto'];
           if (callback) {
-            callback();
+            callback(info.resourcePath);
           }
           else {
             self.handleEnd();
@@ -462,7 +462,7 @@ class ResourceRequestHandler extends EventDispatcher {
             let forward = values[':forward'];
             self.renderResource(info.resourcePath, null, info.selector, context, function(ctype, content) {
               if (callback) {
-                callback();
+                callback(info.resourcePath);
               }
               else {
                 self.handleEnd();
@@ -476,7 +476,7 @@ class ResourceRequestHandler extends EventDispatcher {
                 let forward = values[':forward'];
 
                 if (callback) {
-                  callback();
+                  callback(storeto);
                 }
                 else if (forward) {
                   self.handleEnd(true);

@@ -11,7 +11,7 @@ class SPARequestHandler extends ClientRequestHandler {
       var x = p.indexOf('#');
       var h = p.substr(0, x);
       if (window.location.toString().startsWith(h)) {
-        p = unescape(p.substr(x+1));
+        p = decodeURIComponent(p.substr(x+1));
       }
       else {
         Utils.flushResourceCache();

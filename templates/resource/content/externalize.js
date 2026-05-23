@@ -3,7 +3,7 @@
   var xref = res['externalizedPath'];
 
   if (xref) {
-    var url = escape(xref);
+    var url = Utils.escape(xref);
     writer.start('text/plain');
     writer.write(url);
     writer.end();

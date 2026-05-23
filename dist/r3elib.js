@@ -209,11 +209,19 @@ class Utils {
             return a.localeCompare(b);
         }
     }
+    static escape(str) {
+        if (!str)
+            return str;
+        let v = encodeURIComponent(str);
+        v = v.replaceAll('%2F', '/');
+        v = v.replaceAll('%40', '@');
+        return v;
+    }
     static unescape(str) {
         if (!str)
             return str;
         else
-            return unescape(str);
+            return decodeURIComponent(str);
     }
     static string2object(str, obj) {
         if (!str)
@@ -1641,7 +1649,7 @@ class ResourceRequestContext {
             for (let k in this.pathInfo.query) {
                 if (i > 0)
                     q += '&';
-                q += k + '=' + escape(this.pathInfo.query[k]);
+                q += k + '=' + encodeURIComponent(this.pathInfo.query[k]);
                 i++;
             }
             if (i > 0)
@@ -2067,13 +2075,13 @@ class ResourceRequestHandler extends EventDispatcher {
             self.transformResource(data, transform, context, function (values) {
                 if (!values) {
                     if (callback) {
-                        callback();
+                        callback(info.resourcePath);
                     }
                 }
                 else if (values[':skipto']) {
                     let forward = values[':skipto'];
                     if (callback) {
-                        callback();
+                        callback(info.resourcePath);
                     }
                     else {
                         self.handleEnd();
@@ -2094,7 +2102,7 @@ class ResourceRequestHandler extends EventDispatcher {
                         let forward = values[':forward'];
                         self.renderResource(info.resourcePath, null, info.selector, context, function (ctype, content) {
                             if (callback) {
-                                callback();
+                                callback(info.resourcePath);
                             }
                             else {
                                 self.handleEnd();
@@ -2107,7 +2115,7 @@ class ResourceRequestHandler extends EventDispatcher {
                             if (!error) {
                                 let forward = values[':forward'];
                                 if (callback) {
-                                    callback();
+                                    callback(storeto);
                                 }
                                 else if (forward) {
                                     self.handleEnd(true);
@@ -3793,7 +3801,7 @@ class RemoteResourceContentWriter {
             ctype = ctype.substr(7);
             data = Utils.base642ArrayBuffer(data);
         }
-        xhr.open('POST', escape(this.filePath), true);
+        xhr.open('POST', Utils.escape(this.filePath), true);
         if (ctype)
             xhr.setRequestHeader('Content-Type', ctype);
         xhr.onreadystatechange = function () {
@@ -4247,6 +4255,7 @@ class DOMContentWriter {
             window['XMLHttpRequest'].prototype.send = function (data) {
                 if (this.__localpath) {
                     Object.defineProperty(this, 'readyState', { get: function () { return 4; } });
+                    Object.defineProperty(this, 'responseText', { get: function () { return this['__responseText']; } });
                     if (data['arrayBuffer']) {
                         let val = {};
                         let tp = data['type'];
@@ -4258,19 +4267,23 @@ class DOMContentWriter {
                         };
                         let cb = this.onreadystatechange;
                         let path = this.__localpath;
+                        let xx = this;
                         delete this.__localpath;
                         self.requestHandler.handleStore(path, val, function (rv) {
+                            xx.__responseText = rv;
                             if (cb)
-                                cb();
+                                cb(rv);
                         });
                     }
                     else {
                         let info = self.requestHandler.parseFormData(this.__localpath, data);
                         let cb = this.onreadystatechange;
+                        let xx = this;
                         delete this.__localpath;
                         self.requestHandler.handleStore(info.formPath, info.formData, function (rv) {
+                            xx.__responseText = rv;
                             if (cb)
-                                cb();
+                                cb(rv);
                         });
                     }
                 }
@@ -4294,7 +4307,7 @@ class DOMContentWriter {
             evt.preventDefault();
             try {
                 let target = evt.target;
-                let action = unescape(target.getAttribute('action'));
+                let action = decodeURIComponent(target.getAttribute('action'));
                 let info = requestHandler.parseFormElement(target, evt.submitter);
                 if (!action)
                     return;
@@ -4307,7 +4320,7 @@ class DOMContentWriter {
                         forward = a[0];
                 }
                 if (forward && forward.indexOf('#')) {
-                    info.formData[':forward'] = unescape(forward.substr(forward.indexOf('#') + 1));
+                    info.formData[':forward'] = decodeURIComponent(forward.substr(forward.indexOf('#') + 1));
                 }
                 if (target.method.toUpperCase() === 'POST') {
                     setTimeout(function () {
@@ -4321,10 +4334,10 @@ class DOMContentWriter {
                         action = action.substr(0, i);
                     for (let k in info.formData) {
                         let v = info.formData[k];
-                        q.push(k + '=' + escape(v));
+                        q.push(k + '=' + encodeURIComponent(v));
                     }
                     if (action.indexOf('#'))
-                        action = unescape(action.substr(action.indexOf('#') + 1));
+                        action = decodeURIComponent(action.substr(action.indexOf('#') + 1));
                     if (q.length)
                         action += '?' + q.join('&');
                     setTimeout(function () {
@@ -4506,7 +4519,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
                 if (c > 0) {
                     let n = a[i].substr(0, c);
                     let v = a[i].substr(c + 1);
-                    p[unescape(n)] = unescape(v);
+                    p[decodeURIComponent(n)] = decodeURIComponent(v);
                 }
             }
         }
@@ -4571,7 +4584,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
         if (action.indexOf('#')) {
             action = action.substr(action.indexOf('#') + 1);
         }
-        action = unescape(action);
+        action = decodeURIComponent(action);
         for (let i = 0; i < formElement.elements.length; i++) {
             let p = formElement.elements[i];
             let type = p.type.toLowerCase();
@@ -4580,9 +4593,9 @@ class ClientRequestHandler extends ResourceRequestHandler {
             if (!name)
                 continue;
             if (name.charAt(0) == ':')
-                value = unescape(value);
+                value = decodeURIComponent(value);
             if (type === 'file') {
-                value = unescape(p.value);
+                value = decodeURIComponent(p.value);
                 let fv = p.files[0];
                 if (!fv)
                     continue;
@@ -4662,7 +4675,7 @@ class SPARequestHandler extends ClientRequestHandler {
             var x = p.indexOf('#');
             var h = p.substr(0, x);
             if (window.location.toString().startsWith(h)) {
-                p = unescape(p.substr(x + 1));
+                p = decodeURIComponent(p.substr(x + 1));
             }
             else {
                 Utils.flushResourceCache();
@@ -4745,7 +4758,7 @@ class ServerRequestHandler extends ResourceRequestHandler {
     }
     handleGetRequest(req) {
         let URL = require('url').URL;
-        let rpath = unescape(req.path);
+        let rpath = decodeURIComponent(req.path);
         let referer = req.headers.referrer || req.headers.referer;
         if (referer) {
             let r = new URL(referer);
@@ -4757,7 +4770,7 @@ class ServerRequestHandler extends ResourceRequestHandler {
     handlePostRequest(req) {
         let URL = require('url').URL;
         let self = this;
-        let rpath = unescape(req.path);
+        let rpath = decodeURIComponent(req.path);
         let multiparty = require('multiparty');
         let querystring = require('querystring');
         let referer = req.headers.referrer || req.headers.referer;

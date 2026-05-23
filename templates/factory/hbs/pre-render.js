@@ -25,7 +25,7 @@
     }
 
     var p = Utils.absolute_path(rv.join(''), context.R['PATH']);
-    p = escape(p);
+    p = Utils.escape(p);
     rv = []
 
     if (context.C['APP_PREFIX']) rv.push(context.C['APP_PREFIX']);
@@ -44,9 +44,9 @@
             else rv.push('&');
 
             var v = context['Q'][k];
-            rv.push(escape(k));
+            rv.push(encodeURIComponent(k));
             rv.push('=');
-            rv.push(escape(v?v:''));
+            rv.push(encodeURIComponent(v?v:''));
             i++;
           }
         }
@@ -101,7 +101,7 @@
 
     var p = rv.join('/');
     p = Utils.absolute_path(p, context.R['RES_PATH']);
-    return escape(p);
+    return Utils.escape(p);
   });
 
 /*
@@ -179,7 +179,7 @@
     var args = arguments;
 
     if (!args[0]) return null;
-    else return escape(args[1]);
+    else return Utils.escape(args[1]);
   });
 
   Handlebars.registerHelper('eq', function (lvalue, rvalue, result, options) {
