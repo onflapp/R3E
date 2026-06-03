@@ -529,8 +529,9 @@ li .ui_label {
   width: 100%;
 }
 
+.ui_group form.full-width,
 form.full-width {
-  display: revert;
+  display: block;
 }
 
 textarea.full-width {
@@ -607,6 +608,12 @@ a.selected {
 }
 
 .ui_group form {
+  margin-block-end: 0;
+  display: inline-block;
+}
+
+.ui_group form {
+  margin-block-end: 0;
   display: inline-block;
 }
 
@@ -614,11 +621,9 @@ a.selected {
   font-family: var(--font);
   font-size: var(--size);
   background-color: var(--input-color);
-  border: var(--input-border_b);
+  border: var(--input-border);
+  border-bottom: var(--input-border_b);
   padding: var(--padding-base) var(--padding-base) var(--padding-base) var(--padding-base); 
-  outline-color: var(--selection-color);
-  outline-width: 2px;
-  outline-style: solid;
   border-radius: 0;
   font-size: inherit;
   margin: 0;
@@ -636,7 +641,8 @@ a.selected {
   box-sizing: border-box;
 }
 
-.ui_group input:focus {
+.ui_group input:focus,
+.ui_group textarea:focus {
   outline-color: var(--selection-color);
   outline-width: 2px;
   outline-style: solid;

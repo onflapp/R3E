@@ -1,9 +1,8 @@
 class DOMContentWriter implements ContentWriter {
-  private requestHandler: ClientRequestHandler;
+  protected requestHandler: ClientRequestHandler;
   private htmldata;
   private extdata;
   private exttype;
-  private externalResources = {};
 
   constructor() {}
 
@@ -14,49 +13,82 @@ class DOMContentWriter implements ContentWriter {
     return p.innerHTML;
   }
 
-  protected patchWindowObjects() {
+  protected updateDocument(content) {
     let self = this;
-    let dopatch = function(obj) {
-      if (obj['__myevents']) {
-        for (let i = 0; i < obj['__myevents'].length; i++) {
-          let v = obj['__myevents'][i];
-          obj.removeEventListener(v.event, v.func, v.cap);
-        }
+    let u = window.location.toString();
+
+    self.patchHttpRequest();
+
+    document.documentElement.innerHTML = content;
+    self.requestHandler.dispatchAllEvents('start', this);
+
+    let done_loading = function () {
+      self.evaluateScripts();
+      self.attachListeners();
+      
+      if (window.parent == window) {
+        sessionStorage.setItem('__CURRENT_REQUEST_URL', u);
       }
 
-      obj['__myevents'] = [];
-     
-      if (!obj['orig_addEventListener']) {
-        obj['orig_addEventListener'] = obj.addEventListener;
-        obj.addEventListener = function(a, b, c) {
-          obj['__myevents'].push({
-            event:a,
-            func:b,
-            cap:c
-          });
-
-          obj['orig_addEventListener'](a, b, c);
-        };
-      }
+      self.requestHandler.dispatchAllEvents('loaded', this);
     };
 
-    /*
-    dopatch(window);
-    dopatch(window.document);
-    dopatch(window.document.body);
-    */
+    window.requestAnimationFrame(function() {
+      done_loading();
+    });
+  }
 
-    if (!window['_customElements_orig_define']) {
-      if (window['customElements']) {
-        window['_customElements_orig_define'] = CustomElementRegistry.prototype.define;
-        window.customElements.define = function(a, b, c) {
-          if (!window.customElements.get(a)) {
-            window['_customElements_orig_define'].call(this, a, b, c);
-          }
-        };
-      }
+  public setRequestHandler(requestHandler: ClientRequestHandler) {
+    this.requestHandler = requestHandler;
+  }
+
+  public start(ctype) {
+    if (ctype && ctype.indexOf('text/') == 0) {
+      this.htmldata = [];
     }
+    else if (ctype && ctype == 'application/json') {
+      this.htmldata = [];
+      this.htmldata.push('<pre>');
+    }
+    else {
+      this.exttype = ctype;
+      this.extdata = [];
+    }
+  }
 
+  public write(content) {
+    if (this.htmldata) this.htmldata.push(content);
+    else if (this.extdata) this.extdata.push(content);
+  }
+
+  public error(error: Error) {
+    console.log(error);
+  }
+
+  public end() {
+    if (this.htmldata) {
+      this.updateDocument(this.htmldata.join(''));
+    }
+    else if ('object/javascript' == this.exttype) {
+      let d = JSON. stringify(this.extdata[0]);
+      this.updateDocument('<pre>'+d+'</pre>');
+    }
+    else if (this.extdata && this.extdata.length) {
+      let blob = new Blob(this.extdata, {type:this.exttype})
+      let uri = window.URL.createObjectURL(blob)
+      
+      this.requestHandler.dispatchAllEvents('ended', this);
+      window.location.replace(uri);
+    }
+    this.htmldata = null;
+    this.extdata = null;
+    this.exttype = null;
+
+    this.requestHandler.handleEnd();
+  }
+
+  protected patchHttpRequest() {
+    let self = this;
     if (!window['XMLHttpRequest']['_prototype_orig_open']) {
       window['XMLHttpRequest']['_prototype_orig_open'] = window['XMLHttpRequest'].prototype.open;
       window['XMLHttpRequest'].prototype.open = function(method, path) {
@@ -120,14 +152,14 @@ class DOMContentWriter implements ContentWriter {
   }
 
   protected attachListeners() {
-    let requestHandler = this.requestHandler;
+    let self = this;
     document.body.addEventListener('submit', function (evt) {
       evt.preventDefault();
 
       try {
         let target = evt.target as HTMLFormElement;
         let action = decodeURIComponent(target.getAttribute('action'));
-        let info = requestHandler.parseFormElement(target, evt.submitter);
+        let info = self.requestHandler.parseFormElement(target, evt.submitter);
 
         if (!action) return;
 
@@ -143,7 +175,7 @@ class DOMContentWriter implements ContentWriter {
         
         if (target.method.toUpperCase() === 'POST') {
           setTimeout(function () {
-            requestHandler.handleStore(info.formPath, info.formData);
+            self.requestHandler.handleStore(info.formPath, info.formData);
           });
         }
         else {
@@ -160,8 +192,8 @@ class DOMContentWriter implements ContentWriter {
           if (q.length) action += '?'+q.join('&');
 
           setTimeout(function () {
-            requestHandler.forwardRequest(action);
-            requestHandler.handleEnd();
+            self.requestHandler.forwardRequest(action);
+            self.requestHandler.handleEnd();
           });
         }
       }
@@ -238,81 +270,6 @@ class DOMContentWriter implements ContentWriter {
       }
 		}
     trigger_done();
-  }
-
-  protected updateDocument(content) {
-    let self = this;
-    let u = window.location.toString();
-
-    this.patchWindowObjects();
-
-    document.documentElement.innerHTML = content;
-    self.requestHandler.dispatchAllEvents('start', this);
-
-    let done_loading = function () {
-      self.evaluateScripts();
-      self.loadExternal();
-      self.attachListeners();
-      
-      if (window.parent == window) {
-        sessionStorage.setItem('__CURRENT_REQUEST_URL', u);
-      }
-
-      self.requestHandler.dispatchAllEvents('loaded', this);
-    };
-
-    window.requestAnimationFrame(function() {
-      done_loading();
-    });
-  }
-
-  public setRequestHandler(requestHandler: ClientRequestHandler) {
-    this.requestHandler = requestHandler;
-  }
-
-  public start(ctype) {
-    if (ctype && ctype.indexOf('text/') == 0) {
-      this.htmldata = [];
-    }
-    else if (ctype && ctype == 'application/json') {
-      this.htmldata = [];
-      this.htmldata.push('<pre>');
-    }
-    else {
-      this.exttype = ctype;
-      this.extdata = [];
-    }
-  }
-
-  public write(content) {
-    if (this.htmldata) this.htmldata.push(content);
-    else if (this.extdata) this.extdata.push(content);
-  }
-
-  public error(error: Error) {
-    console.log(error);
-  }
-
-  public end() {
-    if (this.htmldata) {
-      this.updateDocument(this.htmldata.join(''));
-    }
-    else if ('object/javascript' == this.exttype) {
-      let d = JSON. stringify(this.extdata[0]);
-      this.updateDocument('<pre>'+d+'</pre>');
-    }
-    else if (this.extdata && this.extdata.length) {
-      let blob = new Blob(this.extdata, {type:this.exttype})
-      let uri = window.URL.createObjectURL(blob)
-      
-      this.requestHandler.dispatchAllEvents('ended', this);
-      window.location.replace(uri);
-    }
-    this.htmldata = null;
-    this.extdata = null;
-    this.exttype = null;
-
-    this.requestHandler.handleEnd();
   }
 }
 
@@ -537,4 +494,5 @@ class ClientRequestHandler extends ResourceRequestHandler {
       localStorage.setItem('_md', new Date().toString());
     }
   }
+
 }

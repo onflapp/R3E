@@ -4200,47 +4200,77 @@ class SessionStorageResource extends LocalStorageResource {
     }
 }
 class DOMContentWriter {
-    constructor() {
-        this.externalResources = {};
-    }
+    constructor() { }
     escapeHTML(html) {
         let text = document.createTextNode(html);
         let p = document.createElement('p');
         p.appendChild(text);
         return p.innerHTML;
     }
-    patchWindowObjects() {
+    updateDocument(content) {
         let self = this;
-        let dopatch = function (obj) {
-            if (obj['__myevents']) {
-                for (let i = 0; i < obj['__myevents'].length; i++) {
-                    let v = obj['__myevents'][i];
-                    obj.removeEventListener(v.event, v.func, v.cap);
-                }
+        let u = window.location.toString();
+        self.patchHttpRequest();
+        document.documentElement.innerHTML = content;
+        self.requestHandler.dispatchAllEvents('start', this);
+        let done_loading = function () {
+            self.evaluateScripts();
+            self.attachListeners();
+            if (window.parent == window) {
+                sessionStorage.setItem('__CURRENT_REQUEST_URL', u);
             }
-            obj['__myevents'] = [];
-            if (!obj['orig_addEventListener']) {
-                obj['orig_addEventListener'] = obj.addEventListener;
-                obj.addEventListener = function (a, b, c) {
-                    obj['__myevents'].push({
-                        event: a,
-                        func: b,
-                        cap: c
-                    });
-                    obj['orig_addEventListener'](a, b, c);
-                };
-            }
+            self.requestHandler.dispatchAllEvents('loaded', this);
         };
-        if (!window['_customElements_orig_define']) {
-            if (window['customElements']) {
-                window['_customElements_orig_define'] = CustomElementRegistry.prototype.define;
-                window.customElements.define = function (a, b, c) {
-                    if (!window.customElements.get(a)) {
-                        window['_customElements_orig_define'].call(this, a, b, c);
-                    }
-                };
-            }
+        window.requestAnimationFrame(function () {
+            done_loading();
+        });
+    }
+    setRequestHandler(requestHandler) {
+        this.requestHandler = requestHandler;
+    }
+    start(ctype) {
+        if (ctype && ctype.indexOf('text/') == 0) {
+            this.htmldata = [];
         }
+        else if (ctype && ctype == 'application/json') {
+            this.htmldata = [];
+            this.htmldata.push('<pre>');
+        }
+        else {
+            this.exttype = ctype;
+            this.extdata = [];
+        }
+    }
+    write(content) {
+        if (this.htmldata)
+            this.htmldata.push(content);
+        else if (this.extdata)
+            this.extdata.push(content);
+    }
+    error(error) {
+        console.log(error);
+    }
+    end() {
+        if (this.htmldata) {
+            this.updateDocument(this.htmldata.join(''));
+        }
+        else if ('object/javascript' == this.exttype) {
+            let d = JSON.stringify(this.extdata[0]);
+            this.updateDocument('<pre>' + d + '</pre>');
+        }
+        else if (this.extdata && this.extdata.length) {
+            let blob = new Blob(this.extdata, { type: this.exttype });
+            let uri = window.URL.createObjectURL(blob);
+            this.requestHandler.dispatchAllEvents('ended', this);
+            window.location.replace(uri);
+        }
+        this.htmldata = null;
+        this.extdata = null;
+        this.exttype = null;
+        this.requestHandler.handleEnd();
+    }
+    patchHttpRequest() {
+        let self = this;
         if (!window['XMLHttpRequest']['_prototype_orig_open']) {
             window['XMLHttpRequest']['_prototype_orig_open'] = window['XMLHttpRequest'].prototype.open;
             window['XMLHttpRequest'].prototype.open = function (method, path) {
@@ -4302,13 +4332,13 @@ class DOMContentWriter {
         }
     }
     attachListeners() {
-        let requestHandler = this.requestHandler;
+        let self = this;
         document.body.addEventListener('submit', function (evt) {
             evt.preventDefault();
             try {
                 let target = evt.target;
                 let action = decodeURIComponent(target.getAttribute('action'));
-                let info = requestHandler.parseFormElement(target, evt.submitter);
+                let info = self.requestHandler.parseFormElement(target, evt.submitter);
                 if (!action)
                     return;
                 let forward = info.formData[':forward'];
@@ -4324,7 +4354,7 @@ class DOMContentWriter {
                 }
                 if (target.method.toUpperCase() === 'POST') {
                     setTimeout(function () {
-                        requestHandler.handleStore(info.formPath, info.formData);
+                        self.requestHandler.handleStore(info.formPath, info.formData);
                     });
                 }
                 else {
@@ -4341,8 +4371,8 @@ class DOMContentWriter {
                     if (q.length)
                         action += '?' + q.join('&');
                     setTimeout(function () {
-                        requestHandler.forwardRequest(action);
-                        requestHandler.handleEnd();
+                        self.requestHandler.forwardRequest(action);
+                        self.requestHandler.handleEnd();
                     });
                 }
             }
@@ -4404,69 +4434,6 @@ class DOMContentWriter {
             }
         }
         trigger_done();
-    }
-    updateDocument(content) {
-        let self = this;
-        let u = window.location.toString();
-        this.patchWindowObjects();
-        document.documentElement.innerHTML = content;
-        self.requestHandler.dispatchAllEvents('start', this);
-        let done_loading = function () {
-            self.evaluateScripts();
-            self.loadExternal();
-            self.attachListeners();
-            if (window.parent == window) {
-                sessionStorage.setItem('__CURRENT_REQUEST_URL', u);
-            }
-            self.requestHandler.dispatchAllEvents('loaded', this);
-        };
-        window.requestAnimationFrame(function () {
-            done_loading();
-        });
-    }
-    setRequestHandler(requestHandler) {
-        this.requestHandler = requestHandler;
-    }
-    start(ctype) {
-        if (ctype && ctype.indexOf('text/') == 0) {
-            this.htmldata = [];
-        }
-        else if (ctype && ctype == 'application/json') {
-            this.htmldata = [];
-            this.htmldata.push('<pre>');
-        }
-        else {
-            this.exttype = ctype;
-            this.extdata = [];
-        }
-    }
-    write(content) {
-        if (this.htmldata)
-            this.htmldata.push(content);
-        else if (this.extdata)
-            this.extdata.push(content);
-    }
-    error(error) {
-        console.log(error);
-    }
-    end() {
-        if (this.htmldata) {
-            this.updateDocument(this.htmldata.join(''));
-        }
-        else if ('object/javascript' == this.exttype) {
-            let d = JSON.stringify(this.extdata[0]);
-            this.updateDocument('<pre>' + d + '</pre>');
-        }
-        else if (this.extdata && this.extdata.length) {
-            let blob = new Blob(this.extdata, { type: this.exttype });
-            let uri = window.URL.createObjectURL(blob);
-            this.requestHandler.dispatchAllEvents('ended', this);
-            window.location.replace(uri);
-        }
-        this.htmldata = null;
-        this.extdata = null;
-        this.exttype = null;
-        this.requestHandler.handleEnd();
     }
 }
 class ClientRequestHandler extends ResourceRequestHandler {
@@ -4664,9 +4631,65 @@ class ClientRequestHandler extends ResourceRequestHandler {
         }
     }
 }
+class SPADOMContentWriter extends DOMContentWriter {
+    updateDocument(content) {
+        let self = this;
+        let u = window.location.toString();
+        this.patchWindowObjects();
+        this.patchHttpRequest();
+        document.documentElement.innerHTML = content;
+        self.requestHandler.dispatchAllEvents('start', this);
+        let done_loading = function () {
+            self.evaluateScripts();
+            self.loadExternal();
+            self.attachListeners();
+            if (window.parent == window) {
+                sessionStorage.setItem('__CURRENT_REQUEST_URL', u);
+            }
+            self.requestHandler.dispatchAllEvents('loaded', this);
+        };
+        window.requestAnimationFrame(function () {
+            done_loading();
+        });
+    }
+    patchWindowObjects() {
+        let self = this;
+        let dopatch = function (obj) {
+            if (obj['__myevents']) {
+                for (let i = 0; i < obj['__myevents'].length; i++) {
+                    let v = obj['__myevents'][i];
+                    obj.removeEventListener(v.event, v.func, v.cap);
+                }
+            }
+            obj['__myevents'] = [];
+            if (!obj['orig_addEventListener']) {
+                obj['orig_addEventListener'] = obj.addEventListener;
+                obj.addEventListener = function (a, b, c) {
+                    obj['__myevents'].push({
+                        event: a,
+                        func: b,
+                        cap: c
+                    });
+                    obj['orig_addEventListener'](a, b, c);
+                };
+            }
+        };
+        if (!window['_customElements_orig_define']) {
+            if (window['customElements']) {
+                window['_customElements_orig_define'] = CustomElementRegistry.prototype.define;
+                window.customElements.define = function (a, b, c) {
+                    if (!window.customElements.get(a)) {
+                        window['_customElements_orig_define'].call(this, a, b, c);
+                    }
+                };
+            }
+        }
+    }
+}
 class SPARequestHandler extends ClientRequestHandler {
     constructor(resourceResolver, templateResolver, contentWriter) {
-        super(resourceResolver, templateResolver, contentWriter);
+        let writer = contentWriter ? contentWriter : new SPADOMContentWriter();
+        super(resourceResolver, templateResolver, writer);
     }
     forwardRequest(rpath) {
         let p = rpath;
