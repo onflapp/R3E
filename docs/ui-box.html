@@ -1,6 +1,16 @@
 <html>
   <head>
     <link rel="stylesheet" href="../templates/_libs/ui.css">
+<style>
+.mystyle h1 {
+  color: red;
+  font-size: small;
+}
+.mystyle p {
+  color: blue;
+  font-size: small;
+}
+</style>
   </head>
   <body class="ui_dialog">
     <div class="ui_group" style="background-color:aliceblue">
@@ -33,6 +43,21 @@
         <a href="#" class="ui_button">button A</a>
         <a href="#" class="ui_button">button X</a>
       </div>
+    </div>
+    
+    <div class="ui_group box padding margins">
+      <h1>header 1</h1>
+      <p>text</p>
+      <h2>header 2</h2>
+      
+      <div class="plain">
+        <div class="mystyle">
+        <h1>header 1</h1>
+        <p>text</p>
+        <h2>header 2</h2>
+        </div>
+      </div>
+      
     </div>
 
   </body>
