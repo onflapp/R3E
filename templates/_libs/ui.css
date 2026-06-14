@@ -1,20 +1,24 @@
 :root {
   --font: system-ui;
   --size: 12px;
-  --border: 1px;
-  --radius: 2px;
-  --margin-base: 6px;
+  --border: 0;
+  --radius: 6px;
+  --margin-base: 10px;
+  --padding-base: 4px;
+
   --margin: var(--margin-base) 0px 0px 0px; /*top right bottom left */
-  --padding-base: 3px;
-  --padding: var(--padding-base) 10px var(--padding-base) 10px;
+  --padding: var(--padding-base) calc(var(--padding-base)*3) var(--padding-base) calc(var(--padding-base)*3);
   --padding-inline: calc(var(--padding-base) + var(--border)) 0 calc(var(--padding-base) + var(--border)) 0;
+  --padding-box: calc(var(--margin-base)*2);
 
   --color: unset;
   --box-color: #DEDEDE;
+  --box-radius: 0;
   --primary-color: #767676;
   --border-color: #767676;
   --border-color: gray;
-  --button-color: unset;
+  --button-color-x: unset;
+  --button-color: #E7E7E7;
   --button-text: black;
   --link-color: LinkText;
   --input-color: white;
@@ -32,7 +36,7 @@
     --size: 14px;
     --margin-base: 12px;
     --padding-base: 6px;
-    --padding: 8px 6px 8px 6px;
+    --padding: 12px 8px 12px 8px;
   }
   
 }
@@ -560,22 +564,22 @@ textarea.full-width {
 }
 
 .box {
-  border-radius: var(--radius);
+  border-radius: var(--box-radius);
   border: 1px solid var(--box-color);
 }
 
 .padding {
-  padding: 12px 12px 12px 12px; /*top right bottom left */
+  padding: var(--padding-box) var(--padding-box) var(--padding-box) var(--padding-box); /*top right bottom left */
 }
 
 body.margins.padding {
   margin: 0;
-  padding: 6px 12px 12px 12px; /*top right bottom left */
+  padding: calc(var(--padding-box) / 2) var(--padding-box) var(--padding-box) var(--padding-box); /*top right bottom left */
 }
 
 .margins .padding,
 .margins.padding {
-  padding: 6px 12px 12px 12px; /*top right bottom left */
+  padding: calc(var(--padding-box) / 2) var(--padding-box) var(--padding-box) var(--padding-box); /*top right bottom left */
 }
 
 .marginless > * {
@@ -672,8 +676,8 @@ a.selected {
 
 .ui_group input[type=range]::-webkit-slider-thumb {
   appearance: none;
-  background-color: var(--input-color);
-  border: var(--border) solid var(--border-color);
+  background-color: var(--border-color);
+  border: var(--border) solid var(--input-color);
   height: 12px;
   width: 12px;
   box-shadow: none;

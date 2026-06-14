@@ -503,7 +503,7 @@ class ResourceRequestHandler extends EventDispatcher {
   public storeResource(resourcePath: string, data: any, callback) {
     let self = this;
     let rres = this.resourceResolver;
-    let processing = 0;
+    let actions = [];
 
     let extractpaths = function(name) {
       let rv = [];
@@ -516,96 +516,118 @@ class ResourceRequestHandler extends EventDispatcher {
       return rv;
     };
 
+    let done = function() {
+      if (actions.length == 0) {
+        callback();
+      }
+      else {
+        let func = actions.shift();
+        try {
+          func();
+        }
+        catch (ex) {
+          console.log(ex);
+          actions = [];
+          callback(new ErrorResource(ex));
+        }
+      }
+    };
+
     let storedata = function(path) {
-      processing++;
-      self.expandDataAndStore(path, data, function () {
-        self.dispatchAllEvents('stored', path, data);
-        processing--;
-        if (processing == 0) callback();
+      actions.push(function() {
+        self.expandDataAndStore(path, data, function () {
+          self.dispatchAllEvents('stored', path, data);
+          done();
+        });
       });
     };
 
-    try {
-      let remove   = extractpaths(':delete');
-      let copyfrom = extractpaths(':copyfrom');
-      let movefrom = extractpaths(':movefrom');
+    let remove   = extractpaths(':delete');
+    let copyfrom = extractpaths(':copyfrom');
+    let movefrom = extractpaths(':movefrom');
 
-      let copyto   = Utils.absolute_path(data[':copyto'], resourcePath);
-      let cloneto  = Utils.absolute_path(data[':cloneto'], resourcePath);
-      let moveto   = Utils.absolute_path(data[':moveto'], resourcePath);
-      let importto = Utils.absolute_path(data[':import'], resourcePath);
-      let reset    = Utils.absolute_path(data[':reset'], resourcePath);
+    let copyto   = Utils.absolute_path(data[':copyto'], resourcePath);
+    let cloneto  = Utils.absolute_path(data[':cloneto'], resourcePath);
+    let moveto   = Utils.absolute_path(data[':moveto'], resourcePath);
+    let importto = Utils.absolute_path(data[':import'], resourcePath);
+    let reset    = Utils.absolute_path(data[':reset'], resourcePath);
 
-      if (copyfrom.length && copyto) {
-        for (let i = 0; i < copyfrom.length; i++) {
-          processing++;
+    if (copyfrom.length && copyto) {
+      for (let i = 0; i < copyfrom.length; i++) {
+        actions.push(function() {
           let to = copyto;
           if (data[':copyto'].endsWith('/')) to = Utils.filename_path_append(copyto, Utils.filename(copyfrom[i]));
           rres.copyResource(copyfrom[i], to, function () {
-            processing--;
             self.dispatchAllEvents('post-copyfrom', to, data);
             storedata(resourcePath);
+            done();
           });
-        }
+        });
       }
-      else if (movefrom.length && moveto) {
-        for (let i = 0; i < movefrom.length; i++) {
-          processing++;
+    }
+    else if (movefrom.length && moveto) {
+      for (let i = 0; i < movefrom.length; i++) {
+        actions.push(function() {
           let to = moveto;
           if (data[':moveto'].endsWith('/')) to = Utils.filename_path_append(moveto, Utils.filename(movefrom[i]));
           rres.moveResource(movefrom[i], to, function () {
-            processing--;
             self.dispatchAllEvents('post-movefrom', to, data);
             storedata(resourcePath);
+            done();
           });
-        }
+        });
       }
-      else if (remove.length) {
-        for (let i = 0; i < remove.length; i++) {
-          processing++;
+    }
+    else if (remove.length) {
+      for (let i = 0; i < remove.length; i++) {
+        actions.push(function() {
           rres.removeResource(remove[i], function () {
-            processing--;
             self.dispatchAllEvents('post-remove', remove[i], data);
-            if (processing == 0) callback();
+            done();
           });
-        }
+        });
       }
-      else if (copyto) {
-        processing++;
+    }
+    else if (copyto) {
+      actions.push(function() {
         rres.copyResource(resourcePath, copyto, function () {
-          processing--;
           self.dispatchAllEvents('post-copyto', copyto, data);
           storedata(copyto);
+          done();
         });
-      }
-      else if (cloneto) {
-        processing++;
+      });
+    }
+    else if (cloneto) {
+      actions.push(function() {
         rres.cloneResource(resourcePath, cloneto, function () {
-          processing--;
           self.dispatchAllEvents('post-cloneto', cloneto, data);
           storedata(cloneto);
+          done();
         });
-      }
-      else if (moveto) {
-        processing++;
+      });
+    }
+    else if (moveto) {
+      actions.push(function() {
         rres.moveResource(resourcePath, moveto, function () {
-          processing--;
           self.dispatchAllEvents('post-moveto', moveto, data);
           storedata(moveto);
+          done();
         });
-      }
-      else if (importto) {
-        let fn = data[':import'];
+      });
+    }
+    else if (importto) {
+      let fn = data[':import'];
 
-        if (fn) {
-          let imp = data[fn+'/_content'];
-          if (imp) {
-            data['_content'] = imp;
-            delete data[fn+'/_content'];
-            delete data[fn+'/_ct'];
-          }
+      if (fn) {
+        let imp = data[fn+'/_content'];
+        if (imp) {
+          data['_content'] = imp;
+          delete data[fn+'/_content'];
+          delete data[fn+'/_ct'];
         }
+      }
 
+      actions.push(function() {
         self.expandDataAndImport(resourcePath, data, function () {
           delete data[':import'];
           delete data['_ct'];
@@ -613,24 +635,25 @@ class ResourceRequestHandler extends EventDispatcher {
 
           self.dispatchAllEvents('pre-importto', resourcePath, data);
           storedata(resourcePath);
+          done();
         });
-      }
-      else if (reset) {
-        processing++;
+      });
+    }
+    else if (reset) {
+      actions.push(function() {
         rres.removeResource(reset, function () {
-          processing--;
           self.dispatchAllEvents('pre-store', resourcePath, data);
           storedata(resourcePath);
+          done();
         });
-      }
-      else {
-        self.dispatchAllEvents('pre-store', resourcePath, data);
-        storedata(resourcePath);
-      }
+      });
     }
-    catch (ex) {
-      callback(new ErrorResource(ex));
+    else {
+      self.dispatchAllEvents('pre-store', resourcePath, data);
+      storedata(resourcePath);
     }
+
+    done();
   }
 
   public handleEnd(stored?: boolean) {

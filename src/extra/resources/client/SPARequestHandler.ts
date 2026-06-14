@@ -1,11 +1,14 @@
 class SPADOMContentWriter extends DOMContentWriter {
 
+  constructor() {
+    super();
+    this.patchWindowObjects();
+    this.patchHttpRequest();
+  }
+
   protected updateDocument(content) {
     let self = this;
     let u = window.location.toString();
-
-    this.patchWindowObjects();
-    this.patchHttpRequest();
 
     document.documentElement.innerHTML = content;
     self.requestHandler.dispatchAllEvents('start', this);

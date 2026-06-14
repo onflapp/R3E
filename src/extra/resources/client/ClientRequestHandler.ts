@@ -4,7 +4,9 @@ class DOMContentWriter implements ContentWriter {
   private extdata;
   private exttype;
 
-  constructor() {}
+  constructor() {
+    this.patchHttpRequest();
+  }
 
   protected escapeHTML(html) {
     let text = document.createTextNode(html);
@@ -16,8 +18,6 @@ class DOMContentWriter implements ContentWriter {
   protected updateDocument(content) {
     let self = this;
     let u = window.location.toString();
-
-    self.patchHttpRequest();
 
     document.documentElement.innerHTML = content;
     self.requestHandler.dispatchAllEvents('start', this);
