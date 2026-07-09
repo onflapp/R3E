@@ -41,6 +41,18 @@
   
 }
 
+.ui_layout-vertical {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.ui_layout-horizontal {
+  display: flex;
+  flex-direction: rows;
+  width: 100%;
+}
+
 .ui_group .ui_paths li {
   display: inline-block;
   padding: var(--padding-inline);
@@ -103,8 +115,10 @@ div.ui_button {
   border-radius: 0;
 }
 
+.ui_group.margins .ui_button-group .ui_button + .ui_button,
 .ui_button-group .ui_button + .ui_button {
-  border-left: 0;
+  border-left: var(--input-border_b);
+  margin-left: 0;
 }
 
 .ui_button-group .ui_button:last-child {
@@ -124,18 +138,35 @@ div.ui_button {
   margin: var(--margin);
 }
 
+/*
+.ui_group.margins span.ui_button + span.ui_button,
+.ui_group.margins span.ui_sep + span.ui_button,
+.ui_group.margins span.ui_sep + button,
+.ui_group.margins span.ui_button + button {
+  margin-left: 4px;
+}
+*/
+
 html:has(body.ui_dialog) {
   background-color: gray;
+  height: 100%;
 }
 
 body.ui_dialog.ui_group,
 body.ui_dialog {
   margin: 20px;
+  height: calc(100dvh - 40px);
+}
+
+body.ui_dialog.ui_group.mode_balebaseapp,
+body.ui_dialog.mode_balebaseapp {
+  margin: 0px;
+  height: 100%;
 }
 
 body.ui_dialog.ui_group.margins,
 body.ui_dialog.margins {
-  padding-top: 0;
+  padding-top: var(--margin-base);
 }
 
 .ui_dialog {
@@ -270,6 +301,10 @@ body.ui_group {
   font-family: var(--font);
   font-size: var(--size);
   padding: var(--padding-inline);
+}
+
+.ui_label.center {
+  padding: var(--padding-base) var(--padding-base) var(--padding-base) var(--padding-base);
 }
 
 span.ui_label {
@@ -533,6 +568,11 @@ li .ui_label {
   width: 100%;
 }
 
+.full-height {
+  height: 100%;
+  overflow-y: scroll;
+}
+
 .ui_group form.full-width,
 form.full-width {
   display: block;
@@ -760,7 +800,6 @@ a.selected {
   font-size: var(--size);
   font-weight: normal;
   color: var(--button-text);
-  background-color: inherit;
   border: var(--border) solid var(--border-color);
   padding: var(--padding);
   margin: 0;
