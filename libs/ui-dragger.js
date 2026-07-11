@@ -5,7 +5,7 @@ function Dragger() {
   this.HANDLE_CLASS = 'ui_dragger-handle';
   this.RESIZER_CLASS = 'ui_dragger-resizer';
   this.PLACEHOLDER_CLASS = 'ui_dragger-placeholder';
-  this.SELECTED_CLASS = "selected";
+  this.DRAGGED_CLASS = "dragged";
   this.OVER_CLASS = "over";
   this.DRAGGING_CLASS = "dragging";
   this.RESIZING_CLASS = "resizing";
@@ -31,6 +31,8 @@ function Dragger() {
   this.ORIGIN_Y = 0;
   this.ORIGIN_W = 0;
   this.ORIGIN_H = 0;
+  this.ORIGIN_OFFX = 0;
+  this.ORIGIN_OFFY = 0;
 
   this.isTouch = false;
   this.isTracking = false;
@@ -328,13 +330,17 @@ function Dragger() {
     var ei = this._eventInfo(evt);
     var posx = ei.pageX;
     var posy = ei.pageY;
-    var offx = window.pageXOffset;
-    var offy = window.pageYOffset;
+    var poffx = window.pageXOffset;
+    var poffy = window.pageYOffset;
+    var ioffx = this.ORIGIN_OFFX;
+    var ioffy = this.ORIGIN_OFFY;
 
     var rect = this.CONTAINER.getBoundingClientRect();
 
-    this.GHOST.style.top = (posy - this.ORIGIN_DY - rect.top - offy) + "px";
-    this.GHOST.style.left = (posx - this.ORIGIN_DX - rect.left - offx) + "px"; 
+    this.GHOST.style.top = Math.round(posy - this.ORIGIN_DY - rect.top - poffy - ioffy) + "px";
+    this.GHOST.style.left = Math.round(posx - this.ORIGIN_DX - rect.left - poffx - ioffx) + "px"; 
+    this.GHOST.style.bottom= ''; 
+    this.GHOST.style.right= ''; 
     this.actions++;
 
     evt.preventDefault();
@@ -537,10 +543,15 @@ function Dragger() {
       }
 
       if (this.isFreehand) {
+        var po = this._elOffsets(el);
+        console.log(po);
+        this.ORIGIN_OFFX = Math.round(po.left);
+        this.ORIGIN_OFFY = Math.round(po.top);
+
         this.ITEM.style.zIndex = 1;
       }
 
-      this.ITEM.classList.add(this.SELECTED_CLASS);
+      this.ITEM.classList.add(this.DRAGGED_CLASS);
       this.ITEM.addEventListener('touchmove', this._ignoreEvent);
     }
 
@@ -594,6 +605,25 @@ function Dragger() {
       p = p.parentElement;
     }
     return false;
+  };
+
+  this._elOffsets = function(el) {
+    var x = 0;
+    var y = 0;
+
+    el = el.offsetParent;
+
+    while(el) {
+      if (el.classList.contains('ui_dragger-item')) {
+        x += Math.round(el.offsetLeft);
+        y += Math.round(el.offsetTop);
+      }
+      el = el.offsetParent;
+    }
+    return {
+      left:x,
+      top:y
+    };
   };
 
   this._eventInfo = function(evt) {
@@ -671,7 +701,7 @@ function Dragger() {
 
     if (this.ITEM) {
       this.ITEM.removeEventListener('touchmove', this._ignoreEvent);
-      this.ITEM.classList.remove(this.SELECTED_CLASS);
+      this.ITEM.classList.remove(this.DRAGGED_CLASS);
     }
     
     document.removeEventListener('touchcancel', this._touchcancel);

@@ -66,6 +66,7 @@
 .ui_group .ui_paths li a {
   text-decoration: none;
   color: var(--link-color);
+  -webkit-user-drag: none;
 }
 
 .ui_group .ui_paths {
@@ -92,6 +93,7 @@ a.ui_button {
   display: inline-block;
   cursor: default;
   color: var(--button-text);
+  -webkit-user-drag: none;
 }
 
 div.ui_button {
@@ -162,6 +164,7 @@ body.ui_dialog.ui_group.mode_balebaseapp,
 body.ui_dialog.mode_balebaseapp {
   margin: 0px;
   height: 100%;
+  border-radius: 0;
 }
 
 body.ui_dialog.ui_group.margins,
@@ -386,6 +389,7 @@ li .ui_label {
 .ui_tag a {
   color: inherit;
   text-decoration: none;
+  -webkit-user-drag: none;
 }
 
 .ui_button.default {
@@ -434,6 +438,8 @@ li .ui_label {
   white-space: nowrap;
   overflow-x: auto;
   border: 1px solid var(--box-color);
+  box-sizing: border-box;
+  height: 100%;
 }
 
 .ui_column {
@@ -442,24 +448,14 @@ li .ui_label {
   display: flex;
   flex-flow: column;
   position: relative;
+  border-right: 1px solid var(--box-color);  
 }
 
 .ui_column-header {
   font-size: smaller;
   color: gray;
-  padding: var(--padding-base);
+  padding: var(--padding);
   border-bottom: 1px solid var(--box-color);
-}
-
-.ui_column-header:after {
-  content: '';
-  display: block;
-  width: 14px;
-  height: 100;
-  position: absolute;
-  border-right: 1px solid var(--box-color);
-  right: 0;
-  top: 0;
 }
 
 .ui_columns .ui_column:last-child .ui_column-header:after {
@@ -471,8 +467,53 @@ li .ui_label {
   overflow-x: hidden;
   width: 100%;
   height: 100%;
-  z-index: 1;
   text-overflow: ellipsis;
+  border-right: 1px solid var(--box-color);
+}
+
+::-webkit-scrollbar {
+  background-color: #FAFAFA;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: gray;
+  border-radius: 10px;
+  border: 4px solid transparent;
+  background-clip: content-box;  
+  width: 2px;
+}
+
+.ui_column-content .selected {
+  border-radius: 0;
+}
+
+.ui_column-content ol.ui_tree,
+.ui_column-content ul.ui_tree {
+  margin: 0;
+}
+
+.ui_column-content .ui_tree a.ui_tree-item {
+  color: inherit;
+  text-decoration: none;
+  -webkit-user-drag: none;
+}
+
+.ui_column-content .ui_tree li .ui_tree-item {
+  padding: 2px 8px 2px 12px;
+}
+
+.ui_column-content .expandable:after {
+  content:'\23F5';
+  float: right;
+  line-height: var(--size);
+}
+
+.ui_column-content .ui_tree .ui_tree-item:before {
+  display: none;
+}
+
+.ui_column-content .ui_tree a.ui_tree-item.selected {
+  color: var(--selection-text);
 }
 
 .ui_group .ui_tree,
@@ -488,11 +529,18 @@ li .ui_label {
 
 .ui_tree li .ui_tree-item {
   margin: 0;
-  padding: var(--padding-base) 3px var(--padding-base) 3px;
+  padding: 2px 4px 2px 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   display: block;
+}
+
+.ui_tree li .ui_tree-item a,
+.ui_tree li a.ui_tree-item {
+  color: inherit;
+  text-decoration: none;
+  -webkit-user-drag: none;
 }
 
 .ui_tree.list li .ui_tree-item {
@@ -525,7 +573,6 @@ li .ui_label {
   content:'-';
   visibility: hidden;
   float: left;
-  color: var(--border-color);
   width: var(--list-marker);
   text-align: center;
   padding-right: 4px;
@@ -570,7 +617,7 @@ li .ui_label {
 
 .full-height {
   height: 100%;
-  overflow-y: scroll;
+  overflow-y: auto;
 }
 
 .ui_group form.full-width,
@@ -897,4 +944,26 @@ div:has(> .ui_cropframe.selected) {
   content: "";
   clear: both;
   display: table;
+}
+
+.ui_dragger-item .ui_dragger-resizer {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background-color: var(--selection-color);
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  cursor: nwse-resize;
+}
+
+.ui_dragger-item .ui_dragger-handle {
+  position: absolute;
+  top: 0;
+  leftt: 0;
+  background-color: var(--selection-color);
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  cursor: move;
 }
