@@ -41,6 +41,38 @@
   
 }
 
+#ui_popup {
+  z-index: 999;
+  border: 0;
+  position: fixed;
+  display: none;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: 300px;
+  box-sizing: border-box;
+  background-color: white;
+  box-shadow: -7px 0px 60px -3px rgb(0 0 0 / 50%);
+}
+
+#ui_popup.visible {
+  animation-name: slidein;
+  animation-duration: 0.2s;
+  display: block;
+}
+
+#ui_popup-background {
+  z-index: 998;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: black;
+  opacity: 0.1;
+  touch-action: none;
+}
+
 .ui_layout-vertical {
   display: flex;
   flex-direction: column;

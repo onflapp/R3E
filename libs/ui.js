@@ -83,6 +83,9 @@ function popupPath(type, path_ref, cb) {
     }
   };
 
+  let fel = document.activeElement;
+  if (fel) fel.blur();
+
   bg.addEventListener('click', onclick);
   bg.id = 'ui_popup-background';
   document.body.append(bg);
