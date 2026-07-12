@@ -67,6 +67,16 @@ ImageCropper = {
       var w = (c.crop_event.iw + dx);
       if (w > 100) target.setAttribute('width', w+'px');
     }
+    else if (c.crop_event.img && evt.touches.length == 2) {
+      var target = c.crop_event.img;
+
+      var dx = evt.touches[1].clientX - evt.touches[0].clientX;
+      var dy = evt.touches[1].clientY - evt.touches[0].clientY;
+      var dd = Math.hypot(dx, dy);
+
+      var w = (c.crop_event.iw + dd);
+      if (w > 100) target.setAttribute('width', w+'px');
+    }
     else if (c.crop_event.img) {
       var target = c.crop_event.img;
       var dx = ei.pageX - c.crop_event.x;

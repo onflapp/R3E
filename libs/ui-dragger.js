@@ -22,7 +22,7 @@ function Dragger() {
   this.PLACEHOLDER = null;
   this.TRACK_TO = null;
 
-  this.timeout = 250;
+  this.timeout = 350;
   this.actions = 0;
 
   this.ORIGIN_DX = 0;
@@ -212,16 +212,23 @@ function Dragger() {
       else {
         this.cleanup();
       }
+
+      evt.stopPropagation();
+      evt.preventDefault();
+      return false;
     }
     else {
       var self = this;
       var check_up = function(evt) {
         document.removeEventListener(self.EVT_UP, check_up);
+        document.removeEventListener('scroll', check_up);
 
+        /*
         var ee = self._eventInfo(evt);
         var dx = ei.pageX - ee.pageX;
         var dy = ei.pageY - ee.pageY;
         var dt = ee.timestamp - ei.timestamp;
+        */
         clearTimeout(self.TRACK_TO);
       };
 
@@ -236,11 +243,8 @@ function Dragger() {
       }, this.timeout);
 
       document.addEventListener(this.EVT_UP, check_up, false);
+      document.addEventListener('scroll', check_up, false);
     };
-
-    evt.stopPropagation();
-    evt.preventDefault();
-    return false;
   };
 
   this.mouse_up = function(evt) {
@@ -316,7 +320,7 @@ function Dragger() {
 
     setTimeout(function() { //make sure we don't miss to remove the event!
       el.removeEventListener('click', cancel_click);
-    },50);
+    },500);
 
     el.addEventListener('click', cancel_click);
 
@@ -627,7 +631,7 @@ function Dragger() {
   };
 
   this._eventInfo = function(evt) {
-    if (evt.targetTouches) {
+    if (evt.targetTouches && evt.targetTouches.length) {
       var t = evt.targetTouches[0];
       return {
         timestamp:evt.timeStamp,
