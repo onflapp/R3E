@@ -80,6 +80,18 @@ class SPARequestHandler extends ClientRequestHandler {
   constructor(resourceResolver: ResourceResolver, templateResolver: ResourceResolver, contentWriter: DOMContentWriter) {
     let writer = contentWriter ? contentWriter : new SPADOMContentWriter();
     super(resourceResolver, templateResolver, writer);
+
+    writer.setRequestHandler(this);
+
+    this.initHandlers();
+  }
+
+  protected initHandlers() {
+    let self = this;
+    window.addEventListener('hashchange', function (evt) {
+      let path = window.location.hash.substr(1);
+      self.handleRequest(path);
+    });
   }
 
   public forwardRequest(rpath: string) {

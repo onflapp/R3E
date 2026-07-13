@@ -287,8 +287,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
   protected initHandlers() {
     let self = this;
     window.addEventListener('hashchange', function (evt) {
-      let path = window.location.hash.substr(1);
-      self.handleRequest(path);
+      window.location.reload();
     });
   }
 

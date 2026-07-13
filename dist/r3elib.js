@@ -4466,8 +4466,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
     initHandlers() {
         let self = this;
         window.addEventListener('hashchange', function (evt) {
-            let path = window.location.hash.substr(1);
-            self.handleRequest(path);
+            window.location.reload();
         });
     }
     assignContext(context, pathInfo) {
@@ -4713,6 +4712,15 @@ class SPARequestHandler extends ClientRequestHandler {
     constructor(resourceResolver, templateResolver, contentWriter) {
         let writer = contentWriter ? contentWriter : new SPADOMContentWriter();
         super(resourceResolver, templateResolver, writer);
+        writer.setRequestHandler(this);
+        this.initHandlers();
+    }
+    initHandlers() {
+        let self = this;
+        window.addEventListener('hashchange', function (evt) {
+            let path = window.location.hash.substr(1);
+            self.handleRequest(path);
+        });
     }
     forwardRequest(rpath) {
         let p = rpath;

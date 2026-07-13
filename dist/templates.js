@@ -17,15 +17,15 @@ window.templates={
       "_pt": "resource/content",
       "_content": "(function (res, writer, ctx) {\r\n  writer.start('text/html');\r\n\r\n  writer.write('name:' + res.name);\r\n  writer.write('\x3Ch1>render types:\x3C/h1>');\r\n  writer.write('\x3Cul>');\r\n\r\n  var types = res.renderTypes;\r\n  for (var i = 0; i \x3C types.length; i++) {\r\n    writer.write('\x3Cli>' + types[i] + '\x3C/li>');\r\n  }\r\n  writer.write('\x3C/ul>');\r\n\r\n  writer.write('\x3Ch1>properties:\x3C/h1>');\r\n  writer.write('\x3Cul>');\r\n\r\n  for (var name in res._) {\r\n    var val = res._[name];\r\n    writer.write('\x3Cli>' + name + '=' + val + '\x3C/li>');\r\n  }\r\n\r\n  writer.write('\x3C/ul>');\r\n\r\n  var w = writer.makeNestedContentWriter();\r\n  ctx.listResourceNames('.').then(function (children) {\r\n    w.write('\x3Ch1>children:\x3C/h1>');\r\n    w.write('\x3Cul>');\r\n\r\n    for (var i = 0; i \x3C children.length; i++) {\r\n      var child = children[i];\r\n      w.write('\x3Cli>' + child + '\x3C/a>\x3C/li>');\r\n    }\r\n    w.write('\x3C/ul>');\r\n    w.end();\r\n  });\r\n\r\n  writer.end();\r\n})"
     },
-    "dump.js": {
-      "_ct": "text/javascript",
-      "_pt": "resource/content",
-      "_content": "(function (res, writer, ctx) {\n  res['R'] = ctx.getRequestProperties();\n  res['Q'] = ctx.getQueryProperties();\n  res['C'] = ctx.getConfigProperties();\n  res['S'] = ctx.getSessionProperties();\n\n  writer.start('application/json');\n  writer.write(JSON.stringify(res, null, 2));\n  writer.end();\n});\n"
-    },
     "json.js": {
       "_ct": "text/javascript",
       "_pt": "resource/content",
       "_content": "(function (res, writer) {\n  writer.start('application/json');\n  writer.write(JSON.stringify(res, null, 2));\n  writer.end();\n});\n"
+    },
+    "dump.js": {
+      "_ct": "text/javascript",
+      "_pt": "resource/content",
+      "_content": "(function (res, writer, ctx) {\n  res['R'] = ctx.getRequestProperties();\n  res['Q'] = ctx.getQueryProperties();\n  res['C'] = ctx.getConfigProperties();\n  res['S'] = ctx.getSessionProperties();\n\n  writer.start('application/json');\n  writer.write(JSON.stringify(res, null, 2));\n  writer.end();\n});\n"
     },
     "keyvalues.js": {
       "_ct": "text/javascript",
@@ -37,15 +37,15 @@ window.templates={
       "_pt": "resource/content",
       "_content": "(function (res, writer) {\n  writer.start('object/javascript');\n  writer.write(res);\n  writer.end();\n});\n"
     },
-    "pre-render.js": {
-      "_ct": "text/javascript",
-      "_pt": "resource/content",
-      "_content": "(function (res, writer, ctx) {\n  writer.end();\n});\n"
-    },
     "pre-store.js": {
       "_ct": "text/javascript",
       "_pt": "resource/content",
       "_content": "(function (res, writer, ctx) {\n  let tm = (new Date().getTime());\n\n  if (!res['_cd']) res['_cd'] = '' + tm;\n  res['_md'] = '' + tm;\n\n  writer.write(res);\n  writer.end();\n});\n"
+    },
+    "pre-render.js": {
+      "_ct": "text/javascript",
+      "_pt": "resource/content",
+      "_content": "(function (res, writer, ctx) {\n  writer.end();\n});\n"
     },
     "ui-close.hbs": {
       "_ct": "text/plain",
@@ -77,20 +77,6 @@ window.templates={
           "_pt": "resource/content",
           "_content": "(function (res, writer, ctx) {\n  var clientside = (typeof window != 'undefined');\n  var xref = res['_xref'];\n\n  if (xref) {\n    var url = Utils.escape(xref);\n    writer.start('text/plain');\n    writer.write(url);\n    writer.end();\n  }\n  else if (clientside) {\n    if (res['isContentResource']) {\n      ctx.readResource('.', new ContentWriterAdapter('blob', function (data, ctype) {\n        var blob = new Blob([data], {\n          type: ctype ? ctype : 'application/octet-binary'\n        });\n        var url = URL.createObjectURL(blob);\n\n        writer.start('text/plain');\n        writer.write(`\x3Cscript src=\"${url}\">\x3C/script>`);\n        writer.end();\n      }));\n    }\n    else {\n      writer.error(new Error('resource has no content'));\n      writer.end();\n    }\n  }\n  else {\n    var url = ctx.pathInfo.resourcePath;\n    writer.start('text/plain');\n    writer.write(`\x3Cscript>${url}\x3C/script>`);\n    writer.end();\n  }\n});\n"
         }
-      }
-    }
-  },
-  "system": {
-    "shell": {
-      "edit.hbs": {
-        "_ct": "text/plain",
-        "_pt": "resource/content",
-        "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  {{include_css \"resource/res-ui.css\"}}\n\n  \x3Ctitle>shell:{{R.PATH}}\x3C/title>\n\x3C/head>\n  \x3Cstyle>\n    #commandline {\n      width: 100%;\n    }\n  \x3C/style>\n  \x3Cscript>\n      window.addEventListener('DOMContentLoaded', function() {\n        var cmd = document.querySelector('#commandline');\n        if (cmd) {\n          cmd.focus();\n        }\n      });\n  \x3C/script>\n\n\x3Cbody>\n  \x3Cdiv class=\"head\">\n    \x3Col class=\"paths\">\n      \x3Cli>\x3Ca href=\"{{req_path \"/\" \"res-list\"}}\">HOME\x3C/a>\x3C/li>\n{{#include \".\" \"parents\"}}\n      \x3Cli>\x3Ca href=\"{{req_path path \"res-list\"}}\">{{name}}\x3C/a>\x3C/li>\n{{/include}}\n      \x3Cli>{{name}}\x3C/li>\n    \x3C/ol>\n\n    \x3Cpre>\n    \x3C/pre>\n\n    \x3Cform method=\"post\" action=\"{{res_path R.PATH}}\">\n      \x3Cinput type=\"hidden\" name=\"_rt\" value=\"system/shell\">\n      \x3Cinput id=\"commandline\" type=\"text\" autocorrect=\"off\" autocapitalize=\"none\" autocomplete=\"off\" spellcheck=\"false\" name=\":command\">\n    \x3C/form>\n\n  \x3C/div>\n\x3C/body>\n\n\x3C/html>\n"
-      },
-      "pre-store.js": {
-        "_ct": "text/javascript",
-        "_pt": "resource/content",
-        "_content": "(function (res, writer, ctx) {\n  let command = res[':command'];\n  let path = ctx.getCurrentResourcePath();\n  let rstype = 'resource/node';\n  let sel = 'res-shell';\n\n  let write_content = function(rv, out) {\n    let t = '';\n    if (!out) {\n      t = '';\n    }\n    else if (Array.isArray(out)) {\n      t = out.join('\\n');\n    }\n    else {\n      t = '' + out;\n    }\n    \n    rv.content = rv.content.replace('XXX', command + '\\n'+t);\n    writer.write(rv);\n    writer.end();\n  };\n\n  ctx.renderResource(path, rstype, sel).then(function(rv) {\n    try {\n      let x = eval(command);\n      if (Object.getPrototypeOf(x) == Promise.prototype) {\n        x.then(function(out) {\n          write_content(rv, out);\n        });\n      }\n      else {\n        write_content(rv, x);\n      }\n    }\n    catch(ex) {\n      write_content(rv, ex);\n    }\n  });\n});\n"
       }
     }
   },
@@ -137,50 +123,16 @@ window.templates={
         "_content": "(function (res, writer, ctx) {\n  if (res && res['isContentResource']) {\n    ctx.readResource('.', new ContentWriterAdapter('utf8', function (data, ctype) {\n      writer.start('text/plain');\n      writer.write(data);\n      writer.end();\n    }));\n  }\n  else {\n    writer.error(new Error('resource has no content'));\n    writer.end();\n  }\n});\n"
       }
     },
-    "index": {
-      "children.js": {
-        "_ct": "text/javascript",
-        "_pt": "resource/content",
-        "_content": "(function (res, writer, ctx) {\n  writer.start('object/javascript');\n  var qp = ctx.getQueryProperties();\n  var qry = '';\n\n  if (qp && qp['q']) qry = qp['q'];\n  if (!qry) {\n    writer.write([]);\n    writer.end();\n    return;\n  }\n\n  ctx.searchResources('.', qry).then(function(ls) {\n    var rv = [];\n    for (var i = 0; i \x3C ls.length; i++) {\n      var it = ls[i];\n      rv.push(it);\n    } \n    writer.write(rv);\n    writer.end();\n  });\n})\n"
-      },
-      "res-create.hbs": {
-        "_ct": "text/plain",
-        "_pt": "resource/content",
-        "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  {{include_css \"_libs/ui.css\"}}\n\n  {{#partial \"text_opts\"}}\nautocomplete=\"off\" autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\"\n  {{/partial}}\n\n  \x3Ctitle>index content\x3C/title>\n\x3C/head>\n\n\x3Cbody class=\"ui_group dialog\">\n\n  \x3Ch1>Index Resource Content\n    \x3Ca class=\"ui_button pull-right\" href=\"{{req_path \".\" \"ui-close\"}}\">X\x3C/a>\n  \x3C/h1>\n\n  \x3Col class=\"ui_paths\">\n    \x3Cli>\x3Ca href=\"{{req_path \"/\" \"res-list\"}}\">HOME\x3C/a>\x3C/li>\n{{#include \".\" \"parents\"}}\n    \x3Cli>\x3Ca href=\"{{req_path path \"res-list\"}}\">{{name}}\x3C/a>\x3C/li>\n{{/include}}\n    \x3Cli>{{name}}\x3C/li>\n  \x3C/ol>\n\n  \x3Ch4>Index Text\x3C/h4>\n\n  \x3Cform method=\"post\" enctype=\"multipart/form-data\" action=\"{{res_path R.PATH \"{:name}\"}}\">\n    \x3Ctextarea autocorrect=\"off\" autocapitalize=\"none\" {{> text_opts}} name=\"_content\">\x3C/textarea>\n    \x3Cinput type=\"text\" name=\":name|newUUID\" value=\"\" {{> text_opts}} placeholder=\"reference path\">\n    \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{req_path R.PATH \"res-list\"}}\">\n    \x3Cbutton type=\"submit\">index\x3C/button>\n  \x3C/form>\n\n  \x3Ch4>Index File\x3C/h4>\n\n  \x3Cform method=\"post\" enctype=\"multipart/form-data\" action=\"{{res_path R.PATH \"{:name}\"}}\">\n    \x3Cinput type=\"file\" name=\":filename\" value=\"\">\n    \x3Cinput type=\"text\" name=\":name|:filename|newUUID\" value=\"\" {{> text_opts}} placeholder=\"reference path\">\n    \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{req_path R.PATH \"res-list\"}}\">\n    \x3Cbutton type=\"submit\">upload\x3C/button>\n  \x3C/form>\n\n  \x3Ch4>Import File\x3C/h4>\n          \n  \x3Cform method=\"post\" enctype=\"multipart/form-data\" action=\"{{res_path R.PATH}}\">\n    \x3Cinput class=\"form-control\" type=\"file\" name=\":import\" value=\"\">\n    \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{req_path R.PATH \"res-list\"}}\">\n    \x3Cbutton type=\"submit\">import\x3C/button>\n  \x3C/form>\n\n\x3C/body>\n\x3C/html>\n"
-      },
-      "res-list.hbs": {
-        "_ct": "text/plain",
-        "_pt": "resource/content",
-        "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  {{include_css \"_libs/ui.css\"}}\n\n  \x3Ctitle>Index Search\x3C/title>\n\x3C/head>\n\n\x3Cbody class=\"ui_group\">\n\n  \x3Col class=\"ui_paths\">\n    \x3Cli>\x3Ca href=\"{{req_path \"/\"}}\">HOME\x3C/a>\x3C/li>\n{{#include \".\" \"parents\"}}\n    \x3Cli>\x3Ca href=\"{{req_path path}}\">{{name}}\x3C/a>\x3C/li>\n{{/include}}\n    \x3Cli>{{name}}\x3C/li>\n  \x3C/ol>\n\n  \x3Cform method=\"get\" action=\"{{req_path \".\" \"res-list\"}}\">\n    \x3Ca target=\"_blank\" class=\"ui_button\" href=\"{{req_path \".\" \"res-create\"}}\">create\x3C/a>\n    \x3Ca target=\"_blank\" class=\"ui_button\" href=\"{{req_path \".\" \"/_THE_INDEX_\" \"res-delete\"}}\">clear\x3C/a>\n    \x3Cinput name=\"q\" type=\"text\" placeholder=\"search\" value=\"{{Q.q}}\">\n    \x3Cbutton type=\"submit\">search\x3C/button>\n  \x3C/form>\n\n  \x3Ctable>\n{{#include \".\" \"children\"}}\n    \x3Ctr>\n      \x3Ctd>\n        \x3Ca href=\"{{req_path path \"res-list\"}}\">{{name}}\x3C/a>\n      \x3C/td>\n    \x3C/tr>\n{{/include}}\n  \x3C/table>\n\n\x3C/body>\n\x3C/html>\n"
-      }
-    },
-    "notfound": {
-      "default.js": {
-        "_ct": "text/javascript",
-        "_pt": "resource/content",
-        "_content": "(function (res, writer, context) {\n  //send 404 only if we are requesing this resource directly\n  if (context.getCurrentRequestPath() === context.getCurrentResourcePath()) {\n    context.sendStatus(404);\n    writer.end();\n  }\n  else {\n    writer.end();\n  }\n});\n"
-      },
-      "res-list.hbs": {
-        "_ct": "text/plain",
-        "_pt": "resource/content",
-        "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  \x3Ctitle>Delete\x3C/title>\n\n  \x3Clink href=\"{{C.BOOTSTRAP_CSS}}\" rel=\"stylesheet\">\n\x3C/head>\n\n\x3Cbody>\n\n  \x3Cdiv role=\"dialog\">\n    \x3Cdiv class=\"modal-dialog\" role=\"document\">\n      \x3Cdiv class=\"modal-content\">\n        \x3Cdiv class=\"modal-header\">\n          \x3Ca class=\"close\" href=\"{{C.P}}{{R.PATH_APPEND}}../{{C.X}}res-list\">\x3Cspan aria-hidden=\"true\">&times;\x3C/span>\x3C/a>\n          \x3Ch4 class=\"modal-title\">Resource Not Found\x3C/h4>\n        \x3C/div>\n        \x3Cdiv class=\"modal-body\">\n\n          \x3Col class=\"breadcrumb\">\n            \x3Cli>\x3Ca href=\"{{C.P}}/{{C.X}}res-list\">HOME\x3C/a>\x3C/li>\n            {{#include \".\" \"parents\"}}\n              \x3Cli>\x3Ca href=\"{{C.P}}{{path}}{{C.X}}res-list\">{{name}}\x3C/a>\x3C/li>\n            {{/include}}\n            \x3Cli class=\"active\">{{R.NAME}}\x3C/li>\n          \x3C/ol>\n\n          \x3Ch4>Resource\"{{name}} not found, create?\"\x3C/h4>\n\n        \x3C/div>\n        \x3Cdiv class=\"modal-footer\">\n          \x3Cform class=\"form-inline\" method=\"post\" action=\"{{C.P}}{{R.PATH}}\">\n            \x3Ca class=\"btn btn-default\" href=\"{{C.P}}{{R.PATH_APPEND}}../{{C.X}}res-list\">Cancel\x3C/a>\n            \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{C.P}}{{R.PATH_APPEND}}{{C.X}}res-list\">\n            \x3Cinput class=\"btn btn-success\" type=\"submit\" value=\"Create\">\n          \x3C/form>\n\n        \x3C/div>\n      \x3C/div>\x3C!-- /.modal-content -->\n    \x3C/div>\x3C!-- /.modal-dialog -->\n  \x3C/div>\x3C!-- /.modal -->\n\n\x3C/body>\n\n\x3C/html>\n\n"
-      }
-    },
     "node": {
-      "children.js": {
-        "_ct": "text/javascript",
-        "_pt": "resource/content",
-        "_content": "(async function (res, writer, ctx) {\n  writer.start('object/javascript');\n\n  let children = await ctx.listResources('.');\n\n  writer.write(children);\n})\n"
-      },
       "dev-tools.js": {
         "_ct": "text/javascript",
         "_pt": "resource/content",
         "_content": "let el = document.createElement('div');\nel.style.position = 'fixed';\nel.style.top = '0';\nel.style.right = '10px';\nel.style.border = '1px solid black';\nel.style.backgroundColor = 'gray';\n\nlet rbut = document.createElement('div');\nrbut.innerHTML = 'R';\nrbut.addEventListener('click', function() {\n  let u = window.location.toString().replace(/.@.*$/, '');\n  window.open(u+'.@res-list');\n});\n\nlet tbut = document.createElement('div');\ntbut.innerHTML = 'T';\ntbut.addEventListener('click', function() {\n  let u = window.location.toString().replace(/.@.*$/, '');\n  window.open(u+'.@res-renderer');\n});\n\nlet dbut = document.createElement('div');\ndbut.innerHTML = 'D';\ndbut.addEventListener('click', function() {\n  let u = window.location.toString().replace(/.@.*$/, '');\n  window.open(u+'.@dump');\n});\n\nlet xbut = document.createElement('div');\nxbut.innerHTML = 'X';\nxbut.addEventListener('click', function() {\n  showTraceMarkers(document.body.childNodes);\n});\n\nel.appendChild(rbut);\nel.appendChild(tbut);\nel.appendChild(dbut);\nel.appendChild(xbut);\n\ndocument.body.appendChild(el);\n\nwindow.addEventListener(\"storage\", function(evt) {\n  if (evt.key == '_res_ui_content_change_') {\n    setTimeout(function() {\n      window.location.reload();\n    }, 500);\n  }\n});\n\nfunction showTraceMarkers(ls) {\n  for (let i = 0; i \x3C ls.length; i++) {\n    let node = ls[i];\n    if (node.nodeType == 8) {\n      let val = node.nodeValue;\n      let el = document.createElement('div');\n      el.style.backgroundColor = 'yellow';\n      el.innerHTML = val;\n      node.parentNode.replaceChild(el, node);\n    }\n    else {\n      showTraceMarkers(node.childNodes);\n    }\n  }\n}\n"
       },
-      "flushcache.js": {
+      "children.js": {
         "_ct": "text/javascript",
         "_pt": "resource/content",
-        "_content": "(function (res, writer, context) {\n  writer.start('text/plain');\n\n  if (res.flushResourceCache) {\n    res.flushResourceCache();\n    writer.write('DONE');\n  }\n  else {\n    writer.write('NOT_SUPPORTED');\n  }\n\n  writer.end();\n})\n"
+        "_content": "(async function (res, writer, ctx) {\n  writer.start('object/javascript');\n\n  let children = await ctx.listResources('.');\n\n  writer.write(children);\n})\n"
       },
       "export.js": {
         "_ct": "text/javascript",
@@ -191,6 +143,11 @@ window.templates={
         "_ct": "text/javascript",
         "_pt": "resource/content",
         "_content": "(function (res, writer, context) {\n  let out = writer;\n  let processing = 0;\n  let ended = false;\n  let count = 0;\n  let path = context.getCurrentDataPath();\n  let rv = {};\n\n  let export_content = function (data) {\n    let func = data['_content'];\n    let ct = data['_ct'];\n    let bin = true;\n\n    if (Utils.is_texttype(ct)) bin = false;\n\n    func(new ContentWriterAdapter(bin ? null : 'utf8', function (buff) {\n\n      if (bin) {\n        data['_ct'] = 'base64:' + (ct ? ct : '');\n        data['_content'] = Utils.ArrayBuffer2base64(buff);\n      }\n      else data['_content'] = buff;\n\n      let p = data[':path'];\n      delete data[':path'];\n      delete data[':name'];\n      Utils.setObjectAtPath(rv, p, data);\n\n      processing--;\n      done();\n    }));\n  };\n\n  let done = function () {\n    if (processing === 0 && ended) {\n      out.write(JSON.stringify(rv, null, 2));\n      out.end();\n      if (out !== writer) writer.end();\n    }\n  };\n\n  let export_children = function () {\n    let path = res['path'];\n    context.exportAllResources(path, 0, {\n      start: function (ctype) {\n        out.start('application/json');\n      },\n      write: function (data) {\n\n        if (data.values['_content']) {\n          processing++;\n          export_content(data.values); //might contain func!\n        }\n        else {\n          let p = data.values[':path'];\n          delete data.values[':path'];\n          delete data.values[':name'];\n          Utils.setObjectAtPath(rv, p, data.values);\n        }\n        count++;\n      },\n      error: function (err) {\n        console.log(err);\n      },\n      end: function () {\n        ended = true;\n        done();\n      }\n    }, true);\n  };\n\n  if (path) {\n    context.resolveResource(path).then(function(ores) {\n      if (ores) {\n        out = ores.getWriter();\n        export_children();\n      }\n      else {\n        context.storeAndResolveResource(path, {'_content':''}).then(function(ores) {\n          out = ores.getWriter();\n          export_children();\n        });\n      }\n    });\n  }\n  else {\n    export_children();\n  }\n\n});\n"
+      },
+      "flushcache.js": {
+        "_ct": "text/javascript",
+        "_pt": "resource/content",
+        "_content": "(function (res, writer, context) {\n  writer.start('text/plain');\n\n  if (res.flushResourceCache) {\n    res.flushResourceCache();\n    writer.write('DONE');\n  }\n  else {\n    writer.write('NOT_SUPPORTED');\n  }\n\n  writer.end();\n})\n"
       },
       "parentpaths.js": {
         "_ct": "text/javascript",
@@ -207,15 +164,15 @@ window.templates={
         "_pt": "resource/content",
         "_content": "(function (res, writer, ctx) {\n  let path = ctx.getCurrentResourcePath();\n  let rv = {};\n\n  ctx.exportAllResources(path, 0, {\n    start: function (ctype) {\n    },\n    write: function (data) {\n      let p = data.values[':path'];\n      let c = 0;\n      for (let k in data.values) {\n        if (k.charAt(0) == '_') continue;\n        if (k.charAt(0) == ':') continue;\n\n        let v = data.values[k];\n        Utils.setObjectAtPath(rv, p+'/'+k, v);\n        c++;\n      }\n      if (c == 0) {\n        Utils.setObjectAtPath(rv, p, {});\n      }\n    },\n    error: function (err) {\n      console.log(err);\n    },\n    end: function () {\n      let n = res['name'];\n      writer.start('object/javascript');\n      writer.write(rv[n]);\n      writer.end();\n    }\n  }, true);\n});\n"
       },
-      "res-copyto.hbs": {
-        "_ct": "text/plain",
-        "_pt": "resource/content",
-        "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  {{include_css \"_libs/ui.css\"}}\n\n  {{#partial \"text_opts\"}}\nautocomplete=\"off\" autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\"\n  {{/partial}}\n\n  \x3Ctitle>copy to\x3C/title>\n\x3C/head>\n\n\x3Cbody class=\"ui_group ui_dialog margins\">\n\n  \x3Ch1 class=\"ui_label underlined\">Copy \"{{name}}\"\n    \x3Ca class=\"ui_button inline pull-right\" href=\"{{req_path \".\" \"ui-close\"}}\">X\x3C/a>\n  \x3C/h1>\n\n  \x3Col class=\"ui_paths\">\n    \x3Cli>HOME\x3C/li>\n{{#include \".\" \"parents\"}}\n    \x3Cli>{{name}}\x3C/li>\n{{/include}}\n    \x3Cli>{{name}}\x3C/li>\n  \x3C/ol>\n\n  \x3Ch1>to\x3C/h1>\n\n  \x3Col class=\"ui_paths\">\n    \x3Cli>\x3Ca href=\"{{req_path \".\" \"res-copyto\"}}/\">HOME\x3C/a>\x3C/li>\n{{#include R.DATA_PATH \"parents\"}}\n    \x3Cli>\x3Ca href=\"{{req_path \".\" \"res-copyto\"}}{{path}}\">{{name}}\x3C/a>\x3C/li>\n{{/include}}\n    \x3Cli>{{R.DATA_NAME}}\x3C/li>\n  \x3C/ol>\n\n  \x3Col>\n{{#include R.DATA_PATH \"children\"}}\n  {{#if isContentResource}}\n    \x3Cli>{{name}}\x3C/li>\n  {{else}}\n    {{#match path \"!startsWith\" ../R.PATH}}\n    \x3Cli>\n      \x3Ca href=\"{{req_path \".\" \"res-copyto\"}}{{path}}\">{{name}}\x3C/a>\n    \x3C/li>\n    {{/match}}\n  {{/if}}\n{{/include}}\n  \x3C/ol>\n\n  \x3Ch3>name:\x3C/h3>\n  \x3Cform method=\"post\" action=\"{{R.PATH}}\">\n\n    \x3Cinput type=\"text\" name=\":name|newUUID\" value=\"Copy of {{R.NAME}}\" {{> text_opts}}>\n    \x3Cinput type=\"hidden\" name=\":copyto\" value=\"{{res_path R.DATA_PATH \"{:name}\"}}\">\n    \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{req_path \".\" \"ui-close\"}}\">\n\n    \x3Cbutton type=\"submit\">Copy\x3C/button>\n  \x3C/form>\n\n  \x3Ch3>Export\x3C/h3>\n\n  \x3Ca class=\"ui_button\" target=\"_blank\" href=\"{{req_path \".\" \"export\"}}\">as JSON\x3C/a>\n  \x3Ca class=\"ui_button\" href=\"{{req_path \".\" \"res-exportto\"}}{{R.DATA_PATH}}\">to resource...\x3C/a>\n{{#if isContentResource}}\n  \x3Ca class=\"ui_button\" href=\"{{req_path \".\" \"res-importto\"}}{{R.DATA_PATH}}\">Import into...\x3C/a>\n{{/if}}\n\n\x3C/body>\n\x3C/html>\n"
-      },
       "properties.js": {
         "_ct": "text/javascript",
         "_pt": "resource/content",
         "_content": "(function (res, writer, ctx) {\n  writer.start('object/javascript');\n  writer.write(res._);\n  writer.end();\n})\n"
+      },
+      "res-copyto.hbs": {
+        "_ct": "text/plain",
+        "_pt": "resource/content",
+        "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  {{include_css \"_libs/ui.css\"}}\n\n  {{#partial \"text_opts\"}}\nautocomplete=\"off\" autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\"\n  {{/partial}}\n\n  \x3Ctitle>copy to\x3C/title>\n\x3C/head>\n\n\x3Cbody class=\"ui_group ui_dialog margins\">\n\n  \x3Ch1 class=\"ui_label underlined\">Copy \"{{name}}\"\n    \x3Ca class=\"ui_button inline pull-right\" href=\"{{req_path \".\" \"ui-close\"}}\">X\x3C/a>\n  \x3C/h1>\n\n  \x3Col class=\"ui_paths\">\n    \x3Cli>HOME\x3C/li>\n{{#include \".\" \"parents\"}}\n    \x3Cli>{{name}}\x3C/li>\n{{/include}}\n    \x3Cli>{{name}}\x3C/li>\n  \x3C/ol>\n\n  \x3Ch1>to\x3C/h1>\n\n  \x3Col class=\"ui_paths\">\n    \x3Cli>\x3Ca href=\"{{req_path \".\" \"res-copyto\"}}/\">HOME\x3C/a>\x3C/li>\n{{#include R.DATA_PATH \"parents\"}}\n    \x3Cli>\x3Ca href=\"{{req_path \".\" \"res-copyto\"}}{{path}}\">{{name}}\x3C/a>\x3C/li>\n{{/include}}\n    \x3Cli>{{R.DATA_NAME}}\x3C/li>\n  \x3C/ol>\n\n  \x3Col>\n{{#include R.DATA_PATH \"children\"}}\n  {{#if isContentResource}}\n    \x3Cli>{{name}}\x3C/li>\n  {{else}}\n    {{#match path \"!startsWith\" ../R.PATH}}\n    \x3Cli>\n      \x3Ca href=\"{{req_path \".\" \"res-copyto\"}}{{path}}\">{{name}}\x3C/a>\n    \x3C/li>\n    {{/match}}\n  {{/if}}\n{{/include}}\n  \x3C/ol>\n\n  \x3Ch3>name:\x3C/h3>\n  \x3Cform method=\"post\" action=\"{{R.PATH}}\">\n\n    \x3Cinput type=\"text\" name=\":name|newUUID\" value=\"Copy of {{R.NAME}}\" {{> text_opts}}>\n    \x3Cinput type=\"hidden\" name=\":copyto\" value=\"{{res_path R.DATA_PATH \"{:name}\"}}\">\n    \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{req_path \".\" \"ui-close\"}}\">\n\n    \x3Cbutton type=\"submit\">Copy\x3C/button>\n  \x3C/form>\n\n  \x3Ch3>Export\x3C/h3>\n\n  \x3Ca class=\"ui_button\" target=\"_blank\" href=\"{{req_path \".\" \"export\"}}\">as JSON\x3C/a>\n  \x3Ca class=\"ui_button\" href=\"{{req_path \".\" \"res-exportto\"}}{{R.DATA_PATH}}\">to resource...\x3C/a>\n{{#if isContentResource}}\n  \x3Ca class=\"ui_button\" href=\"{{req_path \".\" \"res-importto\"}}{{R.DATA_PATH}}\">Import into...\x3C/a>\n{{/if}}\n\n\x3C/body>\n\x3C/html>\n"
       },
       "res-create.hbs": {
         "_ct": "text/plain",
@@ -273,6 +230,35 @@ window.templates={
         "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  {{include_css \"resource/res-ui.css\"}}\n\n  \x3Ctitle>shell:{{R.PATH}}\x3C/title>\n\x3C/head>\n  \x3Cstyle>\n    #commandline {\n      width: 100%;\n    }\n  \x3C/style>\n  \x3C!--script>\n      window.addEventListener('DOMContentLoaded', function() {\n        var cmd = document.querySelector('#commandline');\n        if (cmd) {\n          cmd.focus();\n        }\n      });\n  \x3C/script-->\n\n\x3Cbody>\n  \x3Cdiv class=\"head\">\n    \x3Col class=\"paths\">\n      \x3Cli>\x3Ca href=\"{{req_path \"/\" \"res-list\"}}\">HOME\x3C/a>\x3C/li>\n{{#include \".\" \"parents\"}}\n      \x3Cli>\x3Ca href=\"{{req_path path \"res-list\"}}\">{{name}}\x3C/a>\x3C/li>\n{{/include}}\n      \x3Cli>\x3Ca href=\"{{req_path path \"res-list\"}}\">{{name}}\x3C/a>\x3C/li>\n    \x3C/ol>\n\n    \x3Cpre>\n    \x3C/pre>\n\n    \x3Cform method=\"post\" action=\"{{res_path R.PATH}}\">\n      \x3Cinput type=\"hidden\" name=\"_rt\" value=\"system/shell\">\n      \x3Cinput id=\"commandline\" type=\"text\" autocorrect=\"off\" autocapitalize=\"none\" autocomplete=\"off\" spellcheck=\"false\" name=\":command\">\n      \x3Cinput type=\"submit\">\n    \x3C/form>\n    \x3Cpre>XXX\x3C/pre>\n  \x3C/div>\n\x3C/body>\n\n\x3C/html>\n"
       }
     },
+    "index": {
+      "children.js": {
+        "_ct": "text/javascript",
+        "_pt": "resource/content",
+        "_content": "(function (res, writer, ctx) {\n  writer.start('object/javascript');\n  var qp = ctx.getQueryProperties();\n  var qry = '';\n\n  if (qp && qp['q']) qry = qp['q'];\n  if (!qry) {\n    writer.write([]);\n    writer.end();\n    return;\n  }\n\n  ctx.searchResources('.', qry).then(function(ls) {\n    var rv = [];\n    for (var i = 0; i \x3C ls.length; i++) {\n      var it = ls[i];\n      rv.push(it);\n    } \n    writer.write(rv);\n    writer.end();\n  });\n})\n"
+      },
+      "res-list.hbs": {
+        "_ct": "text/plain",
+        "_pt": "resource/content",
+        "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  {{include_css \"_libs/ui.css\"}}\n\n  \x3Ctitle>Index Search\x3C/title>\n\x3C/head>\n\n\x3Cbody class=\"ui_group\">\n\n  \x3Col class=\"ui_paths\">\n    \x3Cli>\x3Ca href=\"{{req_path \"/\"}}\">HOME\x3C/a>\x3C/li>\n{{#include \".\" \"parents\"}}\n    \x3Cli>\x3Ca href=\"{{req_path path}}\">{{name}}\x3C/a>\x3C/li>\n{{/include}}\n    \x3Cli>{{name}}\x3C/li>\n  \x3C/ol>\n\n  \x3Cform method=\"get\" action=\"{{req_path \".\" \"res-list\"}}\">\n    \x3Ca target=\"_blank\" class=\"ui_button\" href=\"{{req_path \".\" \"res-create\"}}\">create\x3C/a>\n    \x3Ca target=\"_blank\" class=\"ui_button\" href=\"{{req_path \".\" \"/_THE_INDEX_\" \"res-delete\"}}\">clear\x3C/a>\n    \x3Cinput name=\"q\" type=\"text\" placeholder=\"search\" value=\"{{Q.q}}\">\n    \x3Cbutton type=\"submit\">search\x3C/button>\n  \x3C/form>\n\n  \x3Ctable>\n{{#include \".\" \"children\"}}\n    \x3Ctr>\n      \x3Ctd>\n        \x3Ca href=\"{{req_path path \"res-list\"}}\">{{name}}\x3C/a>\n      \x3C/td>\n    \x3C/tr>\n{{/include}}\n  \x3C/table>\n\n\x3C/body>\n\x3C/html>\n"
+      },
+      "res-create.hbs": {
+        "_ct": "text/plain",
+        "_pt": "resource/content",
+        "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  {{include_css \"_libs/ui.css\"}}\n\n  {{#partial \"text_opts\"}}\nautocomplete=\"off\" autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\"\n  {{/partial}}\n\n  \x3Ctitle>index content\x3C/title>\n\x3C/head>\n\n\x3Cbody class=\"ui_group dialog\">\n\n  \x3Ch1>Index Resource Content\n    \x3Ca class=\"ui_button pull-right\" href=\"{{req_path \".\" \"ui-close\"}}\">X\x3C/a>\n  \x3C/h1>\n\n  \x3Col class=\"ui_paths\">\n    \x3Cli>\x3Ca href=\"{{req_path \"/\" \"res-list\"}}\">HOME\x3C/a>\x3C/li>\n{{#include \".\" \"parents\"}}\n    \x3Cli>\x3Ca href=\"{{req_path path \"res-list\"}}\">{{name}}\x3C/a>\x3C/li>\n{{/include}}\n    \x3Cli>{{name}}\x3C/li>\n  \x3C/ol>\n\n  \x3Ch4>Index Text\x3C/h4>\n\n  \x3Cform method=\"post\" enctype=\"multipart/form-data\" action=\"{{res_path R.PATH \"{:name}\"}}\">\n    \x3Ctextarea autocorrect=\"off\" autocapitalize=\"none\" {{> text_opts}} name=\"_content\">\x3C/textarea>\n    \x3Cinput type=\"text\" name=\":name|newUUID\" value=\"\" {{> text_opts}} placeholder=\"reference path\">\n    \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{req_path R.PATH \"res-list\"}}\">\n    \x3Cbutton type=\"submit\">index\x3C/button>\n  \x3C/form>\n\n  \x3Ch4>Index File\x3C/h4>\n\n  \x3Cform method=\"post\" enctype=\"multipart/form-data\" action=\"{{res_path R.PATH \"{:name}\"}}\">\n    \x3Cinput type=\"file\" name=\":filename\" value=\"\">\n    \x3Cinput type=\"text\" name=\":name|:filename|newUUID\" value=\"\" {{> text_opts}} placeholder=\"reference path\">\n    \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{req_path R.PATH \"res-list\"}}\">\n    \x3Cbutton type=\"submit\">upload\x3C/button>\n  \x3C/form>\n\n  \x3Ch4>Import File\x3C/h4>\n          \n  \x3Cform method=\"post\" enctype=\"multipart/form-data\" action=\"{{res_path R.PATH}}\">\n    \x3Cinput class=\"form-control\" type=\"file\" name=\":import\" value=\"\">\n    \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{req_path R.PATH \"res-list\"}}\">\n    \x3Cbutton type=\"submit\">import\x3C/button>\n  \x3C/form>\n\n\x3C/body>\n\x3C/html>\n"
+      }
+    },
+    "notfound": {
+      "default.js": {
+        "_ct": "text/javascript",
+        "_pt": "resource/content",
+        "_content": "(function (res, writer, context) {\n  //send 404 only if we are requesing this resource directly\n  if (context.getCurrentRequestPath() === context.getCurrentResourcePath()) {\n    context.sendStatus(404);\n    writer.end();\n  }\n  else {\n    writer.end();\n  }\n});\n"
+      },
+      "res-list.hbs": {
+        "_ct": "text/plain",
+        "_pt": "resource/content",
+        "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  \x3Ctitle>Delete\x3C/title>\n\n  \x3Clink href=\"{{C.BOOTSTRAP_CSS}}\" rel=\"stylesheet\">\n\x3C/head>\n\n\x3Cbody>\n\n  \x3Cdiv role=\"dialog\">\n    \x3Cdiv class=\"modal-dialog\" role=\"document\">\n      \x3Cdiv class=\"modal-content\">\n        \x3Cdiv class=\"modal-header\">\n          \x3Ca class=\"close\" href=\"{{C.P}}{{R.PATH_APPEND}}../{{C.X}}res-list\">\x3Cspan aria-hidden=\"true\">&times;\x3C/span>\x3C/a>\n          \x3Ch4 class=\"modal-title\">Resource Not Found\x3C/h4>\n        \x3C/div>\n        \x3Cdiv class=\"modal-body\">\n\n          \x3Col class=\"breadcrumb\">\n            \x3Cli>\x3Ca href=\"{{C.P}}/{{C.X}}res-list\">HOME\x3C/a>\x3C/li>\n            {{#include \".\" \"parents\"}}\n              \x3Cli>\x3Ca href=\"{{C.P}}{{path}}{{C.X}}res-list\">{{name}}\x3C/a>\x3C/li>\n            {{/include}}\n            \x3Cli class=\"active\">{{R.NAME}}\x3C/li>\n          \x3C/ol>\n\n          \x3Ch4>Resource\"{{name}} not found, create?\"\x3C/h4>\n\n        \x3C/div>\n        \x3Cdiv class=\"modal-footer\">\n          \x3Cform class=\"form-inline\" method=\"post\" action=\"{{C.P}}{{R.PATH}}\">\n            \x3Ca class=\"btn btn-default\" href=\"{{C.P}}{{R.PATH_APPEND}}../{{C.X}}res-list\">Cancel\x3C/a>\n            \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{C.P}}{{R.PATH_APPEND}}{{C.X}}res-list\">\n            \x3Cinput class=\"btn btn-success\" type=\"submit\" value=\"Create\">\n          \x3C/form>\n\n        \x3C/div>\n      \x3C/div>\x3C!-- /.modal-content -->\n    \x3C/div>\x3C!-- /.modal-dialog -->\n  \x3C/div>\x3C!-- /.modal -->\n\n\x3C/body>\n\n\x3C/html>\n\n"
+      }
+    },
     "redirect": {
       "default.js": {
         "_ct": "text/javascript",
@@ -317,6 +303,20 @@ window.templates={
       }
     }
   },
-  "_cd": "1783881935180",
-  "_md": "1783881935180"
+  "system": {
+    "shell": {
+      "edit.hbs": {
+        "_ct": "text/plain",
+        "_pt": "resource/content",
+        "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  {{include_css \"resource/res-ui.css\"}}\n\n  \x3Ctitle>shell:{{R.PATH}}\x3C/title>\n\x3C/head>\n  \x3Cstyle>\n    #commandline {\n      width: 100%;\n    }\n  \x3C/style>\n  \x3Cscript>\n      window.addEventListener('DOMContentLoaded', function() {\n        var cmd = document.querySelector('#commandline');\n        if (cmd) {\n          cmd.focus();\n        }\n      });\n  \x3C/script>\n\n\x3Cbody>\n  \x3Cdiv class=\"head\">\n    \x3Col class=\"paths\">\n      \x3Cli>\x3Ca href=\"{{req_path \"/\" \"res-list\"}}\">HOME\x3C/a>\x3C/li>\n{{#include \".\" \"parents\"}}\n      \x3Cli>\x3Ca href=\"{{req_path path \"res-list\"}}\">{{name}}\x3C/a>\x3C/li>\n{{/include}}\n      \x3Cli>{{name}}\x3C/li>\n    \x3C/ol>\n\n    \x3Cpre>\n    \x3C/pre>\n\n    \x3Cform method=\"post\" action=\"{{res_path R.PATH}}\">\n      \x3Cinput type=\"hidden\" name=\"_rt\" value=\"system/shell\">\n      \x3Cinput id=\"commandline\" type=\"text\" autocorrect=\"off\" autocapitalize=\"none\" autocomplete=\"off\" spellcheck=\"false\" name=\":command\">\n    \x3C/form>\n\n  \x3C/div>\n\x3C/body>\n\n\x3C/html>\n"
+      },
+      "pre-store.js": {
+        "_ct": "text/javascript",
+        "_pt": "resource/content",
+        "_content": "(function (res, writer, ctx) {\n  let command = res[':command'];\n  let path = ctx.getCurrentResourcePath();\n  let rstype = 'resource/node';\n  let sel = 'res-shell';\n\n  let write_content = function(rv, out) {\n    let t = '';\n    if (!out) {\n      t = '';\n    }\n    else if (Array.isArray(out)) {\n      t = out.join('\\n');\n    }\n    else {\n      t = '' + out;\n    }\n    \n    rv.content = rv.content.replace('XXX', command + '\\n'+t);\n    writer.write(rv);\n    writer.end();\n  };\n\n  ctx.renderResource(path, rstype, sel).then(function(rv) {\n    try {\n      let x = eval(command);\n      if (Object.getPrototypeOf(x) == Promise.prototype) {\n        x.then(function(out) {\n          write_content(rv, out);\n        });\n      }\n      else {\n        write_content(rv, x);\n      }\n    }\n    catch(ex) {\n      write_content(rv, ex);\n    }\n  });\n});\n"
+      }
+    }
+  },
+  "_cd": "1783952728313",
+  "_md": "1783952728313"
 }
