@@ -2155,6 +2155,7 @@ class ResourceRequestHandler extends EventDispatcher {
         };
         let done = function () {
             if (actions.length == 0) {
+                actions = [];
                 callback();
             }
             else {
@@ -4465,9 +4466,11 @@ class ClientRequestHandler extends ResourceRequestHandler {
     }
     initHandlers() {
         let self = this;
-        window.addEventListener('hashchange', function (evt) {
-            window.location.reload();
-        });
+        let func = function (evt) {
+            self.forwardRequest(window.location.toString());
+        };
+        window['__r3eforward_evt'] = func;
+        window.addEventListener('hashchange', func);
     }
     assignContext(context, pathInfo) {
         window['R3E'] = { context: context, info: pathInfo };
@@ -4483,13 +4486,19 @@ class ClientRequestHandler extends ResourceRequestHandler {
         else {
             p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + rpath;
         }
-        clearTimeout(window['__r3eforwardcb']);
-        window['__r3eforwardcb'] = setTimeout(function () {
-            delete window['__r3eforwardcb'];
-            if (p == window.location.toString())
+        clearTimeout(window['__r3eforward_cb']);
+        window['__r3eforward_cb'] = setTimeout(function () {
+            delete window['__r3eforward_cb'];
+            let func = window['__r3eforward_evt'];
+            if (func)
+                window.removeEventListener('hashchange', func);
+            if (p == window.location.toString()) {
                 window.location.reload();
-            else
+            }
+            else {
                 window.location.replace(p);
+                window.location.reload();
+            }
         }, 50);
     }
     handleRequest(rpath) {
@@ -4712,8 +4721,6 @@ class SPARequestHandler extends ClientRequestHandler {
     constructor(resourceResolver, templateResolver, contentWriter) {
         let writer = contentWriter ? contentWriter : new SPADOMContentWriter();
         super(resourceResolver, templateResolver, writer);
-        writer.setRequestHandler(this);
-        this.initHandlers();
     }
     initHandlers() {
         let self = this;
@@ -4726,21 +4733,19 @@ class SPARequestHandler extends ClientRequestHandler {
         let p = rpath;
         let self = this;
         if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) {
-            var x = p.indexOf('#');
-            var h = p.substr(0, x);
-            if (window.location.toString().startsWith(h)) {
-                p = decodeURIComponent(p.substr(x + 1));
-            }
-            else {
-                Utils.flushResourceCache();
-                window.location.replace(p);
-                return;
-            }
+        }
+        else {
+            p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + rpath;
         }
         clearTimeout(window['__r3eforwardcb']);
         window['__r3eforwardcb'] = setTimeout(function () {
             delete window['__r3eforwardcb'];
-            self.handleRequest(p);
+            if (p == window.location.toString()) {
+                window.location.reload();
+            }
+            else {
+                window.location.replace(p);
+            }
         }, 10);
     }
     renderRequest(rpath) {

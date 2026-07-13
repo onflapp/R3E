@@ -286,9 +286,12 @@ class ClientRequestHandler extends ResourceRequestHandler {
 
   protected initHandlers() {
     let self = this;
-    window.addEventListener('hashchange', function (evt) {
-      window.location.reload();
-    });
+    let func = function (evt) {
+      self.forwardRequest(window.location.toString());
+    };
+
+    window['__r3eforward_evt'] = func;
+    window.addEventListener('hashchange', func);
   }
 
   protected assignContext(context: ResourceRequestContext, pathInfo: PathInfo) {
@@ -309,11 +312,20 @@ class ClientRequestHandler extends ResourceRequestHandler {
       p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + rpath;
     }
 
-    clearTimeout(window['__r3eforwardcb']);
-    window['__r3eforwardcb'] = setTimeout(function() {
-      delete window['__r3eforwardcb'];
-      if (p == window.location.toString()) window.location.reload();
-      else window.location.replace(p);
+    clearTimeout(window['__r3eforward_cb']);
+    window['__r3eforward_cb'] = setTimeout(function() {
+      delete window['__r3eforward_cb'];
+      let func = window['__r3eforward_evt'];
+
+      if (func) window.removeEventListener('hashchange', func);
+
+      if (p == window.location.toString()) {
+        window.location.reload();
+      }
+      else {
+        window.location.replace(p);
+        window.location.reload();
+      }
     },50);
   }
 

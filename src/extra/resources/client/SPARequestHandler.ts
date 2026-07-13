@@ -80,10 +80,6 @@ class SPARequestHandler extends ClientRequestHandler {
   constructor(resourceResolver: ResourceResolver, templateResolver: ResourceResolver, contentWriter: DOMContentWriter) {
     let writer = contentWriter ? contentWriter : new SPADOMContentWriter();
     super(resourceResolver, templateResolver, writer);
-
-    writer.setRequestHandler(this);
-
-    this.initHandlers();
   }
 
   protected initHandlers() {
@@ -98,23 +94,22 @@ class SPARequestHandler extends ClientRequestHandler {
     let p = rpath;
     let self = this;
     if (p.indexOf('http://') === 0 || p.indexOf('https://') === 0) {
-      var x = p.indexOf('#');
-      var h = p.substr(0, x);
-      if (window.location.toString().startsWith(h)) {
-        p = decodeURIComponent(p.substr(x+1));
-      }
-      else {
-        Utils.flushResourceCache();
-
-        window.location.replace(p);
-        return;
-      }
+    }
+    else {
+      p = window.location.protocol + '//' + window.location.host + window.location.pathname + '#' + rpath;
     }
 
     clearTimeout(window['__r3eforwardcb']);
     window['__r3eforwardcb'] = setTimeout(function() {
       delete window['__r3eforwardcb'];
-      self.handleRequest(p);
+      
+      if (p == window.location.toString()) {
+        window.location.reload();
+      }
+      else {
+        window.location.replace(p);
+      }
+
     },10);
   }
 

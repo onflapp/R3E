@@ -67,7 +67,7 @@ ImageCropper = {
       var w = (c.crop_event.iw + dx);
       if (w > 100) target.setAttribute('width', w+'px');
     }
-    else if (c.crop_event.img && evt.touches.length == 2) {
+    else if (c.crop_event.img && evt.touches && evt.touches.length == 2) {
       var target = c.crop_event.img;
 
       var dx = evt.touches[1].clientX - evt.touches[0].clientX;

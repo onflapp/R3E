@@ -518,6 +518,7 @@ class ResourceRequestHandler extends EventDispatcher {
 
     let done = function() {
       if (actions.length == 0) {
+        actions = [];
         callback();
       }
       else {

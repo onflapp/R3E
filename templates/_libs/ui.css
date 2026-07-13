@@ -10,6 +10,7 @@
   --padding: var(--padding-base) calc(var(--padding-base)*3) var(--padding-base) calc(var(--padding-base)*3);
   --padding-inline: calc(var(--padding-base) + var(--border)) 0 calc(var(--padding-base) + var(--border)) 0;
   --padding-box: calc(var(--margin-base)*2);
+  --padding-item: 2px 4px 2px 4px;
 
   --color: unset;
   --box-color: #DEDEDE;
@@ -27,6 +28,7 @@
   --input-border_b: 1px solid #BBBBBB;
   --selection-color: Highlight;
   --selection-text: white;
+  --selection-radius: 2px;
   --list-offset: 16px;
   --list-marker: 12px;
 }
@@ -34,9 +36,12 @@
 @media (pointer:coarse) {
   :root {
     --size: 14px;
+    --radius: 8px;
+    --selection-radius: 8px;
     --margin-base: 12px;
     --padding-base: 6px;
     --padding: 12px 8px 12px 8px;
+    --padding-item: 12px 2px 12px 2px;
   }
   
 }
@@ -561,7 +566,7 @@ li .ui_label {
 
 .ui_tree li .ui_tree-item {
   margin: 0;
-  padding: 2px 4px 2px 4px;
+  padding: var(--padding-item);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -707,7 +712,7 @@ body.margins.padding {
 
 .selected {
   background-color: var(--selection-color);
-  border-radius: 2px;
+  border-radius: var(--selection-radius);
   color: var(--selection-text);
 }
 
