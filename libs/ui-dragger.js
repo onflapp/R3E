@@ -244,7 +244,7 @@ function Dragger() {
 
       document.addEventListener(this.EVT_UP, check_up, false);
       document.addEventListener('scroll', check_up, false);
-    };
+    }
   };
 
   this.mouse_up = function(evt) {
