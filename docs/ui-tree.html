@@ -2,6 +2,31 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=yes">
     <link rel="stylesheet" href="../templates/_libs/ui.css">
+
+<style>
+.ui_tree .ui_tree-item.tag:before {
+  visibility: visible;
+  content: '#';
+}
+
+.ui_tree .ui_tree-item.mention:before {
+  visibility: visible;
+  content: '@';
+}
+
+.ui_tree .ui_tree-item.square:before {
+  visibility: visible;
+  content: '\25FC';
+}
+
+.ui_tree .ui_tree-item.star:before {
+  visibility: visible;
+  content: '\2605';
+}
+
+
+</style>
+
   </head>
   <body class="ui_group padding">
     <h3>tree B</h3>
@@ -48,7 +73,7 @@
       </ol>
     </div>
 
-    <h3>tree list</h3>
+    <h3>tree list - guided</h3>
     <div>
       <ol class="ui_tree guided">
         <li><div class="ui_tree-item">a</div></li>
@@ -74,6 +99,17 @@
         <li><div class="ui_tree-item">a</div></li>
       </ol>
     </div>
+
+    <h3>tree list - simple</h3>
+    <div>
+      <ol class="ui_tree">
+        <li><div class="ui_tree-item tag">a</div></li>
+        <li><div class="ui_tree-item square">a</div>
+        <li><div class="ui_tree-item mention">a</div></li>
+        <li><div class="ui_tree-item star">a</div></li>
+      </ol>
+    </div>
+
 
   </body>
 </html>
