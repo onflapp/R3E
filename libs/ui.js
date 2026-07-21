@@ -458,25 +458,6 @@ $(function () {
     evt.preventDefault();
   });
 
-  $(document).on('click', '.act_popup-item-sel', function(evt) {
-    let item_ref = $(evt.target).data('item_ref');
-    if (!item_ref) item_ref = $(evt.target).parents('[data-item_ref]').data('item_ref');
-    if (!item_ref && evt.target.form) {
-      let data = handler.parseFormElement(evt.target.form);
-      if (data) item_ref = data.formData;
-    }
-
-    if (item_ref) {
-      if (window.top != window) {
-        window.top.postMessage(item_ref, window.location);
-      }
-      else if (window.opener != window) {
-        window.opener.postMessage(item_ref, window.location);
-      }
-    }
-    evt.preventDefault();
-  });
-
   $(document).on('click', '.act_popup-show', function(evt) {
     evt.preventDefault();
 
@@ -551,6 +532,7 @@ $(function () {
 
   $(document).on('click', '.act_dialog-confirm', function(evt) {
     evt.preventDefault();
+    evt.stopPropagation();
 
     let $el = $(evt.target);
     let main = $el.data('form');
@@ -569,11 +551,42 @@ $(function () {
     if ($main && $main.length) {
       submitFormAsync($main.get(0), function() {
         Utils.flushResourceCache();
-        $form.trigger('submit');
+        if (evt.target.type == 'submit') {
+          let sevt = new SubmitEvent('submit', { submitter: evt.target, bubbles:true, cancelable:true });
+          $form.get(0).dispatchEvent(sevt);
+        }
+        else $form.trigger('submit');
       });
     }
     else {
-      $form.trigger('submit');
+      if (evt.target.type == 'submit') {
+        let sevt = new SubmitEvent('submit', { submitter: evt.target, bubbles:true, cancelable:true });
+        $form.get(0).dispatchEvent(sevt);
+      }
+      else $form.trigger('submit');
+    }
+  });
+
+  $(document).on('click', '.act_popup-item-sel', function(evt) {
+    evt.preventDefault();
+
+    if (evt.target.classList.contains('act_dialog-confirm')) return;
+    if (evt.target.classList.contains('act_dialog-show')) return;
+
+    let item_ref = $(evt.target).data('item_ref');
+    if (!item_ref) item_ref = $(evt.target).parents('[data-item_ref]').data('item_ref');
+    if (!item_ref && evt.target.form) {
+      let data = handler.parseFormElement(evt.target.form);
+      if (data) item_ref = data.formData;
+    }
+
+    if (item_ref) {
+      if (window.top != window) {
+        window.top.postMessage(item_ref, window.location);
+      }
+      else if (window.opener != window) {
+        window.opener.postMessage(item_ref, window.location);
+      }
     }
   });
 
@@ -593,6 +606,25 @@ $(function () {
     }
     else {
       $el.trigger(en);
+    }
+  });
+
+  $(document).on('click', '.ui_button-upload', function(evt) {
+    if (!evt.target.classList.contains('ui_button-upload')) return;
+
+    evt.preventDefault();
+    evt.stopPropagation();
+
+    $file = $(evt.target).find('input[type=file]');
+    if ($file.length) {
+      let el = $file.get(0);
+      el.onchange = function() {
+        delete el.change;
+
+        let $form = $(el.form);
+        $form.trigger('submit');
+      };
+      el.click();
     }
   });
 

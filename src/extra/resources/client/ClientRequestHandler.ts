@@ -470,7 +470,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
           reader.readAsArrayBuffer(fv);
         };
       }
-      else if (type === 'submit') {
+      else if (type === 'submit') { //careful, forms will include all submit buttons tied to this form
         if (p == submitter && name) {
           rv[name] = value;
         }
