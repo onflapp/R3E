@@ -240,6 +240,11 @@ class Utils {
     let v = encodeURIComponent(str);
     v = v.replaceAll('%2F', '/');
     v = v.replaceAll('%40', '@');
+    v = v.replaceAll('!', '%21');
+    v = v.replaceAll('(', '%28');
+    v = v.replaceAll(')', '%29');
+    v = v.replaceAll('~', '%7E');
+    v = v.replaceAll('*', '%2A');
 
     return v;
   }

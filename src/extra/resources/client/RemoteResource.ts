@@ -113,7 +113,7 @@ class RemoteResource extends StoredResource {
     if (this.isDirectory) {
       let url = this.getStoragePath('.children.json');
 
-      this.remoteGET(url, true, function(values) {
+      this.remoteGET(Utils.escape(url), true, function(values) {
         callback(values?values:[]);
       });
     }
@@ -125,7 +125,7 @@ class RemoteResource extends StoredResource {
   protected storeProperties(callback) {
     let url = this.getStoragePath('.metadata.json');
 
-    this.remotePOST(url, this.values, function() {
+    this.remotePOST(Utils.escape(url), this.values, function() {
       callback();
     });
   }
@@ -140,7 +140,7 @@ class RemoteResource extends StoredResource {
           callback(true);
         }
         else {
-          self.remoteGET(url, true, function(values) {
+          self.remoteGET(Utils.escape(url), true, function(values) {
             if (values) {
               if (values._pt === 'resource/content') self.isDirectory = false;
 
@@ -155,7 +155,7 @@ class RemoteResource extends StoredResource {
       });
     }
     else { //try metadata first
-      this.remoteGET(url, true, function(values) {
+      this.remoteGET(Utils.escape(url), true, function(values) {
         if (values) {
           if (values._pt === 'resource/content') self.isDirectory = false;
 
@@ -179,7 +179,7 @@ class RemoteResource extends StoredResource {
     if (url.endsWith('.js')) fullload = true;
 
     if (fullload) {
-      this.remoteGET(url, false, function(data) {
+      this.remoteGET(Utils.escape(url), false, function(data) {
         if (data) {
           self.values._pt = 'resource/content';
           self.contentSize = data.byteLength;
@@ -234,7 +234,7 @@ class RemoteResource extends StoredResource {
       let url = this.getStoragePath();
       let ct = this.getContentType();
 
-      this.remoteGET(url, false, function(data) {
+      this.remoteGET(Utils.escape(url), false, function(data) {
         writer.start(ct);
         writer.write(data);
         writer.end(callback);

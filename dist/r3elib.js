@@ -215,6 +215,11 @@ class Utils {
         let v = encodeURIComponent(str);
         v = v.replaceAll('%2F', '/');
         v = v.replaceAll('%40', '@');
+        v = v.replaceAll('!', '%21');
+        v = v.replaceAll('(', '%28');
+        v = v.replaceAll(')', '%29');
+        v = v.replaceAll('~', '%7E');
+        v = v.replaceAll('*', '%2A');
         return v;
     }
     static unescape(str) {
@@ -2682,18 +2687,21 @@ class ObjectResource extends Resource {
                 return false;
         };
         var search_func = function (base, vals) {
+            var found = false;
             for (var k in vals) {
                 var v = vals[k];
                 if (typeof v === 'object' && Object.getPrototypeOf(v) == Object.prototype) {
                     var p = k;
                     if (base.length > 0)
                         p = base + '/' + p;
-                    if (match_func(k))
+                    if (match_func(k) && list.includes(p) == false)
                         list.push(p);
                     search_func(p, v);
                 }
                 else if (typeof v === 'string' && match_func(v)) {
-                    list.push(base);
+                    if (list.includes(base) == false)
+                        list.push(base);
+                    found = true;
                 }
             }
         };
@@ -3890,7 +3898,7 @@ class RemoteResource extends StoredResource {
     loadChildrenNames(callback) {
         if (this.isDirectory) {
             let url = this.getStoragePath('.children.json');
-            this.remoteGET(url, true, function (values) {
+            this.remoteGET(Utils.escape(url), true, function (values) {
                 callback(values ? values : []);
             });
         }
@@ -3900,7 +3908,7 @@ class RemoteResource extends StoredResource {
     }
     storeProperties(callback) {
         let url = this.getStoragePath('.metadata.json');
-        this.remotePOST(url, this.values, function () {
+        this.remotePOST(Utils.escape(url), this.values, function () {
             callback();
         });
     }
@@ -3913,7 +3921,7 @@ class RemoteResource extends StoredResource {
                     callback(true);
                 }
                 else {
-                    self.remoteGET(url, true, function (values) {
+                    self.remoteGET(Utils.escape(url), true, function (values) {
                         if (values) {
                             if (values._pt === 'resource/content')
                                 self.isDirectory = false;
@@ -3928,7 +3936,7 @@ class RemoteResource extends StoredResource {
             });
         }
         else {
-            this.remoteGET(url, true, function (values) {
+            this.remoteGET(Utils.escape(url), true, function (values) {
                 if (values) {
                     if (values._pt === 'resource/content')
                         self.isDirectory = false;
@@ -3952,7 +3960,7 @@ class RemoteResource extends StoredResource {
         if (url.endsWith('.js'))
             fullload = true;
         if (fullload) {
-            this.remoteGET(url, false, function (data) {
+            this.remoteGET(Utils.escape(url), false, function (data) {
                 if (data) {
                     self.values._pt = 'resource/content';
                     self.contentSize = data.byteLength;
@@ -3986,7 +3994,7 @@ class RemoteResource extends StoredResource {
         else {
             let url = this.getStoragePath();
             let ct = this.getContentType();
-            this.remoteGET(url, false, function (data) {
+            this.remoteGET(Utils.escape(url), false, function (data) {
                 writer.start(ct);
                 writer.write(data);
                 writer.end(callback);

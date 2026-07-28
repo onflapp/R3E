@@ -140,15 +140,29 @@ div.ui_button {
   cursor: default;
 }
 
+.ui_button i,
+button i {
+  color: var(--border-color);
+  font-style: normal;
+  padding-left: 2px;
+}
+
+.ui_group button.ui_button-round,
 .ui_group .ui_button-round {
   background-color: var(--button-color);
   font-family: var(--font);
-  border-radius: 10px;
-  height: 23px;
-  width: 23px;
+  border-radius: 30px;
+  border: 3px solid var(--button-color);
   text-align: center;
-  font-size: 20px;
+  font-size: 12px;
   cursor: default;
+  user-select: none;
+  color: gray;
+  width: 16px;
+  display: inline-block;
+  padding: 0;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
 }
 
 .ui_button-group {
@@ -330,6 +344,8 @@ body.ui_group {
   display: inline-block;
   color: var(--box-color);
   padding: var(--padding-inline);
+  font-weight: normal;
+  font-style: normal;
 }
 
 .ui_group.margins .ui_sep {
@@ -592,6 +608,7 @@ li .ui_label {
 
 .ui_list.rows li .ui_list-item {
   margin-bottom: -1px;
+  height: 32px;
 }
 
 .ui_list.rows li .ui_list-item > .sec_title:has(~ .sec_icon),

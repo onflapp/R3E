@@ -92,16 +92,18 @@ class ObjectResource extends Resource {
       else return false;
     }; 
     var search_func = function(base, vals) {
+      var found = false;
       for (var k in vals) {
         var v = vals[k];
         if (typeof v === 'object' && Object.getPrototypeOf(v) == Object.prototype) {
           var p = k;
           if (base.length > 0) p = base + '/' + p;
-          if (match_func(k)) list.push(p);
+          if (match_func(k) && list.includes(p) == false) list.push(p);
           search_func(p, v);
         }
         else if (typeof v === 'string' && match_func(v)) {
-          list.push(base);
+          if (list.includes(base) == false) list.push(base);
+          found = true;
         }
       }
     };
