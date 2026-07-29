@@ -294,7 +294,7 @@ function restoreMode(name, reset) {
 
   if (!v) return;
 
-  if (v.location == u || v.location == '*') {
+  if (v.location == u || v.location == '*') { //only when the location is the same
     let $el = $('#'+v.element);
     if ($el.length) {
       $el.addClass(cl);
@@ -464,7 +464,9 @@ $(function () {
       else {
         el.classList.add(cl);
         document.body.classList.add(cn);
-        if (sv) saveMode(cn);
+
+        if (sv && sv.indexOf(':*') > 0) saveMode(cn, true);
+        else if (sv)                    saveMode(cn);
       }
     }
     else {
@@ -476,7 +478,9 @@ $(function () {
       else {
         document.body.classList.add(cl);
         document.body.classList.add(cn);
-        if (sv) saveMode(cn);
+
+        if (sv && sv.indexOf(':*') > 0) saveMode(cn, true);
+        else if (sv)                    saveMode(cn);
       }
     }
 
