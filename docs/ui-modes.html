@@ -40,6 +40,15 @@ body:not(.mode_edit) .mode_edit-visible {
     <h1>mode edit</h1>
     edit mode
 
+    <pre>
+      act_mode-toggle: toggle mode
+
+      data-mode="name": mode to toggle
+      data-mode_save="true": remember the mode
+      data-mode_sel="sel": what element to apply the mode (default body)
+    
+    </pre>
+
     <a href="#" data-mode="detail" data-mode_save="true" data-mode_sel="sec_detail" class="act_mode-toggle ui_button">detail</a>
     <div id="sec_detail" class="mode_detail-visible">
       <h2>detail mode</h2>

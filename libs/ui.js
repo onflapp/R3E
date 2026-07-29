@@ -191,6 +191,37 @@ function clearHighlightMode() {
   sessionStorage.removeItem('__LAST_HIGHLIGHT_MODE');
 }
 
+function saveListState(name) {
+  let ls = [];
+  let items = document.querySelectorAll('#'+name+' li.collapsed');
+  for (let i = 0; i < items.length; i++) {
+    let ref = items[i].dataset['item_ref'];
+    if (ref) ls.push(ref);
+  }
+
+  let v = {
+    items:ls
+  };
+
+  localStorage.setItem('__LAST_LIST_STATE_'+name, JSON.stringify(v));
+}
+
+function restoreListState(name) {
+  let v = JSON.parse(localStorage.getItem('__LAST_LIST_STATE_'+name));
+
+  if (!v) return;
+
+  let ls = v.items;
+  let items = document.querySelectorAll('#'+name+' li');
+  for (let i = 0; i < items.length; i++) {
+    let it = items[i];
+    let ref = it.dataset['item_ref'];
+    if (ref && ls.includes(ref) && it.querySelectorAll('.selected').length == 0) {
+      it.classList.add('collapsed');
+    }
+  }
+}
+
 function saveHighlightMode(list) {
   let ls = [];
   let items = document.querySelectorAll(list);
@@ -217,7 +248,6 @@ function restoreHighlightMode() {
 
   if (!v) return;
 
-  console.log(v);
   if (v.location == u && v.element) {
     let items = document.querySelectorAll(v.element);
     for (let i = 0; i < items.length; i++) {

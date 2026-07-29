@@ -32,6 +32,7 @@
   --list-offset: 16px;
   --list-marker: 12px;
   --list-marker-color: gray;
+  --info-color: ghostwhite;
 }
 
 @media (pointer:coarse) {
@@ -259,47 +260,26 @@ body.ui_group {
   margin-bottom: 0;
 }
 
-.ui_group h1 {
+.ui_group h1.ui_label {
   color: var(--border-color);
   font-size: x-large;
   font-weight: normal;
-  margin: 0;
 }
 
-.ui_group.margins h1 {
-  margin: calc(var(--margin-base)*2) 0px calc(var(--margin-base)*2) 0px;
-}
- 
-.ui_group h2 {
+.ui_group h2.ui_label {
   color: var(--border-color);
   font-size: large;
   font-weight: normal;
-  margin: 0;
 }
 
-.ui_group.margins h2 {
-  font-weight: normal;
-  margin: var(--margin-base) 0px var(--margin-base) 0px;
-}
-
-.ui_group h3 {
+.ui_group h3.ui_label {
   color: var(--border-color);
   font-size: var(--size);
-  margin: 0;
 }
 
-.ui_group.margins h3 {
-  margin: var(--margin);
-}
-
-.ui_group h4 {
+.ui_group h4.ui_label {
   color: var(--border-color);
   font-size: small;
-  margin: 0;
-}
-
-.ui_group.margins h4 {
-  margin: var(--margin);
 }
 
 .ui_group ul,
@@ -391,7 +371,16 @@ li .ui_label {
 
 .ui_label.info {
   font-size: smaller;
-  background-color: lightgray;
+  background-color: var(--info-color);
+  color: gray;
+}
+
+.ui_label.bubble {
+  font-size: smaller;
+  border-radius: 6px;
+  border-bottom-left-radius: 0;
+  padding: 12px;
+  background-color: var(--info-color);
   color: gray;
 }
 
@@ -811,7 +800,7 @@ textarea.full-width {
 }
 
 .underlined {
-  border-bottom: 1px solid black;
+  border-bottom: 1px solid var(--box-color);
   margin-bottom: calc(var(--margin-base) * 2) !important;
 }
 
