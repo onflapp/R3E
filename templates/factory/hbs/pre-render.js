@@ -188,6 +188,11 @@
   });
 
   Handlebars.registerHelper('date', function () {
+    var root = arguments[arguments.length-1].data.root;
+    var lang = null;
+
+    if (root['C']) lang = root['C']['LANG'];
+
     var val = arguments[0];
     if (val == '' || val == null) return '';
     if (arguments.length > 2) {
@@ -195,14 +200,15 @@
       var opts = {
       };
       var d = new Date(parseInt(val));
-      return d.toLocaleDateString(null, opts);
+
+      if (format == 'iso') return Utils.dateToISO(d);
+      else return d.toLocaleDateString(lang, opts);
     }
     else {
       var d = new Date(parseInt(val));
-      return d.toLocaleDateString();
+      return d.toLocaleDateString(lang);
     }
   });
-
 
   /************************************************************************
 

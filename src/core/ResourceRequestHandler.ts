@@ -66,6 +66,11 @@ class ResourceRequestHandler extends EventDispatcher {
       delete data[toremove[i]];
     }
 
+    /* 
+      valueA@valueB => copy valueB to valueA
+      valueA!convertTS => convert valueA using convertTS
+    */
+
     for (let key in data) {
       let val = data[key];
       if (key.indexOf('@') !== -1) {
@@ -82,6 +87,21 @@ class ResourceRequestHandler extends EventDispatcher {
 
         delete data[key];
       }
+      else if (key.indexOf('!') !== -1) {
+        let i = key.indexOf('!');
+        let k = key.substr(0, i);
+        let n = key.substr(i+1);
+        let v = data[key];
+
+        let f = this.valueTransformers[n];
+        if (f) {
+          v = f(v);
+          data[k] = v;
+        }
+
+        delete data[key];
+      }
+
     }
 
     return data;

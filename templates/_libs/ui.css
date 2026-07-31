@@ -339,7 +339,7 @@ body.ui_group {
   font-family: var(--font);
   font-size: var(--size);
   padding: var(--padding-inline);
-  overflow: hidden;
+  /* overflow: hidden; cases problem with H1 in flex layout? */
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -700,8 +700,7 @@ div.ui_label.bubble {
 }
 
 .ui_tree.list li .ui_tree-item {
-  margin-bottom: 1px;
-  border-radius: var(--radius);
+  margin-bottom: -1px;
   border: 1px solid var(--box-color);
 }
 .ui_tree.guided ul,
@@ -783,6 +782,10 @@ div.ui_label.bubble {
 .ui_group form.full-width,
 form.full-width {
   display: block;
+}
+
+.ui_group a.full-width {
+  display: inline-block;
 }
 
 textarea.full-width {

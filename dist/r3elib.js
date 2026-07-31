@@ -1,4 +1,23 @@
 class Utils {
+    static dateToISO(date) {
+        let mm = date.getMonth() + 1;
+        if (mm < 10)
+            mm = '0' + mm;
+        let dd = date.getDate();
+        if (dd < 10)
+            dd = '0' + dd;
+        let yy = date.getFullYear();
+        var hh = date.getHours();
+        if (hh < 10)
+            hh = '0' + hh;
+        var tt = date.getMinutes();
+        if (tt < 10)
+            tt = '0' + tt;
+        var ss = date.getSeconds();
+        if (ss < 10)
+            ss = '0' + ss;
+        return '' + yy + '-' + mm + '-' + dd + 'T' + hh + ':' + tt + ':' + ss;
+    }
     static setObjectAtPath(obj, path, val) {
         let paths = path.split('/');
         let o = obj;
@@ -1804,6 +1823,18 @@ class ResourceRequestHandler extends EventDispatcher {
                 }
                 else {
                     data[k] = data[key];
+                }
+                delete data[key];
+            }
+            else if (key.indexOf('!') !== -1) {
+                let i = key.indexOf('!');
+                let k = key.substr(0, i);
+                let n = key.substr(i + 1);
+                let v = data[key];
+                let f = this.valueTransformers[n];
+                if (f) {
+                    v = f(v);
+                    data[k] = v;
                 }
                 delete data[key];
             }
