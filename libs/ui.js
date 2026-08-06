@@ -675,10 +675,20 @@ $.post = function(url, data, cb) {
   let xhr = new XMLHttpRequest();
   xhr.open('POST', url, true);
   xhr.onreadystatechange = function () {
-    if (cb) cb();
+    if (xhr.readyState == 4) {
+      if (cb) cb(xhr.responseText);
+    }
   }
   xhr.send(data);
 };
 
-$.get = function(url, data, cb) {
+$.get = function(url, cb) {
+  let xhr = new XMLHttpRequest();
+  xhr.open('GET', url, true);
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState == 4) {
+      if (cb) cb(xhr.responseText);
+    }
+  }
+  xhr.send();
 };
