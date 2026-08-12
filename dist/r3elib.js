@@ -931,32 +931,14 @@ class ResourceResolver {
             callback();
             return;
         }
+        if (toPath.indexOf(fromPath + '/') == 0) {
+            callback();
+            return;
+        }
         self.copyResource(fromPath, toPath, function () {
             self.removeResource(fromPath, function () {
                 callback();
             });
-        });
-    }
-    cloneResource(fromPath, toPath, callback) {
-        if (fromPath === '/' || fromPath === '') {
-            callback();
-            return;
-        }
-        if (fromPath === toPath) {
-            callback();
-            return;
-        }
-        let self = this;
-        self.resolveResource(fromPath, function (res) {
-            if (res) {
-                let data = new Data(res.getValues());
-                self.storeResource(toPath, data, function () {
-                    callback(arguments);
-                });
-            }
-            else {
-                callback(arguments);
-            }
         });
     }
     copyResource(fromPath, toPath, callback) {
@@ -1292,6 +1274,57 @@ class ResourceRequestContext {
             }
         });
     }
+    listAllResources(resourcePath, filter) {
+        let self = this;
+        let rres = this.getResourceResolver();
+        let base = this.getCurrentResourcePath();
+        let ls = [];
+        return new Promise(function (resolve) {
+            let visit_all = function (res) {
+                Tools.visitAllChidren(res, true, function (rpath, child) {
+                    if (child) {
+                        let map = self.makePropertiesForResource(child);
+                        map['path'] = Utils.filename_path_append(base, rpath);
+                        if (filter) {
+                            let rv = filter(map);
+                            if (rv == 1 || rv == true) {
+                                ls.push(map);
+                                return false;
+                            }
+                            else if (rv < 0) {
+                                return true;
+                            }
+                            else {
+                                return false;
+                            }
+                        }
+                        else {
+                            ls.push(map);
+                            return false;
+                        }
+                    }
+                    else {
+                        resolve(ls);
+                        return false;
+                    }
+                });
+            };
+            if (resourcePath === '.' && self.currentResource) {
+                visit_all(self.currentResource);
+            }
+            else {
+                resourcePath = Utils.absolute_path(resourcePath, base);
+                rres.resolveResource(resourcePath, function (res) {
+                    if (res) {
+                        visit_all(res);
+                    }
+                    else {
+                        resolve([]);
+                    }
+                });
+            }
+        });
+    }
     listAllResourceNames(resourcePath, filter) {
         let self = this;
         let rres = this.getResourceResolver();
@@ -1299,7 +1332,7 @@ class ResourceRequestContext {
         let ls = [];
         return new Promise(function (resolve) {
             let visit_all = function (res) {
-                Tools.visitAllChidren(res, false, function (rpath) {
+                Tools.visitAllChidren(res, false, function (rpath, child) {
                     if (rpath) {
                         if (filter) {
                             let rv = filter(rpath);
@@ -2208,6 +2241,7 @@ class ResourceRequestHandler extends EventDispatcher {
         };
         let storedata = function (path) {
             actions.push(function () {
+                self.dispatchAllEvents('pre-store', path, data);
                 self.expandDataAndStore(path, data, function () {
                     self.dispatchAllEvents('stored', path, data);
                     done();
@@ -2222,6 +2256,13 @@ class ResourceRequestHandler extends EventDispatcher {
         let moveto = Utils.absolute_path(data[':moveto'], resourcePath);
         let importto = Utils.absolute_path(data[':import'], resourcePath);
         let reset = Utils.absolute_path(data[':reset'], resourcePath);
+        if (reset) {
+            actions.push(function () {
+                rres.removeResource(reset, function () {
+                    done();
+                });
+            });
+        }
         if (copyfrom.length && copyto) {
             for (let i = 0; i < copyfrom.length; i++) {
                 actions.push(function () {
@@ -2269,15 +2310,6 @@ class ResourceRequestHandler extends EventDispatcher {
                 });
             });
         }
-        else if (cloneto) {
-            actions.push(function () {
-                rres.cloneResource(resourcePath, cloneto, function () {
-                    self.dispatchAllEvents('post-cloneto', cloneto, data);
-                    storedata(cloneto);
-                    done();
-                });
-            });
-        }
         else if (moveto) {
             actions.push(function () {
                 rres.moveResource(resourcePath, moveto, function () {
@@ -2308,17 +2340,7 @@ class ResourceRequestHandler extends EventDispatcher {
                 });
             });
         }
-        else if (reset) {
-            actions.push(function () {
-                rres.removeResource(reset, function () {
-                    self.dispatchAllEvents('pre-store', resourcePath, data);
-                    storedata(resourcePath);
-                    done();
-                });
-            });
-        }
         else {
-            self.dispatchAllEvents('pre-store', resourcePath, data);
             storedata(resourcePath);
         }
         done();
@@ -2441,6 +2463,10 @@ class Tools {
             processing++;
             res.listChildrenNames(function (names) {
                 processing += names.length;
+                if (resolve) {
+                    let order = res.getPreferredChidrenOrder();
+                    names = Tools.reorderChildren(names, order);
+                }
                 for (var i = 0; i < names.length; i++) {
                     let name = names[i];
                     res.resolveChildResource(name, function (r) {

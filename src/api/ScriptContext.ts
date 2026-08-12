@@ -5,6 +5,7 @@ interface ScriptContext {
   listResources(resourcePath: string, filter?:any) : Promise<any>;
   listResourceNames(resourcePath: string, filter?:any) : Promise<any>;
   listAllResourceNames(resourcePath: string, filter?:any) : Promise<any>;
+  listAllResources(resourcePath: string, filter?:any) : Promise<any>;
   renderResource(resourcePath: string, rstype: string, selector: string) : Promise<any>;
   readResource(resourcePath: string, writer: ContentWriter, callback: any);
 

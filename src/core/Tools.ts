@@ -128,6 +128,10 @@ class Tools {
 
       res.listChildrenNames(function (names) {
         processing += names.length;
+        if (resolve) {
+          let order = res.getPreferredChidrenOrder();
+          names = Tools.reorderChildren(names, order);
+        }
 
         for (var i = 0; i < names.length; i++) {
           let name = names[i];

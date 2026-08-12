@@ -492,6 +492,7 @@ div.ui_label.bubble {
   box-sizing: border-box;
   display: flex;
   flex-flow: column;
+  flex: 1;
   position: relative;
   border-right: 1px solid var(--box-color);  
 }
@@ -534,6 +535,7 @@ div.ui_label.bubble {
 
 .ui_column-content ol.ui_tree,
 .ui_column-content ul.ui_tree {
+  height: 100%;
   margin: 0;
 }
 
@@ -902,17 +904,11 @@ a.selected {
   outline-style: solid;
 }
 
+.ui_group.margins input,
 .ui_group.margins textarea,
 .ui_group.margins button,
 .ui_group.margins select {
   margin: var(--margin);
-}
-
-.ui_group input[type=checkbox] {
-}
-
-.ui_group input[type=radio] {
-  xtransform: translateY(2px);
 }
 
 .ui_group input[type=range] {
@@ -1088,6 +1084,7 @@ a.selected {
 
 .ui_dragger-container.over {
   outline: 2px solid var(--selection-color);
+  outline-offset: -2px;
 }
 
 .ui_image {

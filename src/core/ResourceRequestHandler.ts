@@ -556,6 +556,7 @@ class ResourceRequestHandler extends EventDispatcher {
 
     let storedata = function(path) {
       actions.push(function() {
+        self.dispatchAllEvents('pre-store', path, data);
         self.expandDataAndStore(path, data, function () {
           self.dispatchAllEvents('stored', path, data);
           done();
@@ -572,6 +573,14 @@ class ResourceRequestHandler extends EventDispatcher {
     let moveto   = Utils.absolute_path(data[':moveto'], resourcePath);
     let importto = Utils.absolute_path(data[':import'], resourcePath);
     let reset    = Utils.absolute_path(data[':reset'], resourcePath);
+
+    if (reset) {
+      actions.push(function() {
+        rres.removeResource(reset, function () {
+          done();
+        });
+      });
+    }
 
     if (copyfrom.length && copyto) {
       for (let i = 0; i < copyfrom.length; i++) {
@@ -618,15 +627,6 @@ class ResourceRequestHandler extends EventDispatcher {
         });
       });
     }
-    else if (cloneto) {
-      actions.push(function() {
-        rres.cloneResource(resourcePath, cloneto, function () {
-          self.dispatchAllEvents('post-cloneto', cloneto, data);
-          storedata(cloneto);
-          done();
-        });
-      });
-    }
     else if (moveto) {
       actions.push(function() {
         rres.moveResource(resourcePath, moveto, function () {
@@ -660,17 +660,7 @@ class ResourceRequestHandler extends EventDispatcher {
         });
       });
     }
-    else if (reset) {
-      actions.push(function() {
-        rres.removeResource(reset, function () {
-          self.dispatchAllEvents('pre-store', resourcePath, data);
-          storedata(resourcePath);
-          done();
-        });
-      });
-    }
     else {
-      self.dispatchAllEvents('pre-store', resourcePath, data);
       storedata(resourcePath);
     }
 

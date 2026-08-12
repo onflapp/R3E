@@ -166,6 +166,62 @@ class ResourceRequestContext implements ScriptContext {
     });
   }
 
+  public listAllResources(resourcePath: string, filter?:any) : Promise<any> {
+    let self = this;
+    let rres = this.getResourceResolver();
+    let base = this.getCurrentResourcePath();
+    let ls = [];
+
+    return new Promise(function (resolve) {
+      let visit_all = function(res) {
+        Tools.visitAllChidren(res, true, function(rpath, child) {
+          if (child) {
+            let map = self.makePropertiesForResource(child);
+            map['path'] = Utils.filename_path_append(base, rpath);
+
+            if (filter) {
+              let rv = filter(map);
+              if (rv == 1 || rv == true) {
+                ls.push(map);
+                return false;
+              }
+              else if (rv < 0) {
+                return true;
+              }
+              else {
+                return false;
+              }
+            }
+            else {
+              ls.push(map);
+              return false;
+            }
+          }
+          else {
+            resolve(ls);
+            return false;
+          }
+        });
+      };
+
+      if (resourcePath === '.' && self.currentResource) {
+        visit_all(self.currentResource);
+      }
+      else {
+        resourcePath = Utils.absolute_path(resourcePath, base);
+        rres.resolveResource(resourcePath, function(res) {
+          if (res) {
+            visit_all(res);
+          }
+          else {
+            resolve([]);
+          }
+        });
+      }
+    });
+
+  }
+
   public listAllResourceNames(resourcePath: string, filter?:any) : Promise<any> {
     let self = this;
     let rres = this.getResourceResolver();
@@ -174,7 +230,7 @@ class ResourceRequestContext implements ScriptContext {
 
     return new Promise(function (resolve) {
       let visit_all = function(res) {
-        Tools.visitAllChidren(res, false, function(rpath) {
+        Tools.visitAllChidren(res, false, function(rpath, child) {
           if (rpath) {
             if (filter) {
               let rv = filter(rpath);
