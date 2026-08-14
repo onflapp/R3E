@@ -320,6 +320,37 @@ class Utils {
     }
   }
 
+  public static relative_path(path:string, base:string) {
+  if (!base) return null;
+  if (!path) return base;
+
+  base = base.replace(/\\/g, '/');
+  path = path.replace(/\\/g, '/');
+
+  if (base == path) return path;
+
+  let bpaths = base.split('/').filter(p => p.length > 0);
+  let ppaths = path.split('/').filter(p => p.length > 0);
+
+  let i = 0;
+  while (i < bpaths.length && i < ppaths.length && bpaths[i] === ppaths[i]) {
+    i++;
+  }
+
+  const stepsUp = bpaths.length - i;
+  const stepsDown = ppaths.slice(i);
+
+  let relativePath = '../'.repeat(stepsUp);
+
+  relativePath += stepsDown.join('/');
+
+  if (!relativePath.startsWith('../')) {
+    relativePath = './' + relativePath;
+  }
+
+  return relativePath;
+}
+
   public static absolute_path(path:string, cpath?:string) {
     if (!path) return null;
 

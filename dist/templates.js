@@ -87,15 +87,15 @@ window.templates={
         "_pt": "resource/content",
         "_content": "(function (res, writer, ctx) {\n  ctx.readResource('.', writer);\n});\n"
       },
-      "edit.css": {
-        "_ct": "text/css",
-        "_pt": "resource/content",
-        "_content": "html,body {\n  height: 100%;\n  margin: 0px;\n}\nbody {\n  box-sizing: border-box;\n  display: flex;\n  flex-flow: column;\n}\n\n.sec_head {\n  margin-top: 2px;\n  margin-left: 8px;\n  margin-right: 8px;\n  margin-bottom: 6px;\n  flex: 0 1 auto;\n}\n\nform {\n  flex: 1 1 auto;\n  box-sizing: border-box;\n  display: block;\n  width: 100%;\n  height: 100%;\n}\n\ntextarea:focus {\n  outline: none !important;\n}\n\n#text_form textarea {\n  margin: 0;\n}\n\n#edit_view {\n  resize: none;\n  box-sizing: border-box;\n  padding-left: 8px;\n  display: block;\n  width: 100%;\n  height: 100%;\n  font-family: monospace;\n  font-size: 11px;\n  caret-color: red;\n  background-color: black;\n  color: lightgreen;\n}\n\n#pdf_view, #image_view {\n  border: 0;\n  flex: 1 1 auto;\n  box-sizing: border-box;\n  display: block;\n  width: 100%;\n  height: 100%;\n}\n\n.head .buttons {\n  display: inline-block;\n  float: right;\n}\n.head .paths {\n  margin: 0;\n  display: inline-block;\n}\n\nbody.small .head {\n  display: none;\n}\n"
-      },
       "edit.hbs": {
         "_ct": "text/plain",
         "_pt": "resource/content",
         "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  {{include_css \"resource/content/edit.css\" \"_libs/ui.css\"}}\n  {{include_js \"_libs/ui.js\"}}\n\n  \x3Ctitle>edit:{{R.PATH}}\x3C/title>\n\x3C/head>\n\n\x3Cbody class=\"ui_group margins\">\n  \x3Cdiv class=\"sec_head\">\n    \x3Col class=\"ui_paths\">\n      \x3Cli>\x3Ca href=\"{{req_path \"/\" \"res-list\"}}\">HOME\x3C/a>\x3C/li>\n{{#include \".\" \"parents\"}}\n      \x3Cli>\x3Ca href=\"{{req_path path \"res-list\"}}\">{{name}}\x3C/a>\x3C/li>\n{{/include}}\n      \x3Cli>{{name}}\x3C/li>\n    \x3C/ol>\n\n{{#match isTextContentResource}}\n    \x3Cdiv class=\"sec_buttons pull-right\">\n      \x3Ca class=\"ui_button\" href=\"{{req_path \"..\" \"res-list\"}}\">cancel\x3C/a>\n      \x3Cbutton type=\"submit\" form=\"text_form\">save\x3C/button>\n    \x3C/div>\n\n  \x3C/div>\n\n  \x3Cform method=\"post\" action=\"{{res_path R.PATH}}\" id=\"text_form\">\n    \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{req_path \".\"}}\">\n\n    \x3Ctextarea id=\"edit_view\" autocorrect=\"off\" autocapitalize=\"none\" autocomplete=\"off\" autofocus=\"on\" spellcheck=\"false\" name=\"_content\">{{include_safe \".\" \"text\"}}\x3C/textarea>\n\n    \x3Cinput type=\"hidden\" name=\"_rt\" value=\"resource/content\">\x3C/input>\n    \x3Cinput type=\"hidden\" name=\"_ct\" value=\"{{contentType}}\">\x3C/input>\n  \x3C/form>\n\n{{/match}}\n{{#match contentType \"startsWith\" \"image/\"}}\n    \x3Cdiv class=\"toolbar\">\n      \x3Ca class=\"ui_button\" href=\"{{req_path \"..\" \"res-list\"}}\">cancel\x3C/a>\n      \x3Ca class=\"ui_button\" target=\"_blank\" href=\"{{include \".\" \"externalize\"}}\">view\x3C/a>\n    \x3C/div>\n\n  \x3C/div>\n\n  \x3Cimg src=\"{{include \".\" \"externalize\"}}\" id=\"image_view\">\x3C/img>\n\n{{/match}}\n{{#match contentType \"startsWith\" \"application/pdf\"}}\n\n    \x3Cdiv class=\"toolbar\">\n      \x3Ca class=\"ui_button\" href=\"{{req_path \"..\" \"res-list\"}}\">cancel\x3C/a>\n      \x3Ca class=\"ui_button\" target=\"_blank\" href=\"{{include \".\" \"externalize\"}}\">open\x3C/a>\n    \x3C/div>\n  \n  \x3C/div>\n\n  \x3Ciframe src=\"{{include \".\" \"externalize\"}}\" id=\"pdf_view\">\x3C/iframe>\n\n{{/match}}\n{{#default}}\n\n    \x3Cdiv>unknown file type of {{contentType}}\x3C/div>\n    \x3Ca href=\"{{include \".\" \"externalize\"}}\" download target=\"_blank\">Download\x3C/a>\n\n{{/default}}\n  \x3Cscript>fix_textarea()\x3C/script>\n\x3C/body>\n\n\x3C/html>\n"
+      },
+      "edit.css": {
+        "_ct": "text/css",
+        "_pt": "resource/content",
+        "_content": "html,body {\n  height: 100%;\n  margin: 0px;\n}\nbody {\n  box-sizing: border-box;\n  display: flex;\n  flex-flow: column;\n}\n\n.sec_head {\n  margin-top: 2px;\n  margin-left: 8px;\n  margin-right: 8px;\n  margin-bottom: 6px;\n  flex: 0 1 auto;\n}\n\nform {\n  flex: 1 1 auto;\n  box-sizing: border-box;\n  display: block;\n  width: 100%;\n  height: 100%;\n}\n\ntextarea:focus {\n  outline: none !important;\n}\n\n#text_form textarea {\n  margin: 0;\n}\n\n#edit_view {\n  resize: none;\n  box-sizing: border-box;\n  padding-left: 8px;\n  display: block;\n  width: 100%;\n  height: 100%;\n  font-family: monospace;\n  font-size: 11px;\n  caret-color: red;\n  background-color: black;\n  color: lightgreen;\n}\n\n#pdf_view, #image_view {\n  border: 0;\n  flex: 1 1 auto;\n  box-sizing: border-box;\n  display: block;\n  width: 100%;\n  height: 100%;\n}\n\n.head .buttons {\n  display: inline-block;\n  float: right;\n}\n.head .paths {\n  margin: 0;\n  display: inline-block;\n}\n\nbody.small .head {\n  display: none;\n}\n"
       },
       "externalize.js": {
         "_ct": "text/javascript",
@@ -211,6 +211,11 @@ window.templates={
         "_pt": "resource/content",
         "_content": "table td {\n  xborder-bottom: 1px solid lightgray;\n}\n\ntable td a {\n  text-decoration: none;\n}\n\ntable.sec_nodes tr:hover {\n  background-color: lightblue;\n}\n\n.sec_props {\n  background-color: lightgray;\n}\n"
       },
+      "res-list-actions.hbs": {
+        "_ct": "text/plain",
+        "_pt": "resource/content",
+        "_content": "  \x3Ca target=\"_blank\" href=\"{{req_path path \"res-delete\"}}\">d\x3C/a>\n  \x3Ca target=\"_blank\" href=\"{{req_path path \"res-copyto\"}}{{path}}/..\">c\x3C/a>\n  \x3Ca target=\"_blank\" href=\"{{req_path path \"res-moveto\"}}{{path}}/..\">m\x3C/a>\n  \x3Ca target=\"_blank\" href=\"{{req_path path \"res-properties\"}}\">p\x3C/a>\n{{#if renderType}}\n  \x3Ca target=\"_blank\" href=\"{{req_path path \"\"}}\">v\x3C/a>\n{{/if}}\n"
+      },
       "res-list.hbs": {
         "_ct": "text/plain",
         "_pt": "resource/content",
@@ -220,11 +225,6 @@ window.templates={
         "_ct": "text/plain",
         "_pt": "resource/content",
         "_content": "\x3C!DOCTYPE html>\n\x3Chtml lang=\"en\">\n\n\x3Chead>\n  \x3Cmeta charset=\"utf-8\">\n  \x3Cmeta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n  \x3Cmeta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0\">\n  \x3Clink rel=\"icon\" href=\"data:;base64,iVBORw0KGgo=\">\n\n  {{include_css \"_libs/ui.css\"}}\n\n  {{#partial \"text_opts\"}}\nautocomplete=\"off\" autocapitalize=\"off\" autocorrect=\"off\" spellcheck=\"false\"\n  {{/partial}}\n\n  \x3Ctitle>move to\x3C/title>\n\x3C/head>\n\n\x3Cbody class=\"ui_group ui_dialog margins\">\n\n  \x3Ch1 class=\"ui_label underlined\">Move \"{{name}}\"\n    \x3Ca class=\"ui_button inline pull-right\" href=\"{{req_path \".\" \"ui-close\"}}\">X\x3C/a>\n  \x3C/h1>\n\n  \x3Col class=\"ui_paths\">\n    \x3Cli>HOME\x3C/li>\n{{#include \".\" \"parents\"}}\n    \x3Cli>{{name}}\x3C/li>\n{{/include}}\n    \x3Cli>{{name}}\x3C/li>\n  \x3C/ol>\n\n  \x3Ch1>to\x3C/h1>\n\n  \x3Col class=\"ui_paths\">\n    \x3Cli>\x3Ca href=\"{{req_path \".\" \"res-moveto\"}}/\">HOME\x3C/a>\x3C/li>\n{{#include R.DATA_PATH \"parents\"}}\n    \x3Cli>\x3Ca href=\"{{req_path \".\" \"res-moveto\"}}{{path}}\">{{name}}\x3C/a>\x3C/li>\n{{/include}}\n    \x3Cli class=\"active\">{{R.DATA_NAME}}\x3C/li>\n  \x3C/ol>\n\n  \x3Col>\n{{#include R.DATA_PATH \"children\"}}\n  {{#if isContentResource}}\n    \x3Cli>{{name}}\x3C/li>\n  {{else}}\n    {{#match path \"!startsWith\" ../R.PATH}}\n    \x3Cli>\n      \x3Ca href=\"{{req_path \".\" \"res-moveto\"}}{{path}}\">{{name}}\x3C/a>\n    \x3C/li>\n    {{/match}}\n  {{/if}}\n{{/include}}\n  \x3C/ol>\n\n  \x3Ch3>name:\x3C/h3>\n  \x3Cform method=\"POST\" action=\"{{R.PATH}}\">\n    \x3Cinput type=\"text\" name=\":name|newUUID\" value=\"{{R.NAME}}\" {{> text_opts}}>\n    \x3Cinput type=\"hidden\" name=\":moveto\" value=\"{{res_path R.DATA_PATH \"{:name}\"}}\">\n    \x3Cinput type=\"hidden\" name=\":forward\" value=\"{{req_path \".\" \"ui-close\"}}\">\n\n    \x3Cbutton type=\"submit\">Move\x3C/button>\n  \x3C/form>\n\n\x3C/body>\n\x3C/html>\n"
-      },
-      "res-list-actions.hbs": {
-        "_ct": "text/plain",
-        "_pt": "resource/content",
-        "_content": "  \x3Ca target=\"_blank\" href=\"{{req_path path \"res-delete\"}}\">d\x3C/a>\n  \x3Ca target=\"_blank\" href=\"{{req_path path \"res-copyto\"}}{{path}}/..\">c\x3C/a>\n  \x3Ca target=\"_blank\" href=\"{{req_path path \"res-moveto\"}}{{path}}/..\">m\x3C/a>\n  \x3Ca target=\"_blank\" href=\"{{req_path path \"res-properties\"}}\">p\x3C/a>\n{{#if renderType}}\n  \x3Ca target=\"_blank\" href=\"{{req_path path \"\"}}\">v\x3C/a>\n{{/if}}\n"
       },
       "res-properties.hbs": {
         "_ct": "text/plain",
@@ -317,6 +317,6 @@ window.templates={
       }
     }
   },
-  "_cd": "1786555692582",
-  "_md": "1786555692582"
+  "_cd": "1786721729643",
+  "_md": "1786721729643"
 }
