@@ -366,35 +366,6 @@ function restoreCurrentScrollView(list) {
   }
 }
 
-function storeDocumentHTML(ctx, doc, dest) {
-  return new Promise(function (resolve) {
-    let $doc = $(doc);
-    let process = 0;
-    let done = function() {
-      if (process == 0) {
-        process = -1;
-        resolve(doc.outerHTML);
-      }
-    };
-
-    process++;
-    $doc.find('img').each(function(n, it) {
-      let src = it.src;
-
-      process++;
-      storeDocumentIMG(ctx, src, dest, function(nsrc) {
-        it.setAttribute('src', encodeURIComponent(nsrc));
-
-        process--;
-        done();
-      });
-    });
-    process--;
-
-    done();
-  });
-}
-
 function formChanges(form) {
   if (!form) return 0;
   if (!form.elements) return 0;
@@ -405,16 +376,6 @@ function formChanges(form) {
     if (it.tagName == 'INPUT' && it.getAttribute('value') != it.value) changes++;
   }
   return changes;
-}
-
-function storeDocumentIMG(ctx, src, dest, cb) {
-  let pref = config.DOC_PREFIX;
-  if (src.startsWith(pref)) src = '/content'+decodeURIComponent(src.substr(pref.length));
-
-  let n = Utils.filename(src);
-  ctx.copyResources([src], dest).then(function() {
-    cb(n);
-  });
 }
 
 $(function () {
@@ -692,3 +653,4 @@ $.get = function(url, cb) {
   }
   xhr.send();
 };
+
