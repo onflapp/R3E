@@ -321,35 +321,25 @@ class Utils {
   }
 
   public static relative_path(path:string, base:string) {
-  if (!base) return null;
-  if (!path) return base;
+    const currentSegs = base.split('/').filter(Boolean);
+    const targetSegs = path.split('/').filter(Boolean);
 
-  base = base.replace(/\\/g, '/');
-  path = path.replace(/\\/g, '/');
+    let commonIndex = 0;
+    while (commonIndex < currentSegs.length && 
+           commonIndex < targetSegs.length && 
+           currentSegs[commonIndex] === targetSegs[commonIndex]) {
+        commonIndex++;
+    }
 
-  if (base == path) return path;
+    const stepsBack = currentSegs.length - commonIndex;
+    const stepsForward = targetSegs.slice(commonIndex);
 
-  let bpaths = base.split('/').filter(p => p.length > 0);
-  let ppaths = path.split('/').filter(p => p.length > 0);
+    if (stepsBack === 0) {
+        return './' + stepsForward.join('/');
+    }
 
-  let i = 0;
-  while (i < bpaths.length && i < ppaths.length && bpaths[i] === ppaths[i]) {
-    i++;
+    return '../'.repeat(stepsBack) + stepsForward.join('/'); 
   }
-
-  const stepsUp = bpaths.length - i;
-  const stepsDown = ppaths.slice(i);
-
-  let relativePath = '../'.repeat(stepsUp);
-
-  relativePath += stepsDown.join('/');
-
-  if (!relativePath.startsWith('../')) {
-    relativePath = './' + relativePath;
-  }
-
-  return relativePath;
-}
 
   public static absolute_path(path:string, cpath?:string) {
     if (!path) return null;
