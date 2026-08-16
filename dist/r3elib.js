@@ -299,28 +299,20 @@ class Utils {
         }
     }
     static relative_path(path, base) {
-        if (!base)
-            return null;
-        if (!path)
-            return base;
-        base = base.replace(/\\/g, '/');
-        path = path.replace(/\\/g, '/');
-        if (base == path)
-            return path;
-        let bpaths = base.split('/').filter(p => p.length > 0);
-        let ppaths = path.split('/').filter(p => p.length > 0);
-        let i = 0;
-        while (i < bpaths.length && i < ppaths.length && bpaths[i] === ppaths[i]) {
-            i++;
+        const currentSegs = base.split('/').filter(Boolean);
+        const targetSegs = path.split('/').filter(Boolean);
+        let commonIndex = 0;
+        while (commonIndex < currentSegs.length &&
+            commonIndex < targetSegs.length &&
+            currentSegs[commonIndex] === targetSegs[commonIndex]) {
+            commonIndex++;
         }
-        const stepsUp = bpaths.length - i;
-        const stepsDown = ppaths.slice(i);
-        let relativePath = '../'.repeat(stepsUp);
-        relativePath += stepsDown.join('/');
-        if (!relativePath.startsWith('../')) {
-            relativePath = './' + relativePath;
+        const stepsBack = currentSegs.length - commonIndex;
+        const stepsForward = targetSegs.slice(commonIndex);
+        if (stepsBack === 0) {
+            return './' + stepsForward.join('/');
         }
-        return relativePath;
+        return '../'.repeat(stepsBack) + stepsForward.join('/');
     }
     static absolute_path(path, cpath) {
         if (!path)
@@ -1338,6 +1330,7 @@ class ResourceRequestContext {
             }
             else {
                 resourcePath = Utils.absolute_path(resourcePath, base);
+                base = resourcePath;
                 rres.resolveResource(resourcePath, function (res) {
                     if (res) {
                         visit_all(res);

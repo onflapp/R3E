@@ -209,6 +209,8 @@ class ResourceRequestContext implements ScriptContext {
       }
       else {
         resourcePath = Utils.absolute_path(resourcePath, base);
+        base = resourcePath;
+
         rres.resolveResource(resourcePath, function(res) {
           if (res) {
             visit_all(res);
