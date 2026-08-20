@@ -195,6 +195,17 @@ button i {
   border-top-right-radius: var(--radius);
 }
 
+.ui_group.margins .ui_button-group.inline .ui_button,
+.ui_group.margins .ui_button-group.inline button,
+.ui_button-group.inline button,
+.ui_button-group.inline .ui_button {
+  border-radius: 0;
+  margin: 0;
+}
+
+.ui_button-group.inline {
+}
+
 .ui_group {
   cursor: default;
   color: var(--color);

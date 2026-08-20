@@ -1153,6 +1153,11 @@ class ResourceRequestContext {
     __overrideCurrentResourcePath(resourcePath) {
         this.pathInfo.resourcePath = resourcePath;
     }
+    __overrideCurrentRequestPath(path) {
+        this.pathInfo.path = path;
+        this.pathInfo.dirname = Utils.filename_dir(path);
+        this.pathInfo.name = Utils.filename(path);
+    }
     setRenderResourceType(rstype) {
         this.renderResourceType = rstype;
     }

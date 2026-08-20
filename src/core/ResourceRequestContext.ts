@@ -18,6 +18,12 @@ class ResourceRequestContext implements ScriptContext {
     this.pathInfo.resourcePath = resourcePath;
   }
 
+  public __overrideCurrentRequestPath(path :string) {
+    this.pathInfo.path = path;
+    this.pathInfo.dirname = Utils.filename_dir(path);
+    this.pathInfo.name = Utils.filename(path);
+  }
+
   public setRenderResourceType(rstype :string) {
     this.renderResourceType = rstype;
   }
