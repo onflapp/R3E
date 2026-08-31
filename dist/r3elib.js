@@ -1100,17 +1100,17 @@ class ResourceRenderer {
                             console.log('path:' + Utils.get_trace_path(rend));
                             console.log(rend);
                             console.log(err);
-                            self.renderError('unable to render selector:[' + sel + "]", res, err, writer);
+                            self.renderError('unable to render selector:[' + sel + '], renderTypes:[' + renderTypes + ']', res, err, writer);
                         });
                     }
                 }
                 catch (ex) {
                     console.log(ex);
-                    self.renderError('unable to render selector:[' + sel + "]", res, ex, writer);
+                    self.renderError('unable to render selector:[' + sel + '], renderTypes:[' + renderTypes + ']', res, ex, writer);
                 }
             }
             else {
-                self.renderError('unable to render selector:[' + sel + "]", res, error, writer);
+                self.renderError('unable to render selector:[' + sel + '], renderTypes:[' + renderTypes + ']', res, error, writer);
             }
         });
     }
