@@ -242,3 +242,150 @@ DraggableList = {
     });
   }
 }
+
+DropZone = {
+
+  _dropZone:function(target) {
+    if (target.classList.contains('ui_drop-zone')) {
+      return target;
+    }
+    else {
+      let p = target.parentElement;
+      while (p) {
+        if (p.classList.contains('ui_drop-zone')) return p;
+        p = p.parentElement;
+      }
+    }
+  },
+
+  _localDate:function(val) {
+    var d = new Date(val);
+    return d.toISOString().slice(0, 16);
+  },
+
+  _eventInfo:function(evt) {
+    if (evt.targetTouches && evt.targetTouches.length) {
+      var t = evt.targetTouches[0];
+      return {
+        timestamp:evt.timeStamp,
+        pageX:t.pageX,
+        pageY:t.pageY
+      };
+    }
+    else {
+      return {
+        timestamp:evt.timeStamp,
+        pageX:evt.pageX,
+        pageY:evt.pageY
+      };
+    }
+  },
+
+  _updateForm:function(drop_zone, files, urls, text) {
+    var fl_form = drop_zone.querySelector('input[type=file]');
+    var tx_form = drop_zone.querySelector('input[type=text]');
+    var ta_form = drop_zone.querySelector('textarea');
+
+    if (files.length > 0 && fl_form) {
+      fl_form.files = files;
+      var fn = drop_zone.querySelector('input[name=filename]');
+      if (fn) fn.value = files[0].name;
+
+      var fd = drop_zone.querySelector('input[name=modified]');
+      if (fd) fd.value = this._localDate(files[0].lastModified);
+    }
+    else if (urls && tx_form)        tx_form.value = urls;
+    else if (text && tx_form)        tx_form.value = text;
+    else if (urls && ta_form)        ta_form.value = urls;
+    else if (text && ta_form)        ta_form.value = text;
+  },
+
+  onDrop:function(evt) {
+    var drop_zone = this._dropZone(evt.target);
+    var dt = evt.dataTransfer;
+    var files = dt.files;
+    var urls = dt.getData('text/uri-list');
+    var text = dt.getData('text/plain');
+
+    this._updateForm(drop_zone, files, urls, text);
+
+    drop_zone.classList.remove('selected');
+
+    evt.dataTransfer.dropEffect = 'copy';
+    evt.preventDefault();
+    evt.stopPropagation();
+  },
+
+  onDragOver:function(evt) {
+    evt.dataTransfer.dropEffect = 'copy';
+    evt.preventDefault();
+    evt.stopPropagation();
+  },
+
+  onDragEnter:function(evt) {
+    var drop_zone = this._dropZone(evt.target);
+    if (drop_zone) drop_zone.classList.add('selected');
+    
+    evt.dataTransfer.dropEffect = 'copy';
+    evt.preventDefault();
+    evt.stopPropagation();
+  },
+
+  onDragLeave:function(evt) {
+    var drop_zone = this._dropZone(evt.target);
+    if (evt.target.classList.contains('ui_drop-zone')) {
+      drop_zone = evt.target;
+    }
+    else {
+      let p = evt.target.parentElement;
+      while (p) {
+        if (p.classList.contains('ui_drop-zone')) drop_zone = p;
+        p = p.parentElement;
+      }
+    }
+
+    var ei = this._eventInfo(evt);
+    var r = drop_zone.getBoundingClientRect();
+    var outside = false;
+
+    if      (ei.pageY < r.top) outside = true;
+    else if (ei.pageY > r.top+r.height-2) outside = true;
+    else if (ei.pageX < r.left) outside = true;
+    else if (ei.pageX > r.left + r.width-2) outside = true;
+
+    if (outside) evt.target.classList.remove('selected');
+
+    evt.preventDefault();
+    evt.stopPropagation();
+  },
+
+  onChange:function(evt) {
+    var drop_zone = this._dropZone(evt.target);
+    var files = evt.target.files;
+
+    this._updateForm(drop_zone, files, null, null);
+  },
+
+  init:function() {
+    let self = this;
+    let ignore = function(evt) {
+      evt.preventDefault();
+      evt.stopPropagation();
+    };
+
+    document.querySelectorAll('.ui_drop-zone').forEach(function(it) {
+      it.addEventListener('dragover', self.onDragOver.bind(self), false);
+      it.addEventListener('dragenter', self.onDragEnter.bind(self), false);
+      it.addEventListener('dragleave', self.onDragLeave.bind(self), false);
+      it.addEventListener('drop', self.onDrop.bind(self), false);
+    });
+
+    document.querySelectorAll('.ui_drop-zone input[type=file]').forEach(function(it) {
+      it.addEventListener('change', self.onChange.bind(self), false);
+    });
+
+    document.addEventListener('dragenter', ignore);
+    document.addEventListener('dragover', ignore);
+    document.addEventListener('drop', ignore);
+  }
+}

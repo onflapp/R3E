@@ -1016,8 +1016,22 @@ a.selected {
   display: none;
 }
 
-.ui_group.margins .ui_button-upload {
+.ui_group.margins .ui_button-upload,
+.ui_group.margins .ui_drop-zone {
   margin: var(--margin);
+}
+
+.ui_drop-zone {
+  box-sizing: border-box;
+  border: 2px solid var(--box-color);
+}
+
+.ui_group.margins .ui_drop-zone {
+  padding: 0 var(--margin-base) var(--margin-base) var(--margin-base);
+}
+
+.ui_drop-zone.selected {
+  border: 2px solid var(--selection-color);
 }
 
 .ui_group button,
@@ -1036,6 +1050,10 @@ a.selected {
   background-color: var(--button-color);
   min-width: calc(var(--size) * 1.5);
   text-align: center;
+}
+
+span.ui_button-upload {
+  display: inline-block;  
 }
 
 .ui_group select {

@@ -13,12 +13,28 @@
 
   <script src="../libs/cash.js" type="text/javascript"></script>
   <script src="../libs/ui.js" type="text/javascript"></script>
+  <script src="../libs/ui-components.js" type="text/javascript"></script>
 
 </head>
 
-<body class="ui_group padding">
+<body class="ui_group padding margins">
   <div>
-    <span class="ui_button-upload">upload new file...<input type="file"></span>
+    <span class="ui_button-upload">upload new file...<input type="file"></input></span>
   </div>
+
+  <h1>Files</h1>
+  <div class="ui_drop-zone">
+    <span class="ui_button-upload">upload new file...<input type="file"></input></span><br>
+    name: <input name="filename" type="text"></input><br>
+    date: <input name="modified" type="datetime-local"></input>
+  </div>
+
+  <h1>Text</h1>
+  <div class="ui_drop-zone">
+    <textarea></textarea>
+  </div>
+
+
+  <script>DropZone.init()</script>
 </body>
 </html>
