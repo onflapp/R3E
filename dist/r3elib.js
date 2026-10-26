@@ -244,8 +244,16 @@ class Utils {
     static unescape(str) {
         if (!str)
             return str;
-        else
-            return decodeURIComponent(str);
+        else {
+            try {
+                return decodeURIComponent(str);
+            }
+            catch (ex) {
+                console.error(ex);
+                console.log(str);
+                return str;
+            }
+        }
     }
     static string2object(str, obj) {
         if (!str)
@@ -753,6 +761,16 @@ class Resource extends Data {
                 ct = data.values['_ct'];
                 if (!ct)
                     ct = mime;
+                ffunc = function (writer, cb) {
+                    writer.start(ct ? ct : 'text/plain');
+                    writer.write(v);
+                    writer.end(cb);
+                };
+            }
+            else if (k === Resource.STORE_CONTENT_PROPERTY && v instanceof Blob) {
+                ct = data.values['_ct'];
+                if (!ct)
+                    ct = v.type;
                 ffunc = function (writer, cb) {
                     writer.start(ct ? ct : 'text/plain');
                     writer.write(v);
@@ -2966,7 +2984,7 @@ class TemplateOutputPlaceholder {
         this.id = id;
         this.placeholder = '_D3EASW_' + id + '_G4FDH9_';
         this.session = session;
-        setTimeout(function () {
+        this.tmcb = setTimeout(function () {
             if (!self.closed) {
                 self.buffer = ['write timeout'];
                 self.end();
@@ -2982,11 +3000,20 @@ class TemplateOutputPlaceholder {
         }
     }
     end() {
-        this.session.processPendingReplacements();
         this.closed = true;
+        clearTimeout(this.tmcb);
+        this.session.processPendingReplacements();
     }
     toString() {
-        return this.buffer.join('');
+        if (this.buffer)
+            return this.buffer.join('');
+        else
+            return '';
+    }
+    destroy() {
+        clearTimeout(this.tmcb);
+        this.buffer = null;
+        this.session = null;
     }
 }
 class TemplateRendererSession {
@@ -3012,6 +3039,7 @@ class TemplateRendererSession {
                 let it = ls[i];
                 let tt = it.toString();
                 text = text.split(it.placeholder).join(tt);
+                it.destroy();
             }
             callback(text);
             self.close();

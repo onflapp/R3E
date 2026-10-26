@@ -5,25 +5,34 @@
 
 <style>
 .ui_tree .ui_tree-item.tag:before {
+  transform: unset;
   visibility: visible;
   content: '#';
 }
 
 .ui_tree .ui_tree-item.mention:before {
+  transform: unset;
   visibility: visible;
   content: '@';
 }
 
 .ui_tree .ui_tree-item.square:before {
+  transform: unset;
   visibility: visible;
   content: '\25FC';
 }
 
 .ui_tree .ui_tree-item.star:before {
+  transform: unset;
   visibility: visible;
   content: '\2605';
 }
 
+.ui_tree .ui_tree-item.none:before {
+  transform: unset;
+  visibility: hidden;
+  content: '-';
+}
 
 </style>
 
@@ -97,6 +106,30 @@
         </li>
         <li><div class="ui_tree-item">a</div></li>
         <li><div class="ui_tree-item">a</div></li>
+      </ol>
+    </div>
+
+    <h3>tree list - flat</h3>
+    <div>
+      <ol class="ui_tree guided flat">
+        <li><div class="ui_tree-item square">root</div>
+          <ol>
+            <li><div class="ui_tree-item">b</div></li>
+            <li class="collapsed"><div class="ui_tree-item">b</div>
+              <ol>
+                <li><div class="ui_tree-item">c</div></li>
+                <li><div class="ui_tree-item">c</div></li>
+              </ol>
+            </li>
+            <li><a class="ui_tree-item selected">b</a>
+              <ol>
+                <li><div class="ui_tree-item">c</div></li>
+                <li><div class="ui_tree-item">c</div></li>
+              </ol>
+            </li>
+            <li><div class="ui_tree-item">b</div></li>
+          </ol>
+        </li>
       </ol>
     </div>
 

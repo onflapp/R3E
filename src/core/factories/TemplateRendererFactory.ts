@@ -2,6 +2,7 @@ class TemplateOutputPlaceholder {
   private buffer: Array < string > = [];
   private session: TemplateRendererSession;
   private closed: boolean = false;
+  private tmcb: any;
 
   public id: number;
   public placeholder: string;
@@ -12,7 +13,7 @@ class TemplateOutputPlaceholder {
     this.placeholder = '_D3EASW_' + id + '_G4FDH9_';
     this.session = session;
 
-    setTimeout(function () {
+    this.tmcb = setTimeout(function () {
       if (!self.closed) {
         self.buffer = ['write timeout'];
         self.end();
@@ -30,12 +31,20 @@ class TemplateOutputPlaceholder {
   }
 
   public end() {
-    this.session.processPendingReplacements();
     this.closed = true;
+    clearTimeout(this.tmcb);
+    this.session.processPendingReplacements();
   }
 
   public toString() {
-    return this.buffer.join('');
+    if (this.buffer) return this.buffer.join('');
+    else return '';
+  }
+
+  public destroy() {
+    clearTimeout(this.tmcb);
+    this.buffer = null;
+    this.session = null;
   }
 }
 
@@ -64,6 +73,7 @@ class TemplateRendererSession {
         let it = ls[i];
         let tt = it.toString();
         text = text.split(it.placeholder).join(tt);
+        it.destroy();
       }
 
       callback(text);

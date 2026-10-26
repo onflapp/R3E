@@ -263,6 +263,16 @@ abstract class Resource extends Data implements ContentReader {
           writer.end(cb);
         };
       }
+      else if (k === Resource.STORE_CONTENT_PROPERTY && v instanceof Blob) {
+        ct = data.values['_ct'];
+        if (!ct) ct = v.type;
+
+        ffunc = function (writer, cb) {
+          writer.start(ct ? ct : 'text/plain');
+          writer.write(v);
+          writer.end(cb);
+        };
+      }
       else if (typeof v === 'function' || typeof v === 'object') {
         continue;
       }

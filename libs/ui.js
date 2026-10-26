@@ -632,6 +632,38 @@ $(function () {
 
 });
 
+$.template = function(name, values) {
+  let tel = document.getElementById(name);
+  if (tel) {
+    let func = window['__template__'+name];
+
+    if (func) {
+      return func(values);
+    }
+    else {
+      if (tel) {
+        let func = Handlebars.compile(tel.innerHTML);
+        window['__template__'+name] = func;
+        return func(values);
+      }
+      else {
+        return null;
+      }
+    }
+  }
+  else if (name) {
+    let func = Handlebars.compile(name);
+    return func(values);
+  }
+};
+
+$.fn.template = function(name, values) {
+  let html =$.template(name, values);
+  this.each(function(n, it) {
+    it.innerHTML = html;
+  });
+};
+
 $.post = function(url, data, cb) {
   let xhr = new XMLHttpRequest();
   xhr.open('POST', url, true);
@@ -654,3 +686,8 @@ $.get = function(url, cb) {
   xhr.send();
 };
 
+$.getJSON = function(url, cb) {
+  $.get(url, function(rv) {
+    if (cb) cb(JSON.parse(rv));
+  });
+};

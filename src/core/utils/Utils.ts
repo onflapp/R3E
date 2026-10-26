@@ -267,7 +267,16 @@ class Utils {
 
   public static unescape(str: string): string {
     if (!str) return str;
-    else return decodeURIComponent(str);
+    else {
+      try {
+        return decodeURIComponent(str);
+      }
+      catch(ex) {
+        console.error(ex);
+        console.log(str);
+        return str;
+      }
+    }
   }
 
   public static string2object(str: string, obj ? : object): object {

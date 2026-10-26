@@ -33,6 +33,8 @@
   --list-marker: 12px;
   --list-marker-color: gray;
   --info-color: ghostwhite;
+  --list-marker-arrow: '\203A';
+  --list-marker-arrow: '\23F5';
 }
 
 @media (pointer:coarse) {
@@ -317,6 +319,16 @@ body.ui_group {
   padding-inline-start: 13px;
 }
 
+.ui_group ul.flat > li > ul ,
+.ui_group ol.flat > li > ol {
+  padding-inline-start: 0px;
+}
+
+.ui_tree.guided.flat > li > ul:before,
+.ui_tree.guided.flat > li > ol:before {
+  border-left: unset;
+}
+
 .ui_group.margins li > ul ,
 .ui_group.margins li > ol {
   margin: 0;
@@ -561,7 +573,7 @@ div.ui_label.bubble {
 }
 
 .ui_column-content .expandable:after {
-  content:'\23F5';
+  content: var(--list-marker-arrow);
   float: right;
   line-height: var(--size);
   color: var(--list-marker-color);
@@ -746,12 +758,12 @@ div.ui_label.bubble {
   float: left;
   width: var(--list-marker);
   text-align: center;
-  padding-right: 4px;
 }
 
 .ui_tree .ui_tree-item:has( + ol li):before,
 .ui_tree .ui_tree-item:has( + ul li):before {
-  content:'\23F7';
+  content: var(--list-marker-arrow);
+  transform: rotate(90deg);
   visibility: visible;
   line-height: calc(var(--size) + 2px);
 }
@@ -763,7 +775,8 @@ div.ui_label.bubble {
 
 .ui_tree li.collapsed .ui_tree-item:has( + ol li):before,
 .ui_tree li.collapsed .ui_tree-item:has( + ul li):before {
-  content:'\23F5';
+  content: var(--list-marker-arrow);
+  transform: unset;
   line-height: calc(var(--size) + 2px);
 }
 
