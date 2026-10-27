@@ -3863,13 +3863,14 @@ class StoredObjectContentResource extends ObjectContentResource {
     }
     getExternalizedPath() {
         let path = this.values['_content'];
+        let host = window.location.protocol + '//' + window.location.host;
         if (path.startsWith('/'))
             path = path.substr(1);
         if (this['rootResource'] && this['rootResource']['storageResource']) {
             let name = this['rootResource']['storageResource'].getName();
             path = name + path;
         }
-        return path;
+        return host + Utils.escape(path);
     }
     read(writer, callback) {
         if (this.storageResource) {
