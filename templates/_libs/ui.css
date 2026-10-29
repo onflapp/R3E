@@ -132,6 +132,7 @@ span.ui_button {
 
 .ui_group a.ui_button,
 a.ui_button {
+  box-sizing: border-box;
   display: inline-block;
   cursor: default;
   color: var(--button-text);
@@ -139,6 +140,7 @@ a.ui_button {
 }
 
 div.ui_button {
+  box-sizing: border-box;
   width: fit-content;
   cursor: default;
 }
@@ -796,8 +798,10 @@ div.ui_label.bubble {
 .ui_tree ul ul ul ul ul ul .ui_tree-item { padding-left: calc(var(--list-offset) * 6); }
 */
 
+.ui_button .full-width,
 .full-width {
   width: 100%;
+  box-sizing: border-box;
 }
 
 .full-height {
@@ -972,6 +976,12 @@ a.selected {
 .ui_group.margins input[type=week],
 .ui_group.margins input[type=datetime-local] {
   margin: var(--margin);
+}
+
+.ui_group.margins input[type=checkbox],
+.ui_group.margins input[type=radio] {
+  margin-top: calc(var(--margin-base) + 8px);
+  margin-bottom: calc(var(--margin-base)/2);
 }
 
 .ui_group input[type=text],
