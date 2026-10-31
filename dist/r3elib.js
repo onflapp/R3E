@@ -4540,22 +4540,16 @@ class DOMContentWriter {
             }
         }
     }
-    loadExternal() {
+    loadExternal(cb) {
         let scripts = document.querySelectorAll('script');
         let links = document.querySelectorAll('link');
         let processing = 0;
         let trigger_done = function () {
             if (processing !== 0)
                 return;
-            setTimeout(function () {
-                let evt = new Event("DOMContentLoaded", {
-                    bubbles: true,
-                    cancelable: true
-                });
-                let evt1 = document.createEvent('Event');
-                evt1.initEvent('load', false, false);
-            });
             processing = -1;
+            if (cb)
+                cb();
         };
         for (let i = 0; i < scripts.length; i++) {
             let script = scripts[i];
@@ -4787,13 +4781,14 @@ class SPADOMContentWriter extends DOMContentWriter {
         document.documentElement.innerHTML = content;
         self.requestHandler.dispatchAllEvents('start', this);
         let done_loading = function () {
-            self.evaluateScripts();
-            self.loadExternal();
-            self.attachListeners();
-            if (window.parent == window) {
-                sessionStorage.setItem('__CURRENT_REQUEST_URL', u);
-            }
-            self.requestHandler.dispatchAllEvents('loaded', this);
+            self.loadExternal(function () {
+                self.evaluateScripts();
+                self.attachListeners();
+                if (window.parent == window) {
+                    sessionStorage.setItem('__CURRENT_REQUEST_URL', u);
+                }
+                self.requestHandler.dispatchAllEvents('loaded', this);
+            });
         };
         window.requestAnimationFrame(function () {
             done_loading();

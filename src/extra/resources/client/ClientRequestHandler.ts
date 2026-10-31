@@ -25,7 +25,7 @@ class DOMContentWriter implements ContentWriter {
     let done_loading = function () {
       self.evaluateScripts();
       self.attachListeners();
-      
+
       if (window.parent == window) {
         sessionStorage.setItem('__CURRENT_REQUEST_URL', u);
       }
@@ -76,7 +76,7 @@ class DOMContentWriter implements ContentWriter {
     else if (this.extdata && this.extdata.length) {
       let blob = new Blob(this.extdata, {type:this.exttype})
       let uri = window.URL.createObjectURL(blob)
-      
+
       this.requestHandler.dispatchAllEvents('ended', this);
       window.location.replace(uri);
     }
@@ -228,14 +228,15 @@ class DOMContentWriter implements ContentWriter {
     }
   }
 
-  protected loadExternal() {
+  protected loadExternal(cb) {
     let scripts = document.querySelectorAll('script');
     let links = document.querySelectorAll('link');
     let processing = 0;
-    
+
     let trigger_done = function() {
       if (processing !== 0) return;
 
+      /*
       setTimeout(function() {
         //let evt = document.createEvent('MutationEvents'); 
         //evt.initMutationEvent('DOMContentLoaded', true, true, document, '', '', '', 0); 
@@ -249,8 +250,10 @@ class DOMContentWriter implements ContentWriter {
         evt1.initEvent('load', false, false);  
         //window.dispatchEvent(evt1);
       });
+      */
 
       processing = -1;
+      if (cb) cb();
     };
 
     for (let i = 0; i < scripts.length; i++) {
@@ -268,7 +271,7 @@ class DOMContentWriter implements ContentWriter {
           trigger_done();
         };
       }
-		}
+    }
     trigger_done();
   }
 }
@@ -371,7 +374,7 @@ class ClientRequestHandler extends ResourceRequestHandler {
         this.refererURL = null;
       }
 
-      this.currentURL = uu;      
+      this.currentURL = uu;
     }
 
     this.queryProperties = p;

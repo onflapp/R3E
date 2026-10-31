@@ -14,15 +14,16 @@ class SPADOMContentWriter extends DOMContentWriter {
     self.requestHandler.dispatchAllEvents('start', this);
 
     let done_loading = function () {
-      self.evaluateScripts();
-      self.loadExternal();
-      self.attachListeners();
-      
-      if (window.parent == window) {
-        sessionStorage.setItem('__CURRENT_REQUEST_URL', u);
-      }
+      self.loadExternal(function() {
+        self.evaluateScripts();
+        self.attachListeners();
+        
+        if (window.parent == window) {
+          sessionStorage.setItem('__CURRENT_REQUEST_URL', u);
+        }
 
-      self.requestHandler.dispatchAllEvents('loaded', this);
+        self.requestHandler.dispatchAllEvents('loaded', this);
+      });
     };
 
     window.requestAnimationFrame(function() {

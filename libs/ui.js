@@ -167,7 +167,7 @@ function triggerAction(cl) {
 
 function toggleFilterMode(cl) {
   var ctx = handler.getRootContext();
-  var path = '/config';
+  var path = '/settings';
   ctx.resolveResource(path).then(function(res) {
     var m = '';
     if (res) m = res._['filter_mode'];
@@ -184,6 +184,8 @@ function toggleFilterMode(cl) {
     }
     ctx.storeResource(path, {filter_mode:m}).then(function() {
     });
+
+    window.dispatchEvent(new Event('resize'));
   });
 }
 
