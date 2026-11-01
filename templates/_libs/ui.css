@@ -46,8 +46,7 @@
     --padding-base: 6px;
     --padding: 12px 8px 12px 8px;
     --padding-item: 12px 2px 12px 2px;
-  }
-  
+  }  
 }
 
 #ui_popup {
@@ -1210,4 +1209,10 @@ div:has(> .ui_cropframe.selected) {
   width: 8px;
   height: 8px;
   cursor: move;
+}
+
+@media (pointer:coarse) {
+  body.ui_dialog .ui_layout-vertical {
+    height: unset;
+  }
 }
