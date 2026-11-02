@@ -106,7 +106,12 @@ class DOMContentWriter implements ContentWriter {
           Object.defineProperty(this, 'readyState', { get: function() {return 4 }});
           Object.defineProperty(this, 'responseText', { get: function() {return this['__responseText'] }});
 
-          if (data['arrayBuffer']) { //Blob?
+          if (!data) {
+            console.log('submit null!');
+            let cb = this.onreadystatechange;
+            if (cb) cb();
+          }
+          else if (data['arrayBuffer']) { //Blob?
             let val = {};
             let tp = data['type'];
             val['_ct'] = tp;

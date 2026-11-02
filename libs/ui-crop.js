@@ -372,8 +372,8 @@ $.fn.renderToCanvas = function (options) {
 
     var src_x = 0 - img_x;
     var src_y = 0 - img_y;
-    var src_w = it.parentElement.clientWidth;
-    var src_h = it.parentElement.clientHeight;
+    var src_w = it.parentElement.clientWidth  || gv(it.parentElement.style.width);
+    var src_h = it.parentElement.clientHeight || gv(it.parentElement.style.height);
 
     var gap_x = img_w - (src_x + src_w);
     var gap_y = img_h - (src_y + src_h);
@@ -385,8 +385,8 @@ $.fn.renderToCanvas = function (options) {
     
     var dest_x = 0;
     var dest_y = 0;
-    var dest_w = it.parentElement.clientWidth;
-    var dest_h = it.parentElement.clientHeight
+    var dest_w = it.parentElement.clientWidth  || gv(it.parentElement.style.width);
+    var dest_h = it.parentElement.clientHeight || gv(it.parentElement.style.height);
 
     var canvas = document.createElement('canvas');
     canvas.width = dest_w;
