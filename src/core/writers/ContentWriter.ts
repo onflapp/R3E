@@ -24,13 +24,18 @@ class ContentWriterAdapter implements ContentWriter {
     this.ctype = ctype;
   }
   public write(data: any) {
-    this.data.push(data);
+    if (this.data) {
+      this.data.push(data);
+    }
   }
   public error(error: Error) {
     console.log(error);
   }
   public end(cb: any) {
-    if (this.conversion === 'utf8') {
+    if (!this.data) {
+      this.__cleanup();
+    }
+    else if (this.conversion === 'utf8') {
       let v = this.data[0];
       let self = this;
       if (!v) {

@@ -22,10 +22,12 @@ class ResourceRenderer {
   protected rendererResolver: ResourceResolver;
   protected rendererFactories: Map<string,RendererFactory>;
   protected makeRenderTypePatterns: MakeRenderTypePatternsFunction;
+  private cache_func: any;
 
   constructor(resolver: ResourceResolver) {
     this.rendererResolver = resolver;
     this.rendererFactories = new Map();
+    this.cache_func = {};
 
     this.makeRenderTypePatterns = function(factoryType: string, renderType: string, name: string, sel: string): Array <string> {
       let rv = [];
@@ -169,6 +171,17 @@ class ResourceRenderer {
     let rtypes = this.makeRenderTypePaths(renderTypes, selectors);
     if (rtypes.length === 0) throw new Error('no render factories registered?');
 
+    /*
+    for (let i = 0; i < rtypes.length; i++) {
+      let rp = rtypes[i];
+      let rf = this.cache_func[rp];
+      if (rf) {
+        callback(rf.func, null);
+        return;
+      }
+    }
+    */
+
     let plist = rtypes.slice();
     let p = rtypes.shift();
     let self = this;
@@ -178,7 +191,14 @@ class ResourceRenderer {
       self.rendererResolver.resolveResource(p, function (rend: Resource) {
         if (rend) {
           if (rend.isContentResource()) {
-            self.makeRenderingFunction(rend, callback);
+            self.makeRenderingFunction(rend, function(rf, err) {
+              if (rf) {
+                self.cache_func[p] = {func:rf};
+              }
+              callback(rf, err);
+              rtypes = [];
+              return;
+            });
           }
           else {
             callback(null, new Error('no ContentResource at path :' + p));

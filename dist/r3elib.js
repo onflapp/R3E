@@ -1012,6 +1012,7 @@ class ResourceRenderer {
     constructor(resolver) {
         this.rendererResolver = resolver;
         this.rendererFactories = new Map();
+        this.cache_func = {};
         this.makeRenderTypePatterns = function (factoryType, renderType, name, sel) {
             let rv = [];
             rv.push(renderType + '/' + sel + '.' + factoryType);
@@ -1143,7 +1144,14 @@ class ResourceRenderer {
             self.rendererResolver.resolveResource(p, function (rend) {
                 if (rend) {
                     if (rend.isContentResource()) {
-                        self.makeRenderingFunction(rend, callback);
+                        self.makeRenderingFunction(rend, function (rf, err) {
+                            if (rf) {
+                                self.cache_func[p] = { func: rf };
+                            }
+                            callback(rf, err);
+                            rtypes = [];
+                            return;
+                        });
                     }
                     else {
                         callback(null, new Error('no ContentResource at path :' + p));
@@ -2540,13 +2548,18 @@ class ContentWriterAdapter {
         this.ctype = ctype;
     }
     write(data) {
-        this.data.push(data);
+        if (this.data) {
+            this.data.push(data);
+        }
     }
     error(error) {
         console.log(error);
     }
     end(cb) {
-        if (this.conversion === 'utf8') {
+        if (!this.data) {
+            this.__cleanup();
+        }
+        else if (this.conversion === 'utf8') {
             let v = this.data[0];
             let self = this;
             if (!v) {
@@ -3030,6 +3043,10 @@ class TemplateRendererSession {
         return p;
     }
     replaceOutputPlaceholders(text, callback) {
+        if (!this.placeholders) {
+            console.log('the session is closed!');
+            return;
+        }
         let self = this;
         let replaceFunc = function () {
             let ls = self.placeholders.sort(function (a, b) {

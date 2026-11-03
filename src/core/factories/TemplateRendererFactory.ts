@@ -64,6 +64,11 @@ class TemplateRendererSession {
   }
 
   public replaceOutputPlaceholders(text: string, callback: any) {
+    if (!this.placeholders) {
+      console.log('the session is closed!');
+      return;
+    }
+
     let self = this;
     let replaceFunc = function () {
       let ls = self.placeholders.sort(function (a: TemplateOutputPlaceholder, b: TemplateOutputPlaceholder): number {
